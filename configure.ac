@@ -11,7 +11,6 @@ AC_INIT(GGAP, [ggap_version], [muntyan@math.tamu.edu], ggap)
 AM_INIT_AUTOMAKE(ggap, [ggap_version])
 
 AC_CONFIG_HEADERS(config.h)
-AC_PKG_ARG_ENV_VAR
 
 AC_DEFINE(GGAP_VERSION, ["ggap_version"], "GGAP package version")
 GGAP_VERSION=\"ggap_version\"
@@ -32,12 +31,13 @@ AC_SUBST(TERMHELPER_VERSION_MINOR)
 AC_SUBST(TERMHELPER_VERSION_MICRO)
 
 AC_PROG_CC
-AC_PROG_CXX
 AC_PROG_CC_STDC
 AC_HEADER_STDC
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 AC_PROG_WINDRES
+AC_PROG_YACC
 
 
 ################################################################################
@@ -78,22 +78,11 @@ AC_CHECK_DEBUG_STUFF([-Wall])
 
 
 ################################################################################
-#  GTK_PREFIX
-#  TODO : mingw-configure should handle this
-#
-AC_ARG_WITH(
-    [gtk-prefix],
-    AC_HELP_STRING([--with-gtk-prefix=<prefix>], [GTK installation directory (for mingw)]),
-    [export GTK_PREFIX=$withval]
-)
-
-
-################################################################################
 #  Check operating system
 #
 cygwin_build="no"
 mingw_build="no"
-darwin_build="no"
+unix_build="no"
 case $host in
   *-*-mingw32*)
     echo "++++ building for MINGW32 ++++"
@@ -105,24 +94,21 @@ case $host in
     ;;
   *-*-darwin*)
     AC_DEFINE(OS_DARWIN, 1, [darwin])
-    darwin_build="yes"
+    unix_build="yes"
     ;;
   *)
+    unix_build="yes"
     ;;
 esac
-AM_CONDITIONAL(CYGWIN_BUILD, test x$cygwin_build = "xyes")
+AM_CONDITIONAL(UNIX_BUILD, test x$unix_build = "xyes")
 AM_CONDITIONAL(MINGW_BUILD, test x$mingw_build = "xyes")
-AM_CONDITIONAL(DARWIN_BUILD, test x$darwin_build = "xyes")
+AM_CONDITIONAL(CYGWIN_BUILD, test x$cygwin_build = "xyes")
 
 
 ################################################################################
 #  GTK libraries
 #
-if test x$cygwin_build != "xyes"; then
-    PKG_CHECK_MODULES(GTK, gtk+-2.0,,AC_MSG_ERROR([gtk+-2.0 library is not found. Please install gtk 2 development package]))
-    PKG_CHECK_MODULES(GLIB, glib-2.0,,exit)
-    PKG_CHECK_MODULES(GDK, gdk-2.0,,exit)
-fi
+PKG_CHECK_GTK_VERSIONS
 
 
 ################################################################################
@@ -282,6 +268,7 @@ AM_CONDITIONAL(BUILD_MOOUI,     test "x$build_mooui"     = "xyes")
 AM_CONDITIONAL(BUILD_MOOEDIT,   test "x$build_mooedit"   = "xyes")
 AM_CONDITIONAL(BUILD_MOOTERM,   test "x$build_mooterm"   = "xyes")
 
+AM_CONDITIONAL(BUILD_PYMOO, false)
 
 ggap_top_src_dir=`cd $srcdir && pwd`
 ggap_top_build_dir=`cd ./$ac_top_builddir && pwd`
@@ -296,15 +283,13 @@ AC_SUBST(MOO_SRC_PREFIX)
 ################################################################################
 #  MooEdit stuff
 #
-MOOEDIT_CFLAGS="$MOO_CFLAGS $XML_CFLAGS -I$ggap_top_src_dir/src/moo/mooedit"
-MOOEDIT_LIBS="$MOO_LIBS $XML_LIBS"
+MOO_CFLAGS="$MOO_CFLAGS $XML_CFLAGS -I$ggap_top_src_dir/src/moo/mooedit"
+MOO_LIBS="$MOO_LIBS $XML_LIBS"
 USE_PCRE="yes"
 
-AC_SUBST(MOOEDIT_CFLAGS)
-AC_SUBST(MOOEDIT_LIBS)
 AM_CONDITIONAL(USE_PCRE, test "x$USE_PCRE" = "xyes")
 
-AM_CONDITIONAL(USE_UNRTF, true)
+AM_CONDITIONAL(USE_UNRTF, false)
 
 
 ################################################################################
@@ -393,7 +378,6 @@ src/moo/mooedit/xdgmime/Makefile
 src/moo/mooedit/glade/Makefile
 src/moo/mooedit/language-specs/Makefile
 src/moo/mooterm/Makefile
-src/moo/mooterm/termhelper_res.rc
 src/moo/mooterm/glade/Makefile
 src/moo/mooui/Makefile
 src/moo/mooui/glade/Makefile

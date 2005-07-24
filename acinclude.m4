@@ -2,7 +2,7 @@ dnl Available from the GNU Autoconf Macro Archive at:
 dnl http://www.gnu.org/software/ac-archive/htmldoc/ac_python_devel.html
 dnl
 AC_DEFUN([AC_PYTHON_DEVEL_NO_AM_PATH_PYTHON],[
-    # Check for Python include path
+# Check for Python include path
     AC_MSG_CHECKING([for Python include path])
     python_path=`echo $PYTHON | sed "s,/bin.*$,,"`
     for i in "$python_path/include/python$PYTHON_VERSION/" "$python_path/include/python/" "$python_path/" ; do
@@ -19,7 +19,7 @@ AC_DEFUN([AC_PYTHON_DEVEL_NO_AM_PATH_PYTHON],[
     fi
     AC_SUBST([PYTHON_INCLUDES],[-I$python_path])
 
-    # Check for Python library path
+# Check for Python library path
     AC_MSG_CHECKING([for Python library path])
     python_path=`echo $PYTHON | sed "s,/bin.*$,,"`
     for i in "$python_path/lib/python$PYTHON_VERSION/config/" "$python_path/lib/python$PYTHON_VERSION/" "$python_path/lib/python/config/" "$python_path/lib/python/" "$python_path/" ; do
@@ -35,12 +35,12 @@ AC_DEFUN([AC_PYTHON_DEVEL_NO_AM_PATH_PYTHON],[
         $2
     fi
     AC_SUBST([PYTHON_LDFLAGS],["-L$python_path -lpython$PYTHON_VERSION"])
-    #
+#
     python_site=`echo $python_path | sed "s/config/site-packages/"`
     AC_SUBST([PYTHON_SITE_PKG],[$python_site])
-    #
-    # libraries which must be linked in when embedding
-    #
+#
+# libraries which must be linked in when embedding
+#
     AC_MSG_CHECKING(python extra libraries)
     PYTHON_EXTRA_LIBS=`$PYTHON -c "import distutils.sysconfig; \
         conf = distutils.sysconfig.get_config_var; \
@@ -81,15 +81,15 @@ AC_DEFUN([AC_CHECK_PYTHON],[
 
         AC_MSG_CHECKING([PYTHON_INCLUDES])
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-            #include <Python.h>
+#include <Python.h>
             int main ()
-            {
+{
                 Py_Initialize();
                 PyRun_SimpleString("from time import time,ctime\n"
                                     "print 'Today is',ctime(time())\n");
                 Py_Finalize();
                 return 0;
-            }]])],
+}]])],
             [python_can_compile=yes],
             [python_can_compile=no])
 
@@ -97,10 +97,11 @@ AC_DEFUN([AC_CHECK_PYTHON],[
             AC_MSG_RESULT([$PYTHON_INCLUDES])
             AC_MSG_CHECKING([PYTHON_LDFLAGS])
             AC_MSG_RESULT([$PYTHON_LDFLAGS])
-            AC_MSG_NOTICE([Didn't do real linking])
+            AC_MSG_NOTICE([Did not do real linking])
             AC_SUBST(PYTHON_INCLUDES)
             AC_SUBST(PYTHON_LDFLAGS)
             found_python="yes"
+            pyexecdir=$PYTHON_PREFIX/Lib/site-packages
             $2
         else
             AC_MSG_RESULT([Python.h not found])
@@ -160,12 +161,12 @@ AC_DEFUN([AC_CHECK_PYGTK],[
 
         AC_MSG_CHECKING([for pygtk headers])
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-            #include <pygtk/pygtk.h>
+#include <pygtk/pygtk.h>
             int main ()
-            {
+{
                 init_pygtk();
                 return 0;
-            }]])],
+}]])],
             [pygtk_can_compile=yes],
             [pygtk_can_compile=no])
 
@@ -173,6 +174,9 @@ AC_DEFUN([AC_CHECK_PYGTK],[
             AC_MSG_RESULT([$PYGTK_CFLAGS])
             AC_SUBST(PYGTK_CFLAGS)
             $2
+            PYGTK_DEFS_DIR=$PYTHON_PREFIX/share/pygtk/2.0/defs
+            AC_SUBST(PYGTK_DEFS_DIR)
+            AC_MSG_NOTICE([pygtk defs dir: $PYGTK_DEFS_DIR])
         else
             AC_MSG_RESULT([not found])
             $3
@@ -195,17 +199,20 @@ AC_DEFUN([AC_CHECK_PYGTK],[
             CXXFLAGS="$CXXFLAGS $PYGTK_CFLAGS $PYTHON_INCLUDES"
             AC_LANG_PUSH(C++)
             AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-                #include <pygobject.h>
+#include <pygobject.h>
                 int main ()
-                {
+{
                     PyObject *object = pygobject_new (NULL);
                     return 0;
-                }]])],
+}]])],
                 [pygtk_can_compile=yes],
                 [pygtk_can_compile=no])
             if test "x$pygtk_can_compile" = "xyes"; then
                 AC_MSG_RESULT(yes)
                 $2
+                PYGTK_DEFS_DIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
+                AC_SUBST(PYGTK_DEFS_DIR)
+                AC_MSG_NOTICE([pygtk defs dir: $PYGTK_DEFS_DIR])
             else
                 AC_MSG_RESULT(no)
                 $3
@@ -259,14 +266,14 @@ AC_DEFUN([AC_CHECK_XML_STUFF],[
 
         AC_MSG_CHECKING([for xmlParseFile])
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-            #include <libxml/parser.h>
-            #include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
             int main ()
-            {
+{
                 xmlDoc *doc;
                 doc = xmlParseFile ("filename");
                 return 0;
-            }]])],
+}]])],
             [xmlparsefile_can_compile=yes],
             [xmlparsefile_can_compile=no])
         if test "x$xmlparsefile_can_compile" = "xyes"; then
@@ -278,14 +285,14 @@ AC_DEFUN([AC_CHECK_XML_STUFF],[
 
         AC_MSG_CHECKING([for xmlReadFile])
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-            #include <libxml/parser.h>
-            #include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
             int main ()
-            {
+{
                 xmlDoc *doc;
                 doc = xmlReadFile ("filename", NULL, 0);
                 return 0;
-            }]])],
+}]])],
             [xmlreadfile_can_compile=yes],
             [xmlreadfile_can_compile=no])
         if test "x$xmlreadfile_can_compile" = "xyes"; then
@@ -297,15 +304,15 @@ AC_DEFUN([AC_CHECK_XML_STUFF],[
 
         AC_MSG_CHECKING([for xmlNode.line])
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-            #include <libxml/parser.h>
-            #include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
             int main ()
-            {
+{
                 xmlNode *node;
                 int line;
                 line = node->line;
                 return 0;
-            }]])],
+}]])],
             [xmlnode_line_can_compile=yes],
             [xmlnode_line_can_compile=no])
         if test "x$xmlnode_line_can_compile" = "xyes"; then
@@ -377,16 +384,16 @@ AC_DEFUN([AC_CHECK_DEBUG_STUFF],[
     fi
 
     if test x$all_gcc_warnings = "xyes"; then
-        M_CFLAGS="$M_CFLAGS -W -Wall -Wpointer-arith \
-                  -std=c99 -Wcast-align -Wsign-compare -Winline -Wreturn-type \
-                  -Wcast-qual -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
-                  -Wmissing-noreturn -Wmissing-format-attribute -Wnested-externs \
-                  -Wunreachable-code -Wdisabled-optimization"
-        M_CXXFLAGS="$M_CXXFLAGS -W -Wall -Woverloaded-virtual \
-                    -Wpointer-arith -Wcast-align -Wsign-compare -Wnon-virtual-dtor \
-                    -Wno-long-long -Wundef -Wconversion -Wchar-subscripts -Wwrite-strings \
-                    -Wmissing-format-attribute -Wcast-align -Wdisabled-optimization \
-                    -Wnon-template-friend -Wsign-promo -Wno-ctor-dtor-privacy"
+M_CFLAGS="$M_CFLAGS -W -Wall -Wpointer-arith dnl
+-std=c99 -Wcast-align -Wsign-compare -Winline -Wreturn-type dnl
+-Wwrite-strings -Wmissing-prototypes -Wmissing-declarations dnl
+-Wmissing-noreturn -Wmissing-format-attribute -Wnested-externs dnl
+-Wunreachable-code -Wdisabled-optimization"
+M_CXXFLAGS="$M_CXXFLAGS -W -Wall -Woverloaded-virtual dnl
+-Wpointer-arith -Wcast-align -Wsign-compare -Wnon-virtual-dtor dnl
+-Wno-long-long -Wundef -Wconversion -Wchar-subscripts -Wwrite-strings dnl
+-Wmissing-format-attribute -Wcast-align -Wdisabled-optimization dnl
+-Wnon-template-friend -Wsign-promo -Wno-ctor-dtor-privacy"
     fi
 
     if test x$debug = "xyes"; then
@@ -421,34 +428,44 @@ AC_DEFUN([AC_CHECK_DEBUG_STUFF],[
 ])
 
 
-AC_DEFUN([AC_PKG_ARG_ENV_VAR],[
-    AC_ARG_WITH(pkg-config-path,
-    AC_HELP_STRING([--with-pkg-config-path=PATH], [sets PKG_CONFIG_PATH environment variable (for using in kdevelop)]),
-    [
-        export PKG_CONFIG_PATH=$with_pkg_config_path
-    ])
+AC_DEFUN([_CHECK_VERSION],[
+    if test x$cygwin_build != xyes; then
+        PKG_CHECK_MODULES($1, $2)
 
-    AC_ARG_WITH(path,
-    AC_HELP_STRING([--with-path=PATH], [sets PATH environment variable (for using in kdevelop)]),
-    [
-        export PATH=$with_path
-    ])
+        AC_MSG_CHECKING($1 version)
+        $1[]_VERSION=`$PKG_CONFIG --modversion $2`
 
-    AC_ARG_WITH(ld-library-path,
-    AC_HELP_STRING([--with-ld-library-path=PATH], [sets LD_LIBRARY_PATH environment variable (for using in kdevelop)]),
-    [
-        export LD_LIBRARY_PATH=$with_ld_library_path
-    ])
+        i=0
+        for part in `echo $[]$1[]_VERSION | sed 's/\./ /g'`; do
+            i=`expr $i + 1`
+            eval part$i=$part
+        done
 
-    AC_ARG_WITH(cflags,
-    AC_HELP_STRING([--with-cflags=CFLAGS], [sets CFLAGS environment variable (for using in kdevelop)]),
-    [
-        export CFLAGS=$with_cflags
-    ])
+        $1[]_MAJOR_VERSION=$part1
+        $1[]_MINOR_VERSION=$part2
+        $1[]_MICRO_VERSION=$part3
 
-    AC_ARG_WITH(cxxflags,
-    AC_HELP_STRING([--with-cxxflags=CXXFLAGS], [sets CXXFLAGS environment variable (for using in kdevelop)]),
-    [
-        export CXXFLAGS=$with_cxxflags
-    ])
+        if test $[]$1[]_MINOR_VERSION -ge 6; then
+            ver_2_6=yes
+        fi
+        if test $[]$1[]_MINOR_VERSION -ge 4; then
+            ver_2_4=yes
+        fi
+        if test $[]$1[]_MINOR_VERSION -ge 2; then
+            ver_2_2=yes
+        fi
+
+        AC_MSG_RESULT($[]$1[]_MAJOR_VERSION.$[]$1[]_MINOR_VERSION.$[]$1[]_MICRO_VERSION)
+    fi
+
+    AM_CONDITIONAL($1[]_2_6, test x$ver_2_6 = "xyes")
+    AM_CONDITIONAL($1[]_2_4, test x$ver_2_4 = "xyes")
+    AM_CONDITIONAL($1[]_2_2, test x$ver_2_2 = "xyes")
 ])
+
+# PKG_CHECK_GTK_VERSIONS
+AC_DEFUN([PKG_CHECK_GTK_VERSIONS],[
+    _CHECK_VERSION(GTK, gtk+-2.0)
+    _CHECK_VERSION(GLIB, glib-2.0)
+    _CHECK_VERSION(GDK, gdk-2.0)
+])# PKG_CHECK_GTK_VERSIONS
