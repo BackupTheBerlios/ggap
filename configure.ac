@@ -350,7 +350,7 @@ AC_DEFINE_UNQUOTED(PACKAGE_SOURCE_DIR, "${ggapsrcdir}", [top source directory])
 
 MOO_EDIT_LANG_FILES_DIR="${ggapprefix}/${ggaprootdir}/language-specs"
 AC_SUBST(MOO_EDIT_LANG_FILES_DIR)
-MOOEDIT_CFLAGS="$MOOEDIT_CFLAGS -DMOO_EDIT_LANG_FILES_DIR=\\\"$MOO_EDIT_LANG_FILES_DIR\\\""
+MOO_CFLAGS="$MOO_CFLAGS -DMOO_EDIT_LANG_FILES_DIR=\\\"$MOO_EDIT_LANG_FILES_DIR\\\""
 
 
 ################################################################################

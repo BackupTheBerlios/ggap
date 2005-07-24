@@ -9,7 +9,7 @@ AM_CFLAGS =                 \
     -I$(top_builddir)       \
     -I$(top_builddir)/src   \
     -I$(top_srcdir)/src     \
-    $(MOOEDIT_CFLAGS)       \
+    $(MOO_CFLAGS)           \
     $(PYTHON_INCLUDES)      \
     $(PYGTK_CFLAGS)         \
     $(CFLAGS)               \
@@ -18,7 +18,7 @@ AM_CXXFLAGS =               \
     -I$(top_builddir)       \
     -I$(top_builddir)/src   \
     -I$(top_srcdir)/src     \
-    $(MOOEDIT_CFLAGS)       \
+    $(MOO_CFLAGS)           \
     $(PYTHON_INCLUDES)      \
     $(PYGTK_CFLAGS)         \
     $(CXXFLAGS)             \

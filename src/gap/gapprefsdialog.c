@@ -20,7 +20,7 @@
 #include "mooutils/moodialogs.h"
 #include "mooutils/mooprefsdialog.h"
 #include "mooedit/mooeditprefs.h"
-#include "mooterm/mootermprefs.h"
+#include "mooterm/mooterm-prefs.h"
 
 
 GtkWidget *_ggap_create_gap_prefs_page (GtkWidget *vbox);

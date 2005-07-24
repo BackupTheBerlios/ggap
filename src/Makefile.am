@@ -42,7 +42,7 @@ AM_CFLAGS =                     \
     -I$(top_builddir)/src/moo   \
     -I$(top_srcdir)/src         \
     $(PROFILES)                 \
-    $(MOOEDIT_CFLAGS)           \
+    $(MOO_CFLAGS)               \
     $(PYTHON_INCLUDES)          \
     $(PYGTK_CFLAGS)             \
     $(M_CFLAGS)                 \
@@ -52,7 +52,7 @@ AM_CXXFLAGS =                   \
     -I$(top_builddir)/src/moo   \
     -I$(top_srcdir)/src         \
     $(PROFILES)                 \
-    $(MOOEDIT_CFLAGS)           \
+    $(MOO_CFLAGS)               \
     $(PYTHON_INCLUDES)          \
     $(PYGTK_CFLAGS)             \
     $(M_CXXFLAGS)               \
@@ -61,7 +61,7 @@ AM_CXXFLAGS =                   \
 ggap_LDADD =                    \
     $(libs)                     \
     moo/libmoo.la               \
-    $(MOOEDIT_LIBS)             \
+    $(MOO_LIBS)                 \
     $(PYTHON_LDFLAGS)           \
     $(PYTHON_EXTRA_LIBS)
 

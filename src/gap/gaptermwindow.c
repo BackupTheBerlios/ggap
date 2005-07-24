@@ -21,7 +21,6 @@
 #include "gap/gapprefsdialog.h"
 #include "gap/gapprefs.h"
 #include "mooutils/moostock.h"
-#include "mooapp/mooappabout.h"
 #include "mooutils/moodialogs.h"
 #include "mooui/moouiobject-impl.h"
 #include "mooedit/mooeditprefs.h"
@@ -351,6 +350,6 @@ static void gap_term_window_copy_last_output (GapTermWindow *self)
 
 static void gap_term_window_python_execute_file (GapTermWindow *self)
 {
-    moo_app_python_execute_file (moo_app_get_instance (), GTK_WINDOW (self), NULL);
+    moo_app_python_execute_file (GTK_WINDOW (self));
 }
 

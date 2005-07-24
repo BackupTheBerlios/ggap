@@ -6,14 +6,14 @@ DEFAULT_INCLUDES =
 AM_CFLAGS =                 \
     -I$(top_builddir)       \
     -I$(top_srcdir)/src     \
-    $(MOOEDIT_CFLAGS)       \
+    $(MOO_CFLAGS)           \
     $(CFLAGS)               \
     $(M_CFLAGS)
 AM_CXXFLAGS =               \
     -I$(top_builddir)       \
     -I$(top_builddir)/src   \
     -I$(top_srcdir)/src     \
-    $(MOOEDIT_CFLAGS)       \
+    $(MOO_CFLAGS)           \
     $(PYTHON_INCLUDES)      \
     $(CXXFLAGS)             \
     $(M_CXXFLAGS)
