@@ -1,0 +1,66 @@
+#!/bin/sh
+
+dir=`pwd`
+builddir=/home/muntyan/Projects/ggap/build
+cygwin_builddir=$builddir/cygwin
+termhelper=$cygwin_builddir/src/moo/mooterm/termhelper.exe
+ggap_windir=/usr/local/win/ggap
+issdir=Z:/home/muntyan/Projects/ggap/wininstaller
+
+if [ x$1 != x -a x$1 != x"--no-cygwin" ]; then
+    ggap_builddir=`cd $1 && pwd`
+else
+    ggap_builddir=$builddir/mingw
+fi
+config=`basename $ggap_builddir`
+installdir=$dir/$config-root
+
+if [ x$1 = x"--no-cygwin" -o x$2 = x"--no-cygwin" ]; then
+    copy_cygwin="no"
+    iss=$issdir/ggap-nocygwin.iss
+    installer=ggapsetup`echo $config | sed s/mingw//`-nocygwin.exe
+else
+    copy_cygwin="yes"
+    iss=$issdir/ggap.iss
+    installer=ggapsetup`echo $config | sed s/mingw//`.exe
+fi
+
+do_cmd () {
+    echo "*** " $*
+    $*
+    return $?
+}
+
+copy_ggap_files () {
+    do_cmd cp $1/usr/local/bin/ggap.exe $2/ && \
+    do_cmd cp -r $1/usr/local/share/ggap/pkg $2/ && \
+    do_cmd cp -r $1/usr/local/share/ggap/language-specs $2/
+}
+
+build () {
+    do_cmd mkdir $ggap_windir && \
+    do_cmd mkdir $installdir && \
+    do_cmd cd $ggap_builddir && \
+    do_cmd make install-strip DESTDIR=$installdir && \
+    copy_ggap_files $installdir $ggap_windir && \
+    do_cmd cd $cygwin_builddir && \
+    do_cmd make && \
+    do_cmd i686-pc-cygwin-strip $termhelper && \
+    do_cmd cp $termhelper $ggap_windir
+    if [ $copy_cygwin = "yes" ]; then
+        do_cmd cp $builddir/cygwin1.dll $ggap_windir
+    fi
+    echo "*** " wine /usr/local/win/InnoSetup5/ISCC.exe $iss && \
+    wine /usr/local/win/InnoSetup5/ISCC.exe $iss && \
+    do_cmd mv $builddir/../wininstaller/Output/setup.exe $dir/$installer
+}
+
+clean () {
+    do_cmd rm -rf $ggap_windir
+    do_cmd rm -rf $installdir
+    do_cmd rm -rf $builddir/../wininstaller/Output
+}
+
+build
+clean
+

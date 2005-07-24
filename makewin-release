@@ -1,0 +1,21 @@
+#!/bin/sh
+
+for dir in "mingw-no-python mingw-python-2.3 mingw-python-2.4"; do
+    cd $dir && rm -rf * && cd ..
+done
+
+cd mingw-no-python && \
+../../mingw-configure --without-python && \
+make && \
+cd .. && \
+cd mingw-python-2.3 && \
+../../mingw-configure --with-python=2.3 && \
+make && \
+cd .. && \
+cd mingw-python-2.4 && \
+../../mingw-configure --with-python=2.4 && \
+make && \
+cd .. && \
+../makewin mingw-no-python && \
+../makewin mingw-python-2.3 && \
+../makewin mingw-python-2.4

@@ -1,0 +1,30 @@
+#include <windows.h>
+
+
+A ICON MOVEABLE PURE LOADONCALL DISCARDABLE "@top_srcdir@/pixmaps/ggap.ico"
+
+1 VERSIONINFO
+FILEVERSION @GGAP_VERSION_MAJOR@,@GGAP_VERSION_MINOR@,@GGAP_VERSION_MICRO@,0
+PRODUCTVERSION @GGAP_VERSION_MAJOR@,@GGAP_VERSION_MINOR@,@GGAP_VERSION_MICRO@,0
+FILETYPE VFT_APP
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "140104E4"
+        {
+            VALUE "CompanyName", "Yevgen Muntyan"
+            VALUE "FileVersion", @GGAP_VERSION@
+            VALUE "FileDescription", "GGAP"
+            VALUE "InternalName", "ggap"
+            VALUE "LegalCopyright", "(C) 2004-2005 by Yevgen Muntyan <muntyan@math.tamu.edu>"
+            VALUE "LegalTrademarks", ""
+            VALUE "OriginalFilename", "ggap.exe"
+            VALUE "ProductName", "GGAP"
+            VALUE "ProductVersion", @GGAP_VERSION@
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 1252
+    }
+}

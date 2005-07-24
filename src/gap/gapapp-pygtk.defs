@@ -1,0 +1,210 @@
+;; WARNING: MODIFIED
+
+;; -*- scheme -*-
+; object definitions ...
+(define-object App
+  (in-module "Gap")
+  (parent "MooApp")
+  (c-name "GapApp")
+  (gtype-id "GAP_TYPE_APP")
+)
+
+(define-object EditWindow
+  (in-module "Gap")
+  (parent "MooEditWindow")
+  (c-name "GapEditWindow")
+  (gtype-id "GAP_TYPE_EDIT_WINDOW")
+)
+
+(define-object OutChannel
+  (in-module "Gap")
+  (parent "GObject")
+  (c-name "GapOutChannel")
+  (gtype-id "GAP_TYPE_OUT_CHANNEL")
+)
+
+(define-object TermWindow
+  (in-module "Gap")
+  (parent "MooTermWindow")
+  (c-name "GapTermWindow")
+  (gtype-id "GAP_TYPE_TERM_WINDOW")
+)
+
+;; Enumerations and flags ...
+
+
+;; From gapapp.h
+
+(define-function gap_app_get_type
+  (c-name "gap_app_get_type")
+  (return-type "GType")
+)
+
+(define-function gap_app
+  (c-name "gap_app")
+  (return-type "GapApp*")
+)
+
+;; MODIFIED
+;; (define-function gap_app_new
+;;   (c-name "gap_app_new")
+;;   (is-constructor-of "GapApp")
+;;   (return-type "MooApp*")
+;;   (parameters
+;;     '("int" "argc")
+;;     '("char**" "argv")
+;;   )
+;; )
+
+(define-function gap_app_get_option_group
+  (c-name "gap_app_get_option_group")
+  (return-type "GOptionGroup*")
+)
+
+(define-function gap_app_get_profile_name
+  (c-name "gap_app_get_profile_name")
+  (return-type "const-char*")
+)
+
+(define-method feed_gap
+  (of-object "GapApp")
+  (c-name "gap_app_feed_gap")
+  (return-type "none")
+  (parameters
+    '("const-char*" "text")
+    '("gssize" "len")
+  )
+)
+
+(define-method start_gap
+  (of-object "GapApp")
+  (c-name "gap_app_start_gap")
+  (return-type "none")
+)
+
+(define-method stop_gap
+  (of-object "GapApp")
+  (c-name "gap_app_stop_gap")
+  (return-type "none")
+)
+
+(define-method restart_gap
+  (of-object "GapApp")
+  (c-name "gap_app_restart_gap")
+  (return-type "none")
+)
+
+(define-method get_out_channel
+  (of-object "GapApp")
+  (c-name "gap_app_get_out_channel")
+  (return-type "GapOutChannel*")
+)
+
+;; MODIFIED
+(define-method write_out
+  (of-object "GapApp")
+  (c-name "gap_app_write_out")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "data")
+    '("gssize" "len" (default "-1"))
+  )
+)
+
+
+
+;; From gapeditwindow.h
+
+(define-function gap_edit_window_get_type
+  (c-name "gap_edit_window_get_type")
+  (return-type "GType")
+)
+
+(define-function gap_edit_window_new
+  (c-name "gap_edit_window_new")
+  (is-constructor-of "GapEditWindow")
+  (return-type "GtkWidget*")
+)
+
+
+
+;; From gapoutchannel.h
+
+(define-function gap_out_channel_get_type
+  (c-name "gap_out_channel_get_type")
+  (return-type "GType")
+)
+
+(define-function gap_out_channel_new
+  (c-name "gap_out_channel_new")
+  (is-constructor-of "GapOutChannel")
+  (return-type "GapOutChannel*")
+  (parameters
+    '("const-char*" "fifo_basename")
+  )
+)
+
+(define-method start
+  (of-object "GapOutChannel")
+  (c-name "gap_out_channel_start")
+  (return-type "gboolean")
+)
+
+(define-method shutdown
+  (of-object "GapOutChannel")
+  (c-name "gap_out_channel_shutdown")
+  (return-type "none")
+)
+
+(define-method restart
+  (of-object "GapOutChannel")
+  (c-name "gap_out_channel_restart")
+  (return-type "gboolean")
+)
+
+(define-method ready
+  (of-object "GapOutChannel")
+  (c-name "gap_out_channel_ready")
+  (return-type "gboolean")
+)
+
+(define-method get_name
+  (of-object "GapOutChannel")
+  (c-name "gap_out_channel_get_name")
+  (return-type "const-char*")
+)
+
+;; MODIFIED
+(define-method write
+  (of-object "GapOutChannel")
+  (c-name "gap_out_channel_write")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "data")
+    '("gssize" "len" (default "-1"))
+  )
+)
+
+
+
+;; From gaptermwindow.h
+
+(define-function gap_term_window_get_type
+  (c-name "gap_term_window_get_type")
+  (return-type "GType")
+)
+
+;; MODIFIED
+;; (define-function gap_term_window_new
+;;   (c-name "gap_term_window_new")
+;;   (is-constructor-of "GapTermWindow")
+;;   (return-type "GapTermWindow*")
+;; )
+
+(define-method apply_settings
+  (of-object "GapTermWindow")
+  (c-name "gap_term_window_apply_settings")
+  (return-type "none")
+)
+
+

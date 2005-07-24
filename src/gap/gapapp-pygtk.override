@@ -1,0 +1,27 @@
+%%
+headers
+#include <Python.h>
+#define NO_IMPORT_PYGOBJECT
+#include "pygobject.h"
+#include "gap/gapapp.h"
+#include "gap/gapeditwindow.h"
+#include "gap/gaptermwindow.h"
+%%
+modulename ggap.gap
+%%
+import gobject.GObject as PyGObject_Type
+import gtk.Window as PyGtkWindow_Type
+import ggap.App as PyMooApp_Type
+import moo.EditWindow as PyMooEditWindow_Type
+import moo.TermWindow as PyMooTermWindow_Type
+%%
+ignore-glob
+  *_get_type
+%%
+ignore
+  gap_app_get_profile_name
+  gap_app
+  gap_app_new
+  gap_app_get_option_group
+  gap_term_window_new
+%%

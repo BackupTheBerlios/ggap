@@ -1,0 +1,27 @@
+%%
+headers
+#include <Python.h>
+#define NO_IMPORT_PYGOBJECT
+#include "pygobject.h"
+#include "sc3/sc3app.h"
+#include "sc3/sc3editwindow.h"
+#include "sc3/sc3termwindow.h"
+%%
+modulename ggap.sc3
+%%
+import gobject.GObject as PyGObject_Type
+import gtk.Window as PyGtkWindow_Type
+import ggap.App as PyMooApp_Type
+import moo.EditWindow as PyMooEditWindow_Type
+import moo.TermWindow as PyMooTermWindow_Type
+%%
+ignore-glob
+  *_get_type
+%%
+ignore
+  sc3_app_get_profile_name
+  sc3_app
+  sc3_app_new
+  sc3_app_get_option_group
+  sc3_term_window_new
+%%

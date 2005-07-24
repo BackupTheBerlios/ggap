@@ -1,0 +1,4 @@
+after checking out this directory, go to src subdirectory and check out moo 
+subdirectory of moo module, i.e. do
+
+cd src; cvs -d the_same_cvsroot co -P -d moo moo/moo

@@ -1,0 +1,15 @@
+2005-04-09  Yevgen Muntyan  <muntyan@math.tamu.edu>
+
+	* === Released 0.5.2 ===
+	Fixed for MacOSX, fied file saving on windows.
+
+2005-04-07  Yevgen Muntyan  <muntyan@math.tamu.edu>
+
+	* === Released 0.5.1 ===
+	Fixed million compilation bugs on amd64 and solaris,
+	fixed copy/paste on windows.
+
+2005-04-06  Yevgen Muntyan  <muntyan@math.tamu.edu>
+
+	* === Released 0.5.0 ===
+
