@@ -1,5 +1,5 @@
 /*
- *   FILENAME.c
+ *   gap.h
  *
  *   Copyright (C) 2004-2005 by Yevgen Muntyan <muntyan@math.tamu.edu>
  *
@@ -11,6 +11,19 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#include ""
+#ifndef __GAP_H__
+#define __GAP_H__
+
+#include <glib.h>
+
+G_BEGIN_DECLS
 
 
+char    *ggap_pkg_init_string   (void);
+char    *gap_read_file_string   (const char *filename);
+char    *gap_reread_file_string (const char *filename);
+
+
+G_END_DECLS
+
+#endif /* __GAP_H__ */

@@ -20,7 +20,7 @@ Name: quicklaunchicon; Description: {cm:CreateQuickLaunchIcon}; GroupDescription
 Source: C:\ggap\ggap.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\termhelper.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\pkg\*; DestDir: {app}\pkg; Flags: ignoreversion recursesubdirs
-Source: C:\ggap\language-specs\*; DestDir: {app}\language-specs; Flags: ignoreversion recursesubdirs
+Source: C:\ggap\syntax\*; DestDir: {app}\syntax; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

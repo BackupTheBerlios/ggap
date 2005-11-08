@@ -21,13 +21,14 @@ Source: C:\ggap\ggap.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\cygwin1.dll; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\termhelper.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\pkg\*; DestDir: {app}\pkg; Flags: ignoreversion recursesubdirs
-Source: C:\ggap\language-specs\*; DestDir: {app}\language-specs; Flags: ignoreversion recursesubdirs
+Source: C:\ggap\syntax\*; DestDir: {app}\syntax; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: {group}\GGAP; Filename: {app}\ggap.exe
 Name: {group}\{cm:UninstallProgram,GGAP}; Filename: {uninstallexe}
 Name: {userdesktop}\GGAP; Filename: {app}\ggap.exe; Tasks: desktopicon
+Name: {userdesktop}\GGAP Editor; Filename: {app}\ggap.exe -e; Tasks: desktopicon
 Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\GGAP; Filename: {app}\ggap.exe; Tasks: quicklaunchicon
 
 [Run]

@@ -6,27 +6,45 @@
     <version>$VERSION$</version>
     <projectmanagement>KDevAutoProject</projectmanagement>
     <primarylanguage>C++</primarylanguage>
-    <ignoreparts/>
+    <ignoreparts>
+      <part>kdevabbrev</part>
+      <part>kdevbookmarks</part>
+      <part>kdevclassview</part>
+      <part>kdevsnippet</part>
+      <part>kdevctags2</part>
+      <part>kdevdocumentation</part>
+      <part>kdevdoxygen</part>
+      <part>kdevfilegroups</part>
+      <part>kdevfilelist</part>
+      <part>kdevfileview</part>
+      <part>kdevdistpart</part>
+      <part>kdevquickopen</part>
+      <part>kdevregexptest</part>
+      <part>kdevscripting</part>
+      <part>kdevfilter</part>
+      <part>kdevastyle</part>
+      <part>kdevtexttools</part>
+    </ignoreparts>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description/>
+    <description></description>
     <secondaryLanguages>
       <language>C</language>
     </secondaryLanguages>
-    <versioncontrol/>
+    <versioncontrol>kdevsubversion</versioncontrol>
   </general>
   <kdevautoproject>
     <general>
       <activetarget>src/script/libscript.la</activetarget>
-      <useconfiguration>no-pygtk</useconfiguration>
+      <useconfiguration>python</useconfiguration>
     </general>
     <run>
-      <mainprogram>src/ggap</mainprogram>
+      <mainprogram>ggap/ggap</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs/>
+      <programargs>-e</programargs>
       <terminal>false</terminal>
-      <autocompile>true</autocompile>
+      <autocompile>false</autocompile>
       <envvars/>
     </run>
     <configurations>
@@ -48,11 +66,11 @@
         <f77flags/>
       </optimized>
       <debug>
-        <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal --enable-developer-mode</configargs>
+        <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal --without-python</configargs>
         <builddir>build/debug</builddir>
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
-        <f77compiler>kdevpgf77options</f77compiler>
+        <f77compiler>kdevg77options</f77compiler>
         <cflags>-O0 -g3 -pg</cflags>
         <cxxflags>-O0 -g3 -pg</cxxflags>
         <envvars>
@@ -147,7 +165,7 @@
         <f77flags/>
       </gtk-2.2-old>
       <python>
-        <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal --enable-developer-mode --with-python --without-native-gtksourceview</configargs>
+        <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal</configargs>
         <builddir>build/python</builddir>
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
@@ -345,20 +363,20 @@
     <make>
       <envvars/>
       <abortonerror>true</abortonerror>
-      <numberofjobs>1</numberofjobs>
+      <numberofjobs>3</numberofjobs>
       <dontact>false</dontact>
-      <makebin/>
+      <makebin>mmake</makebin>
       <prio>0</prio>
     </make>
   </kdevautoproject>
   <kdevdebugger>
     <general>
-      <dbgshell>libtool</dbgshell>
+      <dbgshell></dbgshell>
       <programargs>--g-fatal-warnings </programargs>
-      <gdbpath/>
-      <configGdbScript/>
-      <runShellScript/>
-      <runGdbScript/>
+      <gdbpath></gdbpath>
+      <configGdbScript></configGdbScript>
+      <runShellScript></runShellScript>
+      <runGdbScript></runGdbScript>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>true</floatingtoolbar>
@@ -423,16 +441,16 @@
   </kdevdoctreeview>
   <kdevfilecreate>
     <filetypes>
-      <type icon="source" ext="g" name="GAP source" create="template" >
+      <type icon="source" ext="g" create="template" name="GAP source" >
         <descr>A new empty GAP source file</descr>
       </type>
-      <type icon="source_cpp" ext="cpp" name="C++ Source" create="template" >
+      <type icon="source_cpp" ext="cpp" create="template" name="C++ Source" >
         <descr>A new empty C++ file.</descr>
       </type>
-      <type icon="source_h" ext="h" name="C/C++ Header" create="template" >
+      <type icon="source_h" ext="h" create="template" name="C/C++ Header" >
         <descr>A new empty header file for C/C++.</descr>
       </type>
-      <type icon="source_c" ext="c" name="C Source" create="template" >
+      <type icon="source_c" ext="c" create="template" name="C Source" >
         <descr>A new empty C file.</descr>
       </type>
     </filetypes>
@@ -459,7 +477,7 @@
     </codecompletion>
     <references/>
     <creategettersetter>
-      <prefixGet/>
+      <prefixGet></prefixGet>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>

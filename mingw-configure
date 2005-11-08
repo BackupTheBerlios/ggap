@@ -50,12 +50,8 @@ export STRINGS="/usr/bin/i586-mingw32msvc-strings"
 export STRIP="/usr/bin/i586-mingw32msvc-strip"
 export WINDRES="/usr/bin/i586-mingw32msvc-windres"
 
-if [ ! $CFLAGS ]; then
-    export CFLAGS="-O3 -g0 -mms-bitfields -march=i686"
-fi
-if [ ! $CXXFLAGS ]; then
-    export CXXFLAGS="-O3 -g0 -mms-bitfields -march=i686"
-fi
+export CFLAGS="$CFLAGS -O0 -g3 -mms-bitfields -march=i686"
+export CXXFLAGS="$CXXFLAGS -O0 -g3 -mms-bitfields -march=i686"
 
 export PATH=$MINGW_BIN:/usr/i586-mingw32msvc/bin:$PATH
 
@@ -65,6 +61,6 @@ fi
 ln -s $0 fake-pkg-config
 export PKG_CONFIG="./fake-pkg-config"
 
-TARGET=i586-mingw32msvc
+TARGET=i586-pc-mingw32msvc
 
-exec sh $CONFIGURE --target=$TARGET --host=$TARGET --without-native-gnu-regex $* 
+exec sh $CONFIGURE --target=$TARGET --host=$TARGET --without-native-gnu-regex $*

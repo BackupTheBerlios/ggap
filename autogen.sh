@@ -3,34 +3,35 @@
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-if test "x$LIBTOOLIZE" = "x"; then
-    LIBTOOLIZE=libtoolize
-fi
-if test "x$ACLOCAL" = "x"; then
-    ACLOCAL=aclocal
-fi
-if test "x$AUTOHEADER" = "x"; then
-    AUTOHEADER=autoheader
-fi
-if test "x$AUTOMAKE" = "x"; then
-    AUTOMAKE=automake
-fi
-if test "x$AUTOCONF" = "x"; then
-    AUTOCONF=autoconf
+echo "Generating configuration files..."
+
+if test -d $srcdir/m4 ; then
+    aclocal_extra="-I $srcdir/m4"
 fi
 
-echo "Generating GGAP configuration files..."
-echo "Adding libtools..."                       && \
-$LIBTOOLIZE --automake --copy                   && \
-echo "Building macros..."                       && \
-$ACLOCAL                                        && \
-echo "Building headers..."                      && \
-$AUTOHEADER                                     && \
-echo "Building makefiles..."                    && \
-$AUTOMAKE --add-missing --copy                  && \
-echo "Building configure..."                    && \
-$AUTOCONF
+ACLOCAL=${ACLOCAL:-aclocal-1.9}
+AUTOMAKE=${AUTOMAKE:-automake-1.9}
+
+LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
+
+AUTOHEADER=${AUTOHEADER:-autoheader}
+AUTOCONF=${AUTOCONF:-autoconf}
+
+echo $LIBTOOLIZE --automake --copy
+$LIBTOOLIZE --automake --copy || exit $?
+
+echo $ACLOCAL $ACLOCAL_FLAGS $aclocal_extra
+$ACLOCAL $ACLOCAL_FLAGS $aclocal_extra || exit $?
+
+echo $AUTOHEADER
+$AUTOHEADER || exit $?
+
+echo $AUTOMAKE --add-missing --copy
+$AUTOMAKE --add-missing --copy || exit $?
+
+echo $AUTOCONF
+$AUTOCONF || exit $?
 
 echo
-echo 'run "./configure ; make ; make install"'
+echo "run './configure ; make ; make install'"
 echo
