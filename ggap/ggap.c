@@ -52,38 +52,38 @@ int _ggap_parse_options (const char *const program_name,
 #endif
 
 #define STR_HELP_GAP_CMD "\
-  -g, --gap-cmd=COMMAND        GAP command line\n"
+  -g, --gap-cmd=COMMAND    GAP command line\n"
 
 #define STR_HELP_EDITOR "\
-  -e, --editor                 Do not start GAP automatically\n"
+  -e, --editor             Do not start GAP automatically\n"
 
 #define STR_HELP_NEW_APP "\
-  -n, --new-app                Run new instance of application\n"
+  -n, --new-app            Run new instance of application\n"
 
 #define STR_HELP_SIMPLE "\
-      --simple                 Simple mode\n"
+      --simple             Simple mode\n"
 
 #define STR_HELP_LOG "\
-  -l, --log[=FILE]             Show debug output or write it to FILE\n"
+  -l, --log[=FILE]         Show debug output or write it to FILE\n"
 
 #define STR_HELP_LOG_PYTHON "\
-  -p, --log-python[=NO|YES]    Redirect output to python console\n"
+  -p, --log-python         Redirect output to python console\n"
 
 #define STR_HELP_VERSION "\
-      --version                Display version information and exit\n"
+      --version            Display version information and exit\n"
 
 #define STR_HELP_HELP "\
-  -h, --help                   Display this help text and exit\n"
+  -h, --help               Display this help text and exit\n"
 
 #define STR_HELP "\
-  -g, --gap-cmd=COMMAND        GAP command line\n\
-  -e, --editor                 Do not start GAP automatically\n\
-  -n, --new-app                Run new instance of application\n\
-      --simple                 Simple mode\n\
-  -l, --log[=FILE]             Show debug output or write it to FILE\n\
-  -p, --log-python[=NO|YES]    Redirect output to python console\n\
-      --version                Display version information and exit\n\
-  -h, --help                   Display this help text and exit\n"
+  -g, --gap-cmd=COMMAND    GAP command line\n\
+  -e, --editor             Do not start GAP automatically\n\
+  -n, --new-app            Run new instance of application\n\
+      --simple             Simple mode\n\
+  -l, --log[=FILE]         Show debug output or write it to FILE\n\
+  -p, --log-python         Redirect output to python console\n\
+      --version            Display version information and exit\n\
+  -h, --help               Display this help text and exit\n"
 
 /* Set to 1 if option --gap-cmd (-g) has been specified.  */
 char _ggap_opt_gap_cmd;
@@ -121,11 +121,6 @@ const char *_ggap_arg_gap_cmd;
 const char *_ggap_arg_log;
 #endif
 
-#ifdef MOO_USE_PYTHON
-/* Argument to option --log-python (-p), or a null pointer if no argument.  */
-const char *_ggap_arg_log_python;
-#endif
-
 /* Parse command line options.  Return index of first non-option argument,
    or -1 if an error is encountered.  */
 int _ggap_parse_options (const char *const program_name, const int argc, char **const argv)
@@ -134,6 +129,9 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   static const char *const optstr__editor = "editor";
   static const char *const optstr__new_app = "new-app";
   static const char *const optstr__simple = "simple";
+#ifdef MOO_USE_PYTHON
+  static const char *const optstr__log_python = "log-python";
+#endif
   static const char *const optstr__version = "version";
   static const char *const optstr__help = "help";
   int i = 0;
@@ -152,9 +150,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   _ggap_arg_gap_cmd = 0;
 #ifdef __WIN32__
   _ggap_arg_log = 0;
-#endif
-#ifdef MOO_USE_PYTHON
-  _ggap_arg_log_python = 0;
 #endif
   while (++i < argc)
   {
@@ -230,11 +225,15 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
         }
 #endif
 #ifdef MOO_USE_PYTHON
-        if (strncmp (option + 1, "og-python", option_len - 1) == 0)
+        if (strncmp (option + 1, optstr__log_python + 1, option_len - 1) == 0)
         {
           if (option_len <= 3)
             goto error_long_opt_ambiguous;
-          _ggap_arg_log_python = argument;
+          if (argument != 0)
+          {
+            option = optstr__log_python;
+            goto error_unexpec_arg_long;
+          }
           _ggap_opt_log_python = 1;
           break;
         }
@@ -328,13 +327,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
           break;
 #ifdef MOO_USE_PYTHON
          case 'p':
-          if (option [1] != '\0')
-          {
-            _ggap_arg_log_python = option + 1;
-            option = "\0";
-          }
-          else
-            _ggap_arg_log_python = 0;
           _ggap_opt_log_python = 1;
           break;
 #endif
@@ -382,7 +374,7 @@ int main (int argc, char *argv[])
 {
     MooApp *app;
     int opt_remain;
-    G_GNUC_UNUSED gboolean use_python_console = TRUE;
+    G_GNUC_UNUSED gboolean use_python_console = FALSE;
 
     gtk_init (&argc, &argv);
 
@@ -417,24 +409,7 @@ int main (int argc, char *argv[])
 
 #ifdef MOO_USE_PYTHON
     if (_ggap_opt_log_python)
-    {
-        if (_ggap_arg_log_python)
-        {
-            if (!g_ascii_strcasecmp (_ggap_arg_log_python, "yes"))
-            {
-                use_python_console = TRUE;
-            }
-            else if (!g_ascii_strcasecmp (_ggap_arg_log_python, "no"))
-            {
-                use_python_console = FALSE;
-            }
-            else
-            {
-                usage ();
-                return 1;
-            }
-        }
-    }
+        use_python_console = TRUE;
 #endif
 
     app = g_object_new (GAP_TYPE_APP,

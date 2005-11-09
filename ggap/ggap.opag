@@ -35,7 +35,7 @@ n  new-app      "Run new instance of application"
 l  log          "[=FILE] Show debug output or write it to FILE" optarg
 #endif
 #ifdef MOO_USE_PYTHON
-p  log-python   "[=NO|YES] Redirect output to python console"   optarg
+p  log-python   "Redirect output to python console"
 #endif
    version      "Display version information and exit"          return
 h  help         "Display this help text and exit"               return
@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
 {
     MooApp *app;
     int opt_remain;
-    G_GNUC_UNUSED gboolean use_python_console = TRUE;
+    G_GNUC_UNUSED gboolean use_python_console = FALSE;
 
     gtk_init (&argc, &argv);
 
@@ -108,24 +108,7 @@ int main (int argc, char *argv[])
 
 #ifdef MOO_USE_PYTHON
     if (_ggap_opt_log_python)
-    {
-        if (_ggap_arg_log_python)
-        {
-            if (!g_ascii_strcasecmp (_ggap_arg_log_python, "yes"))
-            {
-                use_python_console = TRUE;
-            }
-            else if (!g_ascii_strcasecmp (_ggap_arg_log_python, "no"))
-            {
-                use_python_console = FALSE;
-            }
-            else
-            {
-                usage ();
-                return 1;
-            }
-        }
-    }
+        use_python_console = TRUE;
 #endif
 
     app = g_object_new (GAP_TYPE_APP,
