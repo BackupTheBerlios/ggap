@@ -382,10 +382,11 @@ gap_term_key_press (GtkWidget      *widget,
                 s = CTRL_H;
                 break;
 
-            case GDK_Delete:
-            case GDK_KP_Delete:
-                s = CTRL_D;
-                break;
+//             case GDK_Delete:
+//             case GDK_KP_Delete:
+//                 "\033[3"
+//                 s = CTRL_D;
+//                 break;
         }
     }
     else if (state == GDK_CONTROL_MASK)
