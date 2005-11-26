@@ -51,7 +51,7 @@ static void gap_term_window_class_init (GapTermWindowClass *klass)
                                  "label", "Switch to Editor",
                                  "tooltip", "Switch to Editor",
                                  "icon-stock-id", GTK_STOCK_EDIT,
-                                 "closure::callback", switch_to_editor,
+                                 "closure-callback", switch_to_editor,
                                  NULL);
 
     moo_window_class_new_action (window_class, "OpenFile",
@@ -59,7 +59,7 @@ static void gap_term_window_class_init (GapTermWindowClass *klass)
                                  "label", "Open File",
                                  "tooltip", "Open File",
                                  "icon-stock-id", GTK_STOCK_OPEN,
-                                 "closure::callback", open_file,
+                                 "closure-callback", open_file,
                                  NULL);
 }
 

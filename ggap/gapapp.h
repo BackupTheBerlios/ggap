@@ -38,9 +38,7 @@ struct _GapApp
     MooTerm *term;
 
     char *gap_cmd_line;
-    char **open_files;
     gboolean editor_mode;
-    gboolean new_app;
     gboolean simple;
 };
 

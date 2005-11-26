@@ -58,7 +58,7 @@ static void gap_edit_window_class_init (GapEditWindowClass *klass)
                                  "label", "Send File",
                                  "tooltip", "Send File",
                                  "icon-stock-id", GTK_STOCK_GOTO_BOTTOM,
-                                 "closure::callback", gap_edit_window_send_file,
+                                 "closure-callback", gap_edit_window_send_file,
                                  NULL);
 }
 

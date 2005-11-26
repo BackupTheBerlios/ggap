@@ -60,8 +60,6 @@ enum {
     PROP_0,
     PROP_GAP_CMD_LINE,
     PROP_EDITOR_MODE,
-    PROP_OPEN_FILES,
-    PROP_NEW_APP,
     PROP_SIMPLE
 };
 
@@ -99,21 +97,6 @@ gap_app_class_init (GapAppClass *klass)
                                              G_PARAM_WRITABLE));
 
     g_object_class_install_property (gobject_class,
-                                     PROP_OPEN_FILES,
-                                     g_param_spec_pointer ("open-files",
-                                             "open-files",
-                                             "open-files",
-                                             G_PARAM_WRITABLE));
-
-    g_object_class_install_property (gobject_class,
-                                     PROP_NEW_APP,
-                                     g_param_spec_boolean ("new-app",
-                                             "new-app",
-                                             "new-app",
-                                             FALSE,
-                                             G_PARAM_WRITABLE));
-
-    g_object_class_install_property (gobject_class,
                                      PROP_SIMPLE,
                                      g_param_spec_boolean ("simple",
                                              "simple",
@@ -138,8 +121,8 @@ gap_app_class_init (GapAppClass *klass)
                                  "label", "_Restart",
                                  "tooltip", "Restart",
                                  "icon-stock-id", MOO_STOCK_RESTART,
-                                 "closure::callback", gap_app_restart_gap,
-                                 "closure::proxy-func", moo_app_get_instance,
+                                 "closure-callback", gap_app_restart_gap,
+                                 "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
     g_type_class_unref (edit_class);
@@ -180,22 +163,8 @@ gap_app_set_property (GObject    *object,
             app->editor_mode = g_value_get_boolean (value);
             break;
 
-        case PROP_NEW_APP:
-            app->new_app = g_value_get_boolean (value);
-            break;
-
         case PROP_SIMPLE:
             app->simple = g_value_get_boolean (value);
-            break;
-
-        case PROP_OPEN_FILES:
-            g_strfreev (app->open_files);
-            app->open_files = g_strdupv (g_value_get_pointer (value));
-            if (app->open_files && !*app->open_files)
-            {
-                g_strfreev (app->open_files);
-                app->open_files = NULL;
-            }
             break;
 
         default:
@@ -225,54 +194,10 @@ gap_app_init_real (MooApp *mapp)
 {
     MooUIXML *xml;
     MooEditor *editor;
-    GapApp *app = GAP_APP (mapp);
-
-    if (!app->new_app)
-    {
-        char **p;
-        GString *msg = g_string_new (NULL);
-
-        if (!app->open_files || !*(app->open_files))
-            g_string_append_len (msg, CMD_PRESENT, strlen (CMD_PRESENT) + 1);
-
-        for (p = app->open_files; p && *p; ++p)
-        {
-            char *freeme = NULL;
-            const char *basename, *filename;
-
-            basename = *p;
-
-            if (g_path_is_absolute (basename))
-            {
-                filename = basename;
-            }
-            else
-            {
-                char *dir = g_get_current_dir ();
-                freeme = g_build_filename (dir, basename, NULL);
-                filename = freeme;
-                g_free (dir);
-            }
-
-            g_string_append_len (msg, CMD_OPEN_FILE, strlen (CMD_OPEN_FILE));
-            g_string_append_len (msg, filename, strlen (filename) + 1);
-
-            g_free (freeme);
-        }
-
-        if (moo_app_send_msg (mapp, msg->str, msg->len))
-        {
-            g_string_free (msg, TRUE);
-            goto exit;
-        }
-
-        g_string_free (msg, TRUE);
-    }
 
     xml = moo_app_get_ui_xml (mapp);
     moo_ui_xml_add_ui_from_string (xml, GGAP_UI, -1);
 
-    app->new_app = TRUE;
     if (!MOO_APP_CLASS(gap_app_parent_class)->init (mapp))
         return FALSE;
 
@@ -280,10 +205,6 @@ gap_app_init_real (MooApp *mapp)
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
     moo_editor_set_default_lang (editor, "GAP");
 
-    return TRUE;
-
-exit:
-    app->new_app = FALSE;
     return TRUE;
 }
 
@@ -293,14 +214,9 @@ gap_app_run (MooApp     *mapp)
 {
     GapApp *app;
     MooEditor *editor;
-    MooEditWindow *edit_window;
     MooTermWindow *term_window;
-    char **file;
 
     app = GAP_APP (mapp);
-
-    if (!app->new_app)
-        return 0;
 
     if (!app->editor_mode)
     {
@@ -309,14 +225,11 @@ gap_app_run (MooApp     *mapp)
         gap_app_start_gap (app);
     }
 
-    if (app->open_files || app->editor_mode)
+    if (app->editor_mode)
     {
         editor = moo_app_get_editor (mapp);
-        edit_window = moo_editor_new_window (editor);
-
-        for (file = app->open_files; file && *file; ++file)
-            moo_editor_open_file (editor, edit_window, NULL,
-                                  *file, NULL);
+        if (!moo_editor_get_active_window (editor))
+            moo_editor_new_window (editor);
     }
 
     return MOO_APP_CLASS(gap_app_parent_class)->run (mapp);
