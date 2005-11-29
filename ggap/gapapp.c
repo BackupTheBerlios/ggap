@@ -113,7 +113,7 @@ gap_app_class_init (GapAppClass *klass)
 //                                  "tooltip", "Execute Selection",
 //                                  "icon-stock-id", GTK_STOCK_EXECUTE,
 //                                  "accel", "<shift><alt>Return",
-//                                  "closure::callback", execute_selection,
+//                                  "closure-callback", execute_selection,
 //                                  NULL);
 
     moo_window_class_new_action (term_class, "Restart",

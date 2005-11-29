@@ -36,13 +36,13 @@
   <kdevautoproject>
     <general>
       <activetarget>src/script/libscript.la</activetarget>
-      <useconfiguration>python</useconfiguration>
+      <useconfiguration>debug</useconfiguration>
     </general>
     <run>
       <mainprogram>ggap/ggap</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs></programargs>
+      <programargs/>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
       <envvars/>
@@ -53,20 +53,20 @@
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevpgf77options</f77compiler>
-        <cxxflags/>
+        <cxxflags></cxxflags>
         <envvars/>
-        <configargs>--enable-all-gcc-warnings=fatal --with-cflags=&quot;-O3 -g0&quot; --with-cxxflags=&quot;-O3 -g0&quot;</configargs>
-        <topsourcedir/>
-        <cppflags/>
-        <ldflags/>
-        <ccompilerbinary/>
-        <cxxcompilerbinary/>
-        <f77compilerbinary/>
-        <cflags/>
-        <f77flags/>
+        <configargs>--enable-all-gcc-warnings=fatal</configargs>
+        <topsourcedir></topsourcedir>
+        <cppflags></cppflags>
+        <ldflags></ldflags>
+        <ccompilerbinary></ccompilerbinary>
+        <cxxcompilerbinary></cxxcompilerbinary>
+        <f77compilerbinary></f77compilerbinary>
+        <cflags></cflags>
+        <f77flags></f77flags>
       </optimized>
       <debug>
-        <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal --without-python</configargs>
+        <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal</configargs>
         <builddir>build/debug</builddir>
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
@@ -78,13 +78,13 @@
           <envvar value="cpp-3.4" name="CPP" />
           <envvar value="g++-3.4" name="CXX" />
         </envvars>
-        <topsourcedir/>
-        <cppflags/>
-        <ldflags/>
+        <topsourcedir></topsourcedir>
+        <cppflags></cppflags>
+        <ldflags></ldflags>
         <ccompilerbinary>gcc-3.4</ccompilerbinary>
         <cxxcompilerbinary>g++-3.4</cxxcompilerbinary>
-        <f77compilerbinary/>
-        <f77flags/>
+        <f77compilerbinary></f77compilerbinary>
+        <f77flags></f77flags>
       </debug>
       <no-python>
         <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal --enable-developer-mode --without-python</configargs>
@@ -363,9 +363,9 @@
     <make>
       <envvars/>
       <abortonerror>true</abortonerror>
-      <numberofjobs>3</numberofjobs>
+      <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
-      <makebin>mmake</makebin>
+      <makebin></makebin>
       <prio>0</prio>
     </make>
   </kdevautoproject>
@@ -441,16 +441,16 @@
   </kdevdoctreeview>
   <kdevfilecreate>
     <filetypes>
-      <type icon="source" ext="g" create="template" name="GAP source" >
+      <type icon="source" ext="g" name="GAP source" create="template" >
         <descr>A new empty GAP source file</descr>
       </type>
-      <type icon="source_cpp" ext="cpp" create="template" name="C++ Source" >
+      <type icon="source_cpp" ext="cpp" name="C++ Source" create="template" >
         <descr>A new empty C++ file.</descr>
       </type>
-      <type icon="source_h" ext="h" create="template" name="C/C++ Header" >
+      <type icon="source_h" ext="h" name="C/C++ Header" create="template" >
         <descr>A new empty header file for C/C++.</descr>
       </type>
-      <type icon="source_c" ext="c" create="template" name="C Source" >
+      <type icon="source_c" ext="c" name="C Source" create="template" >
         <descr>A new empty C file.</descr>
       </type>
     </filetypes>
