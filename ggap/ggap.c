@@ -66,9 +66,6 @@ int _ggap_parse_options (const char *const program_name,
 #define STR_HELP_LOG "\
   -l, --log[=FILE]         Show debug output or write it to FILE\n"
 
-#define STR_HELP_LOG_PYTHON "\
-  -p, --log-python         Redirect output to python console\n"
-
 #define STR_HELP_VERSION "\
       --version            Display version information and exit\n"
 
@@ -81,7 +78,6 @@ int _ggap_parse_options (const char *const program_name,
   -n, --new-app            Run new instance of application\n\
       --simple             Simple mode\n\
   -l, --log[=FILE]         Show debug output or write it to FILE\n\
-  -p, --log-python         Redirect output to python console\n\
       --version            Display version information and exit\n\
   -h, --help               Display this help text and exit\n"
 
@@ -100,11 +96,6 @@ char _ggap_opt_simple;
 #ifdef __WIN32__
 /* Set to 1 if option --log (-l) has been specified.  */
 char _ggap_opt_log;
-#endif
-
-#ifdef MOO_USE_PYTHON
-/* Set to 1 if option --log-python (-p) has been specified.  */
-char _ggap_opt_log_python;
 #endif
 
 /* Set to 1 if option --version has been specified.  */
@@ -129,9 +120,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   static const char *const optstr__editor = "editor";
   static const char *const optstr__new_app = "new-app";
   static const char *const optstr__simple = "simple";
-#ifdef MOO_USE_PYTHON
-  static const char *const optstr__log_python = "log-python";
-#endif
   static const char *const optstr__version = "version";
   static const char *const optstr__help = "help";
   int i = 0;
@@ -141,9 +129,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   _ggap_opt_simple = 0;
 #ifdef __WIN32__
   _ggap_opt_log = 0;
-#endif
-#ifdef MOO_USE_PYTHON
-  _ggap_opt_log_python = 0;
 #endif
   _ggap_opt_version = 0;
   _ggap_opt_help = 0;
@@ -217,24 +202,8 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
 #ifdef __WIN32__
         if (strncmp (option + 1, "og", option_len - 1) == 0)
         {
-          if (option_len < 3)
-            goto error_long_opt_ambiguous;
           _ggap_arg_log = argument;
           _ggap_opt_log = 1;
-          break;
-        }
-#endif
-#ifdef MOO_USE_PYTHON
-        if (strncmp (option + 1, optstr__log_python + 1, option_len - 1) == 0)
-        {
-          if (option_len <= 3)
-            goto error_long_opt_ambiguous;
-          if (argument != 0)
-          {
-            option = optstr__log_python;
-            goto error_unexpec_arg_long;
-          }
-          _ggap_opt_log_python = 1;
           break;
         }
 #endif
@@ -277,9 +246,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
        default:
        error_unknown_long_opt:
         fprintf (stderr, STR_ERR_UNKNOWN_LONG_OPT, program_name, option);
-        return -1;
-       error_long_opt_ambiguous:
-        fprintf (stderr, STR_ERR_LONG_OPT_AMBIGUOUS, program_name, option);
         return -1;
        error_missing_arg_long:
         fprintf (stderr, STR_ERR_MISSING_ARG_LONG, program_name, option);
@@ -325,11 +291,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
          case 'n':
           _ggap_opt_new_app = 1;
           break;
-#ifdef MOO_USE_PYTHON
-         case 'p':
-          _ggap_opt_log_python = 1;
-          break;
-#endif
          default:
           fprintf (stderr, STR_ERR_UNKNOWN_SHORT_OPT, program_name, *option);
           return -1;
@@ -357,9 +318,6 @@ static void usage (void)
 #ifdef __WIN32__
     g_print ("%s", STR_HELP_LOG);
 #endif
-#ifdef MOO_USE_PYTHON
-    g_print ("%s", STR_HELP_LOG_PYTHON);
-#endif
     g_print ("%s", STR_HELP_VERSION);
     g_print ("%s", STR_HELP_HELP);
 }
@@ -374,7 +332,6 @@ int main (int argc, char *argv[])
 {
     MooApp *app;
     int opt_remain;
-    G_GNUC_UNUSED gboolean use_python_console = FALSE;
 
     gtk_init (&argc, &argv);
 
@@ -407,11 +364,6 @@ int main (int argc, char *argv[])
     }
 #endif
 
-#ifdef MOO_USE_PYTHON
-    if (_ggap_opt_log_python)
-        use_python_console = TRUE;
-#endif
-
     app = g_object_new (GAP_TYPE_APP,
                         "argv", argv,
                         "short-name", "ggap",
@@ -425,10 +377,6 @@ int main (int argc, char *argv[])
                         "open-files", argv + opt_remain,
                         "new-app", (gboolean) _ggap_opt_new_app,
                         "simple", (gboolean) _ggap_opt_simple,
-
-#ifdef MOO_USE_PYTHON
-                        "use-python-console", use_python_console,
-#endif
 
                         NULL);
 

@@ -34,9 +34,6 @@ n  new-app      "Run new instance of application"
 #ifdef __WIN32__
 l  log          "[=FILE] Show debug output or write it to FILE" optarg
 #endif
-#ifdef MOO_USE_PYTHON
-p  log-python   "Redirect output to python console"
-#endif
    version      "Display version information and exit"          return
 h  help         "Display this help text and exit"               return
 %%
@@ -56,9 +53,6 @@ static void usage (void)
 #ifdef __WIN32__
     g_print ("%s", STR_HELP_LOG);
 #endif
-#ifdef MOO_USE_PYTHON
-    g_print ("%s", STR_HELP_LOG_PYTHON);
-#endif
     g_print ("%s", STR_HELP_VERSION);
     g_print ("%s", STR_HELP_HELP);
 }
@@ -73,7 +67,6 @@ int main (int argc, char *argv[])
 {
     MooApp *app;
     int opt_remain;
-    G_GNUC_UNUSED gboolean use_python_console = FALSE;
 
     gtk_init (&argc, &argv);
 
@@ -106,11 +99,6 @@ int main (int argc, char *argv[])
     }
 #endif
 
-#ifdef MOO_USE_PYTHON
-    if (_ggap_opt_log_python)
-        use_python_console = TRUE;
-#endif
-
     app = g_object_new (GAP_TYPE_APP,
                         "argv", argv,
                         "short-name", "ggap",
@@ -124,10 +112,6 @@ int main (int argc, char *argv[])
                         "open-files", argv + opt_remain,
                         "new-app", (gboolean) _ggap_opt_new_app,
                         "simple", (gboolean) _ggap_opt_simple,
-
-#ifdef MOO_USE_PYTHON
-                        "use-python-console", use_python_console,
-#endif
 
                         NULL);
 

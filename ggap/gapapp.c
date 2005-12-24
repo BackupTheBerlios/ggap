@@ -379,8 +379,8 @@ gap_app_prefs_dialog (MooApp     *app)
     moo_prefs_dialog_append_page (dialog, gap_prefs_page_new ());
     moo_prefs_dialog_append_page (dialog, moo_term_prefs_page_new ());
 
-//     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
-    moo_prefs_dialog_append_page (dialog, moo_edit_colors_prefs_page_new (moo_app_get_editor (app)));
+    moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
+//     moo_prefs_dialog_append_page (dialog, moo_edit_colors_prefs_page_new (moo_app_get_editor (app)));
     _moo_plugin_attach_prefs (GTK_WIDGET (dialog));
 
     return GTK_WIDGET (dialog);

@@ -2,7 +2,7 @@
 # @(#)$Id: Makefile.am,v 1.69 2005/06/06 14:45:54 emuntyan Exp $
 #
 
-EXTRA_PROGRAMS = ggap termhelper
+EXTRA_PROGRAMS = ggap
 
 if !MOO_OS_CYGWIN
 bin_PROGRAMS = ggap
@@ -15,6 +15,7 @@ AM_CFLAGS =                     \
     -I$(top_srcdir)/ggap        \
     -I$(top_builddir)/ggap/moo  \
     -I$(top_srcdir)/ggap/moo    \
+    -I$(top_builddir)/ggap/moo/mooutils/pcre \
     $(PYTHON_INCLUDES)          \
     $(MOO_CFLAGS)               \
     $(PYGTK_CFLAGS)             \
@@ -88,13 +89,38 @@ ggap.c: ggap.opag
 # moo
 #
 
+noinst_PROGRAMS =
 moo_prefix = moo
+SUBDIRS =
+
+# common moo Makefile
 include moo/Makefile.incl
+# mooutils
 include moo/mooutils/Makefile.incl
+include moo/mooutils/glade/Makefile.incl
+include moo/mooutils/moofileview/Makefile.incl
+include moo/mooutils/newgtk/Makefile.incl
+include moo/mooutils/pcre/Makefile.incl
+include moo/mooutils/pixmaps/Makefile.incl
+include moo/mooutils/xdgmime/Makefile.incl
+# mooedit
 include moo/mooedit/Makefile.incl
+include moo/mooedit/glade/Makefile.incl
+include moo/mooedit/syntax/Makefile.incl
+include moo/mooedit/plugins/Makefile.incl
+include moo/mooedit/plugins/activestrings/Makefile.incl
+# mooterm
 include moo/mooterm/Makefile.incl
+include moo/mooterm/glade/Makefile.incl
+# mooapp
 include moo/mooapp/Makefile.incl
+include moo/mooapp/glade/Makefile.incl
+# moopython
 include moo/moopython/Makefile.incl
+include moo/moopython/codegen/Makefile.incl
+include moo/moopython/pygtk/Makefile.incl
+include moo/moopython/plugins/Makefile.incl
+
 
 CLEANFILES += $(moo_cleanfiles)
 
@@ -116,29 +142,3 @@ EXTRA_DIST +=                \
     $(moo_unix_sources)      \
     $(moo_built_sources)     \
     $(moo_extra_dist)
-
-
-###########################################################################
-# termhelper
-#
-
-if MOO_OS_CYGWIN
-noinst_PROGRAMS = termhelper
-endif
-
-termhelper_SOURCES =        \
-    $(termhelper_sources)   \
-    termhelper_res.res
-
-BUILT_SOURCES += termhelper_res.res
-nodist_termhelper_SOURCES = termhelper_res.res
-CLEANFILES += termhelper_res.res
-
-if MOO_OS_CYGWIN
-termhelper_res.res: moo/mooterm/termhelper_res.rc
-	$(WINDRES) -i moo/mooterm/termhelper_res.rc --input-format=rc -o termhelper_res.res -O coff
-termhelper_LDADD = ggap_res.res
-else
-termhelper_res.res: moo/mooterm/termhelper_res.rc
-	touch termhelper_res.res
-endif

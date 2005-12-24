@@ -73,23 +73,35 @@ MOO_AC_XDGMIME
 MOO_AC_PYGTK
 #  Different stuff needed for moo
 MOO_AC_FUNCS
+# pcre
+MOO_AC_PCRE
 
 
-if test x$MOO_OS_CYGWIN = xyes; then
-    AM_CONDITIONAL(MOO_BUILD_UTILS, false)
-    AM_CONDITIONAL(MOO_BUILD_EDIT,  false)
-    AM_CONDITIONAL(MOO_BUILD_APP,   false)
-else
-    AM_CONDITIONAL(MOO_BUILD_UTILS, true)
-    AM_CONDITIONAL(MOO_BUILD_EDIT,  true)
-    AM_CONDITIONAL(MOO_BUILD_APP,   true)
+AM_CONDITIONAL(MOO_BUILD_UTILS, test x$MOO_OS_CYGWIN != xyes)
+AM_CONDITIONAL(MOO_BUILD_EDIT, test x$MOO_OS_CYGWIN != xyes)
+AM_CONDITIONAL(MOO_BUILD_APP, test x$MOO_OS_CYGWIN != xyes)
+AM_CONDITIONAL(MOO_BUILD_TERM,  true)
+
+if test x$MOO_OS_CYGWIN != xyes; then
+    MOO_BUILD_UTILS=1
+    MOO_BUILD_EDIT=1
+    MOO_BUILD_APP=1
     AC_DEFINE(MOO_BUILD_UTILS, 1, [build mooutils])
     AC_DEFINE(MOO_BUILD_EDIT, 1, [build mooedit])
     AC_DEFINE(MOO_BUILD_APP, 1, [build mooapp])
+else
+    MOO_BUILD_UTILS=0
+    MOO_BUILD_EDIT=0
+    MOO_BUILD_APP=0
 fi
 
-AM_CONDITIONAL(MOO_BUILD_TERM,  true)
 AC_DEFINE(MOO_BUILD_TERM, 1, [build mooterm])
+MOO_BUILD_TERM=1
+
+AC_SUBST(MOO_BUILD_UTILS)
+AC_SUBST(MOO_BUILD_EDIT)
+AC_SUBST(MOO_BUILD_TERM)
+AC_SUBST(MOO_BUILD_APP)
 
 AM_CONDITIONAL(MOO_BUILD_PLUGINS,   false)
 AM_CONDITIONAL(MOO_STANDALONE,      false)
@@ -138,6 +150,7 @@ AC_DEFINE_UNQUOTED(MOO_TEXT_LANG_FILES_DIR, "${ggapprefix}/${ggaprootdir}/syntax
 #
 AC_OUTPUT([
 Makefile
+m4/Makefile
 pkg/PackageInfo.g
 pkg/init.g
 pkg/Makefile
@@ -146,6 +159,9 @@ ggap/ggap_res.rc
 wininstaller/Makefile
 ggap/moo/moo-config.h
 ggap/moo/mooterm/termhelper_res.rc
+ggap/moo/mooutils/pcre/pcre.h
+ggap/moo/moopython/pygtk/moo-mod.py
+ggap/moo/moo.pc
 ])
 
 

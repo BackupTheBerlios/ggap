@@ -53,17 +53,17 @@
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevpgf77options</f77compiler>
-        <cxxflags></cxxflags>
+        <cxxflags/>
         <envvars/>
         <configargs>--enable-all-gcc-warnings=fatal</configargs>
-        <topsourcedir></topsourcedir>
-        <cppflags></cppflags>
-        <ldflags></ldflags>
-        <ccompilerbinary></ccompilerbinary>
-        <cxxcompilerbinary></cxxcompilerbinary>
-        <f77compilerbinary></f77compilerbinary>
-        <cflags></cflags>
-        <f77flags></f77flags>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <ccompilerbinary>gcc-3.4</ccompilerbinary>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags/>
+        <f77flags/>
       </optimized>
       <debug>
         <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal</configargs>
@@ -73,16 +73,12 @@
         <f77compiler>kdevg77options</f77compiler>
         <cflags>-O0 -g3 -pg</cflags>
         <cxxflags>-O0 -g3 -pg</cxxflags>
-        <envvars>
-          <envvar value="gcc-3.4" name="CC" />
-          <envvar value="cpp-3.4" name="CPP" />
-          <envvar value="g++-3.4" name="CXX" />
-        </envvars>
+        <envvars/>
         <topsourcedir></topsourcedir>
         <cppflags></cppflags>
         <ldflags></ldflags>
-        <ccompilerbinary>gcc-3.4</ccompilerbinary>
-        <cxxcompilerbinary>g++-3.4</cxxcompilerbinary>
+        <ccompilerbinary></ccompilerbinary>
+        <cxxcompilerbinary></cxxcompilerbinary>
         <f77compilerbinary></f77compilerbinary>
         <f77flags></f77flags>
       </debug>
@@ -365,7 +361,7 @@
       <abortonerror>true</abortonerror>
       <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
-      <makebin></makebin>
+      <makebin/>
       <prio>0</prio>
     </make>
   </kdevautoproject>
