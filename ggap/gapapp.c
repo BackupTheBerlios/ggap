@@ -358,7 +358,7 @@ gap_prefs_page_new (void)
                                                GAP_PREFS_GLADE_UI,
                                                -1,
                                                "page",
-                                               "");
+                                               APP_PREFS_PREFIX);
 
     return page;
 }
