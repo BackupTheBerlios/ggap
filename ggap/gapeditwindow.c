@@ -25,6 +25,9 @@ static GHashTable *tmp_to_real;    /* char* -> MooEdit* */
 static GHashTable *real_to_tmp;    /* MooEdit* -> GSList* (char*) */
 
 
+#define TERM_WINDOW ((gpointer) moo_app_get_terminal (moo_app_get_instance ()))
+
+
 static void     gap_edit_window_class_init  (GapEditWindowClass *klass);
 static void     gap_edit_window_init        (GapEditWindow      *window);
 static void     gap_edit_window_destroy     (GtkObject          *object);
@@ -114,6 +117,7 @@ gap_edit_window_send_file (GapEditWindow *window)
 
         cmd = gap_read_file_string (filename);
         gap_app_feed_gap (GAP_APP_INSTANCE, cmd);
+        moo_window_present (TERM_WINDOW);
         g_free (cmd);
     }
     else
