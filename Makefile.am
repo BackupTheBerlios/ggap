@@ -2,7 +2,7 @@
 # @(#)$Id: Makefile.am,v 1.14 2005/06/06 14:45:53 emuntyan Exp $
 #
 
-DIST_SUBDIRS = pkg ggap wininstaller
+DIST_SUBDIRS = pkg ggap wininstaller m4
 SUBDIRS = pkg ggap
 
 ggap_docs =             \

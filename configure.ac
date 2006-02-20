@@ -1,5 +1,5 @@
 #
-# @(#)$Id: configure.ac,v 1.43 2005/06/06 14:53:37 emuntyan Exp $
+# ggap/configure.ac
 #
 
 m4_define([ggap_major_version], [0])
@@ -10,7 +10,6 @@ m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_vers
 m4_define([moo_major_version], [0])
 m4_define([moo_minor_version], [6])
 m4_define([moo_micro_version], [1])
-m4_define([moo_api_version], [1.0])
 m4_define([moo_version], [moo_major_version.moo_minor_version.moo_micro_version])
 
 AC_INIT(GGAP, [ggap_version], [muntyan@math.tamu.edu], ggap)
@@ -28,26 +27,7 @@ AC_SUBST(GGAP_VERSION)
 AC_SUBST(GGAP_VERSION_MAJOR)
 AC_SUBST(GGAP_VERSION_MINOR)
 AC_SUBST(GGAP_VERSION_MICRO)
-
-
-MOO_VERSION=\"moo_version\"
-MOO_VERSION_UNQUOTED=moo_version
-MOO_API_VERSION=moo_api_version
-MOO_VERSION_MAJOR=moo_major_version
-MOO_VERSION_MINOR=moo_minor_version
-MOO_VERSION_MICRO=moo_micro_version
-AC_SUBST(MOO_VERSION)
-AC_SUBST(MOO_VERSION_UNQUOTED)
-AC_SUBST(MOO_API_VERSION)
-AC_SUBST(MOO_VERSION_MAJOR)
-AC_SUBST(MOO_VERSION_MINOR)
-AC_SUBST(MOO_VERSION_MICRO)
-AC_DEFINE(MOO_VERSION, ["moo_version"], "libmoo version")
-AC_DEFINE(MOO_API_VERSION, ["moo_api_version"], "libmoo api version")
-AC_DEFINE(MOO_VERSION_MAJOR, [moo_major_version], "libmoo major version")
-AC_DEFINE(MOO_VERSION_MINOR, [moo_minor_version], "libmoo minor version")
-AC_DEFINE(MOO_VERSION_MICRO, [moo_micro_version], "libmoo micro version")
-
+MOO_DEFINE_VERSIONS
 
 AC_PROG_CC
 AC_PROG_CC_STDC
@@ -157,7 +137,6 @@ pkg/Makefile
 ggap/Makefile
 ggap/ggap_res.rc
 wininstaller/Makefile
-ggap/moo/moo-config.h
 ggap/moo/mooterm/termhelper_res.rc
 ggap/moo/mooutils/pcre/pcre.h
 ggap/moo/moopython/pygtk/moo-mod.py
