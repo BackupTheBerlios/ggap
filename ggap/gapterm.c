@@ -157,7 +157,7 @@ do_analyze (GapTerm *term)
     {
         MooTermLine *line;
         char *text;
-        guint len;
+        guint width;
         int j, k;
         GString *message;
 
@@ -177,13 +177,13 @@ do_analyze (GapTerm *term)
 
         g_free (text);
         j = i;
+        moo_term_get_screen_size (MOO_TERM (term), &width, NULL);
 
         while (j < cursor_row)
         {
             line = moo_term_get_line (moo_term, j);
-            len = moo_term_line_len (line);
-            if (moo_term_line_get_char (line, len - 1) == ' ' &&
-                moo_term_line_get_char (line, len - 2) == '\\')
+            if (moo_term_line_get_char (line, width - 1) == ' ' &&
+                moo_term_line_get_char (line, width - 2) == '\\')
             {
                 ++j;
             }
@@ -204,16 +204,15 @@ do_analyze (GapTerm *term)
         for (k = i; k < j; ++k)
         {
             line = moo_term_get_line (moo_term, k);
-            len = moo_term_line_len (line);
-            text = moo_term_line_get_text (line, 0, len - 2);
+            text = moo_term_line_get_text (line, 0, width - 2);
             g_string_append (message, text);
             g_free (text);
         }
 
         line = moo_term_get_line (moo_term, j);
-        len = moo_term_line_len (line);
-        for (k = len - 2; k >= 0 && moo_term_line_get_char (line, k) == ' '; --k) ;
+        for (k = width - 2; k >= 0 && moo_term_line_get_char (line, k) == ' '; --k) ;
         text = moo_term_line_get_text (line, 0, k + 1);
+        g_print ("'%s'\n", text);
         g_string_append (message, text);
         g_free (text);
 
@@ -222,45 +221,39 @@ do_analyze (GapTerm *term)
         if (egg_regex_match (term->priv->error_regex, message->str, message->len, 0) > 0)
         {
             char *file_string, *info_string, *line_string;
+            long line_no;
 
             info_string = egg_regex_fetch (term->priv->error_regex, message->str, 1);
             file_string = egg_regex_fetch (term->priv->error_regex, message->str, 2);
             line_string = egg_regex_fetch (term->priv->error_regex, message->str, 3);
 
-            if (!file_string || !info_string || !line_string)
+            g_assert (info_string && file_string && line_string);
+
+            errno = 0;
+            line_no = strtol (line_string, NULL, 10);
+
+            if (errno)
             {
-                g_critical ("%s: oops", G_STRLOC);
+                perror ("strtol");
+                g_critical ("%s: could not convert '%s' to number",
+                            G_STRLOC, line_string);
+            }
+            else if (line_no < 1 || line_no > G_MAXINT)
+            {
+                g_critical ("%s: invalid line number '%s'", G_STRLOC, line_string);
             }
             else
             {
-                long line_no;
+                moo_term_get_iter_at_line (moo_term, &start, i);
+                moo_term_get_iter_at_line_offset (moo_term, &end, j, k + 1);
+                moo_term_apply_tag (moo_term, term->priv->error_tag, &start, &end);
 
-                errno = 0;
-                line_no = strtol (line_string, NULL, 10);
-
-                if (errno)
+                for (k = i; k <= j; ++k)
                 {
-                    perror ("strtol");
-                    g_critical ("%s: could not convert '%s' to number",
-                                G_STRLOC, line_string);
-                }
-                else if (line_no < 1 || line_no > G_MAXINT)
-                {
-                    g_critical ("%s: invalid line number '%s'", G_STRLOC, line_string);
-                }
-                else
-                {
-                    moo_term_get_iter_at_line (moo_term, &start, i);
-                    moo_term_get_iter_at_line_offset (moo_term, &end, j, k + 1);
-                    moo_term_apply_tag (moo_term, term->priv->error_tag, &start, &end);
-
-                    for (k = i; k <= j; ++k)
-                    {
-                        line = moo_term_get_line (moo_term, k);
-                        moo_term_set_line_data_full (moo_term, line, "gap-syntax-error",
-                                                     err_info_new (file_string, info_string, line_no - 1),
-                                                     (GDestroyNotify) err_info_free);
-                    }
+                    line = moo_term_get_line (moo_term, k);
+                    moo_term_set_line_data_full (moo_term, line, "gap-syntax-error",
+                                                 err_info_new (file_string, info_string, line_no - 1),
+                                                 (GDestroyNotify) err_info_free);
                 }
             }
 
