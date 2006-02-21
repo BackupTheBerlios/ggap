@@ -174,11 +174,8 @@ gap_app_set_property (GObject    *object,
 
 
 static void
-gap_app_init (GapApp *app)
+gap_app_init (G_GNUC_UNUSED GapApp *app)
 {
-    moo_app_set_terminal_type (MOO_APP (app), GAP_TYPE_TERM_WINDOW);
-    app->term = NULL;
-
 #ifdef __WIN32__
     moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, NULL);
 #else
@@ -209,19 +206,50 @@ gap_app_init_real (MooApp *mapp)
 }
 
 
+static gboolean
+term_window_close (GapApp         *app,
+                   G_GNUC_UNUSED GdkEventAny *event,
+                   MooTermWindow  *window)
+{
+    g_return_val_if_fail (GAP_IS_APP (app), FALSE);
+    g_return_val_if_fail (MOO_IS_TERM_WINDOW (window), FALSE);
+
+    if (app->term_window != window)
+        return FALSE;
+
+    return !moo_app_quit (MOO_APP (app));
+}
+
+
+static void
+gap_app_ensure_terminal (GapApp *app)
+{
+    g_return_if_fail (GAP_IS_APP (app));
+
+    if (!app->term)
+    {
+        app->term_window = g_object_new (GAP_TYPE_TERM_WINDOW, "ui-xml",
+                                         moo_app_get_ui_xml (MOO_APP (app)),
+                                         NULL);
+        gtk_widget_show (GTK_WIDGET (app->term_window));
+        app->term = moo_term_window_get_term (app->term_window);
+        g_signal_connect_swapped (app->term_window, "delete-event",
+                                  G_CALLBACK (term_window_close), app);
+    }
+}
+
+
 static int
 gap_app_run (MooApp     *mapp)
 {
     GapApp *app;
     MooEditor *editor;
-    MooTermWindow *term_window;
 
     app = GAP_APP (mapp);
 
     if (!app->editor_mode)
     {
-        term_window = moo_app_get_terminal (mapp);
-        app->term = moo_term_window_get_term (term_window);
+        gap_app_ensure_terminal (app);
         gap_app_start_gap (app);
     }
 
@@ -279,11 +307,7 @@ gap_app_start_gap (GapApp *app)
     g_return_if_fail (GAP_IS_APP (app));
     g_return_if_fail (!moo_term_child_alive (app->term));
 
-    if (!app->term)
-    {
-        MooTermWindow *window = moo_app_get_terminal (MOO_APP (app));
-        app->term = moo_term_window_get_term (window);
-    }
+    gap_app_ensure_terminal (app);
 
     cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
     g_return_if_fail (cmd_base && cmd_base[0]);
@@ -343,7 +367,8 @@ gap_app_feed_gap (GapApp     *app,
                   const char *text)
 {
     g_return_if_fail (GAP_IS_APP (app) && text != NULL);
-    g_return_if_fail (app->term != NULL && moo_term_child_alive (app->term));
+    gap_app_ensure_terminal (app);
+    g_return_if_fail (moo_term_child_alive (app->term));
     moo_term_feed_child (app->term, text, -1);
 }
 

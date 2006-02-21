@@ -14,6 +14,7 @@
 #include "gapeditwindow.h"
 #include "gapapp.h"
 #include "gap.h"
+#include "mooutils/mooutils-misc.h"
 #include <gtk/gtkstock.h>
 
 
@@ -23,9 +24,6 @@ struct _GapEditWindowPrivate {
 
 static GHashTable *tmp_to_real;    /* char* -> MooEdit* */
 static GHashTable *real_to_tmp;    /* MooEdit* -> GSList* (char*) */
-
-
-#define TERM_WINDOW ((gpointer) moo_app_get_terminal (moo_app_get_instance ()))
 
 
 static void     gap_edit_window_class_init  (GapEditWindowClass *klass);
@@ -117,7 +115,7 @@ gap_edit_window_send_file (GapEditWindow *window)
 
         cmd = gap_read_file_string (filename);
         gap_app_feed_gap (GAP_APP_INSTANCE, cmd);
-        moo_window_present (TERM_WINDOW);
+        moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window));
         g_free (cmd);
     }
     else

@@ -35,7 +35,9 @@ typedef struct _GapAppClass         GapAppClass;
 struct _GapApp
 {
     MooApp base;
+
     MooTerm *term;
+    MooTermWindow *term_window;
 
     char *gap_cmd_line;
     gboolean editor_mode;
