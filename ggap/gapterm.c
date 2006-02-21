@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <gdk/gdkkeysyms.h>
 
+#define ERROR_TAG "gap-syntax-error"
 
 struct _GapTermPrivate {
     guint analyze_idle_id;
@@ -99,7 +100,7 @@ gap_term_constructor (GType               type,
     object = G_OBJECT_CLASS(gap_term_parent_class)->constructor (type, n_props, props);
     term = GAP_TERM (object);
 
-    term->priv->error_tag = moo_term_create_tag (MOO_TERM (term), "gap-syntax-error");
+    term->priv->error_tag = moo_term_create_tag (MOO_TERM (term), ERROR_TAG);
 
     attr.mask = MOO_TERM_TEXT_UNDERLINE | MOO_TERM_TEXT_FOREGROUND;
     attr.foreground = MOO_TERM_RED;
@@ -212,7 +213,6 @@ do_analyze (GapTerm *term)
         line = moo_term_get_line (moo_term, j);
         for (k = width - 2; k >= 0 && moo_term_line_get_char (line, k) == ' '; --k) ;
         text = moo_term_line_get_text (line, 0, k + 1);
-        g_print ("'%s'\n", text);
         g_string_append (message, text);
         g_free (text);
 
@@ -248,13 +248,16 @@ do_analyze (GapTerm *term)
                 moo_term_get_iter_at_line_offset (moo_term, &end, j, k + 1);
                 moo_term_apply_tag (moo_term, term->priv->error_tag, &start, &end);
 
-                for (k = i; k <= j; ++k)
-                {
-                    line = moo_term_get_line (moo_term, k);
-                    moo_term_set_line_data_full (moo_term, line, "gap-syntax-error",
-                                                 err_info_new (file_string, info_string, line_no - 1),
-                                                 (GDestroyNotify) err_info_free);
-                }
+                if (strcmp (file_string, "*errin*"))
+	        {
+                    for (k = i; k <= j; ++k)
+                    {
+                        line = moo_term_get_line (moo_term, k);
+                        moo_term_set_line_data_full (moo_term, line, ERROR_TAG,
+                                                     err_info_new (file_string, info_string, line_no - 1),
+                                                     (GDestroyNotify) err_info_free);
+                    }
+	        }
             }
 
             g_free (file_string);
@@ -314,11 +317,13 @@ gap_term_button_press (GtkWidget      *widget,
 
     if (moo_term_iter_has_tag (&iter, term->priv->error_tag))
     {
-        ErrInfo *err = moo_term_get_line_data (MOO_TERM (term), iter.line,
-                                               "gap-syntax-error");
-        g_return_val_if_fail (err != NULL, FALSE);
-        gap_edit_window_open_file (err->file, err->line, widget);
-        return TRUE;
+        ErrInfo *err = moo_term_get_line_data (MOO_TERM (term), iter.line, ERROR_TAG);
+
+        if (err)
+        {
+            gap_edit_window_open_file (err->file, err->line, widget);
+            return TRUE;
+        }
     }
 
 call_parent:
