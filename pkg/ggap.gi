@@ -22,16 +22,28 @@ function(out_pipe, in_pipe)
   if GGAP_PARAMS.init then
     Error("GGAP package is already initialized");
   fi;
+
   if not IsString(out_pipe) then
     Error("argument is not a string");
   fi;
   if not IsString(in_pipe) then
     Error("argument is not a string");
   fi;
+
   GGAP_PARAMS.out_pipe_name := out_pipe;
   GGAP_PARAMS.in_pipe_name := in_pipe;
-  GGAP_PARAMS.out_pipe := OutputTextFile(out_pipe, true);
-  GGAP_PARAMS.in_pipe := InputTextFile(in_pipe);
+
+  if in_pipe <> "" then
+    GGAP_PARAMS.in_pipe := InputTextFile(in_pipe);
+  else
+    GGAP_PARAMS.in_pipe := fail;
+  fi;
+  if out_pipe <> "" then
+    GGAP_PARAMS.out_pipe := OutputTextFile(out_pipe, true);
+  else
+    GGAP_PARAMS.out_pipe := fail;
+  fi;
+
   GGAP_PARAMS.init := true;
 end;
 

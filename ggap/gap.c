@@ -33,10 +33,10 @@ ggap_pkg_init_string (void)
 
     in_name = moo_app_get_input_pipe_name (moo_app_get_instance ());
     out_name = moo_app_get_output_pipe_name (moo_app_get_instance ());
-    g_return_val_if_fail (in_name != NULL && out_name != NULL, NULL);
 
-    in_escaped = gap_escape_filename (in_name);
-    out_escaped = gap_escape_filename (out_name);
+    /* XXX */
+    in_escaped = gap_escape_filename (in_name ? in_name : "");
+    out_escaped = gap_escape_filename (out_name ? out_name : "");
     init_string = g_strdup_printf ("GGAP_API.INIT(\"%s\", \"%s\");\n",
                                    in_escaped, out_escaped);
 
