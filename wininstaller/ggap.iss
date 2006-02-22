@@ -1,6 +1,6 @@
 [Setup]
 AppName=GGAP
-AppVerName=GGAP 0.5.2
+AppVerName=GGAP 0.6.1
 AppPublisher=Yevgen Muntyan
 AppPublisherURL=http://ggap.sourceforge.net/
 AppSupportURL=http://ggap.sourceforge.net/
@@ -18,7 +18,6 @@ Name: quicklaunchicon; Description: {cm:CreateQuickLaunchIcon}; GroupDescription
 
 [Files]
 Source: C:\ggap\ggap.exe; DestDir: {app}; Flags: ignoreversion
-Source: C:\ggap\cygwin1.dll; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\termhelper.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\pkg\*; DestDir: {app}\pkg; Flags: ignoreversion recursesubdirs
 Source: C:\ggap\syntax\*; DestDir: {app}\syntax; Flags: ignoreversion recursesubdirs

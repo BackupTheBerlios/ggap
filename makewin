@@ -15,15 +15,8 @@ fi
 config=`basename $ggap_builddir`
 installdir=$dir/$config-root
 
-if [ x$1 = x"--no-cygwin" -o x$2 = x"--no-cygwin" ]; then
-    copy_cygwin="no"
-    iss=$issdir/ggap-nocygwin.iss
-    installer=ggapsetup`echo $config | sed s/mingw//`-nocygwin.exe
-else
-    copy_cygwin="yes"
-    iss=$issdir/ggap.iss
-    installer=ggapsetup`echo $config | sed s/mingw//`.exe
-fi
+iss=$issdir/ggap.iss
+installer=ggapsetup`echo $config | sed s/mingw//`.exe
 
 do_cmd () {
     echo "*** " $*
@@ -47,9 +40,6 @@ build () {
     do_cmd make && \
     do_cmd i686-pc-cygwin-strip $termhelper && \
     do_cmd cp $termhelper $ggap_windir
-    if [ $copy_cygwin = "yes" ]; then
-        do_cmd cp $builddir/cygwin1.dll $ggap_windir
-    fi
     echo "*** " wine /usr/local/win/InnoSetup5/ISCC.exe $iss && \
     wine /usr/local/win/InnoSetup5/ISCC.exe $iss && \
     do_cmd mv $builddir/../wininstaller/Output/setup.exe $dir/$installer

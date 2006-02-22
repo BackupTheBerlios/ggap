@@ -23,6 +23,12 @@ char    *ggap_pkg_init_string   (void);
 char    *gap_read_file_string   (const char *filename);
 char    *gap_reread_file_string (const char *filename);
 
+#ifdef __WIN32__
+gboolean gap_parse_cmd_line     (const char *command_line,
+                                 char      **bin_dir,
+                                 char      **root_dir);
+#endif
+
 
 G_END_DECLS
 

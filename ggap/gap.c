@@ -75,3 +75,60 @@ gap_reread_file_string (const char *filename)
 {
     return gap_file_func_string (filename, "Reread");
 }
+
+
+#ifdef __WIN32__
+gboolean
+gap_parse_cmd_line (const char *command_line,
+                    char      **bin_dir_p,
+                    char      **root_dir_p)
+{
+    char *bin_dir = NULL, *root_dir = NULL, *exe = NULL;
+
+    g_return_val_if_fail (command_line && *command_line, FALSE);
+
+    if (*command_line == '"')
+    {
+        char *second = strchr (command_line + 1, '"');
+
+        if (!second || second == command_line + 1)
+            return FALSE;
+
+        exe = g_strndup (command_line, second - command_line - 1);
+    }
+    else
+    {
+        char **comps = g_strsplit_set (command_line, " \t", 2);
+
+        if (!comps)
+            return FALSE;
+
+        exe = g_strdup (comps[0]);
+
+        g_strfreev (comps);
+    }
+
+    if (!g_path_is_absolute (exe))
+    {
+        g_free (exe);
+        return FALSE;
+    }
+
+    bin_dir = g_path_get_dirname (exe);
+    root_dir = g_path_get_dirname (bin_dir);
+
+    if (bin_dir_p)
+        *bin_dir_p = bin_dir;
+    else
+        g_free (bin_dir);
+
+    if (root_dir_p)
+        *root_dir_p = root_dir;
+    else
+        g_free (root_dir);
+
+    g_free (exe);
+
+    return TRUE;
+}
+#endif

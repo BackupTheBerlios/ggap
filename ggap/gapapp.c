@@ -177,7 +177,7 @@ static void
 gap_app_init (G_GNUC_UNUSED GapApp *app)
 {
 #ifdef __WIN32__
-    moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, NULL);
+    moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, "c:\\gap4r4\\bin\\gapw95.exe -l c:\\gap4r4");
 #else
     moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, "gap");
 #endif
@@ -305,12 +305,49 @@ gap_app_start_gap (GapApp *app)
     gboolean result, init_pkg;
 
     g_return_if_fail (GAP_IS_APP (app));
-    g_return_if_fail (!moo_term_child_alive (app->term));
 
     gap_app_ensure_terminal (app);
+    g_return_if_fail (!moo_term_child_alive (app->term));
 
     cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
     g_return_if_fail (cmd_base && cmd_base[0]);
+
+#ifdef __WIN32__
+    {
+        static char *saved_bin_dir;
+        static const char *saved_path;
+        char *bin_dir;
+
+        if (gap_parse_cmd_line (cmd_base, &bin_dir, NULL))
+        {
+            if (!saved_bin_dir || strcmp (saved_bin_dir, bin_dir))
+            {
+                char *path;
+
+                if (!saved_path)
+                    saved_path = g_getenv ("PATH");
+
+                if (saved_path)
+                    path = g_strdup_printf ("%s;%s", bin_dir, saved_path);
+                else
+                    path = g_strdup (bin_dir);
+
+                g_setenv ("PATH", path, TRUE);
+                g_free (path);
+
+                saved_bin_dir = bin_dir;
+                bin_dir = NULL;
+            }
+
+            g_free (bin_dir);
+        }
+        else
+        {
+            g_warning ("%s: could not parse command line `%s`",
+                       G_STRLOC, cmd_base);
+        }
+    }
+#endif
 
     cmd = g_string_new (cmd_base);
 
@@ -330,18 +367,15 @@ gap_app_start_gap (GapApp *app)
                                          moo_prefs_get_filename (APP_PREFS_GAP_WORKING_DIR),
                                          NULL, NULL);
 
-    if (result)
-    {
-        if (init_pkg)
-        {
-            char *init_string = ggap_pkg_init_string ();
-            gap_app_feed_gap (app, init_string);
-            g_free (init_string);
-        }
-    }
-    else
+    if (!result)
     {
         g_critical ("%s: could not start gap", G_STRLOC);
+    }
+    else if (init_pkg)
+    {
+        char *init_string = ggap_pkg_init_string ();
+        gap_app_feed_gap (app, init_string);
+        g_free (init_string);
     }
 
     g_string_free (cmd, TRUE);
