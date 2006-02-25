@@ -15,3 +15,6 @@ depcomp
 install-sh
 ltmain\.sh
 missing
+.*~
+.*pcs
+.*kdevses

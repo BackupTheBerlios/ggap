@@ -13,6 +13,7 @@
 
 #include "gap.h"
 #include "gapapp.h"
+#include <string.h>
 
 
 static char *

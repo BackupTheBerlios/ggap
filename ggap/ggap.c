@@ -17,6 +17,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mooutils/mooutils-misc.h>
 
 
 int _ggap_parse_options (const char *const program_name,
