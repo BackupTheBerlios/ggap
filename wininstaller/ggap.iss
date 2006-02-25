@@ -1,6 +1,6 @@
 [Setup]
 AppName=GGAP
-AppVerName=GGAP 0.6.1
+AppVerName=GGAP 0.6.2
 AppPublisher=Yevgen Muntyan
 AppPublisherURL=http://ggap.sourceforge.net/
 AppSupportURL=http://ggap.sourceforge.net/
