@@ -18,6 +18,7 @@
 #include "gapeditwindow.h"
 #include "gap.h"
 #include "gapprefs-glade.h"
+#include "usermenu.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
 #include <mooterm/mooterm-prefs.h>
@@ -197,6 +198,8 @@ gap_app_init_real (MooApp *mapp)
 
     if (!MOO_APP_CLASS(gap_app_parent_class)->init (mapp))
         return FALSE;
+
+    user_menu_init ();
 
     editor = moo_app_get_editor (mapp);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
@@ -437,9 +440,8 @@ gap_app_prefs_dialog (MooApp     *app)
 
     moo_prefs_dialog_append_page (dialog, gap_prefs_page_new ());
     moo_prefs_dialog_append_page (dialog, moo_term_prefs_page_new ());
-
     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
-//     moo_prefs_dialog_append_page (dialog, moo_edit_colors_prefs_page_new (moo_app_get_editor (app)));
+    moo_prefs_dialog_append_page (dialog, user_menu_prefs_page_new ());
     _moo_plugin_attach_prefs (GTK_WIDGET (dialog));
 
     return GTK_WIDGET (dialog);

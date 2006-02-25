@@ -67,6 +67,8 @@
 
     <item name="Tools" label="_Tools">
       <separator/>
+      <placeholder name="UserMenu"/>
+      <separator/>
       <placeholder name="ToolsMenu"/>
       <separator/>
       <item action="StopJob"/>
@@ -155,6 +157,12 @@
       <separator/>
     </item>
 
+    <item name="Tools" label="_Tools">
+      <separator/>
+      <placeholder name="UserMenu"/>
+      <separator/>
+    </item>
+
     <item name="Settings" label="_Settings">
       <separator/>
       <item action="ShowToolbar"/>
@@ -188,4 +196,3 @@
 </object> <!-- Terminal -->
 
 </ui>
-

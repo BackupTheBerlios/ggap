@@ -49,7 +49,9 @@ ggap_SOURCES =      \
     gapterm.h       \
     gaptermwindow.c \
     gaptermwindow.h \
-    gapprefs-glade.h
+    gapprefs-glade.h\
+    usermenu.c      \
+    usermenu.h
 
 nodist_ggap_SOURCES = ggap_res.res
 CLEANFILES = ggap_res.res
