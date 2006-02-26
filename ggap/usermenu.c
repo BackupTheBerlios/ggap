@@ -451,14 +451,13 @@ user_menu_prefs_page_new (void)
 
     column = gtk_tree_view_column_new ();
     gtk_tree_view_append_column (treeview, column);
-    cell = gtk_cell_renderer_pixbuf_new ();
-    gtk_tree_view_column_pack_start (column, cell, FALSE);
-    gtk_tree_view_column_set_cell_data_func (column, cell,
-                                             (GtkTreeCellDataFunc) icon_data_func,
-                                             NULL, NULL);
 
-    column = gtk_tree_view_column_new ();
-    gtk_tree_view_append_column (treeview, column);
+//     cell = gtk_cell_renderer_pixbuf_new ();
+//     gtk_tree_view_column_pack_start (column, cell, FALSE);
+//     gtk_tree_view_column_set_cell_data_func (column, cell,
+//                                              (GtkTreeCellDataFunc) icon_data_func,
+//                                              NULL, NULL);
+
     cell = gtk_cell_renderer_text_new ();
     gtk_tree_view_column_pack_start (column, cell, TRUE);
     gtk_tree_view_column_set_cell_data_func (column, cell,
@@ -557,7 +556,7 @@ prefs_page_init (GtkTreeModel *model)
     gtk_tree_store_append (store, &iter, NULL);
     gtk_tree_store_set (store, &iter,
                         COLUMN_LABEL, "Terminal",
-                        COLUMN_ICON, MOO_STOCK_GAP,
+//                         COLUMN_ICON, MOO_STOCK_GAP,
                         -1);
     load_items ("Terminal", (LoadItemsFunc) insert_item,
                 model, &iter);
@@ -565,7 +564,7 @@ prefs_page_init (GtkTreeModel *model)
     gtk_tree_store_append (store, &iter, NULL);
     gtk_tree_store_set (store, &iter,
                         COLUMN_LABEL, "Editor",
-                        COLUMN_ICON, GTK_STOCK_EDIT,
+//                         COLUMN_ICON, GTK_STOCK_EDIT,
                         -1);
     load_items ("Editor", (LoadItemsFunc) insert_item,
                 model, &iter);
