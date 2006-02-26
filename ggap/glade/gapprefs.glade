@@ -137,7 +137,7 @@
 			      <property name="text" translatable="yes"></property>
 			      <property name="has_frame">True</property>
 			      <property name="invisible_char">*</property>
-			      <property name="activates_default">False</property>
+			      <property name="activates_default">True</property>
 			      <signal name="moo_prefs_key" handler="command" last_modification_time="Tue, 31 Jan 2006 15:23:00 GMT"/>
 			    </widget>
 			    <packing>
@@ -159,7 +159,7 @@
 			      <property name="text" translatable="yes"></property>
 			      <property name="has_frame">True</property>
 			      <property name="invisible_char">*</property>
-			      <property name="activates_default">False</property>
+			      <property name="activates_default">True</property>
 			      <signal name="moo_prefs_key" handler="working_dir" last_modification_time="Tue, 31 Jan 2006 15:27:48 GMT"/>
 			    </widget>
 			    <packing>

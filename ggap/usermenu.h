@@ -18,6 +18,7 @@
 
 
 void         user_menu_init             (void);
+void         user_menu_update           (void);
 GtkWidget   *user_menu_prefs_page_new   (void);
 
 

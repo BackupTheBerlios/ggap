@@ -22,17 +22,16 @@
 #include <string.h>
 
 
+#define MENU_XML        "UserMenu"
 #define MENU_XML_ROOT   "UserMenu/%s"
 #define MENU_ITEM       "item"
 #define PROP_LABEL      "label"
 #define PROP_ICON       "icon"
-#define PROP_NAME       "name"
 #define PROP_HIDDEN     "hidden"
 
 
 typedef struct {
     char *label;
-    char *name;
     char *icon;
     char *script;
     char *action_id;
@@ -65,7 +64,6 @@ static Menu* menus[2];
 
 
 typedef void (*LoadItemsFunc) (const char *label,
-                               const char *name,
                                const char *icon,
                                const char *script,
                                gboolean    visible,
@@ -74,7 +72,6 @@ typedef void (*LoadItemsFunc) (const char *label,
 
 
 static MenuItem *menu_item_new          (const char *label,
-                                         const char *name,
                                          const char *icon,
                                          const char *script,
                                          gboolean    visible);
@@ -142,7 +139,6 @@ user_action_activate (MooAction *moo_action)
 
 static MenuItem *
 menu_item_new (const char *label,
-               const char *name,
                const char *icon,
                const char *script,
                gboolean    visible)
@@ -153,7 +149,6 @@ menu_item_new (const char *label,
 
     item = g_new0 (MenuItem, 1);
     item->label = g_strdup (label);
-    item->name = g_strdup (name);
     item->icon = g_strdup (icon);
     item->script = g_strdup (script);
     item->visible = visible != 0;
@@ -168,7 +163,6 @@ menu_item_free (MenuItem *item)
     if (item)
     {
         g_free (item->label);
-        g_free (item->name);
         g_free (item->icon);
         g_free (item->script);
         g_free (item->action_id);
@@ -230,7 +224,7 @@ load_items (const char   *name,
 
     for (node = root->children; node != NULL; node = node->next)
     {
-        const char *label, *icon, *script, *name;
+        const char *label, *icon, *script;
         gboolean hidden;
 
         if (!MOO_MARKUP_IS_ELEMENT (node))
@@ -243,21 +237,20 @@ load_items (const char   *name,
         }
 
         label = moo_markup_get_prop (node, PROP_LABEL);
-        name = moo_markup_get_prop (node, PROP_NAME);
         icon = moo_markup_get_prop (node, PROP_ICON);
         hidden = moo_markup_get_bool_prop (node, PROP_HIDDEN, FALSE);
         script = moo_markup_get_content (node);
 
-        if (!label && !name)
+        if (!label)
         {
-            g_warning ("%s: label and name missing", G_STRLOC);
+            g_warning ("%s: label missing", G_STRLOC);
             continue;
         }
 
         if (!script || !script[0])
             script = NULL;
 
-        func (label, name, icon, script, !hidden, data1, data2);
+        func (label, icon, script, !hidden, data1, data2);
     }
 }
 
@@ -290,13 +283,12 @@ menu_purge (Menu           *menu,
 
 static void
 create_menu_item (const char *label,
-                  const char *name,
                   const char *icon,
                   const char *script,
                   gboolean    visible,
                   Menu       *menu)
 {
-    MenuItem *item = menu_item_new (label, name, icon, script, visible);
+    MenuItem *item = menu_item_new (label, icon, script, visible);
     menu_add_item (menu, item);
 }
 
@@ -309,7 +301,6 @@ create_action (MooWindow *window,
 
     action = g_object_new (user_action_get_type(),
                            "label", item->label,
-                           "name", item->name ? item->name : item->label,
                            "visible", (gboolean) item->visible,
                            "icon-stock-id", item->icon,
                            NULL);
@@ -385,12 +376,22 @@ user_menu_init (void)
 }
 
 
+void
+user_menu_update (void)
+{
+    g_assert (menus[0] != NULL);
+    menu_update (menus[EDITOR], "Editor", "EditorUserMenu",
+                 g_type_class_peek (GAP_TYPE_EDIT_WINDOW));
+    menu_update (menus[TERM], "Terminal", "TerminalUserMenu",
+                 g_type_class_peek (GAP_TYPE_TERM_WINDOW));
+}
+
+
 /***************************************************************************/
 /* Preferences page
  */
 
 enum {
-    COLUMN_NAME,
     COLUMN_LABEL,
     COLUMN_SCRIPT,
     COLUMN_ICON,
@@ -399,26 +400,57 @@ enum {
 };
 
 
-static void prefs_page_apply    (GtkTreeModel       *model);
-static void prefs_page_init     (GtkTreeModel       *model);
+static void prefs_page_apply    (MooGladeXML        *xml);
+static void prefs_page_init     (MooGladeXML        *xml);
+static void prefs_page_destroy  (MooGladeXML        *xml);
 static void selection_changed   (GtkTreeSelection   *selection,
                                  MooGladeXML        *xml);
-static void icon_data_func      (GtkTreeViewColumn  *column,
-                                 GtkCellRenderer    *cell,
+static void set_from_widgets    (MooGladeXML        *xml,
                                  GtkTreeModel       *model,
-                                 GtkTreeIter        *iter);
+                                 GtkTreePath        *path);
+static void set_from_model      (MooGladeXML        *xml,
+                                 GtkTreeModel       *model,
+                                 GtkTreePath        *path);
+
 static void label_data_func     (GtkTreeViewColumn  *column,
                                  GtkCellRenderer    *cell,
                                  GtkTreeModel       *model,
                                  GtkTreeIter        *iter);
-static void new_item            (MooGladeXML        *xml);
-static void delete_item         (MooGladeXML        *xml);
+static void button_new          (MooGladeXML        *xml);
+static void button_delete       (MooGladeXML        *xml);
+static void button_up           (MooGladeXML        *xml);
+static void button_down         (MooGladeXML        *xml);
+static void label_changed       (MooGladeXML        *xml);
+static void visible_changed     (MooGladeXML        *xml);
+
+
+static void
+setup_script_view (MooTextView *script)
+{
+    MooLangMgr *mgr;
+    MooLang *lang;
+    MooIndenter *indent;
+
+    g_object_set (script, "highlight-current-line", FALSE, NULL);
+
+    mgr = moo_editor_get_lang_mgr (moo_app_get_editor (moo_app_get_instance ()));
+    lang = moo_lang_mgr_get_lang (mgr, "MooScript");
+    if (lang)
+        moo_text_view_set_lang (script, lang);
+
+    moo_text_view_set_font_from_string (script, "Monospace");
+
+    indent = moo_indenter_new (NULL, NULL);
+    moo_text_view_set_indenter (script, indent);
+    g_object_set (indent, "use-tabs", FALSE, "indent", 2, NULL);
+    g_object_unref (indent);
+}
 
 
 GtkWidget *
 user_menu_prefs_page_new (void)
 {
-    GtkWidget *page, *button;
+    GtkWidget *page;
     MooGladeXML *xml;
     GtkTreeSelection *selection;
     GtkTreeView *treeview;
@@ -426,21 +458,27 @@ user_menu_prefs_page_new (void)
     GtkTreeStore *store;
     GtkCellRenderer *cell;
 
+    xml = moo_glade_xml_new_empty ();
+    moo_glade_xml_map_id (xml, "script", MOO_TYPE_TEXT_VIEW);
+    moo_glade_xml_map_id (xml, "page", MOO_TYPE_PREFS_DIALOG_PAGE);
+    moo_glade_xml_parse_memory (xml, USER_MENU_GLADE_UI, -1, "page");
+
+    page = moo_glade_xml_get_widget (xml, "page");
+    g_return_val_if_fail (page != NULL, NULL);
+    g_object_set (page, "label", "User Menus",
+                  "icon-stock-id", MOO_STOCK_MENU, NULL);
+    g_object_set_data_full (G_OBJECT (page), "moo-glade-xml", xml,
+                            (GDestroyNotify) g_object_unref);
+
+    g_signal_connect_swapped (page, "apply", G_CALLBACK (prefs_page_apply), xml);
+    g_signal_connect_swapped (page, "init", G_CALLBACK (prefs_page_init), xml);
+    g_signal_connect_swapped (page, "destroy", G_CALLBACK (prefs_page_destroy), xml);
+
+    setup_script_view (moo_glade_xml_get_widget (xml, "script"));
+
     store = gtk_tree_store_new (N_COLUMNS,
                                 G_TYPE_STRING, G_TYPE_STRING,
-                                G_TYPE_STRING, G_TYPE_STRING,
-                                G_TYPE_BOOLEAN);
-
-    page = moo_prefs_dialog_page_new_from_xml ("User Menus",
-                                               MOO_STOCK_MENU,
-                                               USER_MENU_GLADE_UI, -1,
-                                               "page", NULL);
-    g_return_val_if_fail (page != NULL, NULL);
-
-    g_signal_connect_swapped (page, "apply", G_CALLBACK (prefs_page_apply), store);
-    g_signal_connect_swapped (page, "init", G_CALLBACK (prefs_page_init), store);
-
-    xml = MOO_PREFS_DIALOG_PAGE(page)->xml;
+                                G_TYPE_STRING, G_TYPE_BOOLEAN);
     treeview = moo_glade_xml_get_widget (xml, "treeview");
     selection = gtk_tree_view_get_selection (treeview);
     g_signal_connect (selection, "changed",
@@ -452,37 +490,26 @@ user_menu_prefs_page_new (void)
     column = gtk_tree_view_column_new ();
     gtk_tree_view_append_column (treeview, column);
 
-//     cell = gtk_cell_renderer_pixbuf_new ();
-//     gtk_tree_view_column_pack_start (column, cell, FALSE);
-//     gtk_tree_view_column_set_cell_data_func (column, cell,
-//                                              (GtkTreeCellDataFunc) icon_data_func,
-//                                              NULL, NULL);
-
     cell = gtk_cell_renderer_text_new ();
     gtk_tree_view_column_pack_start (column, cell, TRUE);
     gtk_tree_view_column_set_cell_data_func (column, cell,
                                              (GtkTreeCellDataFunc) label_data_func,
                                              NULL, NULL);
 
-    button = moo_glade_xml_get_widget (xml, "new");
-    g_signal_connect_swapped (button, "clicked", G_CALLBACK (new_item), xml);
-    button = moo_glade_xml_get_widget (xml, "delete");
-    g_signal_connect_swapped (button, "clicked", G_CALLBACK (delete_item), xml);
+    g_signal_connect_swapped (moo_glade_xml_get_widget (xml, "new"),
+                              "clicked", G_CALLBACK (button_new), xml);
+    g_signal_connect_swapped (moo_glade_xml_get_widget (xml, "delete"),
+                              "clicked", G_CALLBACK (button_delete), xml);
+    g_signal_connect_swapped (moo_glade_xml_get_widget (xml, "up"),
+                              "clicked", G_CALLBACK (button_up), xml);
+    g_signal_connect_swapped (moo_glade_xml_get_widget (xml, "down"),
+                              "clicked", G_CALLBACK (button_down), xml);
+    g_signal_connect_swapped (moo_glade_xml_get_widget (xml, "label"),
+                              "changed", G_CALLBACK (label_changed), xml);
+    g_signal_connect_swapped (moo_glade_xml_get_widget (xml, "visible"),
+                              "toggled", G_CALLBACK (visible_changed), xml);
 
     return page;
-}
-
-
-static void
-icon_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
-                GtkCellRenderer    *cell,
-                GtkTreeModel       *model,
-                GtkTreeIter        *iter)
-{
-    char *icon;
-    gtk_tree_model_get (model, iter, COLUMN_ICON, &icon, -1);
-    g_object_set (cell, "stock-id", icon, NULL);
-    g_free (icon);
 }
 
 
@@ -492,6 +519,7 @@ label_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
                  GtkTreeModel       *model,
                  GtkTreeIter        *iter)
 {
+    GtkTreeIter dummy;
     gboolean visible;
     char *label;
 
@@ -499,7 +527,7 @@ label_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
                         COLUMN_VISIBLE, &visible,
                         COLUMN_LABEL, &label, -1);
 
-    if (gtk_tree_model_iter_parent (model, NULL, iter))
+    if (gtk_tree_model_iter_parent (model, &dummy, iter))
         g_object_set (cell, "text", label,
                       "foreground", visible ? NULL : "grey",
                       "style", visible ? PANGO_STYLE_NORMAL : PANGO_STYLE_ITALIC,
@@ -514,15 +542,117 @@ label_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 
-static void
-prefs_page_apply (GtkTreeModel *model)
+static gboolean
+is_empty_string (const char *string)
 {
+    if (!string)
+        return TRUE;
+
+#define IS_SPACE(c) (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+    while (*string)
+    {
+        if (*string && !IS_SPACE (*string))
+            return FALSE;
+        string++;
+    }
+#undef IS_SPACE
+
+    return TRUE;
+}
+
+
+static void
+save_items (GtkTreeModel *model,
+            GtkTreeIter  *parent,
+            const char   *window_name,
+            MooMarkupDoc *doc)
+{
+    GtkTreeIter iter;
+    MooMarkupNode *root;
+    char *path;
+
+    if (!gtk_tree_model_iter_children (model, &iter, parent))
+        return;
+
+    path = g_strdup_printf (MENU_XML_ROOT, window_name);
+    root = moo_markup_create_element (MOO_MARKUP_NODE (doc), path);
+    g_free (path);
+
+    do
+    {
+        MooMarkupNode *node;
+        char *label, *icon, *script;
+        gboolean visible;
+
+        gtk_tree_model_get (model, &iter,
+                            COLUMN_LABEL, &label,
+                            COLUMN_ICON, &icon,
+                            COLUMN_SCRIPT, &script,
+                            COLUMN_VISIBLE, &visible,
+                            -1);
+
+        if (is_empty_string (script))
+        {
+            g_free (script);
+            script = NULL;
+        }
+
+        if (script)
+            node = moo_markup_create_text_element (root, MENU_ITEM, script);
+        else
+            node = moo_markup_create_element (root, MENU_ITEM);
+
+        moo_markup_set_prop (node, PROP_LABEL, label);
+        moo_markup_set_prop (node, PROP_ICON, icon);
+
+        if (!visible)
+            moo_markup_set_bool_prop (node, PROP_HIDDEN, TRUE);
+
+        g_free (label);
+        g_free (icon);
+        g_free (script);
+    }
+    while (gtk_tree_model_iter_next (model, &iter));
+}
+
+
+static void
+prefs_page_apply (MooGladeXML *xml)
+{
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    MooMarkupDoc *doc;
+    MooMarkupNode *root;
+
+    doc = moo_prefs_get_markup ();
+    g_return_if_fail (doc != NULL);
+
+    selection = gtk_tree_view_get_selection (moo_glade_xml_get_widget (xml, "treeview"));
+
+    if (gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+        GtkTreePath *path = gtk_tree_model_get_path (model, &iter);
+        set_from_widgets (xml, model, path);
+        gtk_tree_path_free (path);
+    }
+
+    root = moo_markup_get_element (MOO_MARKUP_NODE (doc), MENU_XML);
+
+    if (root)
+        moo_markup_delete_node (root);
+
+    gtk_tree_model_get_iter_first (model, &iter);
+    save_items (model, &iter, "Terminal", doc);
+    gtk_tree_model_iter_next (model, &iter);
+    save_items (model, &iter, "Editor", doc);
+
+    user_menu_update ();
 }
 
 
 static void
 insert_item (const char   *label,
-             const char   *name,
              const char   *icon,
              const char   *script,
              gboolean      visible,
@@ -533,7 +663,6 @@ insert_item (const char   *label,
     gtk_tree_store_append (store, &iter, parent);
     gtk_tree_store_set (store, &iter,
                         COLUMN_LABEL, label,
-                        COLUMN_NAME, name,
                         COLUMN_ICON, icon,
                         COLUMN_SCRIPT, script,
                         COLUMN_VISIBLE, visible,
@@ -542,11 +671,13 @@ insert_item (const char   *label,
 
 
 static void
-prefs_page_init (GtkTreeModel *model)
+prefs_page_init (MooGladeXML *xml)
 {
     GtkTreeIter iter;
     GtkTreeStore *store;
+    GtkTreeModel *model;
 
+    model = gtk_tree_view_get_model (moo_glade_xml_get_widget (xml, "treeview"));
     store = GTK_TREE_STORE (model);
 
     if (gtk_tree_model_get_iter_first (model, &iter))
@@ -556,7 +687,6 @@ prefs_page_init (GtkTreeModel *model)
     gtk_tree_store_append (store, &iter, NULL);
     gtk_tree_store_set (store, &iter,
                         COLUMN_LABEL, "Terminal",
-//                         COLUMN_ICON, MOO_STOCK_GAP,
                         -1);
     load_items ("Terminal", (LoadItemsFunc) insert_item,
                 model, &iter);
@@ -564,27 +694,320 @@ prefs_page_init (GtkTreeModel *model)
     gtk_tree_store_append (store, &iter, NULL);
     gtk_tree_store_set (store, &iter,
                         COLUMN_LABEL, "Editor",
-//                         COLUMN_ICON, GTK_STOCK_EDIT,
                         -1);
     load_items ("Editor", (LoadItemsFunc) insert_item,
                 model, &iter);
+
+    set_from_model (xml, model, NULL);
+}
+
+
+static gboolean
+get_selected (MooGladeXML   *xml,
+              GtkTreeModel **model,
+              GtkTreeIter   *iter)
+{
+    GtkTreeSelection *selection;
+    selection = gtk_tree_view_get_selection (moo_glade_xml_get_widget (xml, "treeview"));
+    return gtk_tree_selection_get_selected (selection, model, iter);
 }
 
 
 static void
-selection_changed (GtkTreeSelection   *selection,
-                   MooGladeXML        *xml)
+set_from_widgets (MooGladeXML  *xml,
+                  GtkTreeModel *model,
+                  GtkTreePath  *path)
+{
+    GtkTreeIter iter, dummy;
+    GtkToggleButton *button;
+    GtkEntry *entry;
+    GtkTextBuffer *buffer;
+    GtkTextIter start, end;
+    const char *label;
+    char *script;
+
+    gtk_tree_model_get_iter (model, &iter, path);
+
+    if (!gtk_tree_model_iter_parent (model, &dummy, &iter))
+        return;
+
+    entry = moo_glade_xml_get_widget (xml, "label");
+    label = gtk_entry_get_text (entry);
+    button = moo_glade_xml_get_widget (xml, "visible");
+    buffer = gtk_text_view_get_buffer (moo_glade_xml_get_widget (xml, "script"));
+    gtk_text_buffer_get_bounds (buffer, &start, &end);
+    script = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+
+    gtk_tree_store_set (GTK_TREE_STORE (model), &iter,
+                        COLUMN_LABEL, label,
+                        COLUMN_SCRIPT, script,
+                        COLUMN_VISIBLE, gtk_toggle_button_get_active (button),
+                        -1);
+
+    g_free (script);
+}
+
+
+static void
+set_from_model (MooGladeXML  *xml,
+                GtkTreeModel *model,
+                GtkTreePath  *path)
+{
+    GtkTreeIter iter, parent;
+    GtkWidget *button_new, *button_delete, *button_up, *button_down;
+    GtkWidget *table;
+    GtkToggleButton *button_visible;
+    GtkEntry *entry_label;
+    GtkTextView *script_view;
+    GtkTextBuffer *buffer;
+
+    g_signal_handlers_block_by_func (moo_glade_xml_get_widget (xml, "label"),
+                                     (gpointer) label_changed, xml);
+    g_signal_handlers_block_by_func (moo_glade_xml_get_widget (xml, "visible"),
+                                     (gpointer) visible_changed, xml);
+
+    button_new = moo_glade_xml_get_widget (xml, "new");
+    button_delete = moo_glade_xml_get_widget (xml, "delete");
+    button_up = moo_glade_xml_get_widget (xml, "up");
+    button_down = moo_glade_xml_get_widget (xml, "down");
+    table = moo_glade_xml_get_widget (xml, "table");
+    entry_label = moo_glade_xml_get_widget (xml, "label");
+    button_visible = moo_glade_xml_get_widget (xml, "visible");
+    script_view = moo_glade_xml_get_widget (xml, "script");
+    buffer = gtk_text_view_get_buffer (script_view);
+
+    if (path)
+        gtk_tree_model_get_iter (model, &iter, path);
+
+    if (!path || !gtk_tree_model_iter_parent (model, &parent, &iter))
+    {
+        gtk_widget_set_sensitive (button_delete, FALSE);
+        gtk_widget_set_sensitive (button_up, FALSE);
+        gtk_widget_set_sensitive (button_down, FALSE);
+        gtk_widget_set_sensitive (GTK_WIDGET (button_visible), FALSE);
+        gtk_widget_set_sensitive (table, FALSE);
+        gtk_entry_set_text (entry_label, "");
+        gtk_text_buffer_set_text (buffer, "", -1);
+        gtk_toggle_button_set_active (button_visible, TRUE);
+    }
+    else
+    {
+        char *label, *script;
+        gboolean visible;
+        int *indices;
+
+        gtk_tree_model_get (model, &iter,
+                            COLUMN_LABEL, &label,
+                            COLUMN_SCRIPT, &script,
+                            COLUMN_VISIBLE, &visible,
+                            -1);
+
+        gtk_widget_set_sensitive (button_delete, TRUE);
+        gtk_widget_set_sensitive (GTK_WIDGET (button_visible), TRUE);
+        gtk_widget_set_sensitive (table, TRUE);
+        gtk_entry_set_text (entry_label, label ? label : "");
+        gtk_text_buffer_set_text (buffer, script ? script : "", -1);
+        gtk_toggle_button_set_active (button_visible, visible);
+
+        indices = gtk_tree_path_get_indices (path);
+        gtk_widget_set_sensitive (button_up, indices[1] != 0);
+        gtk_widget_set_sensitive (button_down, indices[1] !=
+                                        gtk_tree_model_iter_n_children (model, &parent) - 1);
+
+    }
+
+    g_signal_handlers_unblock_by_func (moo_glade_xml_get_widget (xml, "label"),
+                                       (gpointer) label_changed, xml);
+    g_signal_handlers_unblock_by_func (moo_glade_xml_get_widget (xml, "visible"),
+                                       (gpointer) visible_changed, xml);
+}
+
+
+static void
+selection_changed (GtkTreeSelection *selection,
+                   MooGladeXML      *xml)
+{
+    GtkTreeRowReference *old_row;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreePath *path, *old_path;
+
+    old_row = g_object_get_data (G_OBJECT (selection), "current-row");
+    old_path = old_row ? gtk_tree_row_reference_get_path (old_row) : NULL;
+
+    if (old_row && !old_path)
+    {
+        g_object_set_data (G_OBJECT (selection), "current-row", NULL);
+        old_row = NULL;
+    }
+
+    if (gtk_tree_selection_get_selected (selection, &model, &iter))
+    {
+        path = gtk_tree_model_get_path (model, &iter);
+
+        if (old_path && !gtk_tree_path_compare (old_path, path))
+        {
+            gtk_tree_path_free (old_path);
+            gtk_tree_path_free (path);
+            return;
+        }
+    }
+    else
+    {
+        if (!old_path)
+            return;
+
+        path = NULL;
+    }
+
+    if (old_path)
+        set_from_widgets (xml, model, old_path);
+
+    set_from_model (xml, model, path);
+
+    if (path)
+    {
+        GtkTreeRowReference *row;
+        row = gtk_tree_row_reference_new (model, path);
+        g_object_set_data_full (G_OBJECT (selection), "current-row", row,
+                                (GDestroyNotify) gtk_tree_row_reference_free);
+    }
+    else
+    {
+        g_object_set_data (G_OBJECT (selection), "current-row", NULL);
+    }
+
+    gtk_tree_path_free (path);
+    gtk_tree_path_free (old_path);
+}
+
+
+static void
+button_new (MooGladeXML *xml)
 {
 }
 
 
 static void
-new_item (MooGladeXML *xml)
+button_delete (MooGladeXML *xml)
 {
 }
 
 
 static void
-delete_item (MooGladeXML *xml)
+button_up (MooGladeXML *xml)
 {
+    GtkTreeModel *model;
+    GtkTreeIter iter, parent;
+    GtkTreeIter swap_with;
+    GtkTreePath *path, *new_path;
+    int *indices;
+
+    if (!get_selected (xml, &model, &iter))
+        g_return_if_reached ();
+    if (!gtk_tree_model_iter_parent (model, &parent, &iter))
+        g_return_if_reached ();
+
+    path = gtk_tree_model_get_path (model, &iter);
+    indices = gtk_tree_path_get_indices (path);
+
+    if (!indices[1])
+        g_return_if_reached ();
+
+    new_path = gtk_tree_path_new_from_indices (indices[0], indices[1] - 1, -1);
+    gtk_tree_model_get_iter (model, &swap_with, new_path);
+    gtk_tree_store_swap (GTK_TREE_STORE (model), &iter, &swap_with);
+    set_from_model (xml, model, new_path);
+
+    gtk_tree_path_free (new_path);
+    gtk_tree_path_free (path);
+}
+
+
+static void
+button_down (MooGladeXML *xml)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter, parent;
+    GtkTreeIter swap_with;
+    GtkTreePath *path, *new_path;
+    int *indices;
+    int n_children;
+
+    if (!get_selected (xml, &model, &iter))
+        g_return_if_reached ();
+    if (!gtk_tree_model_iter_parent (model, &parent, &iter))
+        g_return_if_reached ();
+
+    path = gtk_tree_model_get_path (model, &iter);
+    indices = gtk_tree_path_get_indices (path);
+    n_children = gtk_tree_model_iter_n_children (model, &parent);
+
+    if (indices[1] == n_children - 1)
+        g_return_if_reached ();
+
+    new_path = gtk_tree_path_new_from_indices (indices[0], indices[1] + 1, -1);
+    gtk_tree_model_get_iter (model, &swap_with, new_path);
+    gtk_tree_store_swap (GTK_TREE_STORE (model), &iter, &swap_with);
+    set_from_model (xml, model, new_path);
+
+    gtk_tree_path_free (new_path);
+    gtk_tree_path_free (path);
+}
+
+
+static void
+label_changed (MooGladeXML *xml)
+{
+    GtkEntry *entry;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    const char *label;
+
+    if (!get_selected (xml, &model, &iter))
+        return;
+
+    entry = moo_glade_xml_get_widget (xml, "label");
+    label = gtk_entry_get_text (entry);
+
+    gtk_tree_store_set (GTK_TREE_STORE (model), &iter, COLUMN_LABEL, label, -1);
+}
+
+
+static void
+visible_changed (MooGladeXML *xml)
+{
+    GtkToggleButton *button;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    if (!get_selected (xml, &model, &iter))
+        return;
+
+    button = moo_glade_xml_get_widget (xml, "visible");
+    gtk_tree_store_set (GTK_TREE_STORE (model), &iter,
+                        COLUMN_VISIBLE, gtk_toggle_button_get_active (button), -1);
+}
+
+
+static void
+prefs_page_destroy (MooGladeXML *xml)
+{
+    GtkTreeSelection *selection;
+
+    selection = gtk_tree_view_get_selection (moo_glade_xml_get_widget (xml, "treeview"));
+    g_signal_handlers_disconnect_by_func (selection, (gpointer) selection_changed, xml);
+
+    g_signal_handlers_disconnect_by_func (moo_glade_xml_get_widget (xml, "new"),
+                                          (gpointer) button_new, xml);
+    g_signal_handlers_disconnect_by_func (moo_glade_xml_get_widget (xml, "delete"),
+                                          (gpointer) button_delete, xml);
+    g_signal_handlers_disconnect_by_func (moo_glade_xml_get_widget (xml, "up"),
+                                          (gpointer) button_up, xml);
+    g_signal_handlers_disconnect_by_func (moo_glade_xml_get_widget (xml, "down"),
+                                          (gpointer) button_down, xml);
+    g_signal_handlers_disconnect_by_func (moo_glade_xml_get_widget (xml, "label"),
+                                          (gpointer) label_changed, xml);
+    g_signal_handlers_disconnect_by_func (moo_glade_xml_get_widget (xml, "visible"),
+                                          (gpointer) visible_changed, xml);
 }
