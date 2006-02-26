@@ -13,17 +13,50 @@
 
 #include "gapapp.h"
 #include "mooutils/mooscript/mooscript-context.h"
+#include "mooutils/mooscript/mooscript-zenity.h"
+
+
+#define ADD_FUNC(ctx_, factory_, name_)         \
+G_STMT_START {                                  \
+    MSFunc *func_;                              \
+    func_ = factory_ ();                        \
+    ms_context_set_func (ctx_, name_, func_);   \
+    g_object_unref (func_);                     \
+} G_STMT_END;
+
+#define ADD_CONSTANT(ctx_, func_, name_)        \
+G_STMT_START {                                  \
+    MSVariable *var_;                           \
+    MSValue *val_;                              \
+    val_ = func_ ();                            \
+    var_ = ms_variable_new_value (val_);        \
+    ms_context_set_var (ctx_, name_, var_);     \
+    ms_variable_unref (var_);                   \
+    ms_value_unref (val_);                      \
+} G_STMT_END;
 
 
 gpointer
 gap_app_get_editor_context (MooWindow *window)
 {
-    return g_object_new (MS_TYPE_CONTEXT, NULL);
+    MSContext *ctx;
+
+    ctx = g_object_new (MS_TYPE_CONTEXT, "window", window, NULL);
+
+    ADD_CONSTANT (ctx, ms_value_none, "none");
+    ADD_CONSTANT (ctx, ms_value_true, "true");
+    ADD_CONSTANT (ctx, ms_value_false, "false");
+
+    ADD_FUNC (ctx, ms_zenity_entry, "Entry");
+    ADD_FUNC (ctx, ms_zenity_info, "Info");
+    ADD_FUNC (ctx, ms_zenity_error, "Error");
+
+    return ctx;
 }
 
 
 gpointer
 gap_app_get_terminal_context (MooWindow *window)
 {
-    return g_object_new (MS_TYPE_CONTEXT, NULL);
+    return gap_app_get_editor_context (window);
 }

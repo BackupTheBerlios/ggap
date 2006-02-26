@@ -85,11 +85,22 @@
 		      <child>
 			<widget class="GtkButton" id="new">
 			  <property name="visible">True</property>
+			  <property name="tooltip" translatable="yes">New item</property>
 			  <property name="can_focus">True</property>
-			  <property name="label">gtk-new</property>
-			  <property name="use_stock">True</property>
 			  <property name="relief">GTK_RELIEF_NORMAL</property>
 			  <property name="focus_on_click">False</property>
+
+			  <child>
+			    <widget class="GtkImage" id="image3">
+			      <property name="visible">True</property>
+			      <property name="stock">gtk-new</property>
+			      <property name="icon_size">4</property>
+			      <property name="xalign">0.5</property>
+			      <property name="yalign">0.5</property>
+			      <property name="xpad">0</property>
+			      <property name="ypad">0</property>
+			    </widget>
+			  </child>
 			</widget>
 			<packing>
 			  <property name="padding">0</property>
@@ -101,11 +112,22 @@
 		      <child>
 			<widget class="GtkButton" id="delete">
 			  <property name="visible">True</property>
+			  <property name="tooltip" translatable="yes">Delete item</property>
 			  <property name="can_focus">True</property>
-			  <property name="label">gtk-delete</property>
-			  <property name="use_stock">True</property>
 			  <property name="relief">GTK_RELIEF_NORMAL</property>
 			  <property name="focus_on_click">False</property>
+
+			  <child>
+			    <widget class="GtkImage" id="image4">
+			      <property name="visible">True</property>
+			      <property name="stock">gtk-delete</property>
+			      <property name="icon_size">4</property>
+			      <property name="xalign">0.5</property>
+			      <property name="yalign">0.5</property>
+			      <property name="xpad">0</property>
+			      <property name="ypad">0</property>
+			    </widget>
+			  </child>
 			</widget>
 			<packing>
 			  <property name="padding">3</property>
@@ -117,6 +139,7 @@
 		      <child>
 			<widget class="GtkButton" id="down">
 			  <property name="visible">True</property>
+			  <property name="tooltip" translatable="yes">Move item down</property>
 			  <property name="can_focus">True</property>
 			  <property name="relief">GTK_RELIEF_NORMAL</property>
 			  <property name="focus_on_click">False</property>
@@ -144,6 +167,7 @@
 		      <child>
 			<widget class="GtkButton" id="up">
 			  <property name="visible">True</property>
+			  <property name="tooltip" translatable="yes">Move item up</property>
 			  <property name="can_focus">True</property>
 			  <property name="relief">GTK_RELIEF_NORMAL</property>
 			  <property name="focus_on_click">False</property>
@@ -190,6 +214,7 @@
 		  <child>
 		    <widget class="GtkCheckButton" id="visible">
 		      <property name="visible">True</property>
+		      <property name="tooltip" translatable="yes">Set whether the menu item is enabled</property>
 		      <property name="can_focus">True</property>
 		      <property name="label" translatable="yes">Visible</property>
 		      <property name="use_underline">True</property>
@@ -278,9 +303,11 @@
 			      <property name="visible">True</property>
 			      <property name="can_focus">True</property>
 			      <property name="editable">True</property>
+			      <property name="overwrite">False</property>
 			      <property name="accepts_tab">True</property>
 			      <property name="justification">GTK_JUSTIFY_LEFT</property>
 			      <property name="wrap_mode">GTK_WRAP_NONE</property>
+			      <property name="cursor_visible">True</property>
 			      <property name="pixels_above_lines">0</property>
 			      <property name="pixels_below_lines">0</property>
 			      <property name="pixels_inside_wrap">0</property>
