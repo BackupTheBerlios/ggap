@@ -78,7 +78,6 @@ static MenuItem *menu_item_new          (const char *label,
 static void      menu_item_free         (MenuItem   *item);
 
 static Menu     *menu_new               (void);
-// static void      menu_free              (Menu       *menu);
 
 static GType     user_action_get_type   (void) G_GNUC_CONST;
 static void      user_action_activate   (MooAction  *action);
@@ -301,6 +300,7 @@ create_action (MooWindow *window,
 
     action = g_object_new (user_action_get_type(),
                            "label", item->label,
+                           "name", item->label,
                            "visible", (gboolean) item->visible,
                            "icon-stock-id", item->icon,
                            NULL);
@@ -338,7 +338,7 @@ menu_update (Menu           *menu,
 
         if (item->action_id)
             g_free (item->action_id);
-        item->action_id = g_strdup_printf ("UserMenu-%d", g_random_int ());
+        item->action_id = g_strdup_printf ("UserMenu-%d", i);
 
         moo_window_class_new_action_custom (klass, item->action_id,
                                             (MooWindowActionFunc) create_action,
@@ -885,12 +885,80 @@ selection_changed (GtkTreeSelection *selection,
 static void
 button_new (MooGladeXML *xml)
 {
+    GtkTreeModel *model;
+    GtkTreeIter iter, parent, after;
+    GtkTreeSelection *selection;
+    GtkTreeView *treeview;
+    GtkTreePath *path;
+
+    treeview = moo_glade_xml_get_widget (xml, "treeview");
+
+    if (!get_selected (xml, &model, &after))
+    {
+        model = gtk_tree_view_get_model (treeview);
+        gtk_tree_model_get_iter_first (model, &parent);
+        gtk_tree_store_append (GTK_TREE_STORE (model), &iter, &parent);
+    }
+    else if (gtk_tree_model_iter_parent (model, &parent, &after))
+    {
+        gtk_tree_store_insert_after (GTK_TREE_STORE (model), &iter,
+                                     &parent, &after);
+    }
+    else
+    {
+        gtk_tree_store_prepend (GTK_TREE_STORE (model), &iter, &after);
+    }
+
+    gtk_tree_store_set (GTK_TREE_STORE (model), &iter,
+                        COLUMN_LABEL, "New Item",
+                        COLUMN_VISIBLE, TRUE, -1);
+
+    path = gtk_tree_model_get_path (model, &iter);
+    gtk_tree_view_expand_to_path (treeview, path);
+    selection = gtk_tree_view_get_selection (treeview);
+    gtk_tree_selection_select_iter (selection, &iter);
+    gtk_tree_path_free (path);
 }
 
 
 static void
 button_delete (MooGladeXML *xml)
 {
+    GtkTreeModel *model;
+    GtkTreeIter iter, parent;
+    GtkTreeSelection *selection;
+    GtkTreeView *treeview;
+
+    if (!get_selected (xml, &model, &iter))
+        g_return_if_reached ();
+    if (!gtk_tree_model_iter_parent (model, &parent, &iter))
+        g_return_if_reached ();
+
+    if (!gtk_tree_store_remove (GTK_TREE_STORE (model), &iter))
+    {
+        int n_children;
+
+        n_children = gtk_tree_model_iter_n_children (model, &parent);
+
+        if (n_children)
+        {
+            GtkTreePath *path, *parent_path;
+            parent_path = gtk_tree_model_get_path (model, &parent);
+            path = gtk_tree_path_new_from_indices (gtk_tree_path_get_indices(parent_path)[0],
+                                                   n_children - 1, -1);
+            gtk_tree_model_get_iter (model, &iter, path);
+            gtk_tree_path_free (path);
+            gtk_tree_path_free (parent_path);
+        }
+        else
+        {
+            iter = parent;
+        }
+    }
+
+    treeview = moo_glade_xml_get_widget (xml, "treeview");
+    selection = gtk_tree_view_get_selection (treeview);
+    gtk_tree_selection_select_iter (selection, &iter);
 }
 
 
