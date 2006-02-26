@@ -51,6 +51,7 @@ ggap_SOURCES =      \
     gaptermwindow.c \
     gaptermwindow.h \
     gapprefs-glade.h\
+    usermenu-glade.h\
     usermenu.c      \
     usermenu.h
 
@@ -67,13 +68,14 @@ ggap_res.res: ggap_res.rc
 	touch ggap_res.res
 endif ! MOO_OS_MINGW
 
-EXTRA_DIST =        \
-    ggap_res.rc.in  \
-    ggap-ui.xml     \
-    ggap.opag       \
-    glade/gapprefs.glade
+EXTRA_DIST =             \
+    ggap_res.rc.in       \
+    ggap-ui.xml          \
+    ggap.opag            \
+    glade/gapprefs.glade \
+    glade/usermenu.glade
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c
+BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c usermenu-glade.h
 XML2H = $(srcdir)/moo/mooutils/xml2h.sh
 PY2H = $(srcdir)/moo/mooutils/py2h.sh
 
@@ -81,8 +83,10 @@ ggap-ui.h: ggap-ui.xml $(XML2H)
 	sh $(XML2H) GGAP_UI $(srcdir)/ggap-ui.xml > ggap-ui.h
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
-	mkdir -p $(mooapp)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h
+
+usermenu-glade.h: glade/usermenu.glade $(XML2H)
+	sh $(XML2H) USER_MENU_GLADE_UI $(srcdir)/glade/usermenu.glade > usermenu-glade.h
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c

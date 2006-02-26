@@ -15,6 +15,7 @@
 #include "gapeditwindow.h"
 #include "gaptermwindow.h"
 #include "gapapp.h"
+#include "usermenu-glade.h"
 #include "mooutils/mooprefsdialog.h"
 #include "mooutils/moostock.h"
 #include "mooutils/mooscript/mooscript-parser.h"
@@ -61,6 +62,15 @@ enum {
 };
 
 static Menu* menus[2];
+
+
+typedef void (*LoadItemsFunc) (const char *label,
+                               const char *name,
+                               const char *icon,
+                               const char *script,
+                               gboolean    visible,
+                               gpointer    data1,
+                               gpointer    data2);
 
 
 static MenuItem *menu_item_new          (const char *label,
@@ -175,21 +185,6 @@ menu_new (void)
 }
 
 
-// static void
-// menu_free (Menu *menu)
-// {
-//     guint i;
-//
-//     if (menu)
-//     {
-//         for (i = 0; i < menu->n_items; ++i)
-//             menu_item_free (menu->items[i]);
-//         g_free (menu->items);
-//         g_free (menu);
-//     }
-// }
-
-
 static void
 menu_add_item (Menu     *menu,
                MenuItem *item)
@@ -210,6 +205,60 @@ menu_add_item (Menu     *menu,
     }
 
     menu->items[menu->n_items++] = item;
+}
+
+
+static void
+load_items (const char   *name,
+            LoadItemsFunc func,
+            gpointer      data1,
+            gpointer      data2)
+{
+    MooMarkupDoc *doc;
+    MooMarkupNode *root, *node;
+    char *path;
+
+    doc = moo_prefs_get_markup ();
+    g_return_if_fail (doc != NULL);
+
+    path = g_strdup_printf (MENU_XML_ROOT, name);
+    root = moo_markup_get_element (MOO_MARKUP_NODE (doc), path);
+    g_free (path);
+
+    if (!root)
+        return;
+
+    for (node = root->children; node != NULL; node = node->next)
+    {
+        const char *label, *icon, *script, *name;
+        gboolean hidden;
+
+        if (!MOO_MARKUP_IS_ELEMENT (node))
+            continue;
+
+        if (strcmp (node->name, MENU_ITEM))
+        {
+            g_warning ("%s: invalid element '%s'", G_STRLOC, node->name);
+            continue;
+        }
+
+        label = moo_markup_get_prop (node, PROP_LABEL);
+        name = moo_markup_get_prop (node, PROP_NAME);
+        icon = moo_markup_get_prop (node, PROP_ICON);
+        hidden = moo_markup_get_bool_prop (node, PROP_HIDDEN, FALSE);
+        script = moo_markup_get_content (node);
+
+        if (!label && !name)
+        {
+            g_warning ("%s: label and name missing", G_STRLOC);
+            continue;
+        }
+
+        if (!script || !script[0])
+            script = NULL;
+
+        func (label, name, icon, script, !hidden, data1, data2);
+    }
 }
 
 
@@ -240,57 +289,15 @@ menu_purge (Menu           *menu,
 
 
 static void
-menu_load (Menu           *menu,
-           const char     *name)
+create_menu_item (const char *label,
+                  const char *name,
+                  const char *icon,
+                  const char *script,
+                  gboolean    visible,
+                  Menu       *menu)
 {
-    MooMarkupDoc *doc;
-    MooMarkupNode *root, *node;
-    char *path;
-
-    doc = moo_prefs_get_markup ();
-    g_return_if_fail (doc != NULL);
-
-    path = g_strdup_printf (MENU_XML_ROOT, name);
-    root = moo_markup_get_element (MOO_MARKUP_NODE (doc), path);
-    g_free (path);
-
-    if (!root)
-        return;
-
-    for (node = root->children; node != NULL; node = node->next)
-    {
-        const char *label, *icon, *script, *name;
-        gboolean hidden;
-        MenuItem *item;
-
-        if (!MOO_MARKUP_IS_ELEMENT (node))
-            continue;
-
-        if (strcmp (node->name, MENU_ITEM))
-        {
-            g_warning ("%s: invalid element '%s'", G_STRLOC, node->name);
-            continue;
-        }
-
-        label = moo_markup_get_prop (node, PROP_LABEL);
-        name = moo_markup_get_prop (node, PROP_NAME);
-        icon = moo_markup_get_prop (node, PROP_ICON);
-        hidden = moo_markup_get_bool_prop (node, PROP_HIDDEN, FALSE);
-        script = moo_markup_get_content (node);
-
-        if (!label && !name)
-        {
-            g_warning ("%s: label and name missing", G_STRLOC);
-            continue;
-        }
-
-        if (!script || !script[0])
-            script = NULL;
-
-        item = menu_item_new (label, name, icon, script, !hidden);
-
-        menu_add_item (menu, item);
-    }
+    MenuItem *item = menu_item_new (label, name, icon, script, visible);
+    menu_add_item (menu, item);
 }
 
 
@@ -325,7 +332,7 @@ menu_update (Menu           *menu,
     guint i;
 
     menu_purge (menu, klass);
-    menu_load (menu, name);
+    load_items (name, (LoadItemsFunc) create_menu_item, menu, NULL);
 
     if (!menu->n_items)
         return;
@@ -361,21 +368,224 @@ void
 user_menu_init (void)
 {
     guint i;
+    MooWindowClass *klass;
 
     g_assert (!menus[0]);
 
     for (i = 0; i < 2; ++i)
         menus[i] = menu_new ();
 
-    menu_update (menus[EDITOR], "Editor", "EditorUserMenu",
-                 g_type_class_peek (GAP_TYPE_EDIT_WINDOW));
-    menu_update (menus[TERM], "Terminal", "TerminalUserMenu",
-                 g_type_class_peek (GAP_TYPE_TERM_WINDOW));
+    klass = g_type_class_ref (GAP_TYPE_EDIT_WINDOW);
+    menu_update (menus[EDITOR], "Editor", "EditorUserMenu", klass);
+    g_type_class_unref (klass);
+
+    klass = g_type_class_ref (GAP_TYPE_TERM_WINDOW);
+    menu_update (menus[TERM], "Terminal", "TerminalUserMenu", klass);
+    g_type_class_unref (klass);
 }
+
+
+/***************************************************************************/
+/* Preferences page
+ */
+
+enum {
+    COLUMN_NAME,
+    COLUMN_LABEL,
+    COLUMN_SCRIPT,
+    COLUMN_ICON,
+    COLUMN_VISIBLE,
+    N_COLUMNS
+};
+
+
+static void prefs_page_apply    (GtkTreeModel       *model);
+static void prefs_page_init     (GtkTreeModel       *model);
+static void selection_changed   (GtkTreeSelection   *selection,
+                                 MooGladeXML        *xml);
+static void icon_data_func      (GtkTreeViewColumn  *column,
+                                 GtkCellRenderer    *cell,
+                                 GtkTreeModel       *model,
+                                 GtkTreeIter        *iter);
+static void label_data_func     (GtkTreeViewColumn  *column,
+                                 GtkCellRenderer    *cell,
+                                 GtkTreeModel       *model,
+                                 GtkTreeIter        *iter);
+static void new_item            (MooGladeXML        *xml);
+static void delete_item         (MooGladeXML        *xml);
 
 
 GtkWidget *
 user_menu_prefs_page_new (void)
 {
-    return moo_prefs_dialog_page_new ("User menu", MOO_STOCK_MENU);
+    GtkWidget *page, *button;
+    MooGladeXML *xml;
+    GtkTreeSelection *selection;
+    GtkTreeView *treeview;
+    GtkTreeViewColumn *column;
+    GtkTreeStore *store;
+    GtkCellRenderer *cell;
+
+    store = gtk_tree_store_new (N_COLUMNS,
+                                G_TYPE_STRING, G_TYPE_STRING,
+                                G_TYPE_STRING, G_TYPE_STRING,
+                                G_TYPE_BOOLEAN);
+
+    page = moo_prefs_dialog_page_new_from_xml ("User Menus",
+                                               MOO_STOCK_MENU,
+                                               USER_MENU_GLADE_UI, -1,
+                                               "page", NULL);
+    g_return_val_if_fail (page != NULL, NULL);
+
+    g_signal_connect_swapped (page, "apply", G_CALLBACK (prefs_page_apply), store);
+    g_signal_connect_swapped (page, "init", G_CALLBACK (prefs_page_init), store);
+
+    xml = MOO_PREFS_DIALOG_PAGE(page)->xml;
+    treeview = moo_glade_xml_get_widget (xml, "treeview");
+    selection = gtk_tree_view_get_selection (treeview);
+    g_signal_connect (selection, "changed",
+                      G_CALLBACK (selection_changed), xml);
+
+    gtk_tree_view_set_model (treeview, GTK_TREE_MODEL (store));
+    g_object_unref (store);
+
+    column = gtk_tree_view_column_new ();
+    gtk_tree_view_append_column (treeview, column);
+    cell = gtk_cell_renderer_pixbuf_new ();
+    gtk_tree_view_column_pack_start (column, cell, FALSE);
+    gtk_tree_view_column_set_cell_data_func (column, cell,
+                                             (GtkTreeCellDataFunc) icon_data_func,
+                                             NULL, NULL);
+
+    column = gtk_tree_view_column_new ();
+    gtk_tree_view_append_column (treeview, column);
+    cell = gtk_cell_renderer_text_new ();
+    gtk_tree_view_column_pack_start (column, cell, TRUE);
+    gtk_tree_view_column_set_cell_data_func (column, cell,
+                                             (GtkTreeCellDataFunc) label_data_func,
+                                             NULL, NULL);
+
+    button = moo_glade_xml_get_widget (xml, "new");
+    g_signal_connect_swapped (button, "clicked", G_CALLBACK (new_item), xml);
+    button = moo_glade_xml_get_widget (xml, "delete");
+    g_signal_connect_swapped (button, "clicked", G_CALLBACK (delete_item), xml);
+
+    return page;
+}
+
+
+static void
+icon_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
+                GtkCellRenderer    *cell,
+                GtkTreeModel       *model,
+                GtkTreeIter        *iter)
+{
+    char *icon;
+    gtk_tree_model_get (model, iter, COLUMN_ICON, &icon, -1);
+    g_object_set (cell, "stock-id", icon, NULL);
+    g_free (icon);
+}
+
+
+static void
+label_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
+                 GtkCellRenderer    *cell,
+                 GtkTreeModel       *model,
+                 GtkTreeIter        *iter)
+{
+    gboolean visible;
+    char *label;
+
+    gtk_tree_model_get (model, iter,
+                        COLUMN_VISIBLE, &visible,
+                        COLUMN_LABEL, &label, -1);
+
+    if (gtk_tree_model_iter_parent (model, NULL, iter))
+        g_object_set (cell, "text", label,
+                      "foreground", visible ? NULL : "grey",
+                      "style", visible ? PANGO_STYLE_NORMAL : PANGO_STYLE_ITALIC,
+                      NULL);
+    else
+        g_object_set (cell, "text", label,
+                      "foreground", NULL,
+                      "style", PANGO_STYLE_NORMAL,
+                      NULL);
+
+    g_free (label);
+}
+
+
+static void
+prefs_page_apply (GtkTreeModel *model)
+{
+}
+
+
+static void
+insert_item (const char   *label,
+             const char   *name,
+             const char   *icon,
+             const char   *script,
+             gboolean      visible,
+             GtkTreeStore *store,
+             GtkTreeIter  *parent)
+{
+    GtkTreeIter iter;
+    gtk_tree_store_append (store, &iter, parent);
+    gtk_tree_store_set (store, &iter,
+                        COLUMN_LABEL, label,
+                        COLUMN_NAME, name,
+                        COLUMN_ICON, icon,
+                        COLUMN_SCRIPT, script,
+                        COLUMN_VISIBLE, visible,
+                        -1);
+}
+
+
+static void
+prefs_page_init (GtkTreeModel *model)
+{
+    GtkTreeIter iter;
+    GtkTreeStore *store;
+
+    store = GTK_TREE_STORE (model);
+
+    if (gtk_tree_model_get_iter_first (model, &iter))
+        while (gtk_tree_store_remove (store, &iter))
+            ;
+
+    gtk_tree_store_append (store, &iter, NULL);
+    gtk_tree_store_set (store, &iter,
+                        COLUMN_LABEL, "Terminal",
+                        COLUMN_ICON, MOO_STOCK_GAP,
+                        -1);
+    load_items ("Terminal", (LoadItemsFunc) insert_item,
+                model, &iter);
+
+    gtk_tree_store_append (store, &iter, NULL);
+    gtk_tree_store_set (store, &iter,
+                        COLUMN_LABEL, "Editor",
+                        COLUMN_ICON, GTK_STOCK_EDIT,
+                        -1);
+    load_items ("Editor", (LoadItemsFunc) insert_item,
+                model, &iter);
+}
+
+
+static void
+selection_changed (GtkTreeSelection   *selection,
+                   MooGladeXML        *xml)
+{
+}
+
+
+static void
+new_item (MooGladeXML *xml)
+{
+}
+
+
+static void
+delete_item (MooGladeXML *xml)
+{
 }
