@@ -43,14 +43,6 @@ gap_app_get_editor_context (MooWindow *window)
 
     ctx = g_object_new (MS_TYPE_CONTEXT, "window", window, NULL);
 
-    ADD_CONSTANT (ctx, ms_value_none, "none");
-    ADD_CONSTANT (ctx, ms_value_true, "true");
-    ADD_CONSTANT (ctx, ms_value_false, "false");
-
-    ADD_FUNC (ctx, ms_zenity_entry, "Entry");
-    ADD_FUNC (ctx, ms_zenity_info, "Info");
-    ADD_FUNC (ctx, ms_zenity_error, "Error");
-
     return ctx;
 }
 
