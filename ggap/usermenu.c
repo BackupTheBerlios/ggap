@@ -749,6 +749,17 @@ set_from_widgets (MooGladeXML  *xml,
 
 
 static void
+script_set_text (gpointer    view,
+                 const char *text)
+{
+    g_return_if_fail (MOO_IS_TEXT_VIEW (view));
+    moo_text_view_begin_not_undoable_action (view);
+    gtk_text_buffer_set_text (gtk_text_view_get_buffer (view), text, -1);
+    moo_text_view_end_not_undoable_action (view);
+}
+
+
+static void
 set_from_model (MooGladeXML  *xml,
                 GtkTreeModel *model,
                 GtkTreePath  *path)
@@ -787,7 +798,7 @@ set_from_model (MooGladeXML  *xml,
         gtk_widget_set_sensitive (GTK_WIDGET (button_visible), FALSE);
         gtk_widget_set_sensitive (table, FALSE);
         gtk_entry_set_text (entry_label, "");
-        gtk_text_buffer_set_text (buffer, "", -1);
+        script_set_text (script_view, "");
         gtk_toggle_button_set_active (button_visible, TRUE);
     }
     else
@@ -806,7 +817,7 @@ set_from_model (MooGladeXML  *xml,
         gtk_widget_set_sensitive (GTK_WIDGET (button_visible), TRUE);
         gtk_widget_set_sensitive (table, TRUE);
         gtk_entry_set_text (entry_label, label ? label : "");
-        gtk_text_buffer_set_text (buffer, script ? script : "", -1);
+        script_set_text (script_view, script ? script : "");
         gtk_toggle_button_set_active (button_visible, visible);
 
         indices = gtk_tree_path_get_indices (path);
