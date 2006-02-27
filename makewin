@@ -16,7 +16,7 @@ config=`basename $ggap_builddir`
 installdir=$dir/$config-root
 
 iss=$issdir/ggap.iss
-installer=ggapsetup`echo $config | sed s/mingw//`.exe
+installer=ggap`echo $config | sed s/mingw//`.exe
 
 do_cmd () {
     echo "*** " $*

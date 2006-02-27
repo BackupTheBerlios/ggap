@@ -1,7 +1,7 @@
 #!/bin/sh
 
 for dir in "mingw-no-python mingw-python-2.3 mingw-python-2.4"; do
-    cd $dir && rm -rf * && cd ..
+    rm -rf $dir && mkdir $dir
 done
 
 cd mingw-no-python && \

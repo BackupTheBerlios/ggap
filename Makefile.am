@@ -2,7 +2,7 @@
 # @(#)$Id: Makefile.am,v 1.14 2005/06/06 14:45:53 emuntyan Exp $
 #
 
-DIST_SUBDIRS = pkg ggap wininstaller m4
+DIST_SUBDIRS = pkg ggap m4
 SUBDIRS = pkg ggap
 
 ggap_docs =             \
@@ -13,7 +13,14 @@ ggap_docs =             \
   README                \
   TODO
 
-EXTRA_DIST = $(ggap_docs) makewin INSTALL mingw-configure cygwin-configure autogen.sh
+EXTRA_DIST =            \
+    $(ggap_docs)        \
+    makewin             \
+    INSTALL             \
+    mingw-configure     \
+    cygwin-configure    \
+    autogen.sh          \
+    wininstaller/ggap.iss
 
 ggapdocdir = ${GGAP_ROOT_DIR}
 ggapdoc_DATA = $(ggap_docs)

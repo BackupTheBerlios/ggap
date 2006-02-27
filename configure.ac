@@ -4,7 +4,7 @@
 
 m4_define([ggap_major_version], [0])
 m4_define([ggap_minor_version], [6])
-m4_define([ggap_micro_version], [25])
+m4_define([ggap_micro_version], [3])
 m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_version])
 
 m4_define([moo_major_version], [0])
@@ -136,7 +136,6 @@ pkg/init.g
 pkg/Makefile
 ggap/Makefile
 ggap/ggap_res.rc
-wininstaller/Makefile
 ggap/moo/mooterm/termhelper_res.rc
 ggap/moo/mooutils/pcre/pcre.h
 ggap/moo/moopython/pygtk/moo-mod.py
