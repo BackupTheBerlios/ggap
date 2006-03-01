@@ -373,12 +373,22 @@ gap_app_start_gap (GapApp *app)
 
     if (init_pkg)
     {
+        char *init;
+
 #ifdef __WIN32__
         g_string_append_printf (cmd, " -l \"%s\";",
                                 moo_app_get_application_dir (MOO_APP (app)));
 #else
         g_string_append (cmd, " -l \"" GGAP_ROOT_DIR "\";");
 #endif
+
+        init = gap_pkg_init_file ();
+
+        if (init)
+        {
+            g_string_append_printf (cmd, " %s", init);
+            g_free (init);
+        }
     }
 
     result = moo_term_fork_command_line (app->term, cmd->str,
@@ -388,12 +398,6 @@ gap_app_start_gap (GapApp *app)
     if (!result)
     {
         g_critical ("%s: could not start gap", G_STRLOC);
-    }
-    else if (init_pkg)
-    {
-        char *init_string = ggap_pkg_init_string ();
-        gap_app_feed_gap (app, init_string);
-        g_free (init_string);
     }
 
     g_string_free (cmd, TRUE);

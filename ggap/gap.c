@@ -13,6 +13,7 @@
 
 #include "gap.h"
 #include "gapapp.h"
+#include "mooutils/mooutils-misc.h"
 #include <string.h>
 
 
@@ -25,25 +26,41 @@ gap_escape_filename (const char *filename)
 
 
 char*
-ggap_pkg_init_string (void)
+gap_pkg_init_file (void)
 {
     const char *in_name, *out_name;
     char *in_escaped, *out_escaped, *init_string;
+    char *filename;
+    MooApp *app;
+    GError *error = NULL;
 
-    g_return_val_if_fail (GAP_IS_APP (moo_app_get_instance ()), NULL);
+    app = moo_app_get_instance ();
+    g_return_val_if_fail (GAP_IS_APP (app), NULL);
+
+    filename = moo_app_tempnam (app);
+    g_return_val_if_fail (filename != NULL, NULL);
 
     in_name = moo_app_get_input_pipe_name (moo_app_get_instance ());
     out_name = moo_app_get_output_pipe_name (moo_app_get_instance ());
 
-    /* XXX */
     in_escaped = gap_escape_filename (in_name ? in_name : "");
     out_escaped = gap_escape_filename (out_name ? out_name : "");
     init_string = g_strdup_printf ("GGAP_API.INIT(\"%s\", \"%s\");\n",
                                    in_escaped, out_escaped);
 
+    if (!moo_save_file_utf8 (filename, init_string, -1, &error))
+    {
+        g_critical ("%s: %s", G_STRLOC, error->message);
+        g_error_free (error);
+        g_free (filename);
+        filename = NULL;
+    }
+
     g_free (in_escaped);
     g_free (out_escaped);
-    return init_string;
+    g_free (init_string);
+
+    return filename;
 }
 
 
