@@ -87,6 +87,7 @@
     </item>
 
     <item name="Help" label="_Help">
+      <item action="GapDoc"/>
       <separator/>
       <item action="About"/>
       <separator/>
@@ -175,6 +176,7 @@
     </item>
 
     <item name="Help" label="_Help">
+      <item action="GapDoc"/>
       <separator/>
       <item action="About"/>
       <separator/>

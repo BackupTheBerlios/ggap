@@ -44,6 +44,8 @@ ggap_SOURCES =      \
     gapapp.c        \
     gapapp.h        \
     gapapp-script.c \
+    gapdoc.c        \
+    gapdoc.h        \
     gapeditwindow.c \
     gapeditwindow.h \
     gapterm.c       \
@@ -51,6 +53,7 @@ ggap_SOURCES =      \
     gaptermwindow.c \
     gaptermwindow.h \
     gapprefs-glade.h\
+    gapdoc-glade.h  \
     usermenu-glade.h\
     usermenu.c      \
     usermenu.h
@@ -73,9 +76,10 @@ EXTRA_DIST =             \
     ggap-ui.xml          \
     ggap.opag            \
     glade/gapprefs.glade \
+    glade/gapdoc.glade   \
     glade/usermenu.glade
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c usermenu-glade.h
+BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c usermenu-glade.h
 XML2H = $(srcdir)/moo/mooutils/xml2h.sh
 PY2H = $(srcdir)/moo/mooutils/py2h.sh
 
@@ -84,6 +88,9 @@ ggap-ui.h: ggap-ui.xml $(XML2H)
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h
+
+gapdoc-glade.h: glade/gapdoc.glade $(XML2H)
+	sh $(XML2H) GAP_DOC_GLADE_UI $(srcdir)/glade/gapdoc.glade > gapdoc-glade.h
 
 usermenu-glade.h: glade/usermenu.glade $(XML2H)
 	sh $(XML2H) USER_MENU_GLADE_UI $(srcdir)/glade/usermenu.glade > usermenu-glade.h

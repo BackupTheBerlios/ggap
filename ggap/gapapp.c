@@ -19,6 +19,7 @@
 #include "gap.h"
 #include "gapprefs-glade.h"
 #include "usermenu.h"
+#include "gapdoc.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
 #include <mooterm/mooterm-prefs.h>
@@ -124,6 +125,20 @@ gap_app_class_init (GapAppClass *klass)
                                  "icon-stock-id", MOO_STOCK_RESTART,
                                  "closure-callback", gap_app_restart_gap,
                                  "closure-proxy-func", moo_app_get_instance,
+                                 NULL);
+
+    moo_window_class_new_action (edit_class, "GapDoc",
+                                 "name", "GAP Documentation",
+                                 "label", "_GAP Documentation",
+                                 "icon-stock-id", GTK_STOCK_HELP,
+                                 "closure-callback", gap_doc_show,
+                                 NULL);
+
+    moo_window_class_new_action (term_class, "GapDoc",
+                                 "name", "GAP Documentation",
+                                 "label", "_GAP Documentation",
+                                 "icon-stock-id", GTK_STOCK_HELP,
+                                 "closure-callback", gap_doc_show,
                                  NULL);
 
     g_type_class_unref (edit_class);
