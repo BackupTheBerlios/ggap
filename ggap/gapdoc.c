@@ -12,7 +12,6 @@
  */
 
 #include "gapdoc.h"
-#include "gapdoc-glade.h"
 #include <gtk/gtk.h>
 
 
@@ -22,32 +21,28 @@ enum {
 };
 
 
-G_DEFINE_TYPE(GapDoc, gap_doc, MOO_TYPE_WINDOW)
+G_DEFINE_TYPE(GapDoc, gap_doc, G_TYPE_OBJECT)
 
 
 static void
-gap_doc_destroy (GtkObject *object)
+gap_doc_dispose (GObject *object)
 {
-    GapDoc *win = GAP_DOC (object);
+    GapDoc *doc = GAP_DOC (object);
 
-    if (win->xml)
+    if (doc->index_store)
     {
-        g_object_unref (win->xml);
-        win->xml = NULL;
+        g_object_unref (doc->index_store);
+        doc->index_store = NULL;
     }
 
-    GTK_OBJECT_CLASS(gap_doc_parent_class)->destroy (object);
+    G_OBJECT_CLASS(gap_doc_parent_class)->dispose (object);
 }
 
 
 static void
 gap_doc_class_init (GapDocClass *klass)
 {
-    MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
-
-    moo_window_class_set_id (window_class, "GapDoc", "GapDoc");
-
-    GTK_OBJECT_CLASS(klass)->destroy = gap_doc_destroy;
+    G_OBJECT_CLASS(klass)->dispose = gap_doc_dispose;
 }
 
 
@@ -117,68 +112,30 @@ index_populate (GtkTreeStore *store)
 
 
 static void
-gap_doc_init_index (GapDoc *win)
+gap_doc_init_index (GapDoc *doc)
 {
-    GtkTreeView *index;
-    GtkTreeViewColumn *column;
-    GtkCellRenderer *cell;
-    GtkTreeStore *store;
-
-    index = moo_glade_xml_get_widget (win->xml, "index");
-    g_return_if_fail (index != NULL);
-
-    store = gtk_tree_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
-    index_populate (store);
-    gtk_tree_view_set_model (index, GTK_TREE_MODEL (store));
-
-    cell = gtk_cell_renderer_text_new ();
-    column = gtk_tree_view_column_new_with_attributes (NULL, cell,
-                                                       "text", IDX_COLUMN_NAME, NULL);
-    gtk_tree_view_append_column (index, column);
+    doc->index_store = gtk_tree_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
+    index_populate (doc->index_store);
 }
 
 
 static void
-gap_doc_init_gui (GapDoc *win)
+gap_doc_init (GapDoc *doc)
 {
-    gap_doc_init_index (win);
+    gap_doc_init_index (doc);
 }
 
 
-static void
-gap_doc_init (GapDoc *win)
+GapDoc *
+gap_doc_instance (void)
 {
-    win->xml = moo_glade_xml_new_empty ();
-    moo_glade_xml_parse_memory (win->xml, GAP_DOC_GLADE_UI, -1, "hpaned");
+    static gpointer instance;
 
-    gtk_container_add (GTK_CONTAINER (MOO_WINDOW(win)->vbox),
-                       moo_glade_xml_get_widget (win->xml, "hpaned"));
-    gtk_widget_show (MOO_WINDOW(win)->vbox);
-
-    g_signal_connect (win, "delete-event",
-                      G_CALLBACK (gtk_widget_hide_on_delete), NULL);
-
-    gap_doc_init_gui (win);
-}
-
-
-static GapDoc *
-instance (void)
-{
-    static gpointer inst;
-
-    if (!inst)
+    if (!instance)
     {
-        inst = g_object_new (GAP_TYPE_DOC, NULL);
-        g_object_add_weak_pointer (G_OBJECT (inst), &inst);
+        instance = g_object_new (GAP_TYPE_DOC, NULL);
+        g_object_add_weak_pointer (G_OBJECT (instance), &instance);
     }
 
-    return inst;
-}
-
-
-void
-gap_doc_show (void)
-{
-    gtk_window_present (GTK_WINDOW (instance ()));
+    return instance;
 }

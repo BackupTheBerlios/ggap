@@ -14,8 +14,7 @@
 #ifndef __GAP_DOC_H__
 #define __GAP_DOC_H__
 
-#include "mooutils/moowindow.h"
-#include "mooutils/mooglade.h"
+#include <gtk/gtktreestore.h>
 
 G_BEGIN_DECLS
 
@@ -34,19 +33,20 @@ typedef struct _GapDocClass     GapDocClass;
 
 struct _GapDoc
 {
-    MooWindow base;
-    MooGladeXML *xml;
+    GObject base;
+
+    GtkTreeStore *index_store;
 };
 
 struct _GapDocClass
 {
-    MooWindowClass base_class;
+    GObjectClass base_class;
 };
 
 
 GType   gap_doc_get_type    (void) G_GNUC_CONST;
 
-void    gap_doc_show        (void);
+GapDoc *gap_doc_instance    (void);
 
 
 G_END_DECLS

@@ -19,7 +19,7 @@
 #include "gap.h"
 #include "gapprefs-glade.h"
 #include "usermenu.h"
-#include "gapdoc.h"
+#include "gapdocwindow.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
 #include <mooterm/mooterm-prefs.h>
@@ -131,14 +131,14 @@ gap_app_class_init (GapAppClass *klass)
                                  "name", "GAP Documentation",
                                  "label", "_GAP Documentation",
                                  "icon-stock-id", GTK_STOCK_HELP,
-                                 "closure-callback", gap_doc_show,
+                                 "closure-callback", gap_doc_window_show,
                                  NULL);
 
     moo_window_class_new_action (term_class, "GapDoc",
                                  "name", "GAP Documentation",
                                  "label", "_GAP Documentation",
                                  "icon-stock-id", GTK_STOCK_HELP,
-                                 "closure-callback", gap_doc_show,
+                                 "closure-callback", gap_doc_window_show,
                                  NULL);
 
     g_type_class_unref (edit_class);

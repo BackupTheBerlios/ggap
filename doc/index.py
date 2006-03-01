@@ -6,9 +6,15 @@ from getopt import getopt
 import string
 
 re_entry = re.compile(r'<dt>(.*)<a href="(.*)">(.*)</a>')
+re_entry2 = re.compile(r'<dt>(.*)<a href="(.*)">(.*)</a>\s*<a href="(.*)">(.*)</a>')
+re_href = re.compile(r'<a href=".*">')
 
 def warn(s):
     sys.stderr.write("Warning: " + s + "\n")
+
+def check(e):
+    if re_href.search(e):
+        raise "Ooops"
 
 def parse(filename):
     try:
@@ -27,13 +33,18 @@ def parse(filename):
         if not l:
             continue
 
-        m = re_entry.match(l)
+        m = re_entry2.match(l)
 
-        if m is None:
-            #sys.stderr.write(l + "\n")
-            pass
-        else:
+        if not m is None:
             entries.append([m.group(1), m.group(2), m.group(3)])
+            entries.append([m.group(1), m.group(4), m.group(5)])
+            check(m.group(3))
+            check(m.group(5))
+        else:
+            m = re_entry.match(l)
+            if not m is None:
+                entries.append([m.group(1), m.group(2), m.group(3)])
+                check(m.group(3))
 
     sys.stderr.write("File " + filename + " Found " + str(len(entries)) + " entries\n")
 

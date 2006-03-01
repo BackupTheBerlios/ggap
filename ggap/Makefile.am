@@ -46,6 +46,8 @@ ggap_SOURCES =      \
     gapapp-script.c \
     gapdoc.c        \
     gapdoc.h        \
+    gapdocwindow.c  \
+    gapdocwindow.h  \
     gapeditwindow.c \
     gapeditwindow.h \
     gapterm.c       \
