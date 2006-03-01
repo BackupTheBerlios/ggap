@@ -15,6 +15,7 @@
 #define __GAP_DOC_H__
 
 #include "mooutils/moowindow.h"
+#include "mooutils/mooglade.h"
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,7 @@ typedef struct _GapDocClass     GapDocClass;
 struct _GapDoc
 {
     MooWindow base;
+    MooGladeXML *xml;
 };
 
 struct _GapDocClass
