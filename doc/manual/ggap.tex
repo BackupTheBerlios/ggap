@@ -1,0 +1,36 @@
+\documentclass[10pt,titlepage]{book}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage[dvips]{hyperref}
+
+\author{Yevgen Muntyan}
+\title{GGAP Manual}
+\date{03/02/06}
+
+
+\newcommand{\variable}[1]{\texttt{#1}}
+\newcommand{\true}{\variable{true}}
+\newcommand{\false}{\variable{false}}
+\newcommand{\none}{\variable{none}}
+
+\newcommand{\funcname}[1]{\texttt{#1}}
+\newcommand{\function}[2]{\funcname{#1}(\textit{#2})}
+\renewcommand{\arg}[1]{\textit{#1}}
+\newcommand{\returns}[1]{\textit{Returns: }#1}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\newcommand{\python}{Python}
+\newcommand{\gap}{GAP}
+
+
+\begin{document}
+% \maketitle
+
+\include{mooscript}
+\include{activestrings}
+\include{usermenu}
+
+\end{document}
