@@ -20,3 +20,4 @@ doc/manual/.*\.py$
 doc/manual/.*\.pyc$
 doc/manual/.*\.html$
 doc/manual/.*\_html.tmpl$
+doc/manual/.*\.tex$
