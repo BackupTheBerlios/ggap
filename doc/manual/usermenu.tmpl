@@ -1,0 +1,19 @@
+## usermenu.tmpl
+##
+#extends base
+#def title
+User-defined actions#slurp
+#end def
+##
+#def body
+
+$section('Functions')
+
+These are builtin functions available to scripts in user-defined actions scripts.
+
+$list
+$item $function('GAP', 'string') - pastes $variable('string') to the $gap console, as if it
+was entered by user.
+$endlist
+
+#end def ## body
