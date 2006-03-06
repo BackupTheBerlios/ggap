@@ -3,13 +3,13 @@
 import sys
 from manual import chap_titles
 
-TEMPLATE = 'tex.tmpl'
 CHAPTER_FILE_NAME = 'CHAPTER_FILE_NAME'
 CHAPTER_TITLE = 'CHAPTER_TITLE'
 
-name = sys.argv[1]
+type = sys.argv[1]
+name = sys.argv[2]
 
-file = open(TEMPLATE)
+file = open(type + ".tmpl")
 text = file.read()
 file.close()
 

@@ -38,10 +38,10 @@ $(BUILD)/index_html.py: index_html.tmpl manual.py
 $(HTML_CHAPS): %.html: $(BUILD)/%.py $(BUILD)/%_html.py manual.py
 	$(PYTHON) $(BUILD)/$*_html.py > $(BUILD)/$@ && mv $(BUILD)/$@ $@
 
-$(HTML_CHAPS_TEMPLATES): $(BUILD)/%_html.tmpl: html.tmpl gen_html_tmpl manual.py
+$(HTML_CHAPS_TEMPLATES): $(BUILD)/%_html.tmpl: html.tmpl gen_tmpl manual.py
 	mkdir -p $(BUILD)
 	cp manual.py $(BUILD)/
-	$(PYTHON) gen_html_tmpl $* > $@
+	$(PYTHON) gen_tmpl html $* > $@
 
 tex: $(TEX_CHAPS) ggap.tex
 
@@ -61,12 +61,12 @@ $(BUILD)/ggap_tex.py: ggap_tex.tmpl manual.py
 $(TEX_CHAPS): %.tex: $(BUILD)/%.py $(BUILD)/%_tex.py manual.py
 	$(PYTHON) $(BUILD)/$*_tex.py > $(BUILD)/$@ && mv $(BUILD)/$@ $@
 
-$(TEX_CHAPS_TEMPLATES): $(BUILD)/%_tex.tmpl: tex.tmpl gen_tex_tmpl manual.py
+$(TEX_CHAPS_TEMPLATES): $(BUILD)/%_tex.tmpl: tex.tmpl gen_tmpl manual.py
 	mkdir -p $(BUILD)
 	cp manual.py $(BUILD)/
-	$(PYTHON) gen_tex_tmpl $* > $@
+	$(PYTHON) gen_tmpl tex $* > $@
 
 clean:
-	rm -rf $(BUILD) *.pyc *~ *.html *.tex *.log *.aux *.out
+	rm -rf $(BUILD) *.pyc *~ *.html *.tex *.log *.aux *.out *.dvi
 
 .PHONY: all html tex clean
