@@ -1,29 +1,45 @@
 PYTHON = /usr/bin/python
 CHEETAH = /usr/bin/cheetah
 
-COMMON = base.py
-HTML = mooscript.html usermenu.html activestrings.html
-HTML_COMPILED = mooscript_html.py usermenu_html.py activestrings_html.py index_html.py
-HTML_TEMPLATES = mooscript_html.tmpl usermenu_html.tmpl activestrings_html.tmpl
-COMPILED = base.py mooscript.py usermenu.py activestrings.py index.py $(HTML_COMPILED)
+COMMON = $(BUILD)/base.py
+HTML_CHAPS = mooscript.html usermenu.html activestrings.html
+HTML_CHAPS_COMPILED = $(BUILD)/mooscript_html.py $(BUILD)/usermenu_html.py $(BUILD)/activestrings_html.py
+HTML_CHAPS_TEMPLATES = $(BUILD)/mooscript_html.tmpl $(BUILD)/usermenu_html.tmpl $(BUILD)/activestrings_html.tmpl
+COMPILED = $(BUILD)/base.py $(BUILD)/mooscript.py $(BUILD)/usermenu.py $(BUILD)/activestrings.py $(BUILD)/index.py
+
+BUILD = build
 
 all: html
 
-html: $(HTML) index.html
+html: $(HTML_CHAPS) index.html
 
-$(COMPILED): %.py: %.tmpl
-	$(CHEETAH) c $<
+$(COMPILED): $(BUILD)/%.py: %.tmpl
+	mkdir -p $(BUILD)
+	cp manual.py $(BUILD)/
+	$(CHEETAH) c $< --stdout > $@
 
-index.html: index_html.py
-	$(PYTHON) index_html.py > $@.tmp && mv $@.tmp $@
+$(HTML_CHAPS_COMPILED): $(BUILD)/%.py: $(BUILD)/%.tmpl
+	mkdir -p $(BUILD)
+	cp manual.py $(BUILD)/
+	$(CHEETAH) c $< --stdout > $@
 
-$(HTML): %.html: %.py %_html.py $(COMMON)
-	$(PYTHON) $*_html.py > $@.tmp && mv $@.tmp $@
+index.html: $(BUILD)/index_html.py manual.py
+	$(PYTHON) $(BUILD)/index_html.py > $(BUILD)/$@ && mv $(BUILD)/$@ $@
 
-$(HTML_TEMPLATES): %_html.tmpl: html.tmpl gen_html_tmpl
+$(BUILD)/index_html.py: index_html.tmpl
+	mkdir -p $(BUILD)
+	cp manual.py $(BUILD)/
+	$(CHEETAH) c $< --stdout > $@
+
+$(HTML_CHAPS): %.html: $(BUILD)/%.py $(BUILD)/%_html.py $(COMMON)
+	$(PYTHON) $(BUILD)/$*_html.py > $(BUILD)/$@ && mv $(BUILD)/$@ $@
+
+$(HTML_CHAPS_TEMPLATES): $(BUILD)/%_html.tmpl: html.tmpl gen_html_tmpl manual.py
+	mkdir -p $(BUILD)
+	cp manual.py $(BUILD)/
 	$(PYTHON) gen_html_tmpl $* > $@
 
 clean:
-	rm -f *.html $(COMPILED) $(HTML_TEMPLATES) *~ *.bak *.pyc *.tmp
+	rm -rf $(BUILD) *.pyc *~ *.html
 
 .PHONY: all html clean
