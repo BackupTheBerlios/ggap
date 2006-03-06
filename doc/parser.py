@@ -3,43 +3,202 @@
 import sys
 import re
 
-class Para(object):
+
+re_file_info = re.compile(r'^%A  .*')
+re_copyright = re.compile(r'^%Y  .*')
+re_sectsep   = re.compile(r'^%%%%%%%%%%%%%%%%%%%%%%%%%%[%]+')
+re_comment   = re.compile(r'^%.*')
+re_chapter   = re.compile(r'^\\(Chapter|PreliminaryChapter){.*}')
+re_section   = re.compile(r'^\\Section{.*}')
+re_index     = re.compile(r'^\\(index|atindex).*')
+
+
+class Node(object):
     def __init__(self):
         object.__init__(self)
 
         self.lines = []
+        self.indices = []
 
     def add(self, line):
         self.lines.append(line)
 
-class Text(Para): pass
-class Symbol(Para): pass
-class Example(Para): pass
-class Items(Para): pass
+    def parse(self):
+        raise NotImplementedError("%s.parse() not implemented" % (type(self),))
+
+    def add_index(self, list):
+        self.indices += list
 
 
-class Section(object):
+class Para(Node): pass
+
+class Text(Para):
+    def parse(self):
+        pass
+
+class Example(Para):
+    def parse(self):
+        pass
+
+class Items(Para):
+    def parse(self):
+        pass
+
+class List(Para):
+    def parse(self):
+        pass
+
+class Symbol(Para):
     def __init__(self, line):
-        object.__init__(self)
+        Para.__init__(self)
+        self.add(line)
 
-        self.line = line
+    def parse(self):
+        pass
+
+class Special(Para):
+    def __init__(self, line):
+        Para.__init__(self)
+        self.add(line)
+
+    def parse(self):
+        pass
+
+
+class Section(Node):
+    def __init__(self):
+        Node.__init__(self)
+
+    def parse(self):
+        if not self.lines:
+            raise RuntimeError("empty section")
+
+        if re_section.match(self.lines[0]):
+                ptr = 1
+        else:
+                ptr = 0
+
+        para = None
         self.paragraphs = []
+        self.next_para_indices = []
 
-    def new_paragraph(self, typ, line):
+        blocks = [
+            ["\\beginexample", "\\endexample", Example],
+            ["\\begintt", "\\endtt", Example],
+            ["\\beginitems", "\\enditems", Items],
+            ["\\beginlist", "\\endlist", List],
+        ]
+
+        while ptr < len(self.lines):
+            line = self.lines[ptr]
+            ptr += 1
+
+            if not line:
+                if para:
+                    para = None
+                continue
+
+            if line.startswith("\\>"):
+                self.add_para(Symbol(line))
+                para = None
+                continue
+
+            found_block = False
+            for b in blocks:
+                if line.startswith(b[0]):
+                    last = self.skip_block(ptr - 1, b[1])
+                    self.add_block(b[2], ptr - 1, last)
+                    ptr = last + 1
+                    para = None
+                    found_block = True
+                    break
+            if found_block:
+                continue
+
+            if re_index.match(line):
+                first = ptr - 1
+                last = first
+
+                if first == 2:
+                    self.add_index([line])
+                    continue
+
+                while re_index.match(self.lines[last + 1]):
+                    last += 1
+
+                self.add_index_next_para(first, last)
+                ptr = last + 1
+                continue
+
+            if line.startswith("\\)"):
+                para = None
+                self.add_para(Special(line))
+                continue
+
+            if line.startswith("%"):
+                continue
+
+            # XXX
+            if not line.startswith("\\") or \
+                   line.startswith("\\ldots") or \
+                   line.startswith("\\matrix") or \
+                   line.startswith("\\medskip") or \
+                   line.startswith("\\choose") or \
+                   line.startswith("\\beta") or \
+                   line.startswith("\\URL") or \
+                   line.startswith("\\sum") or \
+                   line.startswith("\\chi") or \
+                   line.startswith("\\sigma") or \
+                   line.startswith("\\{") or \
+                   line.startswith("\\frac") or \
+                   line.startswith("\\right") or \
+                   line.startswith("\\\"") or \
+                   line.startswith("\\cite"):
+                if para:
+                    assert type(para) == Text
+                    para.add(line)
+                para = Text()
+                para.add(line)
+                self.add_para(para)
+                continue
+
+            raise RuntimeError("bad paragraph start '%s'" % (line,))
+
+        print "%d paragraphs" % (len(self.paragraphs),)
+
+        for para in self.paragraphs:
+            para.parse()
+
+    def skip_block(self, first, end):
+        last = first
+        while last < len(self.lines) and not self.lines[last].startswith(end):
+            last += 1
+        return last
+
+    def add_block(self, typ, first, last):
         para = typ()
-        para.add(line)
-        self.paragraphs.append(para)
-        return para
+        self.add_para(para)
+        for i in range(first, last+1):
+            para.add(self.lines[i])
 
-class Chapter(object):
-    def __init__(self, line):
-        object.__init__(self)
+    def add_index_next_para(self, first, last):
+        self.next_para_indices += self.lines[first:last+1]
+
+    def add_para(self, para):
+        self.paragraphs.append(para)
+        if self.next_para_indices:
+            para.add_index(self.next_para_indices)
+            self.next_para_indices = []
+
+
+class Chapter(Node):
+    def __init__(self):
+        Node.__init__(self)
 
         self.sections = []
-        self.line = line
 
-    def new_section(self, line):
-        self.sections.append(Section(line))
+    def new_section(self):
+        self.sections.append(Section())
         return self.sections[-1]
 
 
@@ -57,18 +216,9 @@ class Doc(object):
     def add_copyright(self, line):
         self.copyright.append(line)
 
-    def new_chapter(self, line):
-        self.chapters.append(Chapter(line))
+    def chapter(self):
+        self.chapters.append(Chapter())
         return self.chapters[-1]
-
-re_file_info = re.compile(r'^%A  .*')
-re_copyright = re.compile(r'^%Y  .*')
-re_sectsep   = re.compile(r'^%%%%%%%%%%%%%%%%%%%%%%%%%%[%]+')
-re_comment   = re.compile(r'^%.*')
-
-re_chapter   = re.compile(r'^\\Chapter{.*}')
-re_section   = re.compile(r'^\\Section{.*}')
-
 
 class Parser(object):
     def __init__(self):
@@ -77,117 +227,99 @@ class Parser(object):
 
     def reset(self):
         self.tags = {}
-        self.state = self.start
         self.doc = Doc()
+        self.ptr = 0
+        self.chap = None
+        self.sect = None
 
     def parse(self, file):
         f = open(file)
         lines = f.readlines()
         f.close()
 
+        self.lines = []
+
         for i in xrange(len(lines)):
             l = lines[i]
             if l[-1:] == '\n':
-                lines[i] = l[:-1]
+                l = l[:-1]
+            if l[-1:] == '\r':
+                l = l[:-1]
+            self.lines.append(l)
 
         self.reset()
         self.doc.file = file
-        self.lines = lines
-        self.ptr = 0
 
-        self.chap = None
-        self.sect = None
-        self.para = None
+        self.get_sections()
 
-        while self.ptr < len(lines):
-            self.state()
-            self.ptr += 1
+        for s in parser.doc.chapters[-1].sections:
+            s.parse()
 
-    def start(self):
-        line = self.lines[self.ptr]
-        m = re_file_info.match(line)
-        if m:
-            self.doc.add_file_info(line)
-            return
-        m = re_copyright.match(line)
-        if m:
-            self.doc.add_copyright(line)
-            return
-        m = re_comment.match(line)
-        if m:
-            return
-        m = re_chapter.match(line)
-        if m:
-            self.chap = self.doc.new_chapter(line)
-            self.state = self.chapter
-            return
-        raise RuntimeError("wrong line in the state 'start'\n" + line)
-
-    def try_section(self):
-        line = self.lines[self.ptr]
-
-        m = re_sectsep.match(line)
-
-        if m:
-            self.ptr += 1
+    def get_sections(self):
+        while self.ptr < len(self.lines):
             line = self.lines[self.ptr]
-            m = re_section.match(line)
-            if m:
-                self.sect = self.chap.new_section(line)
-                self.state = self.section
-                return True
-            raise RuntimeError("wrong line %d after %%%% line in the state 'chapter'\n%s\n" % \
-                                                                    (self.ptr + 1, line))
-        return False
+            self.ptr += 1
 
-    def chapter(self):
-        line = self.lines[self.ptr]
+            if re_file_info.match(line):
+                self.doc.add_file_info(line)
+                continue
 
-        if not len(line):
-            return
+            if re_copyright.match(line):
+                self.doc.add_copyright(line)
+                continue
 
-        if self.try_section():
-            return
+            if re_chapter.match(line):
+                if self.chap:
+                    raise RuntimeError("duplicated \\Chapter at line %d" % (self.ptr,))
+                self.chap = self.doc.chapter()
+                self.chap.add(line)
+                continue
 
-        raise RuntimeError("wrong line %d in the state 'chapter'\n%s\n" % (self.ptr + 1, line))
+            if not self.chap and re_comment.match(line):
+                continue
 
-    def section(self):
-        line = self.lines[self.ptr]
+            if re_sectsep.match(line):
+                if self.lines[self.ptr] == "%%" and \
+                   self.lines[self.ptr+1].startswith("%E"):
+                    break
 
-        if not line:
-            self.para = None
-            return
+                while not self.lines[self.ptr]:
+                    self.ptr += 1
+                line = self.lines[self.ptr]
+                if not re_section.match(line):
+                    raise RuntimeError("wrong line %d after %%%%" % (self.ptr+1,))
 
-        if line.startswith("\\beginitems"):
-            self.para = self.sect.new_paragraph(Items, line)
-            return
+                self.sect = self.chap.new_section()
+                self.sect.add(self.lines[self.ptr])
 
-        if line.startswith("\\>"):
-            self.para = self.sect.new_paragraph(Symbol, line)
-            return
+                self.ptr += 1
+                continue
 
-        if line.startswith("\\beginexample"):
-            self.para = self.sect.new_paragraph(Example, line)
-            return
+            if re_comment.match(line):
+                continue
 
-        if not line.startswith("\\"):
-            self.para = self.sect.new_paragraph(Text, line)
-            return
+            if not self.sect and not line:
+                continue
 
-        if self.para:
-            self.para.add(line)
-            return
+            if not self.sect:
+                self.sect = self.chap.new_section()
 
-        if self.try_section():
-            return
+            self.sect.add(line)
 
-        if line.startswith("\%"):
-            return
-
-        raise RuntimeError("unknown paragraph type on line %d\n%s\n" % (self.ptr + 1, line))
 
 if __name__ == '__main__':
-    file = '/home/muntyan/Desktop/gap/gap4r4/doc/ref/matint.tex'
+    files = ['/home/muntyan/Desktop/gap/gap4r4/doc/ref/matint.tex']
+    files = ['/home/muntyan/Desktop/gap/gap4r4/doc/ref/rws.tex']
+    files = ['/home/muntyan/Desktop/gap/gap4r4/doc/ref/about.tex']
+
     if sys.argv[1:]:
-        file = sys.argv[1]
-    Parser().parse(file)
+        files = sys.argv[1:]
+
+    for f in files:
+        if f.endswith("extcover.tex") or \
+           f.endswith("ficover.tex"):
+            continue
+        print "file " + f
+        parser = Parser()
+        parser.parse(f)
+        print "in file %s: %d sections" % (f, len(parser.doc.chapters[-1].sections),)

@@ -1,0 +1,303 @@
+#extends base
+#def title
+MooScript#slurp
+#end def
+##
+#def body
+
+$section('Syntax')
+
+MooScript is a simple scripting language made after $python and $gap. A
+script consists of a sequence of statements separated by semicolons.
+
+$subsection('Values')
+
+The following data types are available in scripts:
+
+$list
+$item $none - this is a value representing $quote('no value').
+
+$item Boolean - boolean type. Values of this type can take two values - $true
+and $false.
+
+$item String - string type. Strings in scripts are entered as a sequence of
+characters enclosed into single or double quote signs, e.g.
+$code
+"a string"
+'another string'
+$endcode
+String may contain quote sign which is not used for the quoting the string itself,
+so one may write $code('"\'quoted string\'"') or $code('\'"another quoted string"\'').
+This syntax is useful for producing strings sent to GAP. For example, to send
+a string $code('Print("something");') one just writes $code('GAP(\'Print("something");\')').
+
+$item Integer - this is the only numerical type in MooScript.
+
+$item List - it is similar to $gap lists, with the difference that lists may not have
+gaps. Syntax is the same as in $gap:
+$code
+[1,2,3,4]
+[1..10]
+$endcode
+
+$endlist
+
+$endsubsection ## Values
+
+$subsection('Variables')
+When script is started, there are few predefined variables, such as $true or $none.
+New variables are created using assignment operator $code('='), e.g. $code('a = 1;') or
+$code('b = [1,2,3];'). Variables may be assigned new value without restriction, e.g.
+$code
+a = 1;
+b = 2;
+a = a * b + a;
+$endcode
+$endsubsection ## Variables
+
+$subsection('Functions')
+Function calls have usual syntax $code('function(arg1, arg2, ...);'). All functions
+return value (that may be $none), so assignment like $code('a = func(x);') always
+makes sense.
+$endsubsection ## ('Functions')
+
+$subsection('Basic operations')
+
+$subsubsection('Operations with integers')
+
+$list
+$item $code('-a')
+$item $code('a + b')
+$item $code('a - b')
+$item $code('a * b')
+$endlist
+$endsubsubsection ## ('Operations with integers')
+
+$subsubsection('String operations')
+
+$list
+$item $code('a + b') - concatenation of strings $variable('a') and $variable('b').
+$item $code('a * n') - for integer $variable('n'), produces string $variable('a') replicated
+$variable('n') times.
+$item $code('a \% args') - format operator, similar to C printf function.
+$code
+'%s%s' % ['a', 'b']
+$endcode
+produces 'ab'.
+$endlist
+
+$endsubsubsection ## ('String operations')
+
+$subsubsection('List operations')
+
+$list
+$item $code('a + b') - concatenation of lists $variable('a') and $variable('b').
+$endlist
+$endsubsubsection ## ('List operations')
+
+$subsubsection('Logical operations')
+Every value produces boolean value $true or $false as follows:
+$list
+$item $none is $false.
+$item a string is $false if and only if it's an empty string $code('""').
+$item a list is $false if and only if it's an empty list $code('[]').
+$item an integer is $false if and only if it's $code('0').
+$endlist
+
+Logical operations accept any arguments, which are converted to booleans
+before evaluating logical expression. There are the following logical
+operations:
+
+$list
+$item $code('and'). Synonim is $code('&&'), e.g. $code('a and b') or $code('a && b').
+$item $code('or'). Synonim is $code('||'), e.g. $code('a or b') or $code('a || b').
+$item $code('not'). Synonim is $code('!'), e.g. $code('not a') or $code('!a').
+$endlist
+$endsubsubsection ## ('Logical operations')
+
+$subsubsection('Comparison')
+Values may be compared. Two values are equal only if they have the same type.
+Ordering is defined on sets of values of the same type.
+$list
+$item $code('a == b') - $true if $variable('a') equals $variable('b'). It has usual
+meaning for strings and integers; two lists are equal if and only if they are
+equal element-wise.
+$item $code('a != b') - negation of $code('==') relation.
+$item $code('a < b')
+$item $code('a <= b')
+$item $code('a > b')
+$item $code('a >= b')
+$endlist
+$endsubsubsection ## ('Comparison')
+
+$endsubsection ## ('Basic operations')
+
+
+$subsection('Loops')
+
+There are three kinds of loops.
+
+$code
+for \textit{variable} in \textit{list} do \textit{stmt1; stmt2; ... ;} od;
+while \textit{condition} do \textit{stmt1; stmt2; ... ;} od;
+do \textit{stmt1; stmt2; ... ;} while \textit{condition};
+$endcode
+
+$endsubsection ## ('Loops')
+
+$subsection('Conditionals')
+
+There are two forms of $code('if') statement.
+
+$code
+if \textit{condition} then \textit{stmt1; stmt2; ... ;} fi;
+if \textit{condition} then \textit{stmt1; ... ;} else \textit{stmt1; ... ;} fi;
+$endcode
+
+There is also ternary operator similar to the one in C programming language.
+
+$code
+\textit{expr} ? \textit{expr1} : \textit{expr2};
+$endcode
+
+It evaluates and returns $variable('expr1') if $variable('expr')
+evaluates to $true, and $variable('expr2') otherwise.
+
+$endsubsection ## ('Conditionals')
+$endsection ## ('Syntax')
+
+
+##
+## Builtin values
+##
+$section('Builtin values')
+
+These are builtin values always available in scripts.
+
+$none - the value representing "nothing", or "no value".
+Evaluates as $false in logical expressions.
+
+$true - logical true value.
+
+$false - logical false value.
+
+$endsection ## ('Builtin values')
+
+##
+## Builtin functions
+##
+$section('Builtin functions')
+
+These are builtin functions always available in scripts.
+
+\function{Print}{arg1, ...} - prints its arguments to console. It is
+useful for debugging purposes.
+
+\function{Include}{file} - executes content of \arg{file}.
+
+\function{Python}{string} - executes $python code from \arg{string}.
+
+\function{Abort}{} - aborts script execution, ``return for poor''.
+
+\function{Str}{val} - converts \arg{val} to a string.
+
+\function{Int}{val} - converts \arg{val} to an integer.
+
+\function{Len}{val} - returns length of \arg{val}. It is character length
+for a string or length for a list.
+
+\function{Text}{text = none, dialog\_text = none} - dialog used for displaying
+and modifying big amount of \arg{text}. \returns{new text}.
+
+\function{Entry}{entry\_text = $none, dialog\_text = $none, hide\_text = $false} -
+analogous to \funcname{Text}, but for small amounts of text.
+\returns{new entry content}.
+
+\function{Info}{text} - displays information dialog.
+
+\function{Error}{text} - displays error dialog.
+
+\function{Question}{text} - displays question dialog. \returns{$true or $false}.
+
+\function{Warning}{text} - same as \funcname{Question} but with warning icon.
+
+\function{ChooseFile}{title = $none, start = $none} - file chooser dialog.
+\returns{filename or $none}.
+
+\function{ChooseFiles}{title = $none, start = $none} - multiple files chooser dialog.
+\returns{list of files or $none}.
+
+\function{ChooseDir}{title = $none, start = $none} - directory chooser dialog.
+\returns{directory or $none}.
+
+\function{ChooseFileSave}{title = $none, start = $none} - dialog that allows
+choosing existing file or entering new file name.
+\returns{filename or $none}.
+
+$endsection ## ('Builtin functions')
+
+
+##
+## Using Python code
+##
+$section('Using ' + $python + ' code')
+
+It is possible to use $python code in scripts. The syntax used for this is the
+following:
+$code
+===
+python code...
+===
+$endcode
+Example:
+$code
+Info('This is MooScript');
+===
+import gtk
+w = gtk.Window()
+l = gtk.Label('and this is Python')
+w.add(l)
+w.show_all()
+===
+Info('MooScript again');
+$endcode
+
+$endsection ## ('Using ' + $python + ' code')
+
+
+##
+## Examples
+##
+$section('Examples')
+
+$subsection('Silly game')
+$code
+stop = false;
+attempts = 0;
+while not stop do
+  word = Entry('', 'Guess a word');
+  attempts = attempts + 1;
+  if word == 'word' then
+    stop = true;
+    Info('Yes!');
+  else
+    Error('Nope');
+  fi;
+od;
+$endcode
+$endsubsection
+
+$subsection('Choosing file')
+This example uses $code('GAP') command which pastes a string to the $gap
+console.
+$code
+file = ChooseFile('Pick a File');
+if file then
+  GAP('Read("%s");\n' % [file]);
+fi;
+$endcode
+$endsubsection
+
+$endsection ## ('Examples')
+
+#end def

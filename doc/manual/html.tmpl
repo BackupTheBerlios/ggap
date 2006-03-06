@@ -1,0 +1,106 @@
+## class name gets substituted by gen_html_tmpl
+## it must be first occurrence of this string in the file!
+#extends DOC_FILE_NAME
+#implements respond
+##
+#####################################################################
+## HTML output methods
+##
+#def section(name)
+<h2 id="SectionTitle">$name</h2>
+<div id="Section">
+#end def
+##
+#def subsection(name)
+<h3 id="SubsectionTitle">$name</h3>
+<div id="Subsection">
+#end def
+##
+#def subsubsection(name)
+<h4 id="SubsubsectionTitle">$name</h4>
+<div id="Subsubsection">
+#end def
+##
+#def endsection
+</div>
+#end def
+#def endsubsection
+</div>
+#end def
+#def endsubsubsection
+</div>
+#end def
+##
+#def list(numbered = False)
+<ul>
+#end def
+#def item
+<li>
+#end def
+#def endlist
+</ul>
+#end def
+##
+##
+##
+#def code(string_ = None)
+#if $string_
+<code id="Code">$string_</code>#slurp
+#else
+<pre id="Code">#slurp
+#end if
+#end def
+##
+#def endcode
+</pre>
+#end def
+##
+#def variable(string_)
+<em>$string_</em>#slurp
+#end def
+##
+#def quote(string_)
+<q>$string_</q>#slurp
+#end def
+##
+##
+##
+#def gap
+GAP#slurp
+#end def
+##
+#def python
+Python#slurp
+#end def
+##
+#def none
+$code('none')#slurp
+#end def
+##
+#def true
+$code('true')#slurp
+#end def
+##
+#def false
+$code('false')#slurp
+#end def
+##
+##
+#####################################################################
+## HTML document body
+##
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+  <title>$title</title>
+  <link rel="stylesheet" type="text/css" href="default.css">
+</head>
+<body>
+<div id="body">
+<h1>$title</h1>
+$body
+</div>
+</body>
+</html>
+##
