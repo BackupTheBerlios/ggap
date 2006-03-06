@@ -1,0 +1,16 @@
+#from manual import title, chapters
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+  <title>$title</title>
+</head>
+<body>
+<h1>$title</h1>
+<ol id="contents">
+#for $chap in $chapters.keys
+<li><a href=#echo '"' + $chap + '.html"'#>$chapters[$chap]</a></li>
+#end for
+</ol>
+</body>
+</html>

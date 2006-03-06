@@ -1,7 +1,11 @@
 ## class name gets substituted by gen_html_tmpl
 ## it must be first occurrence of this string in the file!
-#extends DOC_FILE_NAME
+#extends CHAPTER_FILE_NAME
 #implements respond
+##
+#def title
+CHAPTER_TITLE
+#end def
 ##
 #####################################################################
 ## HTML output methods
