@@ -1,3 +1,5 @@
+## mooscript.tmpl
+##
 #extends base
 #def title
 MooScript#slurp
@@ -22,20 +24,20 @@ and $false.
 
 $item String - string type. Strings in scripts are entered as a sequence of
 characters enclosed into single or double quote signs, e.g.
-$code
+$code#slurp
 "a string"
 'another string'
 $endcode
 String may contain quote sign which is not used for the quoting the string itself,
 so one may write $code('"\'quoted string\'"') or $code('\'"another quoted string"\'').
-This syntax is useful for producing strings sent to GAP. For example, to send
+$para This syntax is useful for producing strings sent to GAP. For example, to send
 a string $code('Print("something");') one just writes $code('GAP(\'Print("something");\')').
 
 $item Integer - this is the only numerical type in MooScript.
 
 $item List - it is similar to $gap lists, with the difference that lists may not have
 gaps. Syntax is the same as in $gap:
-$code
+$code#slurp
 [1,2,3,4]
 [1..10]
 $endcode
@@ -48,7 +50,7 @@ $subsection('Variables')
 When script is started, there are few predefined variables, such as $true or $none.
 New variables are created using assignment operator $code('='), e.g. $code('a = 1;') or
 $code('b = [1,2,3];'). Variables may be assigned new value without restriction, e.g.
-$code
+$code#slurp
 a = 1;
 b = 2;
 a = a * b + a;
@@ -79,11 +81,8 @@ $list
 $item $code('a + b') - concatenation of strings $variable('a') and $variable('b').
 $item $code('a * n') - for integer $variable('n'), produces string $variable('a') replicated
 $variable('n') times.
-$item $code('a \% args') - format operator, similar to C printf function.
-$code
-'%s%s' % ['a', 'b']
-$endcode
-produces 'ab'.
+$item $code('a % args') - format operator, similar to C printf function.
+$code("'%s%s' % ['a', 'b']") produces 'ab'.
 $endlist
 
 $endsubsubsection ## ('String operations')
@@ -137,10 +136,10 @@ $subsection('Loops')
 
 There are three kinds of loops.
 
-$code
-for \textit{variable} in \textit{list} do \textit{stmt1; stmt2; ... ;} od;
-while \textit{condition} do \textit{stmt1; stmt2; ... ;} od;
-do \textit{stmt1; stmt2; ... ;} while \textit{condition};
+$code#slurp
+for $italic('variable') in $italic('list') do $italic('stmt1; stmt2; ... ;') od;
+while $italic('condition') do $italic('stmt1; stmt2; ... ;') od;
+do $italic('stmt1; stmt2; ... ;') while $italic('condition');
 $endcode
 
 $endsubsection ## ('Loops')
@@ -149,15 +148,15 @@ $subsection('Conditionals')
 
 There are two forms of $code('if') statement.
 
-$code
-if \textit{condition} then \textit{stmt1; stmt2; ... ;} fi;
-if \textit{condition} then \textit{stmt1; ... ;} else \textit{stmt1; ... ;} fi;
+$code#slurp
+if $italic('condition') then $italic('stmt1; stmt2; ... ;') fi;
+if $italic('condition') then $italic('stmt1; ... ;') else $italic('stmt1; ... ;') fi;
 $endcode
 
 There is also ternary operator similar to the one in C programming language.
 
-$code
-\textit{expr} ? \textit{expr1} : \textit{expr2};
+$code#slurp
+$italic('expr') ? $italic('expr1') : $italic('expr2');
 $endcode
 
 It evaluates and returns $variable('expr1') if $variable('expr')
@@ -190,49 +189,35 @@ $section('Builtin functions')
 
 These are builtin functions always available in scripts.
 
-\function{Print}{arg1, ...} - prints its arguments to console. It is
+$list
+$item $function('Print', 'arg1', '...') - prints its arguments to console. It is
 useful for debugging purposes.
-
-\function{Include}{file} - executes content of \arg{file}.
-
-\function{Python}{string} - executes $python code from \arg{string}.
-
-\function{Abort}{} - aborts script execution, ``return for poor''.
-
-\function{Str}{val} - converts \arg{val} to a string.
-
-\function{Int}{val} - converts \arg{val} to an integer.
-
-\function{Len}{val} - returns length of \arg{val}. It is character length
+$item $function('Include', 'file') - executes content of $arg('file').
+$item $function('Python', 'string') - executes $python code from $arg('string').
+$item $function('Abort') - aborts script execution, ``return for poor''.
+$item $function('Str', 'val') - converts $arg('val') to a string.
+$item $function('Int', 'val') - converts $arg('val') to an integer.
+$item $function('Len', 'val') - returns length of $arg('val'). It is character length
 for a string or length for a list.
-
-\function{Text}{text = none, dialog\_text = none} - dialog used for displaying
-and modifying big amount of \arg{text}. \returns{new text}.
-
-\function{Entry}{entry\_text = $none, dialog\_text = $none, hide\_text = $false} -
-analogous to \funcname{Text}, but for small amounts of text.
-\returns{new entry content}.
-
-\function{Info}{text} - displays information dialog.
-
-\function{Error}{text} - displays error dialog.
-
-\function{Question}{text} - displays question dialog. \returns{$true or $false}.
-
-\function{Warning}{text} - same as \funcname{Question} but with warning icon.
-
-\function{ChooseFile}{title = $none, start = $none} - file chooser dialog.
-\returns{filename or $none}.
-
-\function{ChooseFiles}{title = $none, start = $none} - multiple files chooser dialog.
-\returns{list of files or $none}.
-
-\function{ChooseDir}{title = $none, start = $none} - directory chooser dialog.
-\returns{directory or $none}.
-
-\function{ChooseFileSave}{title = $none, start = $none} - dialog that allows
+$item $function('Text', 'text='+$none, 'dialog_text='+$none) - dialog used for displaying
+and modifying big amount of $arg('text'). $returns('new text').
+$item $function('Entry', 'entry_text='+$none, 'dialog_text='+$none, 'hide_text='+$false) -
+analogous to $funcname('Text'), but for small amounts of text.
+$returns('new entry content').
+$item $function('Info', 'text') - displays information dialog.
+$item $function('Error', 'text') - displays error dialog.
+$item $function('Question', 'text') - displays question dialog. $returns($true + ' or ' + $false).
+$item $function('Warning', 'text') - same as $funcname('Question') but with warning icon.
+$item $function('ChooseFile', 'title='+$none, 'start='+$none) - file chooser dialog.
+$returns('filename or '+$none).
+$item $function('ChooseFiles', 'title='+$none, 'start='+$none) - multiple files chooser dialog.
+$returns('list of files or '+$none).
+$item $function('ChooseDir', 'title='+$none, 'start='+$none) - directory chooser dialog.
+$returns('directory or '+$none).
+$item $function('ChooseFileSave', 'title='+$none, 'start='+$none) - dialog that allows
 choosing existing file or entering new file name.
-\returns{filename or $none}.
+$returns('filename or '+$none).
+$endlist
 
 $endsection ## ('Builtin functions')
 
@@ -244,13 +229,13 @@ $section('Using ' + $python + ' code')
 
 It is possible to use $python code in scripts. The syntax used for this is the
 following:
-$code
+$code#slurp
 ===
 python code...
 ===
 $endcode
 Example:
-$code
+$code#slurp
 Info('This is MooScript');
 ===
 import gtk
@@ -271,7 +256,7 @@ $endsection ## ('Using ' + $python + ' code')
 $section('Examples')
 
 $subsection('Silly game')
-$code
+$code#slurp
 stop = false;
 attempts = 0;
 while not stop do
@@ -290,7 +275,7 @@ $endsubsection
 $subsection('Choosing file')
 This example uses $code('GAP') command which pastes a string to the $gap
 console.
-$code
+$code#slurp
 file = ChooseFile('Pick a File');
 if file then
   GAP('Read("%s");\n' % [file]);
@@ -300,4 +285,4 @@ $endsubsection
 
 $endsection ## ('Examples')
 
-#end def
+#end def ## body
