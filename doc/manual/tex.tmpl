@@ -1,0 +1,129 @@
+## class name gets substituted by gen_html_tmpl
+## it must be first occurrence of this string in the file!
+#extends CHAPTER_FILE_NAME
+#implements respond
+##
+#def title
+CHAPTER_TITLE#slurp
+#end def
+##
+#####################################################################
+## TEX output methods
+##
+##
+#def escape(s)
+$s.replace('_', '\_').replace('%', '\\%').replace('&', '\\&')#slurp
+#end def
+##
+#def section(name)
+\section{$name}
+#end def
+##
+#def subsection(name)
+\subsection{$name}
+#end def
+##
+#def subsubsection(name)
+\subsubsection{$name}
+#end def
+##
+#def endsection
+#end def
+#def endsubsection
+#end def
+#def endsubsubsection
+#end def
+##
+#def list(numbered = False)
+\begin{itemize}
+#end def
+#def item
+\item
+#end def
+#def endlist
+\end{itemize}
+#end def
+##
+##
+##
+#def code(string_ = None)
+#if $string_
+\code{$escape($string_)}#slurp
+#else
+\begin{verbatim}
+#end if
+#end def
+##
+#def endcode
+\end{verbatim}
+#end def
+##
+##
+#def function(name, *args)
+\function{$name}{#slurp
+#for $i in $range($len($args))
+#if not $i
+$escape($args[$i])#slurp
+#else
+, $escape($args[$i])#slurp
+#end if
+#end for
+}#slurp
+#end def
+##
+#def funcname(s)
+\funcname{$s}#slurp
+#end def
+##
+#def returns(s)
+\returns{$s}#slurp
+#end def
+##
+#def arg(s)
+\arg{$s}#slurp
+#end def
+##
+##
+#def variable(string_)
+\variable{$string_}#slurp
+#end def
+##
+#def quote(string_)
+``$string_''#slurp
+#end def
+##
+#def italic(string_)
+$string_#slurp
+#end def
+##
+##
+#def para
+
+#end def
+##
+#def gap
+GAP#slurp
+#end def
+##
+#def python
+Python#slurp
+#end def
+##
+#def none
+$code('none')#slurp
+#end def
+##
+#def true
+$code('true')#slurp
+#end def
+##
+#def false
+$code('false')#slurp
+#end def
+##
+##
+#####################################################################
+## TEX chapter
+##
+\chapter{$title}
+$body
