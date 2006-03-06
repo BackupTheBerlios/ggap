@@ -2,10 +2,10 @@ PYTHON = /usr/bin/python
 CHEETAH = /usr/bin/cheetah
 
 COMMON = base.py
-HTML = mooscript.html usermenu.html
-HTML_COMPILED = mooscript_html.py usermenu_html.py
-HTML_TEMPLATES = mooscript_html.tmpl usermenu_html.tmpl
-COMPILED = base.py mooscript.py usermenu.py $(HTML_COMPILED)
+HTML = mooscript.html usermenu.html activestrings.html
+HTML_COMPILED = mooscript_html.py usermenu_html.py activestrings_html.py
+HTML_TEMPLATES = mooscript_html.tmpl usermenu_html.tmpl activestrings_html.tmpl
+COMPILED = base.py mooscript.py usermenu.py activestrings.py $(HTML_COMPILED)
 
 all: html
 

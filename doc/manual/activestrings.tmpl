@@ -1,0 +1,56 @@
+## activestrings.tmpl
+##
+#extends base
+#def title
+Active Strings#slurp
+#end def
+##
+#def body
+
+$section('Values')
+These are builtin values available to scripts in Active Strings plugin.
+$list
+$item $code('_0') - full matched string.
+$item $code('_1'), $code('_2'), ... - strings matched by whildcards in the
+pattern, if any.
+$endlist
+
+$endsection
+
+
+$section('Functions')
+
+These are builtin functions available to scripts in Active Strings plugin.
+
+$list
+$item $function('Bs', 'n=1') - equivalent to $arg('n') pressing of Backspace key.
+$item $function('Del', 'n=1') - equivalent to $arg('n') pressing of Delete key.
+$item $function('Ins', 'arg1', '...') - inserts given strings into the document at the
+cursor position.
+$item $function('Up', 'n=1') - moves cursor $arg('n') positions up.
+$item $function('Down', 'n=1') - moves cursor $arg('n') positions down.
+$item $function('Left', 'n=1') - moves cursor $arg('n') positions left.
+$item $function('Right', 'n=1') - moves cursor $arg('n') positions right.
+$item $function('Sel', 'n') - selects $arg('n') characters starting from cursor
+position. $arg('n') may be positive or negative, to indicate selection
+direction.
+$endlist
+
+$endsection
+
+
+$section('Examples')
+
+$code#slurp
+Bs(Len(_0));
+$endcode
+Erases matched string, aka "you can't type this string in".
+
+$code#slurp
+Sel(-Len(_0)); Bs();
+$endcode
+Same as the previous example.
+
+$endsection
+
+#end def ## body
