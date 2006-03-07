@@ -119,7 +119,7 @@ user_action_activate (MooAction *moo_action)
         ctx = gap_app_get_terminal_context (action->window);
 
     g_return_if_fail (MS_IS_CONTEXT (ctx));
-    result = ms_node_eval (script, ctx);
+    result = ms_top_node_eval (script, ctx);
 
     if (result)
     {
@@ -132,6 +132,7 @@ user_action_activate (MooAction *moo_action)
         ms_context_clear_error (ctx);
     }
 
+    ms_node_unref (script);
     g_object_unref (ctx);
 }
 
