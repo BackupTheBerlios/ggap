@@ -5,6 +5,9 @@ $section('Syntax')
 
 MooScript is a simple scripting language made after $python and $gap. A
 script consists of a sequence of statements separated by semicolons.
+$para
+Script execution may be interrupted at any time using $code('return')
+keyword.
 
 $subsection('Values')
 
@@ -136,6 +139,32 @@ while $italic('condition') do $italic('stmt1; stmt2; ... ;') od;
 do $italic('stmt1; stmt2; ... ;') while $italic('condition');
 $endcode
 
+Loop execution may be controlled using $code('break') and $code('continue') keywords,
+in the same way as in $gap or $python.
+
+$subsubsection('Examples')
+
+$code#slurp
+for i in [1..1000] do
+  Print(i);
+od;
+$endcode
+
+$code#slurp
+a = 0;
+while a < 10 do
+  a = a + a;
+od;
+$endcode
+
+$code#slurp
+a = 0;
+do a = a + a;
+while a < 10;
+$endcode
+
+$endsubsubsection ## Examples
+
 $endsubsection ## ('Loops')
 
 $subsection('Conditionals')
@@ -188,7 +217,7 @@ $item $function('Print', 'arg1', '...') - prints its arguments to console. It is
 useful for debugging purposes.
 $item $function('Include', 'file') - executes content of $arg('file').
 $item $function('Python', 'string') - executes $python code from $arg('string').
-$item $function('Abort') - aborts script execution, ``return for poor''.
+$item $function('Abort') - aborts script execution, absolutely useless.
 $item $function('Str', 'val') - converts $arg('val') to a string.
 $item $function('Int', 'val') - converts $arg('val') to an integer.
 $item $function('Len', 'val') - returns length of $arg('val'). It is character length
