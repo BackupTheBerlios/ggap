@@ -9,7 +9,7 @@ m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_vers
 
 m4_define([moo_major_version], [0])
 m4_define([moo_minor_version], [6])
-m4_define([moo_micro_version], [1])
+m4_define([moo_micro_version], [2])
 m4_define([moo_version], [moo_major_version.moo_minor_version.moo_micro_version])
 
 AC_INIT(GGAP, [ggap_version], [muntyan@math.tamu.edu], ggap)
