@@ -158,8 +158,7 @@ if test x$MOO_OS_CYGWIN != "xyes"; then
     echo
     echo "    OS                                        = $system"
     echo "    prefix                                    = $ggapprefix"
-    echo "    python support                            = $MOO_USE_PYTHON"
-    echo "    pygtk support                             = $MOO_USE_PYGTK"
+    echo "    python support                            = $MOO_USE_PYGTK"
     echo
     echo "    editor lang files go to                   = $MOO_TEXT_LANG_FILES_DIR"
     echo
