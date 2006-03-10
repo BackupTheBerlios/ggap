@@ -202,23 +202,33 @@ gap_app_init (G_GNUC_UNUSED GapApp *app)
 }
 
 
+static void
+editor_windows_closed (GapApp *app)
+{
+    if (!app->term_window)
+        moo_app_quit (MOO_APP (app));
+}
+
+
 static gboolean
-gap_app_init_real (MooApp *mapp)
+gap_app_init_real (MooApp *app)
 {
     MooUIXML *xml;
     MooEditor *editor;
 
-    xml = moo_app_get_ui_xml (mapp);
+    xml = moo_app_get_ui_xml (app);
     moo_ui_xml_add_ui_from_string (xml, GGAP_UI, -1);
 
-    if (!MOO_APP_CLASS(gap_app_parent_class)->init (mapp))
+    if (!MOO_APP_CLASS(gap_app_parent_class)->init (app))
         return FALSE;
 
     user_menu_init ();
 
-    editor = moo_app_get_editor (mapp);
+    editor = moo_app_get_editor (app);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
     moo_editor_set_default_lang (editor, "GAP");
+    g_signal_connect_swapped (editor, "all-windows-closed",
+                              G_CALLBACK (editor_windows_closed), app);
 
     return TRUE;
 }
@@ -327,7 +337,11 @@ gap_app_start_gap (GapApp *app)
     gap_app_ensure_terminal (app);
     g_return_if_fail (!moo_term_child_alive (app->term));
 
-    cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
+    if (app->gap_cmd_line)
+        cmd_base = app->gap_cmd_line;
+    else
+        cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
+
     g_return_if_fail (cmd_base && cmd_base[0]);
 
 #ifdef __WIN32__
