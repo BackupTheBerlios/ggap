@@ -104,7 +104,7 @@ gap_term_constructor (GType               type,
 
     attr.mask = MOO_TERM_TEXT_UNDERLINE | MOO_TERM_TEXT_FOREGROUND;
     attr.foreground = MOO_TERM_RED;
-    moo_term_tag_set_attr (term->priv->error_tag, attr);
+    moo_term_tag_set_attr (term->priv->error_tag, &attr);
 
     return object;
 }
