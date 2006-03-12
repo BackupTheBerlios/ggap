@@ -20,6 +20,9 @@
 G_BEGIN_DECLS
 
 
+extern gboolean GAP_APP_EDITOR_MODE;
+
+
 #define GAP_TYPE_APP                (gap_app_get_type ())
 #define GAP_APP(object)             (G_TYPE_CHECK_INSTANCE_CAST ((object), GAP_TYPE_APP, GapApp))
 #define GAP_APP_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GAP_TYPE_APP, GapAppClass))

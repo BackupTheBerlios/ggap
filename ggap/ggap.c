@@ -17,7 +17,6 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mooutils/mooutils-misc.h>
 
 
 int _ggap_parse_options (const char *const program_name,
@@ -58,6 +57,9 @@ int _ggap_parse_options (const char *const program_name,
 #define STR_HELP_EDITOR "\
   -e, --editor             Do not start GAP automatically\n"
 
+#define STR_HELP_PURE_EDITOR "\
+  -E, --pure-editor        Do not enable any GAP stuff\n"
+
 #define STR_HELP_NEW_APP "\
   -n, --new-app            Run new instance of application\n"
 
@@ -76,6 +78,7 @@ int _ggap_parse_options (const char *const program_name,
 #define STR_HELP "\
   -g, --gap-cmd=COMMAND    GAP command line\n\
   -e, --editor             Do not start GAP automatically\n\
+  -E, --pure-editor        Do not enable any GAP stuff\n\
   -n, --new-app            Run new instance of application\n\
       --simple             Simple mode\n\
   -l, --log[=FILE]         Show debug output or write it to FILE\n\
@@ -87,6 +90,9 @@ char _ggap_opt_gap_cmd;
 
 /* Set to 1 if option --editor (-e) has been specified.  */
 char _ggap_opt_editor;
+
+/* Set to 1 if option --pure-editor (-E) has been specified.  */
+char _ggap_opt_pure_editor;
 
 /* Set to 1 if option --new-app (-n) has been specified.  */
 char _ggap_opt_new_app;
@@ -119,6 +125,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
 {
   static const char *const optstr__gap_cmd = "gap-cmd";
   static const char *const optstr__editor = "editor";
+  static const char *const optstr__pure_editor = "pure-editor";
   static const char *const optstr__new_app = "new-app";
   static const char *const optstr__simple = "simple";
   static const char *const optstr__version = "version";
@@ -126,6 +133,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   int i = 0;
   _ggap_opt_gap_cmd = 0;
   _ggap_opt_editor = 0;
+  _ggap_opt_pure_editor = 0;
   _ggap_opt_new_app = 0;
   _ggap_opt_simple = 0;
 #ifdef __WIN32__
@@ -221,6 +229,18 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
           break;
         }
         goto error_unknown_long_opt;
+       case 'p':
+        if (strncmp (option + 1, optstr__pure_editor + 1, option_len - 1) == 0)
+        {
+          if (argument != 0)
+          {
+            option = optstr__pure_editor;
+            goto error_unexpec_arg_long;
+          }
+          _ggap_opt_pure_editor = 1;
+          break;
+        }
+        goto error_unknown_long_opt;
        case 's':
         if (strncmp (option + 1, optstr__simple + 1, option_len - 1) == 0)
         {
@@ -261,6 +281,9 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
       {
         switch (*option)
         {
+         case 'E':
+          _ggap_opt_pure_editor = 1;
+          break;
          case 'e':
           _ggap_opt_editor = 1;
           break;
@@ -314,6 +337,7 @@ static void usage (void)
 
     g_print ("%s", STR_HELP_GAP_CMD);
     g_print ("%s", STR_HELP_EDITOR);
+    g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
     g_print ("%s", STR_HELP_SIMPLE);
 #ifdef __WIN32__
@@ -364,6 +388,8 @@ int main (int argc, char *argv[])
             moo_set_log_func_window (TRUE);
     }
 #endif
+
+    GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
 
     app = g_object_new (GAP_TYPE_APP,
                         "argv", argv,

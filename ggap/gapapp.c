@@ -36,6 +36,9 @@
 #define APP_PREFS_GAP_WORKING_DIR   APP_PREFS_PREFIX "/working_dir"
 
 
+gboolean GAP_APP_EDITOR_MODE;
+
+
 static void         gap_app_get_property    (GObject    *object,
                                              guint       prop_id,
                                              GValue     *value,
@@ -72,15 +75,15 @@ gap_app_class_init (GapAppClass *klass)
     MooAppClass *app_class = MOO_APP_CLASS (klass);
     MooWindowClass *edit_class, *term_class;
 
-    gobject_class->set_property = gap_app_set_property;
-    gobject_class->get_property = gap_app_get_property;
-
     app_class->init = gap_app_init_real;
     app_class->run = gap_app_run;
     app_class->quit = gap_app_quit;
     app_class->try_quit = gap_app_try_quit;
     app_class->prefs_dialog = gap_app_prefs_dialog;
     app_class->exec_cmd = gap_app_exec_cmd;
+
+    gobject_class->set_property = gap_app_set_property;
+    gobject_class->get_property = gap_app_get_property;
 
     g_object_class_install_property (gobject_class,
                                      PROP_GAP_CMD_LINE,
@@ -105,6 +108,9 @@ gap_app_class_init (GapAppClass *klass)
                                              "simple",
                                              FALSE,
                                              G_PARAM_WRITABLE));
+
+    if (GAP_APP_EDITOR_MODE)
+        return;
 
     edit_class = g_type_class_ref (MOO_TYPE_EDIT_WINDOW);
     term_class = g_type_class_ref (GAP_TYPE_TERM_WINDOW);
@@ -192,6 +198,9 @@ gap_app_set_property (GObject    *object,
 static void
 gap_app_init (G_GNUC_UNUSED GapApp *app)
 {
+    if (GAP_APP_EDITOR_MODE)
+        return;
+
 #ifdef __WIN32__
     moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, "c:\\gap4r4\\bin\\gapw95.exe -l c:\\gap4r4");
 #else
@@ -275,13 +284,13 @@ gap_app_run (MooApp     *mapp)
 
     app = GAP_APP (mapp);
 
-    if (!app->editor_mode)
+    if (!GAP_APP_EDITOR_MODE && !app->editor_mode)
     {
         gap_app_ensure_terminal (app);
         gap_app_start_gap (app);
     }
 
-    if (app->editor_mode)
+    if (GAP_APP_EDITOR_MODE || app->editor_mode)
     {
         editor = moo_app_get_editor (mapp);
         if (!moo_editor_get_active_window (editor))
@@ -471,8 +480,12 @@ gap_app_prefs_dialog (MooApp     *app)
     dialog = MOO_PREFS_DIALOG (moo_prefs_dialog_new (title));
     g_free (title);
 
-    moo_prefs_dialog_append_page (dialog, gap_prefs_page_new ());
-    moo_prefs_dialog_append_page (dialog, moo_term_prefs_page_new ());
+    if (!GAP_APP_EDITOR_MODE)
+    {
+        moo_prefs_dialog_append_page (dialog, gap_prefs_page_new ());
+        moo_prefs_dialog_append_page (dialog, moo_term_prefs_page_new ());
+    }
+
     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
     moo_prefs_dialog_append_page (dialog, user_menu_prefs_page_new ());
     _moo_plugin_attach_prefs (GTK_WIDGET (dialog));

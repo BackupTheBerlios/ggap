@@ -54,13 +54,14 @@ static void gap_edit_window_class_init (GapEditWindowClass *klass)
     gtkobject_class->destroy = gap_edit_window_destroy;
     edit_window_class->close_doc = gap_edit_window_close_doc;
 
-    moo_window_class_new_action (window_class, "SendFile",
-                                 "name", "Send File",
-                                 "label", "Send File",
-                                 "tooltip", "Send File",
-                                 "icon-stock-id", GTK_STOCK_GOTO_BOTTOM,
-                                 "closure-callback", gap_edit_window_send_file,
-                                 NULL);
+    if (!GAP_APP_EDITOR_MODE)
+        moo_window_class_new_action (window_class, "SendFile",
+                                     "name", "Send File",
+                                     "label", "Send File",
+                                     "tooltip", "Send File",
+                                     "icon-stock-id", GTK_STOCK_GOTO_BOTTOM,
+                                     "closure-callback", gap_edit_window_send_file,
+                                     NULL);
 }
 
 

@@ -29,6 +29,7 @@ int _ggap_parse_options (const char *const program_name,
 %%
 g  gap-cmd      "=COMMAND GAP command line"                     reqarg
 e  editor       "Do not start GAP automatically"
+E  pure-editor  "Do not enable any GAP stuff"
 n  new-app      "Run new instance of application"
    simple       "Simple mode"
 #ifdef __WIN32__
@@ -48,6 +49,7 @@ static void usage (void)
 
     g_print ("%s", STR_HELP_GAP_CMD);
     g_print ("%s", STR_HELP_EDITOR);
+    g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
     g_print ("%s", STR_HELP_SIMPLE);
 #ifdef __WIN32__
@@ -98,6 +100,8 @@ int main (int argc, char *argv[])
             moo_set_log_func_window (TRUE);
     }
 #endif
+
+    GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
 
     app = g_object_new (GAP_TYPE_APP,
                         "argv", argv,
