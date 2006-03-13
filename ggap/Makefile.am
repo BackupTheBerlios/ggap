@@ -1,6 +1,11 @@
-#
-# @(#)$Id: Makefile.am,v 1.69 2005/06/06 14:45:54 emuntyan Exp $
-#
+user_actionsdir = ${GGAP_DATA_DIR}
+user_actions_DATA =	\
+	ui.xml.example	\
+	actions.example
+EXTRA_DIST = $(user_actions_DATA)
+
+ui.xml.example: ggap-ui.xml
+	cp $(srcdir)/ggap-ui.xml $(srcdir)/ui.xml.example
 
 EXTRA_PROGRAMS = ggap
 
@@ -70,11 +75,11 @@ ggap_res.res: ggap_res.rc
 	touch ggap_res.res
 endif ! MOO_OS_MINGW
 
-EXTRA_DIST =             \
-    ggap_res.rc.in       \
-    ggap-ui.xml          \
-    ggap.opag            \
-    glade/gapprefs.glade \
+EXTRA_DIST +=		\
+    ggap_res.rc.in	\
+    ggap-ui.xml		\
+    ggap.opag		\
+    glade/gapprefs.glade\
     glade/gapdoc.glade
 
 BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c
