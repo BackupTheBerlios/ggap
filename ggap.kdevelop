@@ -36,7 +36,7 @@
   <kdevautoproject>
     <general>
       <activetarget>src/script/libscript.la</activetarget>
-      <useconfiguration>debug</useconfiguration>
+      <useconfiguration>optimized</useconfiguration>
     </general>
     <run>
       <mainprogram>ggap/ggap</mainprogram>
@@ -53,17 +53,17 @@
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevpgf77options</f77compiler>
-        <cxxflags/>
+        <cxxflags></cxxflags>
         <envvars/>
         <configargs>--enable-all-gcc-warnings=fatal</configargs>
-        <topsourcedir/>
-        <cppflags/>
-        <ldflags/>
-        <ccompilerbinary>gcc-3.4</ccompilerbinary>
-        <cxxcompilerbinary/>
-        <f77compilerbinary/>
-        <cflags/>
-        <f77flags/>
+        <topsourcedir></topsourcedir>
+        <cppflags></cppflags>
+        <ldflags></ldflags>
+        <ccompilerbinary></ccompilerbinary>
+        <cxxcompilerbinary></cxxcompilerbinary>
+        <f77compilerbinary></f77compilerbinary>
+        <cflags></cflags>
+        <f77flags></f77flags>
       </optimized>
       <debug>
         <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal</configargs>
@@ -361,7 +361,7 @@
       <abortonerror>true</abortonerror>
       <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
-      <makebin/>
+      <makebin></makebin>
       <prio>0</prio>
     </make>
   </kdevautoproject>

@@ -24,9 +24,6 @@ EXTRA_DIST =            \
     autogen.sh          \
     wininstaller/ggap.iss
 
-ggapdocdir = ${GGAP_DATA_DIR}
-ggapdoc_DATA = $(ggap_docs)
-
 ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST +=				\
