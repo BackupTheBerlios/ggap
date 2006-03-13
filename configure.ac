@@ -98,31 +98,15 @@ AC_SUBST(MOO_SRC_PREFIX)
 ################################################################################
 #  Installation directories, etc.
 #
-if test "x${prefix}" = "xNONE"; then
-  ggapprefix=${ac_default_prefix}
-else
-  ggapprefix=${prefix}
-fi
+MOO_AC_SET_DIRS(ggap)
 
-ggapdatadir=share
+GGAP_DATA_DIR="${MOO_DATA_DIR}"
+AC_SUBST(GGAP_DATA_DIR)
+AC_DEFINE_UNQUOTED(GGAP_DATA_DIR, "${GGAP_DATA_DIR}", [data dir])
 
-ggaprootdir=${ggapdatadir}/ggap
-NO_PREFIX_GGAP_ROOT_DIR="${ggaprootdir}"
-AC_SUBST(NO_PREFIX_GGAP_ROOT_DIR)
-GGAP_ROOT_DIR="${ggapprefix}/${ggaprootdir}"
-AC_SUBST(GGAP_ROOT_DIR)
-AC_DEFINE_UNQUOTED(GGAP_ROOT_DIR, "${ggapprefix}/${ggaprootdir}", [data files go to GGAP_ROOT_DIR])
-
-ggapgapdir=${ggaprootdir}/pkg/ggap
-NO_PREFIX_GGAP_GAP_DIR="${ggapgapdir}"
-AC_SUBST(NO_PREFIX_GGAP_GAP_DIR)
-GGAP_GAP_DIR="${ggapprefix}/${ggapgapdir}"
+GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg/ggap"
 AC_SUBST(GGAP_GAP_DIR)
-AC_DEFINE_UNQUOTED(GGAP_GAP_DIR, "${ggapprefix}/${ggapgapdir}", [gap shared package dir])
-
-MOO_TEXT_LANG_FILES_DIR="${ggapprefix}/${ggaprootdir}/syntax"
-AC_SUBST(MOO_TEXT_LANG_FILES_DIR)
-AC_DEFINE_UNQUOTED(MOO_TEXT_LANG_FILES_DIR, "${ggapprefix}/${ggaprootdir}/syntax", [lang files dir])
+AC_DEFINE_UNQUOTED(GGAP_GAP_DIR, "${GGAP_GAP_DIR}", [shared package dir])
 
 
 ################################################################################
@@ -156,11 +140,12 @@ if test x$MOO_OS_CYGWIN != "xyes"; then
     fi
 
     echo
-    echo "    OS                                        = $system"
-    echo "    prefix                                    = $ggapprefix"
-    echo "    python support                            = $MOO_USE_PYGTK"
+    echo "    OS                        = $system"
+    echo "    prefix                    = $prefix"
+    echo "    python support            = $MOO_USE_PYGTK"
     echo
-    echo "    editor lang files go to                   = $MOO_TEXT_LANG_FILES_DIR"
+    echo "    editor lang files go to   = $MOO_TEXT_LANG_FILES_DIR"
+    echo "    shared package goes to    = $GGAP_GAP_DIR"
     echo
 else
     echo

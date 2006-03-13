@@ -13,12 +13,10 @@
 
 #include "config.h"
 #include "gapapp.h"
-#include "ggap-ui.h"
 #include "gaptermwindow.h"
 #include "gapeditwindow.h"
 #include "gap.h"
 #include "gapprefs-glade.h"
-#include "usermenu.h"
 #include "gapdocwindow.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
@@ -222,16 +220,10 @@ editor_windows_closed (GapApp *app)
 static gboolean
 gap_app_init_real (MooApp *app)
 {
-    MooUIXML *xml;
     MooEditor *editor;
-
-    xml = moo_app_get_ui_xml (app);
-    moo_ui_xml_add_ui_from_string (xml, GGAP_UI, -1);
 
     if (!MOO_APP_CLASS(gap_app_parent_class)->init (app))
         return FALSE;
-
-    user_menu_init ();
 
     editor = moo_app_get_editor (app);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
@@ -396,14 +388,10 @@ gap_app_start_gap (GapApp *app)
 
     if (init_pkg)
     {
-        char *init;
+        char *init, *dir;
 
-#ifdef __WIN32__
-        g_string_append_printf (cmd, " -l \"%s\";",
-                                moo_app_get_application_dir (MOO_APP (app)));
-#else
-        g_string_append (cmd, " -l \"" GGAP_ROOT_DIR "\";");
-#endif
+        dir = moo_app_get_data_dir (MOO_APP (app), MOO_APP_DATA_SHARE);
+        g_string_append_printf (cmd, " -l \"%s\";", dir);
 
         init = gap_pkg_init_file ();
 
@@ -412,6 +400,8 @@ gap_app_start_gap (GapApp *app)
             g_string_append_printf (cmd, " %s", init);
             g_free (init);
         }
+
+        g_free (dir);
     }
 
     result = moo_term_fork_command_line (app->term, cmd->str,
@@ -487,7 +477,6 @@ gap_app_prefs_dialog (MooApp     *app)
     }
 
     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
-    moo_prefs_dialog_append_page (dialog, user_menu_prefs_page_new ());
     _moo_plugin_attach_prefs (GTK_WIDGET (dialog));
 
     return GTK_WIDGET (dialog);

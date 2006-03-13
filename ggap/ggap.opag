@@ -13,6 +13,7 @@
 
 #include "config.h"
 #include "gapapp.h"
+#include "ggap-ui.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
@@ -110,6 +111,7 @@ int main (int argc, char *argv[])
                         "description", "GGAP is a front end for GAP",
                         "run-output", (gboolean) !_ggap_opt_simple,
                         "run-input", (gboolean) !_ggap_opt_simple,
+                        "default-ui", GGAP_UI,
 
                         "gap-cmd-line", _ggap_arg_gap_cmd,
                         "editor-mode", (gboolean) _ggap_opt_editor,

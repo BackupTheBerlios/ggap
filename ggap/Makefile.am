@@ -55,10 +55,7 @@ ggap_SOURCES =      \
     gaptermwindow.c \
     gaptermwindow.h \
     gapprefs-glade.h\
-    gapdoc-glade.h  \
-    usermenu-glade.h\
-    usermenu.c      \
-    usermenu.h
+    gapdoc-glade.h
 
 nodist_ggap_SOURCES = ggap_res.res
 CLEANFILES = ggap_res.res
@@ -78,10 +75,9 @@ EXTRA_DIST =             \
     ggap-ui.xml          \
     ggap.opag            \
     glade/gapprefs.glade \
-    glade/gapdoc.glade   \
-    glade/usermenu.glade
+    glade/gapdoc.glade
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c usermenu-glade.h
+BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c
 XML2H = $(srcdir)/moo/mooutils/xml2h.sh
 PY2H = $(srcdir)/moo/mooutils/py2h.sh
 
@@ -93,9 +89,6 @@ gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 
 gapdoc-glade.h: glade/gapdoc.glade $(XML2H)
 	sh $(XML2H) GAP_DOC_GLADE_UI $(srcdir)/glade/gapdoc.glade > gapdoc-glade.h
-
-usermenu-glade.h: glade/usermenu.glade $(XML2H)
-	sh $(XML2H) USER_MENU_GLADE_UI $(srcdir)/glade/usermenu.glade > usermenu-glade.h
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c
@@ -154,8 +147,6 @@ ggap_SOURCES += $(moo_unix_sources)
 endif
 
 EXTRA_DIST +=                \
-    $(moo_sources)           \
     $(moo_win32_sources)     \
     $(moo_unix_sources)      \
-    $(moo_built_sources)     \
     $(moo_extra_dist)
