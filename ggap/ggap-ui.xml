@@ -1,7 +1,16 @@
-<ui><!-- -*- Mode: XML; indent-tabs-mode: nil; c-basic-offset: 2 -*- -->
+<!-- -*- Mode: XML; indent-tabs-mode: nil; c-basic-offset: 2 -*- -->
+<!-- This is the XML file defining menus and toolbars of the program.
+     To add an action add <item action="YourAction"> under desired menu/toolbar,
+     where 'YourAction' is the name of action defined in 'actions' file.
+     WARNING: changing/moving around 'placeholder' items may break menu
+     items added by plugins; moving around menus is also not recommended.
+     (but adding new items is completely safe).
+     -->
+<ui>
 
 <object name="Editor">
 
+  <!-- Editor menubar -->
   <widget name="Menubar">
 
     <item name="File" label="_File">
@@ -93,8 +102,9 @@
       <separator/>
     </item>
 
-  </widget> <!-- Menubar -->
+  </widget>
 
+  <!-- Editor toolbar -->
   <widget name="Toolbar">
     <separator/>
     <item action="NewTab"/>
@@ -119,12 +129,13 @@
     </placeholder>
     <separator/>
 
-  </widget> <!-- Toolbar -->
+  </widget>
 
-</object> <!-- Editor -->
+</object>
 
 <object name="Terminal">
 
+  <!-- GAP window menubar -->
   <widget name="Menubar">
 
     <item name="File" label="_File">
@@ -182,8 +193,9 @@
       <separator/>
     </item>
 
-  </widget> <!-- Menubar -->
+  </widget>
 
+  <!-- GAP window toolbar -->
   <widget name="Toolbar">
     <separator/>
     <item action="Copy"/>
@@ -193,8 +205,8 @@
     <separator/>
     <item action="Restart"/>
     <separator/>
-  </widget> <!-- Toolbar -->
+  </widget>
 
-</object> <!-- Terminal -->
+</object>
 
 </ui>
