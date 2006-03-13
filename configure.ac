@@ -86,10 +86,7 @@ AC_SUBST(MOO_BUILD_APP)
 AM_CONDITIONAL(MOO_BUILD_PLUGINS,   false)
 AM_CONDITIONAL(MOO_STANDALONE,      false)
 
-moo_top_src_dir=`cd $srcdir && pwd`
-moo_top_build_dir=`cd ./$ac_top_builddir && pwd`
-MOO_CFLAGS="-I$moo_top_src_dir/ggap/moo $GTK_CFLAGS $FAM_CFLAGS $XML_CFLAGS -DXDG_PREFIX=_moo_edit_xdg -DG_LOG_DOMAIN=\\\"Moo\\\" -D__MOO__ -DMOO_MARSHALS_H=\\\"mooutils/moomarshals.h\\\""
-AC_SUBST(MOO_CFLAGS)
+MOO_AC_FLAGS
 
 MOO_SRC_PREFIX="ggap/moo"
 AC_SUBST(MOO_SRC_PREFIX)
@@ -122,7 +119,6 @@ ggap/Makefile
 ggap/ggap_res.rc
 ggap/moo/mooterm/termhelper_res.rc
 ggap/moo/mooutils/pcre/pcre.h
-ggap/moo/moopython/pygtk/moo-mod.py
 ggap/moo/moo.pc
 ])
 
