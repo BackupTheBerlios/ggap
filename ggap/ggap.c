@@ -15,6 +15,7 @@
 #include "config.h"
 #include "gapapp.h"
 #include "ggap-ui.h"
+#include "mooutils/mooutils-misc.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,10 +102,8 @@ char _ggap_opt_new_app;
 /* Set to 1 if option --simple has been specified.  */
 char _ggap_opt_simple;
 
-#ifdef __WIN32__
 /* Set to 1 if option --log (-l) has been specified.  */
 char _ggap_opt_log;
-#endif
 
 /* Set to 1 if option --version has been specified.  */
 char _ggap_opt_version;
@@ -115,10 +114,8 @@ char _ggap_opt_help;
 /* Argument to option --gap-cmd (-g).  */
 const char *_ggap_arg_gap_cmd;
 
-#ifdef __WIN32__
 /* Argument to option --log (-l), or a null pointer if no argument.  */
 const char *_ggap_arg_log;
-#endif
 
 /* Parse command line options.  Return index of first non-option argument,
    or -1 if an error is encountered.  */
@@ -137,15 +134,11 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   _ggap_opt_pure_editor = 0;
   _ggap_opt_new_app = 0;
   _ggap_opt_simple = 0;
-#ifdef __WIN32__
   _ggap_opt_log = 0;
-#endif
   _ggap_opt_version = 0;
   _ggap_opt_help = 0;
   _ggap_arg_gap_cmd = 0;
-#ifdef __WIN32__
   _ggap_arg_log = 0;
-#endif
   while (++i < argc)
   {
     const char *option = argv [i];
@@ -209,14 +202,12 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
         }
         goto error_unknown_long_opt;
        case 'l':
-#ifdef __WIN32__
         if (strncmp (option + 1, "og", option_len - 1) == 0)
         {
           _ggap_arg_log = argument;
           _ggap_opt_log = 1;
           break;
         }
-#endif
         goto error_unknown_long_opt;
        case 'n':
         if (strncmp (option + 1, optstr__new_app + 1, option_len - 1) == 0)
@@ -301,7 +292,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
          case 'h':
           _ggap_opt_help = 1;
           return i + 1;
-#ifdef __WIN32__
          case 'l':
           if (option [1] != '\0')
           {
@@ -312,7 +302,6 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
             _ggap_arg_log = 0;
           _ggap_opt_log = 1;
           break;
-#endif
          case 'n':
           _ggap_opt_new_app = 1;
           break;
@@ -341,9 +330,7 @@ static void usage (void)
     g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
     g_print ("%s", STR_HELP_SIMPLE);
-#ifdef __WIN32__
     g_print ("%s", STR_HELP_LOG);
-#endif
     g_print ("%s", STR_HELP_VERSION);
     g_print ("%s", STR_HELP_HELP);
 }
@@ -380,7 +367,6 @@ int main (int argc, char *argv[])
         return 0;
     }
 
-#ifdef __WIN32__
     if (_ggap_opt_log)
     {
         if (_ggap_arg_log)
@@ -388,7 +374,6 @@ int main (int argc, char *argv[])
         else
             moo_set_log_func_window (TRUE);
     }
-#endif
 
     GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
 
