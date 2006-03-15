@@ -33,24 +33,32 @@ gap_func (MSValue   **args,
 }
 
 
-gpointer
-gap_app_get_editor_context (MooWindow *window)
+static void
+setup_editor_context (MSContext *ctx)
 {
-    MSContext *ctx;
     MSFunc *func;
 
-    ctx = g_object_new (MS_TYPE_CONTEXT, "window", window, NULL);
+    g_return_if_fail (MS_IS_CONTEXT (ctx));
 
     func = ms_cfunc_new_var (gap_func);
     ms_context_set_func (ctx, "GAP", func);
     g_object_unref (func);
-
-    return ctx;
 }
 
 
-gpointer
-gap_app_get_terminal_context (MooWindow *window)
+static void
+setup_terminal_context (MSContext *ctx)
 {
-    return gap_app_get_editor_context (window);
+    return setup_editor_context (ctx);
+}
+
+
+void
+gap_app_setup_context (MSContext  *ctx,
+                       MooWindow  *window)
+{
+    if (MOO_IS_EDIT_WINDOW (window))
+        setup_editor_context (ctx);
+    else
+        setup_terminal_context (ctx);
 }
