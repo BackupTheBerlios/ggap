@@ -14,7 +14,6 @@ bin_PROGRAMS = ggap
 endif
 
 if MOO_OS_MINGW
-all-am: ggap
 ggap: ggap.win
 	cp $(srcdir)/ggap.win ggap
 	chmod +x ggap
