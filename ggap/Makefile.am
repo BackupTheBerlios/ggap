@@ -13,6 +13,13 @@ if !MOO_OS_CYGWIN
 bin_PROGRAMS = ggap
 endif
 
+if MOO_OS_MINGW
+all-am: ggap
+ggap: ggap.win
+	cp $(srcdir)/ggap.win ggap
+	chmod +x ggap
+endif
+
 DEFAULT_INCLUDES =
 AM_CFLAGS =                     \
     -I$(top_builddir)           \
