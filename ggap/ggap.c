@@ -15,7 +15,7 @@
 #include "config.h"
 #include "gapapp.h"
 #include "ggap-ui.h"
-#include "mooutils/mooutils-misc.h"
+#include "mooutils/mooutils-fs.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
@@ -377,6 +377,7 @@ int main (int argc, char *argv[])
 
     GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
 
+    files = moo_filenames_from_locale (argv + opt_remain);
     app = g_object_new (GAP_TYPE_APP,
                         "argv", argv,
                         "short-name", "ggap",
@@ -388,11 +389,12 @@ int main (int argc, char *argv[])
 
                         "gap-cmd-line", _ggap_arg_gap_cmd,
                         "editor-mode", (gboolean) _ggap_opt_editor,
-                        "open-files", argv + opt_remain,
+                        "open-files", files && *files ? files : NULL,
                         "new-app", (gboolean) _ggap_opt_new_app,
                         "simple", (gboolean) _ggap_opt_simple,
 
                         NULL);
+    g_free (files);
 
     moo_app_init (app);
     return moo_app_run (app);
