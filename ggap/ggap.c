@@ -16,6 +16,7 @@
 #include "gapapp.h"
 #include "ggap-ui.h"
 #include "mooutils/mooutils-fs.h"
+#include "mooutils/mooutils-misc.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
@@ -345,6 +346,7 @@ int main (int argc, char *argv[])
 {
     MooApp *app;
     int opt_remain;
+    char **files;
 
     gtk_init (&argc, &argv);
 
