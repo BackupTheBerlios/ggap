@@ -86,24 +86,22 @@ AC_SUBST(MOO_BUILD_APP)
 AM_CONDITIONAL(MOO_BUILD_PLUGINS,   false)
 AM_CONDITIONAL(MOO_STANDALONE,      false)
 
-MOO_AC_FLAGS
-
-MOO_SRC_PREFIX="ggap/moo"
-AC_SUBST(MOO_SRC_PREFIX)
-
 
 ################################################################################
 #  Installation directories, etc.
 #
+MOO_SRC_PREFIX="ggap/moo"
+AC_SUBST(MOO_SRC_PREFIX)
 MOO_AC_SET_DIRS(ggap)
+MOO_AC_FLAGS
 
 GGAP_DATA_DIR="${MOO_DATA_DIR}"
 AC_SUBST(GGAP_DATA_DIR)
-AC_DEFINE_UNQUOTED(GGAP_DATA_DIR, "${GGAP_DATA_DIR}", [data dir])
+MOO_CFLAGS="$MOO_CFLAGS -DGGAP_DATA_DIR=\\\"${GGAP_DATA_DIR}\\\""
 
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg/ggap"
 AC_SUBST(GGAP_GAP_DIR)
-AC_DEFINE_UNQUOTED(GGAP_GAP_DIR, "${GGAP_GAP_DIR}", [shared package dir])
+MOO_CFLAGS="$MOO_CFLAGS -DGGAP_GAP_DIR=\\\"${GGAP_GAP_DIR}\\\""
 
 
 ################################################################################
