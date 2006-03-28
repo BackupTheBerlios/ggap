@@ -450,12 +450,9 @@ gap_prefs_page_new (void)
 {
     GtkWidget *page;
 
-    page = moo_prefs_dialog_page_new_from_xml ("GAP",
-                                               MOO_STOCK_GAP,
-                                               GAP_PREFS_GLADE_UI,
-                                               -1,
-                                               "page",
-                                               APP_PREFS_PREFIX);
+    page = moo_prefs_dialog_page_new_from_xml ("GAP", MOO_STOCK_GAP, NULL,
+                                               GAP_PREFS_GLADE_UI, -1,
+                                               "page", APP_PREFS_PREFIX);
 
     return page;
 }
