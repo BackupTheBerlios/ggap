@@ -20,6 +20,7 @@
 #include "gapdocwindow.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
+#include <mooutils/mooutils-misc.h>
 #include <mooterm/mooterm-prefs.h>
 #include <mooedit/mooeditprefs.h>
 #include <mooedit/mooplugin.h>
@@ -392,9 +393,13 @@ gap_app_start_gap (GapApp *app)
     if (init_pkg)
     {
         char *init, *dir;
+        char **dirs;
+        guint i, n_dirs = 0;
 
-        dir = moo_app_get_data_dir (MOO_APP (app), MOO_APP_DATA_SHARE);
-        g_string_append_printf (cmd, " -l \"%s\";", dir);
+        dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
+
+        for (i = 0; i < n_dirs; ++i)
+            g_string_append_printf (cmd, " -l \"%s\";", dirs[i]);
 
         init = gap_pkg_init_file ();
 
@@ -404,7 +409,7 @@ gap_app_start_gap (GapApp *app)
             g_free (init);
         }
 
-        g_free (dir);
+        g_strfreev (dirs);
     }
 
     result = moo_term_fork_command_line (app->term, cmd->str,
