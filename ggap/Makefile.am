@@ -1,7 +1,6 @@
 user_actionsdir = ${GGAP_DATA_DIR}
 user_actions_DATA =	\
-	ui.xml.example	\
-	actions.example
+	ui.xml.example
 EXTRA_DIST = $(user_actions_DATA)
 
 ui.xml.example: ggap-ui.xml
