@@ -392,7 +392,7 @@ gap_app_start_gap (GapApp *app)
 
     if (init_pkg)
     {
-        char *init, *dir;
+        char *init;
         char **dirs;
         guint i, n_dirs = 0;
 
