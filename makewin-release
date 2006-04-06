@@ -4,14 +4,17 @@ for dir in "mingw-no-python mingw-python-2.3 mingw-python-2.4"; do
     rm -rf $dir && mkdir $dir
 done
 
+rm -rf mingw-no-python && mkdir mingw-no-python && \
 cd mingw-no-python && \
 ../../mingw-configure --without-python && \
 make && \
 cd .. && \
+rm -rf mingw-python-2.3 && mkdir mingw-python-2.3 && \
 cd mingw-python-2.3 && \
 ../../mingw-configure --with-python=2.3 && \
 make && \
 cd .. && \
+rm -rf mingw-python-2.4 && mkdir mingw-python-2.4 && \
 cd mingw-python-2.4 && \
 ../../mingw-configure --with-python=2.4 && \
 make && \

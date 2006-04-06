@@ -4,7 +4,7 @@
 
 m4_define([ggap_major_version], [0])
 m4_define([ggap_minor_version], [6])
-m4_define([ggap_micro_version], [35])
+m4_define([ggap_micro_version], [4])
 m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_version])
 
 m4_define([moo_major_version], [0])

@@ -15,7 +15,8 @@
 
     <item name="File" label="_File">
       <separator/>
-      <item action="NewTab"/>
+      <item action="NewDoc"/>
+      <item action="NewWindow"/>
       <separator/>
       <item action="Open"/>
       <item action="OpenRecent"/>
@@ -107,7 +108,7 @@
   <!-- Editor toolbar -->
   <widget name="Toolbar">
     <separator/>
-    <item action="NewTab"/>
+    <item action="NewDoc"/>
     <separator/>
     <item action="Open"/>
     <item action="Save"/>

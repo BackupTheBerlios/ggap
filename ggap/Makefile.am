@@ -12,12 +12,6 @@ if !MOO_OS_CYGWIN
 bin_PROGRAMS = ggap
 endif
 
-if MOO_OS_MINGW
-ggap: ggap.win
-	cp $(srcdir)/ggap.win ggap
-	chmod +x ggap
-endif
-
 DEFAULT_INCLUDES =
 AM_CFLAGS =                           \
     -I$(top_builddir)                 \
@@ -150,13 +144,12 @@ BUILT_SOURCES += $(moo_built_sources)
 
 if MOO_OS_MINGW
 ggap_SOURCES += $(moo_win32_sources)
+EXTRA_DIST += $(moo_unix_sources)
 endif
 
 if MOO_OS_UNIX
 ggap_SOURCES += $(moo_unix_sources)
+EXTRA_DIST += $(moo_win32_sources)
 endif
 
-EXTRA_DIST +=                \
-    $(moo_win32_sources)     \
-    $(moo_unix_sources)      \
-    $(moo_extra_dist)
+EXTRA_DIST += $(moo_extra_dist)
