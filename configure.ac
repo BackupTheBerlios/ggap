@@ -9,7 +9,7 @@ m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_vers
 
 m4_define([moo_major_version], [0])
 m4_define([moo_minor_version], [6])
-m4_define([moo_micro_version], [6])
+m4_define([moo_micro_version], [7])
 m4_define([moo_version], [moo_major_version.moo_minor_version.moo_micro_version])
 
 AC_INIT(GGAP, [ggap_version], [muntyan@math.tamu.edu], ggap)
@@ -92,6 +92,7 @@ AM_CONDITIONAL(MOO_STANDALONE,      false)
 #
 MOO_SRC_PREFIX="ggap/moo"
 AC_SUBST(MOO_SRC_PREFIX)
+MOO_AC_RELOC
 MOO_AC_SET_DIRS(ggap)
 MOO_AC_FLAGS
 
@@ -116,8 +117,8 @@ pkg/Makefile
 ggap/Makefile
 ggap/ggap_res.rc
 ggap/moo/mooterm/termhelper_res.rc
-ggap/moo/mooutils/pcre/pcre.h
 ggap/moo/moo.pc
+ggap/moo/moo-version.h
 ])
 
 
