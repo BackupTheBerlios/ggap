@@ -64,8 +64,8 @@ void        gap_app_stop_gap                (GapApp     *app);
 void        gap_app_feed_gap                (GapApp     *app,
                                              const char *text);
 
-void        gap_app_setup_context           (MSContext  *ctx,
-                                             MooWindow  *window);
+void        gap_app_setup_command           (MooCommand *cmd,
+                                             GtkWindow  *window);
 
 
 G_END_DECLS

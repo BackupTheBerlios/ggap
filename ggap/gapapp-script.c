@@ -12,7 +12,7 @@
  */
 
 #include "gapapp.h"
-#include "mooutils/mooscript/mooscript-context.h"
+#include "mooscript/mooscript-context.h"
 
 
 static MSValue*
@@ -54,11 +54,11 @@ setup_terminal_context (MSContext *ctx)
 
 
 void
-gap_app_setup_context (MSContext  *ctx,
-                       MooWindow  *window)
+gap_app_setup_command (MooCommand *cmd,
+                       GtkWindow  *window)
 {
     if (MOO_IS_EDIT_WINDOW (window))
-        setup_editor_context (ctx);
+        setup_editor_context (cmd->context);
     else
-        setup_terminal_context (ctx);
+        setup_terminal_context (cmd->context);
 }

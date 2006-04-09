@@ -198,6 +198,7 @@
 
   <!-- GAP window toolbar -->
   <widget name="Toolbar">
+    <item action="SwitchToEditor"/>
     <separator/>
     <item action="Copy"/>
     <item action="Paste"/>

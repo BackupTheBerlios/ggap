@@ -56,8 +56,9 @@ static void         gap_app_exec_cmd        (MooApp     *app,
                                              const char *data,
                                              guint       len);
 static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
-static MSContext   *gap_app_get_context     (MooApp     *app,
-                                             MooWindow  *window);
+static void         gap_app_cmd_setup       (MooApp     *app,
+                                             MooCommand *cmd,
+                                             GtkWindow  *window);
 
 
 G_DEFINE_TYPE(GapApp, gap_app, MOO_TYPE_APP)
@@ -82,7 +83,7 @@ gap_app_class_init (GapAppClass *klass)
     app_class->try_quit = gap_app_try_quit;
     app_class->prefs_dialog = gap_app_prefs_dialog;
     app_class->exec_cmd = gap_app_exec_cmd;
-    app_class->get_context = gap_app_get_context;
+    app_class->cmd_setup = gap_app_cmd_setup;
 
     gobject_class->set_property = gap_app_set_property;
     gobject_class->get_property = gap_app_get_property;
@@ -488,14 +489,13 @@ gap_app_prefs_dialog (MooApp     *app)
 }
 
 
-static MSContext*
-gap_app_get_context (MooApp     *app,
-                     MooWindow  *window)
+static void
+gap_app_cmd_setup (MooApp     *app,
+                   MooCommand *cmd,
+                   GtkWindow  *window)
 {
-    MSContext *ctx = MOO_APP_CLASS(gap_app_parent_class)->get_context (app, window);
+    MOO_APP_CLASS(gap_app_parent_class)->cmd_setup (app, cmd, window);
 
     if (!GAP_APP_EDITOR_MODE)
-        gap_app_setup_context (ctx, window);
-
-    return ctx;
+        gap_app_setup_command (cmd, window);
 }
