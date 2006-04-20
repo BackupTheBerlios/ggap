@@ -12,7 +12,6 @@ if !MOO_OS_CYGWIN
 bin_PROGRAMS = ggap
 endif
 
-DEFAULT_INCLUDES =
 AM_CFLAGS =                               \
     -I$(top_builddir)                     \
     -I$(top_builddir)/ggap                \
