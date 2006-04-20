@@ -13,17 +13,18 @@ bin_PROGRAMS = ggap
 endif
 
 DEFAULT_INCLUDES =
-AM_CFLAGS =                           \
-    -I$(top_builddir)                 \
-    -I$(top_builddir)/ggap            \
-    -I$(top_srcdir)/ggap              \
-    -I$(top_builddir)/ggap/moo        \
-    -I$(top_srcdir)/ggap/moo          \
-    -I$(top_srcdir)/ggap/moo/mooutils \
-    $(PYTHON_INCLUDES)                \
-    $(MOO_CFLAGS)                     \
-    $(PYGTK_CFLAGS)                   \
-    $(MOO_DEBUG_CFLAGS)               \
+AM_CFLAGS =                               \
+    -I$(top_builddir)                     \
+    -I$(top_builddir)/ggap                \
+    -I$(top_srcdir)/ggap                  \
+    -I$(top_builddir)/ggap/moo            \
+    -I$(top_srcdir)/ggap/moo              \
+    -I$(top_srcdir)/ggap/moo/mooutils     \
+    -I$(top_builddir)/ggap/moo/mooutils   \
+    $(PYTHON_INCLUDES)                    \
+    $(MOO_CFLAGS)                         \
+    $(PYGTK_CFLAGS)                       \
+    $(MOO_DEBUG_CFLAGS)                   \
     $(CFLAGS)
 
 ggap_LDADD =                    \
