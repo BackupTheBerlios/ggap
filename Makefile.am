@@ -8,7 +8,12 @@ EXTRA_DIST =            \
     INSTALL             \
     mingw-configure     \
     cygwin-configure    \
-    autogen.sh          \
-    wininstaller/ggap.iss
+    autogen.sh
 
 ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
+
+desktopdir = $(datadir)/applications
+desktop_DATA = ggap.desktop
+appicondir = $(datadir)/pixmaps
+appicon_DATA = ggap/moo/mooutils/pixmaps/ggap.png
+EXTRA_DIST += $(desktop_DATA)

@@ -1,6 +1,6 @@
 [Setup]
 AppName=GGAP
-AppVerName=GGAP 0.6.7
+AppVerName=GGAP @GGAP_VERSION_UNQUOTED@
 AppPublisher=Yevgen Muntyan
 AppPublisherURL=http://ggap.sourceforge.net/
 AppSupportURL=http://ggap.sourceforge.net/
@@ -21,6 +21,11 @@ Source: C:\ggap\ggap.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\termhelper.exe; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\pkg\*; DestDir: {app}\pkg; Flags: ignoreversion recursesubdirs
 Source: C:\ggap\syntax\*; DestDir: {app}\syntax; Flags: ignoreversion recursesubdirs
+Source: C:\ggap\completion\*; DestDir: {app}\completion; Flags: ignoreversion recursesubdirs
+Source: C:\ggap\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recursesubdirs
+Source: C:\ggap\tools.cfg; DestDir: {app}; Flags: ignoreversion
+Source: C:\ggap\menu.cfg; DestDir: {app}; Flags: ignoreversion
+Source: C:\ggap\as.cfg; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

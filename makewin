@@ -1,56 +1,102 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-dir=`pwd`
-builddir=/home/muntyan/projects/ggap/build
-cygwin_builddir=$builddir/cygwin
-termhelper=$cygwin_builddir/ggap/termhelper.exe
-ggap_windir=/usr/local/win/ggap
-issdir=Z:/home/muntyan/projects/ggap/wininstaller
+import os
+import sys
+import getopt
 
-if [ x$1 != x -a x$1 != x"--no-cygwin" ]; then
-    ggap_builddir=`cd $1 && pwd`
-else
-    ggap_builddir=$builddir/mingw
-fi
-config=`basename $ggap_builddir`
-installdir=$dir/$config-root
+dir = os.getcwd()
+builddir = "/home/muntyan/projects/ggap/build"
+cygwin_builddir = builddir + "/cygwin"
+termhelper_exe = cygwin_builddir + "/ggap/termhelper.exe"
+build_termhelper = True
+ggap_windir = "/usr/local/win/ggap"
 
-iss=$issdir/ggap.iss
-installer=ggap`echo $config | sed s/mingw//`.exe
 
-do_cmd () {
-    echo "*** " $*
-    $*
-    return $?
-}
+def usage():
+    print "Usage:", sys.argv[0], "[--termhelper=<BINARY>] [build_dir]"
+    sys.exit(2)
 
-copy_ggap_files () {
-    do_cmd cp $1/usr/local/bin/ggap.exe $2/ && \
-    do_cmd cp -r $1/usr/local/share/ggap/ui.xml.example $2/ && \
-    do_cmd cp -r $1/usr/local/share/ggap/pkg $2/ && \
-    do_cmd cp -r $1/usr/local/share/ggap/syntax $2/
-}
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "", ["termhelper="])
+except getopt.GetoptError:
+    usage()
 
-build () {
-    do_cmd mkdir $ggap_windir && \
-    do_cmd mkdir $installdir && \
-    do_cmd cd $ggap_builddir && \
-    do_cmd make install-strip DESTDIR=$installdir && \
-    copy_ggap_files $installdir $ggap_windir && \
-    do_cmd cd $cygwin_builddir && \
-    do_cmd make && \
-    do_cmd i686-pc-cygwin-strip $termhelper && \
-    do_cmd cp $termhelper $ggap_windir
-    echo "*** " wine /usr/local/win/InnoSetup5/ISCC.exe $iss && \
-    wine /usr/local/win/InnoSetup5/ISCC.exe $iss && \
-    do_cmd mv $builddir/../wininstaller/Output/setup.exe $dir/$installer
-}
+for o, a in opts:
+    if o == "--termhelper":
+        termhelper_exe = os.path.abspath(a)
+        build_termhelper = False
+if args:
+    if args[1:]: usage()
+    ggap_builddir = os.path.abspath(args[0])
+else:
+    ggap_builddir = builddir + "/mingw"
 
-clean () {
-    do_cmd rm -rf $ggap_windir
-    do_cmd rm -rf $installdir
-    do_cmd rm -rf $builddir/../wininstaller/Output
-}
+config = os.path.basename(ggap_builddir)
+installdir = "%s/%s-inst" % (dir, config)
 
-build
-clean
+issdir = "Z:%s/wininstaller" % (ggap_builddir,)
+iss = issdir + "/ggap.iss"
+
+
+class Error(Exception):
+    def __init__(self, status):
+        Exception.__init__(self)
+        self.status = status
+
+def do_cmd(cmd):
+    print cmd
+    status = os.system(cmd)
+    if status:
+        raise Error(status)
+
+def copy_files():
+    files = ["bin/ggap.exe", "share/ggap/pkg", "share/ggap/syntax",
+             "share/ggap/tools.cfg", "share/ggap/menu.cfg", "share/ggap/as.cfg",
+             "share/ggap/completion", "lib/ggap/plugins"]
+    for f in files:
+        do_cmd("cp -r %s/usr/local/%s %s/" % (installdir, f, ggap_windir))
+
+def make_termhelper():
+    if build_termhelper:
+        os.chdir(cygwin_builddir)
+        do_cmd("make")
+        do_cmd("i686-pc-cygwin-strip " + termhelper_exe)
+    do_cmd("cp %s %s/" % (termhelper_exe, ggap_windir))
+
+config_template = """
+version = @GGAP_VERSION@
+"""
+
+def get_version():
+    sys.path.insert(0, ggap_builddir)
+    if not os.path.exists('config.py.in'):
+        file = open('config.py.in', 'w+')
+        file.write(config_template)
+        file.close()
+    do_cmd('./config.status --file config.py:config.py.in')
+    import config
+    return config.version
+
+def build():
+    do_cmd("mkdir " + ggap_windir)
+    do_cmd("mkdir " + installdir)
+    os.chdir(ggap_builddir)
+    do_cmd("make install-strip DESTDIR=" + installdir)
+    copy_files()
+    make_termhelper()
+    do_cmd("wine /usr/local/win/InnoSetup5/ISCC.exe " + iss)
+    installer = "ggapsetup-" + get_version() + config.replace("mingw", "") + ".exe"
+    do_cmd("mv %s/wininstaller/Output/setup.exe %s/%s" % (ggap_builddir, dir, installer))
+
+def clean():
+    do_cmd("rm -rf %s %s %s" % (ggap_windir, installdir,
+                                ggap_builddir + "/wininstaller/Output"))
+
+try:
+    build()
+except Error, e:
+    clean()
+    sys.exit(e.status)
+
+clean()
+print "*** Success ***"

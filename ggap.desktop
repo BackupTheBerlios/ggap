@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=GGAP
+Comment=GAP Front End
+Exec=medit %F
+Terminal=false
+Type=Application
+StartupNotify=true
+MimeType=text/*;
+Icon=ggap.png
+Categories=Math;Science;
