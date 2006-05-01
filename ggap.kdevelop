@@ -36,7 +36,7 @@
   <kdevautoproject>
     <general>
       <activetarget>src/script/libscript.la</activetarget>
-      <useconfiguration>mingw</useconfiguration>
+      <useconfiguration>debug</useconfiguration>
     </general>
     <run>
       <mainprogram>ggap/ggap</mainprogram>

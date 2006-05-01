@@ -139,6 +139,7 @@ if test x$MOO_OS_CYGWIN != "xyes"; then
     echo "    OS                        = $system"
     echo "    prefix                    = $prefix"
     echo "    python support            = $MOO_USE_PYGTK"
+    echo "    build pcre library        = $MOO_BUILD_PCRE"
     echo
     echo "    editor lang files go to   = $MOO_TEXT_LANG_FILES_DIR"
     echo "    shared package goes to    = $GGAP_GAP_DIR"

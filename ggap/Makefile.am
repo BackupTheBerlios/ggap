@@ -18,15 +18,13 @@ AM_CFLAGS =                               \
     $(MOO_DEBUG_CFLAGS)                   \
     $(CFLAGS)
 
-ggap_LDADD =                    \
-    $(GTK_LIBS)                 \
-    $(XML_LIBS)                 \
-    $(FAM_LIBS)                 \
-    $(PYTHON_LDFLAGS)           \
+ggap_LDADD =                \
+    $(MOO_LIBS)             \
+    $(PYTHON_LDFLAGS)       \
     $(PYTHON_EXTRA_LIBS)
 
 # ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
-ggap_LDFLAGS =
+ggap_LDFLAGS = -export-dynamic
 
 if MOO_OS_MINGW
 ggap_LDFLAGS += -mwindows
