@@ -227,12 +227,14 @@ gap_app_init_real (MooApp *app)
 {
     MooEditor *editor;
 
+    /* this should be before MooApp::init since that reads rc file */
+    moo_prefs_new_key_string (moo_edit_setting (MOO_EDIT_PREFS_DEFAULT_LANG), "gap");
+
     if (!MOO_APP_CLASS(gap_app_parent_class)->init (app))
         return FALSE;
 
     editor = moo_app_get_editor (app);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
-    moo_editor_set_default_lang (editor, "GAP");
     g_signal_connect_swapped (editor, "all-windows-closed",
                               G_CALLBACK (editor_windows_closed), app);
 
