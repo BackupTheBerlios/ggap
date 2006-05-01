@@ -1,11 +1,3 @@
-user_actionsdir = ${GGAP_DATA_DIR}
-user_actions_DATA =	\
-	ui.xml.example
-EXTRA_DIST = $(user_actions_DATA)
-
-ui.xml.example: ggap-ui.xml
-	cp $(srcdir)/ggap-ui.xml $(srcdir)/ui.xml.example
-
 EXTRA_PROGRAMS = ggap
 
 if !MOO_OS_CYGWIN
@@ -74,7 +66,7 @@ ggap_res.res: ggap_res.rc
 	touch ggap_res.res
 endif ! MOO_OS_MINGW
 
-EXTRA_DIST +=		\
+EXTRA_DIST =		\
     ggap_res.rc.in	\
     ggap-ui.xml		\
     ggap.opag		\
