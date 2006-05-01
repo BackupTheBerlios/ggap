@@ -155,7 +155,7 @@ gap_edit_window_open_file (const char *filename,
     if (doc)
     {
         moo_editor_set_active_doc (editor, doc);
-        moo_text_view_move_cursor (MOO_TEXT_VIEW (doc), line, 0, TRUE);
+        moo_text_view_move_cursor (MOO_TEXT_VIEW (doc), line, 0, FALSE, TRUE);
     }
 }
 
