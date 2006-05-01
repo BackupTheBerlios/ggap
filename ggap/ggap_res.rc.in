@@ -15,7 +15,7 @@ FILETYPE VFT_APP
             VALUE "FileVersion", @GGAP_VERSION@
             VALUE "FileDescription", "GGAP"
             VALUE "InternalName", "ggap"
-            VALUE "LegalCopyright", "(C) 2004-2005 by Yevgen Muntyan <muntyan@math.tamu.edu>"
+            VALUE "LegalCopyright", "(C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>"
             VALUE "LegalTrademarks", ""
             VALUE "OriginalFilename", "ggap.exe"
             VALUE "ProductName", "GGAP"
