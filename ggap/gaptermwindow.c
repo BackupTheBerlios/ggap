@@ -14,7 +14,7 @@
 #include "gaptermwindow.h"
 #include <mooutils/eggregex.h>
 #include <mooapp/mooapp.h>
-#include <gtk/gtkstock.h>
+#include <mooutils/moocompat.h>
 #include <string.h>
 #include <errno.h>
 #include <string.h>

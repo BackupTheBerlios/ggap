@@ -10,9 +10,7 @@
 
 <object name="Editor">
 
-  <!-- Editor menubar -->
   <widget name="Menubar">
-
     <item name="File" label="_File">
       <separator/>
       <item action="NewDoc"/>
@@ -25,8 +23,11 @@
       <separator/>
       <item action="Reload"/>
       <separator/>
+      <item action="PrintOptions"/>
       <item action="PageSetup"/>
       <item action="Print"/>
+      <separator/>
+      <placeholder name="UserMenu"/>
       <separator/>
       <item action="Close"/>
       <item action="CloseAll"/>
@@ -53,6 +54,8 @@
       <item action="Comment"/>
       <item action="Uncomment"/>
       <separator/>
+      <placeholder name="UserMenu"/>
+      <separator/>
     </item>
 
     <item name="Search" label="_Search">
@@ -62,10 +65,14 @@
       <item action="FindPrevious"/>
       <item action="Replace"/>
       <separator/>
+      <item action="QuickSearch"/>
+      <separator/>
       <item action="GoToLine"/>
       <separator/>
       <item action="NextPlaceholder"/>
       <item action="PrevPlaceholder"/>
+      <separator/>
+      <placeholder name="UserMenu"/>
       <separator/>
     </item>
 
@@ -77,12 +84,14 @@
       <item action="LanguageMenu"/>
       <separator/>
       <!--
-      <item action="ToggleBookmark"/>
-      <item action="PreviousBookmark"/>
-      <item action="NextBookmark"/>
-      -->
+          <item action="ToggleBookmark"/>
+          <item action="PreviousBookmark"/>
+          <item action="NextBookmark"/>
+          -->
       <separator/>
       <item action="FocusDoc"/>
+      <separator/>
+      <placeholder name="UserMenu"/>
       <separator/>
     </item>
 
@@ -95,9 +104,9 @@
 
     <item name="Tools" label="_Tools">
       <separator/>
-      <placeholder name="EditorUserMenu"/>
-      <separator/>
       <placeholder name="ToolsMenu"/>
+      <separator/>
+      <placeholder name="UserMenu"/>
       <separator/>
       <item action="StopJob"/>
       <separator/>
@@ -115,21 +124,20 @@
     </item>
 
     <item name="Help" label="_Help">
-      <item action="GapDoc"/>
       <separator/>
       <item action="About"/>
       <separator/>
     </item>
 
-  </widget>
+  </widget> <!-- Menubar -->
 
-  <!-- Editor toolbar -->
   <widget name="Toolbar">
     <separator/>
     <item action="NewDoc"/>
     <separator/>
     <item action="Open"/>
     <item action="Save"/>
+    <item action="SaveAs"/>
     <separator/>
     <item action="Undo"/>
     <item action="Redo"/>
@@ -148,7 +156,7 @@
     </placeholder>
     <separator/>
 
-  </widget>
+  </widget> <!-- Toolbar -->
 
   <widget name="Popup">
     <separator/>
@@ -169,7 +177,8 @@
     <separator/>
   </widget> <!-- Popup -->
 
-</object>
+</object> <!-- Editor -->
+
 
 <object name="Terminal">
 

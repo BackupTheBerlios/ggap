@@ -16,4 +16,6 @@ desktopdir = $(datadir)/applications
 desktop_DATA = ggap.desktop
 appicondir = $(datadir)/pixmaps
 appicon_DATA = ggap/moo/mooutils/pixmaps/ggap.png
+iconthemedir = $(datadir)/icons/hicolor/48x48/apps
+icontheme_DATA = ggap/moo/mooutils/pixmaps/ggap.png
 EXTRA_DIST += $(desktop_DATA)
