@@ -4,7 +4,7 @@
      where 'YourAction' is the name of action defined in 'actions' file.
      WARNING: changing/moving around 'placeholder' items may break menu
      items added by plugins; moving around menus is also not recommended.
-     (but adding new items is completely safe).
+     (but adding or moving *items* is okay).
      -->
 <ui>
 
@@ -98,6 +98,7 @@
     <item name="GAP" label="_GAP">
       <separator/>
       <item action="SendFile"/>
+      <item action="SendCopy"/>
       <item action="SendSelection"/>
       <separator/>
     </item>
@@ -132,6 +133,8 @@
   </widget> <!-- Menubar -->
 
   <widget name="Toolbar">
+    <separator/>
+    <item action="SendFile"/>
     <separator/>
     <item action="NewDoc"/>
     <separator/>
@@ -198,9 +201,6 @@
 
     <item name="Edit" label="E_dit">
       <separator/>
-      <!--
-      <item name="CopyLastOutput" action="CopyLastOutput"/>
-      -->
       <item action="Copy"/>
       <item action="Paste"/>
       <separator/>
@@ -213,6 +213,8 @@
       <item action="GAPRead"/>
       <separator/>
       <item action="Restart"/>
+      <separator/>
+<!--       <item action="Interrupt"/> -->
       <separator/>
     </item>
 
@@ -253,6 +255,7 @@
     <separator/>
     <item action="Restart"/>
     <separator/>
+<!--     <item action="Interrupt"/> -->
   </widget>
 
 </object>

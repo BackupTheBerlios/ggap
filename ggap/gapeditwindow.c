@@ -34,6 +34,8 @@ static void     gap_edit_window_close_doc   (MooEditWindow      *window,
                                              MooEdit            *doc);
 
 static void     gap_edit_window_send_file   (GapEditWindow      *window);
+static void     gap_edit_window_send_copy   (GapEditWindow      *window);
+static void     gap_edit_window_send_selection (GapEditWindow   *window);
 
 
 /* GAP_TYPE_EDIT_WINDOW */
@@ -55,13 +57,32 @@ static void gap_edit_window_class_init (GapEditWindowClass *klass)
     edit_window_class->close_doc = gap_edit_window_close_doc;
 
     if (!GAP_APP_EDITOR_MODE)
+    {
         moo_window_class_new_action (window_class, "SendFile",
-                                     "name", "Send File",
+                                     "display-name", "Send File",
                                      "label", "Send File",
                                      "tooltip", "Send File",
-                                     "icon-stock-id", GTK_STOCK_GOTO_BOTTOM,
+                                     "stock-id", GTK_STOCK_EXECUTE,
                                      "closure-callback", gap_edit_window_send_file,
+                                     "condition::sensitive", "has-open-document",
                                      NULL);
+        moo_window_class_new_action (window_class, "SendCopy",
+                                     "display-name", "Send Copy",
+                                     "label", "Send Copy",
+                                     "tooltip", "Send Copy",
+                                     "stock-id", GTK_STOCK_CONVERT,
+                                     "closure-callback", gap_edit_window_send_copy,
+                                     "condition::sensitive", "has-open-document",
+                                     NULL);
+        moo_window_class_new_action (window_class, "SendSelection",
+                                     "display-name", "Send Selection",
+                                     "label", "Send Selection",
+                                     "tooltip", "Send Selection",
+                                     "stock-id", GTK_STOCK_JUMP_TO,
+                                     "closure-callback", gap_edit_window_send_selection,
+                                     "condition::sensitive", "has-open-document",
+                                     NULL);
+    }
 }
 
 
@@ -87,25 +108,41 @@ gap_edit_window_destroy (GtkObject          *object)
 
 
 static void
-gap_edit_window_send_file (GapEditWindow *window)
+send_and_bring_to_front (const char *string)
 {
-    MooEdit *doc;
+    gap_app_feed_gap (GAP_APP_INSTANCE, string);
+    moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window));
+}
+
+
+static void
+send_filename (const char *filename)
+{
+    char *cmd = gap_read_file_string (filename);
+    send_and_bring_to_front (cmd);
+    g_free (cmd);
+}
+
+
+static void
+send_copy (GapEditWindow *window,
+           MooEdit       *doc)
+{
     MooEditor *editor;
     MooApp *app;
     char *filename;
     GError *error = NULL;
 
+    g_return_if_fail (doc != NULL);
+
     app = moo_app_get_instance ();
     editor = moo_edit_window_get_editor (MOO_EDIT_WINDOW (window));
-    doc = moo_edit_window_get_active_doc (MOO_EDIT_WINDOW (window));
-    g_return_if_fail (doc != NULL);
 
     filename = moo_app_tempnam (app);
     g_return_if_fail (filename != NULL);
 
     if (moo_editor_save_copy (editor, doc, filename, NULL, &error))
     {
-        char *cmd;
         GSList *list;
 
         g_hash_table_insert (tmp_to_real, g_strdup (filename), doc);
@@ -114,14 +151,12 @@ gap_edit_window_send_file (GapEditWindow *window)
         list = g_slist_prepend (list, g_strdup (filename));
         g_hash_table_insert (real_to_tmp, doc, list);
 
-        cmd = gap_read_file_string (filename);
-        gap_app_feed_gap (GAP_APP_INSTANCE, cmd);
-        moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window));
-        g_free (cmd);
+        send_filename (filename);
     }
     else
     {
         g_warning ("%s: could not save file '%s'", G_STRLOC, filename);
+
         if (error)
         {
             g_warning ("%s: %s", G_STRLOC, error->message);
@@ -130,6 +165,55 @@ gap_edit_window_send_file (GapEditWindow *window)
     }
 
     g_free (filename);
+}
+
+
+static void
+gap_edit_window_send_copy (GapEditWindow *window)
+{
+    MooEdit *doc;
+
+    doc = moo_edit_window_get_active_doc (MOO_EDIT_WINDOW (window));
+    g_return_if_fail (doc != NULL);
+    send_copy (window, doc);
+}
+
+
+static void
+gap_edit_window_send_file (GapEditWindow *window)
+{
+    MooEdit *doc;
+    const char *filename;
+
+    doc = moo_edit_window_get_active_doc (MOO_EDIT_WINDOW (window));
+    g_return_if_fail (doc != NULL);
+
+    filename = moo_edit_get_filename (doc);
+
+    if (filename)
+        send_filename (filename);
+    else
+        send_copy (window, doc);
+}
+
+
+static void
+gap_edit_window_send_selection (GapEditWindow *window)
+{
+    MooEdit *doc;
+    char *text;
+
+    doc = moo_edit_window_get_active_doc (MOO_EDIT_WINDOW (window));
+    g_return_if_fail (doc != NULL);
+
+    text = moo_text_view_get_selection (MOO_TEXT_VIEW (doc));
+
+    if (!text)
+        text = moo_text_view_get_text (MOO_TEXT_VIEW (doc));
+
+    send_and_bring_to_front (text);
+
+    g_free (text);
 }
 
 

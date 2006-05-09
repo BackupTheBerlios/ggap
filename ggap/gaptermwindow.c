@@ -47,18 +47,18 @@ static void gap_term_window_class_init (GapTermWindowClass *klass)
     gtkobject_class->destroy = gap_term_window_destroy;
 
     moo_window_class_new_action (window_class, "SwitchToEditor",
-                                 "name", "Switch to Editor",
+                                 "display-name", "Switch to Editor",
                                  "label", "Switch to Editor",
                                  "tooltip", "Switch to Editor",
-                                 "icon-stock-id", GTK_STOCK_EDIT,
+                                 "stock-id", GTK_STOCK_EDIT,
                                  "closure-callback", switch_to_editor,
                                  NULL);
 
     moo_window_class_new_action (window_class, "OpenFile",
-                                 "name", "Open File",
+                                 "display-name", "Open File",
                                  "label", "Open File",
                                  "tooltip", "Open File",
-                                 "icon-stock-id", GTK_STOCK_OPEN,
+                                 "stock-id", GTK_STOCK_OPEN,
                                  "closure-callback", open_file,
                                  NULL);
 }

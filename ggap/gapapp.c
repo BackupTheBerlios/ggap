@@ -115,38 +115,47 @@ gap_app_class_init (GapAppClass *klass)
     if (GAP_APP_EDITOR_MODE)
         return;
 
-    edit_class = g_type_class_ref (MOO_TYPE_EDIT_WINDOW);
+    edit_class = g_type_class_ref (GAP_TYPE_EDIT_WINDOW);
     term_class = g_type_class_ref (GAP_TYPE_TERM_WINDOW);
 
 //     moo_window_class_new_action (edit_class, "ExecuteSelection",
-//                                  "name", "Execute Selection",
+//                                  "display-name", "Execute Selection",
 //                                  "label", "_Execute Selection",
 //                                  "tooltip", "Execute Selection",
-//                                  "icon-stock-id", GTK_STOCK_EXECUTE,
+//                                  "stock-id", GTK_STOCK_EXECUTE,
 //                                  "accel", "<shift><alt>Return",
 //                                  "closure-callback", execute_selection,
 //                                  NULL);
 
     moo_window_class_new_action (term_class, "Restart",
-                                 "name", "Restart",
+                                 "display-name", "Restart",
                                  "label", "_Restart",
-                                 "tooltip", "Restart",
-                                 "icon-stock-id", MOO_STOCK_RESTART,
+                                 "tooltip", "Restart GAP",
+                                 "stock-id", MOO_STOCK_RESTART,
                                  "closure-callback", gap_app_restart_gap,
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
+    moo_window_class_new_action (term_class, "Interrupt",
+                                 "display-name", "Interrupt",
+                                 "label", "_Interrupt",
+                                 "tooltip", "Interrupt computation",
+                                 "stock-id", GTK_STOCK_STOP,
+                                 "closure-callback", gap_app_send_intr,
+                                 "closure-proxy-func", moo_app_get_instance,
+                                 NULL);
+
     moo_window_class_new_action (edit_class, "GapDoc",
-                                 "name", "GAP Documentation",
+                                 "display-name", "GAP Documentation",
                                  "label", "_GAP Documentation",
-                                 "icon-stock-id", GTK_STOCK_HELP,
+                                 "stock-id", GTK_STOCK_HELP,
                                  "closure-callback", gap_doc_window_show,
                                  NULL);
 
     moo_window_class_new_action (term_class, "GapDoc",
-                                 "name", "GAP Documentation",
+                                 "display-name", "GAP Documentation",
                                  "label", "_GAP Documentation",
-                                 "icon-stock-id", GTK_STOCK_HELP,
+                                 "stock-id", GTK_STOCK_HELP,
                                  "closure-callback", gap_doc_window_show,
                                  NULL);
 
@@ -321,6 +330,16 @@ gap_app_exec_cmd (MooApp     *app,
                   guint       len)
 {
     MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
+}
+
+
+void
+gap_app_send_intr (GapApp *app)
+{
+    g_return_if_fail (GAP_IS_APP (app) && MOO_IS_TERM (app->term));
+
+    if (moo_term_child_alive (app->term))
+        moo_term_send_intr (app->term);
 }
 
 

@@ -60,6 +60,7 @@ GType       gap_app_get_type                (void) G_GNUC_CONST;
 void        gap_app_restart_gap             (GapApp     *app);
 void        gap_app_start_gap               (GapApp     *app);
 void        gap_app_stop_gap                (GapApp     *app);
+void        gap_app_send_intr               (GapApp     *app);
 
 void        gap_app_feed_gap                (GapApp     *app,
                                              const char *text);
