@@ -10,14 +10,14 @@ environment for using GAP - copy/paste, buttons, menus and such.
 4. Surely it provides this for non-windows users too.
 
 It should work on MS Windows, Linux, *BSD, Mac OS X, and I don't know what else.
-I does work on Linux and Windows 2000/XP, not tested on other systems.
-It does not work on cygwin currently (should it?).
+I does work on Linux, Windows 2000/XP, Mac OS X, and FreeBSD; not tested on other
+systems. It does not work on cygwin.
 
 For installation instructions see INSTALL file in the source directory.
 
 Feature requests/comments/bug reports/questions are highly appreciated. You
-can write to muntyan@math.tamu.edu and/or use bug tracking system at
-http://sourceforge.net/projects/ggap . Often you can find me at #gtk+
-irc channel at irc.freenode.net, my nick is 'muntyan'.
+can write to muntyan@tamu.edu and/or use bug tracking system at
+http://sourceforge.net/projects/ggap . Also you can find me in #ggap
+irc channel at irc.freenode.net.
 
 See GGAP home page http://ggap.sourceforge.net for latest release.

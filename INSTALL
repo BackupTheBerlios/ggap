@@ -2,17 +2,17 @@ Building and installing GGAP (http://ggap.sourceforge.net)
 ----------------------------------------------------------
 
     GGAP is a GTK+ (http://gtk.org) program, so it requires installed
-GTK+ of version 2.2 or higher. Recommended GTK version is the latest
-(today it's 2.6); ggap is not tested with GTK 2.0 (I doubt it will work).
+GTK+ of version 2.6 or higher (2.4 might work too, and 2.2 works periodically).
+Recommended GTK version is the latest (today it's 2.8).
 Recommended way to obtain GTK libraries for windows users is to download installer
 from http://gladewin32.sf.net .
 
-Optional dependensies are: python 2.2 or newer, pygtk, libxml2.
+Optional dependensies are: python, pygtk, libxml2.
 
 Building GGAP on Unix-like system
 =================================
 
-    GGAP uses autotools system, so the following should enough:
+    GGAP uses autotools system, so the following should be enough:
 
 ./configure; make; make install
 
@@ -22,7 +22,7 @@ end of this file.
 
     Also it supports the following options (and some not important others):
 
-    --with-python=[version] -   enables python support in ggap. By default
+    --with-python           -   enables python support in ggap. By default
                                 configure turns this option on if python
                                 development files are found. If you wish to use
                                 version of python other than that found by configure,
@@ -63,7 +63,7 @@ cd mingw-build
 cd ../cygwin-build
 ../cygwin-configure; make
 
-Installer is made with Inno Setup; there are ggap.iss and ggap-nocygwin.iss setup scripts
+Installer is made with Inno Setup; there is ggap.iss setup scripts
 in wininstaller directory. I do it with wine, and use makewin script for this.
 
 If you need help with building GGAP for windows, contact me at muntyan@math.tamu.edu (I
