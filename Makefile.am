@@ -8,8 +8,7 @@ EXTRA_DIST =            \
     INSTALL             \
     mingw-configure     \
     cygwin-configure    \
-    autogen.sh          \
-    ui.xml.example
+    autogen.sh
 
 ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
 
@@ -25,4 +24,5 @@ appicondir = $(datadir)/pixmaps
 appicon_DATA = ggap/moo/mooutils/pixmaps/ggap.png
 iconthemedir = $(datadir)/icons/hicolor/48x48/apps
 icontheme_DATA = ggap/moo/mooutils/pixmaps/ggap.png
-EXTRA_DIST += $(desktop_DATA)
+
+EXTRA_DIST += $(desktop_DATA) $(ggap_DATA)

@@ -50,9 +50,11 @@ def do_cmd(cmd):
         raise Error(status)
 
 def copy_files():
-    files = ["bin/ggap.exe", "share/ggap/pkg", "share/ggap/syntax",
-             "share/ggap/tools.cfg", "share/ggap/menu.cfg", "share/ggap/as.cfg",
-             "share/ggap/completion", "lib/ggap/plugins"]
+    files = ["bin/ggap.exe", "share/ggap/ui.xml.example", 
+             "share/ggap/pkg", "share/ggap/syntax",
+             "share/ggap/tools.cfg", "share/ggap/menu.cfg", 
+	     "share/ggap/as.cfg", "share/ggap/completion", 
+	     "lib/ggap/plugins"]
     for f in files:
         do_cmd("cp -r %s/usr/local/%s %s/" % (installdir, f, ggap_windir))
 

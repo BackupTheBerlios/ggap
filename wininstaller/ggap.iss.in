@@ -26,6 +26,7 @@ Source: C:\ggap\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recurses
 Source: C:\ggap\tools.cfg; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\menu.cfg; DestDir: {app}; Flags: ignoreversion
 Source: C:\ggap\as.cfg; DestDir: {app}; Flags: ignoreversion
+Source: C:\ggap\ui.xml.example; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
