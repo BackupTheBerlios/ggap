@@ -4,12 +4,12 @@
 
 m4_define([ggap_major_version], [0])
 m4_define([ggap_minor_version], [6])
-m4_define([ggap_micro_version], [7])
+m4_define([ggap_micro_version], [8])
 m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_version])
 
 m4_define([moo_major_version], [0])
 m4_define([moo_minor_version], [6])
-m4_define([moo_micro_version], [98])
+m4_define([moo_micro_version], [99])
 m4_define([moo_version], [moo_major_version.moo_minor_version.moo_micro_version])
 
 AC_INIT(GGAP, [ggap_version], [muntyan@math.tamu.edu], ggap)
@@ -36,6 +36,7 @@ AC_HEADER_STDC
 # AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 MOO_AC_PROGS
+ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
 
 #  Check debug options
 MOO_AC_DEBUG
