@@ -19,19 +19,17 @@
 ##
 ##  This record contains various variables for ggap package.
 ##
-BindGlobal("GGAP_PARAMS", rec(
-  init := false
-));
+DeclareGlobalVariable("GGAP_PARAMS", "various variables for ggap package");
 
 
 #############################################################################
 ##
 #V  GGAP_API
 ##
-##  This record contains various functions used in ggap package.
+##  This record contains all the functions in ggap package. alias.g installs
+##  global names for these functions later.
 ##
-BindGlobal("GGAP_API", rec());
+DeclareGlobalVariable("GGAP_API", "various functions used in ggap package");
 
 
 #E
-## kate: space-indent on; indent-width 2;

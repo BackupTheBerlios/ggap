@@ -103,7 +103,7 @@ GGAP_DATA_DIR="${MOO_DATA_DIR}"
 AC_SUBST(GGAP_DATA_DIR)
 MOO_CFLAGS="$MOO_CFLAGS -DGGAP_DATA_DIR=\\\"${GGAP_DATA_DIR}\\\""
 
-GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg/ggap"
+GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 MOO_CFLAGS="$MOO_CFLAGS -DGGAP_GAP_DIR=\\\"${GGAP_GAP_DIR}\\\""
 
@@ -114,8 +114,10 @@ MOO_CFLAGS="$MOO_CFLAGS -DGGAP_GAP_DIR=\\\"${GGAP_GAP_DIR}\\\""
 AC_OUTPUT([
 Makefile
 m4/Makefile
-pkg/PackageInfo.g
-pkg/init.g
+pkg/ggap/PackageInfo.g
+pkg/ggap/init.g
+pkg/gui/PackageInfo.g
+pkg/gui/init.g
 pkg/Makefile
 ggap/Makefile
 ggap/ggap_res.rc

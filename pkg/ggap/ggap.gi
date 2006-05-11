@@ -13,6 +13,10 @@
 ##
 
 
+InstallValue(GGAP_PARAMS, rec(init := false));
+InstallValue(GGAP_API, rec());
+
+
 #############################################################################
 ##
 #F  GGAP_API.INIT(<out_pipe>, <in_pipe>)

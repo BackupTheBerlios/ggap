@@ -1,6 +1,6 @@
 #############################################################################
 ##
-#W  PackageInfo.g                 ggap package                 Yevgen Muntyan
+#W  PackageInfo.g                  gui package                 Yevgen Muntyan
 #W
 #Y  Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
 ##
@@ -15,10 +15,10 @@
 ##
 
 SetPackageInfo( rec(
-  PackageName := "ggap",
-  Subtitle := "ggap",
+  PackageName := "gui",
+  Subtitle := "gui",
   Version := @GGAP_VERSION@,
-  Date := "12/10/2005",
+  Date := "11/05/2006",
 
 ##  URL of the archive(s) of the current package release, but *without*
 ##  the format extension(s), like '.zoo', which are given next.
@@ -183,7 +183,7 @@ Status := "other",
 
   Dependencies := rec(
     GAP := ">=4.4",
-    NeededOtherPackages := [],
+    NeededOtherPackages := [["ggap", @GGAP_VERSION@]],
     SuggestedOtherPackages := [],
     ExternalConditions := []
   ),
@@ -192,13 +192,12 @@ Status := "other",
 
   BannerString := Concatenation(
   "----------------------------------------------------------------\n",
-  "Loading GGAP ", ~.Version, "\n",
-  "For help, type: ?ggap \n",
+  "Loading gui ", ~.Version, "\n",
+  "For help, type: ?gui \n",
   "----------------------------------------------------------------\n" ),
 
   Autoload := true,
-  TestFile := "tst/demo.g",
+#   TestFile := "tst/demo.g",
 ));
 
 #E
-## kate: space-indent on; indent-width 2;

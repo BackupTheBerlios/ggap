@@ -1,6 +1,6 @@
 #############################################################################
 ##
-#W  init.g                     ggap package                    Yevgen Muntyan
+#W  read.g                      gui package                    Yevgen Muntyan
 #W
 #Y  Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
 ##
@@ -12,17 +12,8 @@
 ##  See COPYING file that comes with this distribution.
 ##
 
-Revision.init_g :=
-  "@(#)$Id: init.g.in,v 1.1 2005/02/23 04:44:16 emuntyan Exp $";
 
 
-DeclareAutoPackage("ggap", @GGAP_VERSION@, ReturnTrue);
-
-
-ReadPkg("ggap", "ggap.gd");
-ReadPkg("ggap", "ggap.gi");
-ReadPkg("ggap", "alias.g");
 
 
 #E
-## kate: space-indent on; indent-width 2;
