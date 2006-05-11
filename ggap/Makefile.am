@@ -15,8 +15,7 @@ AM_CFLAGS =                               \
     $(PYTHON_INCLUDES)                    \
     $(MOO_CFLAGS)                         \
     $(PYGTK_CFLAGS)                       \
-    $(MOO_DEBUG_CFLAGS)                   \
-    $(CFLAGS)
+    $(MOO_DEBUG_CFLAGS)
 
 ggap_LDADD =                \
     $(MOO_LIBS)             \
