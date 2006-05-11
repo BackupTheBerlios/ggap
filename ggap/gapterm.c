@@ -248,8 +248,8 @@ do_analyze (GapTerm *term)
                 moo_term_get_iter_at_line_offset (moo_term, &end, j, k + 1);
                 moo_term_apply_tag (moo_term, term->priv->error_tag, &start, &end);
 
-                if (strcmp (file_string, "*errin*"))
-	        {
+                if (strcmp (file_string, "*errin*") && strcmp (file_string, "stream"))
+                {
                     for (k = i; k <= j; ++k)
                     {
                         line = moo_term_get_line (moo_term, k);
