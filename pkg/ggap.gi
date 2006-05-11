@@ -108,6 +108,21 @@ end;
 GGAP_API.WRITE_PYTHON :=
 function(arg)
   local s;
+  AppendTo(GGAP_PARAMS.out_pipe, "p");
+  for s in arg do
+    AppendTo (GGAP_PARAMS.out_pipe, s);
+  od;
+  AppendTo(GGAP_PARAMS.out_pipe, "\000");
+end;
+
+
+#############################################################################
+##
+#F  GGAP_API.WRITE_SCRIPT(...)
+##
+GGAP_API.WRITE_SCRIPT :=
+function(arg)
+  local s;
   AppendTo(GGAP_PARAMS.out_pipe, "s");
   for s in arg do
     AppendTo (GGAP_PARAMS.out_pipe, s);
@@ -145,7 +160,7 @@ end;
 ##
 GGAP_API.GRead :=
 function(filename)
-  GGAP_API.WRITE("p", filename);
+  GGAP_API.WRITE("P", filename);
 end;
 
 

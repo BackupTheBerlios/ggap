@@ -21,6 +21,7 @@ DeclareAutoPackage("ggap", @GGAP_VERSION@, ReturnTrue);
 
 ReadPkg("ggap", "ggap.gd");
 ReadPkg("ggap", "ggap.gi");
+ReadPkg("ggap", "alias.g");
 
 
 #E
