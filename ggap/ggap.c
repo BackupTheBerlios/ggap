@@ -399,8 +399,10 @@ int main (int argc, char *argv[])
                         "simple", (gboolean) _ggap_opt_simple,
 
                         NULL);
-    g_free (files);
+    g_strfreev (files);
 
-    moo_app_init (app);
+    if (!moo_app_init (app))
+        return 0;
+
     return moo_app_run (app);
 }
