@@ -13,7 +13,9 @@
 ##
 
 
-InstallValue(GGAP_PARAMS, rec(init := false));
+InstallValue(GGAP_PARAMS, rec(init := false, stamp := 0,
+                              in_command := false, in_check_input := false,
+                              objects := []));
 InstallValue(GGAP_API, rec());
 
 
@@ -39,6 +41,7 @@ function(out_pipe, in_pipe)
 
   if in_pipe <> "" then
     GGAP_PARAMS.in_pipe := InputTextFile(in_pipe);
+    InstallCharReadHookFunc(GGAP_PARAMS.in_pipe, "r", GGAP_API.CHECK_INPUT);
   else
     GGAP_PARAMS.in_pipe := fail;
   fi;
@@ -54,40 +57,103 @@ end;
 
 #############################################################################
 ##
+#F  GGAP_API.READ_COMMAND()
+##
+GGAP_API.READ_COMMAND :=
+function()
+  local cmd;
+
+  if GGAP_PARAMS.in_command then
+    Error("GGAP_API.READ_COMMAND caused recursion");
+  fi;
+
+  GGAP_PARAMS.in_command := true;
+  cmd := GGAP_API.READ();
+  GGAP_PARAMS.in_command := false;
+
+  Print("got command ", cmd, "\n");
+
+  # 1 - object destroyed
+  if cmd[1] = 1 then
+    GGAP_OBJECT_DESTROYED(cmd[2]);
+  else
+    Error("Unknown command ", cmd);
+  fi;
+end;
+
+
+#############################################################################
+##
+#F  GGAP_API.CHECK_INPUT()
+##
+GGAP_API.CHECK_INPUT :=
+function(whatever)
+  if GGAP_PARAMS.in_check_input then
+    Error("GGAP_API.CHECK_INPUT recursed!");
+  fi;
+
+  GGAP_PARAMS.in_check_input := true;
+  GGAP_API.READ();
+  GGAP_PARAMS.in_check_input := false;
+end;
+
+
+#############################################################################
+##
 #F  GGAP_API.READ()
 ##
 GGAP_API.READ :=
 function()
-  local type, s1, s2, size, string, i;
+  local type, s1, s2, size, string, i, tuple;
 
-  while true do
-    type := ReadByte(GGAP_PARAMS.in_pipe);
+  type := ReadByte(GGAP_PARAMS.in_pipe);
 
-    # 0 - NONE
-    # 1 - string
-    # 2 - boolean
+  # these must be kept in sync with gapapp-script.h
+  # 0 - NONE
+  # 1 - string
+  # 2 - one byte integer
+  # 3 - pair
+  # 4 - triple
+  # 5 - command
 
-    if type = 0 then
-      return;
-    elif type = 1 then
-      s1 := ReadByte(GGAP_PARAMS.in_pipe);
-      s2 := ReadByte(GGAP_PARAMS.in_pipe);
-      size := s1 * 256 + s2;
-      if size = 0 then
-        return "";
-      else
-        string := "";
-        for i in [1..size] do
-          Add(string, CHAR_INT(ReadByte(GGAP_PARAMS.in_pipe)));
-        od;
-        return string;
-      fi;
-    elif type = 2 then
-      return ReadByte(GGAP_PARAMS.in_pipe) <> 0;
+  if type = 0 then
+    return;
+  elif type = 1 then
+    s1 := ReadByte(GGAP_PARAMS.in_pipe);
+    s2 := ReadByte(GGAP_PARAMS.in_pipe);
+    size := s1 * 256 + s2;
+    if size = 0 then
+      return "";
     else
-      Error("unknown data type ", type);
+      string := "";
+      for i in [1..size] do
+        Add(string, CHAR_INT(ReadByte(GGAP_PARAMS.in_pipe)));
+      od;
+      return string;
     fi;
-  od;
+  elif type = 2 then
+    return ReadByte(GGAP_PARAMS.in_pipe);
+  elif type = 3 then
+    tuple := [];
+    tuple[1] := GGAP_API.READ();
+    tuple[2] := GGAP_API.READ();
+    return tuple;
+  elif type = 4 then
+    tuple := [];
+    tuple[1] := GGAP_API.READ();
+    tuple[2] := GGAP_API.READ();
+    tuple[3] := GGAP_API.READ();
+    return tuple;
+  elif type = 5 then
+    GGAP_API.READ_COMMAND();
+    if not GGAP_PARAMS.in_check_input then
+      return GGAP_API.READ();
+    else
+      return;
+    fi;
+  else
+    Error("unknown data type ", type);
+  fi;
 end;
 
 

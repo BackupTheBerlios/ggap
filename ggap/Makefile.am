@@ -43,6 +43,8 @@ ggap_SOURCES =      \
     gapdocwindow.h  \
     gapeditwindow.c \
     gapeditwindow.h \
+    gapsession.c    \
+    gapsession.h    \
     gapterm.c       \
     gapterm.h       \
     gaptermwindow.c \

@@ -267,6 +267,16 @@ term_window_close (GapApp         *app,
 
 
 static void
+gap_died (GapApp *app)
+{
+    g_assert (app->session != NULL);
+    g_object_unref (app->session);
+    app->session = NULL;
+    moo_app_discard_output ();
+}
+
+
+static void
 gap_app_ensure_terminal (GapApp *app)
 {
     g_return_if_fail (GAP_IS_APP (app));
@@ -278,6 +288,8 @@ gap_app_ensure_terminal (GapApp *app)
                                          NULL);
         gtk_widget_show (GTK_WIDGET (app->term_window));
         app->term = moo_term_window_get_term (app->term_window);
+        g_signal_connect_swapped (app->term, "child-died",
+                                  G_CALLBACK (gap_died), app);
         g_signal_connect_swapped (app->term_window, "delete-event",
                                   G_CALLBACK (term_window_close), app);
     }
@@ -329,7 +341,10 @@ gap_app_exec_cmd (MooApp     *app,
                   const char *data,
                   guint       len)
 {
-    MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
+    if (cmd != 'g')
+        MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
+    else
+        gap_app_exec_command (GAP_APP (app), data);
 }
 
 
@@ -443,6 +458,9 @@ gap_app_start_gap (GapApp *app)
         g_critical ("%s: could not start gap", G_STRLOC);
     }
 
+    g_assert (app->session == NULL);
+    app->session = gap_session_new ();
+
     g_string_free (cmd, TRUE);
 }
 
@@ -452,12 +470,12 @@ gap_app_stop_gap (GapApp     *app)
 {
     g_return_if_fail (GAP_IS_APP (app) && MOO_IS_TERM (app->term));
 
-    if (!moo_term_child_alive (app->term))
-        return;
-
-    gap_app_feed_gap (app, "\n\4\4\4");
-    g_usleep (100000);
-    moo_term_kill_child (app->term);
+    if (moo_term_child_alive (app->term))
+    {
+        gap_app_feed_gap (app, "\n\4\4\4");
+        g_usleep (100000);
+        moo_term_kill_child (app->term);
+    }
 }
 
 

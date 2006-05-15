@@ -16,6 +16,7 @@
 
 #include <mooapp/mooapp.h>
 #include "gaptermwindow.h"
+#include "gapsession.h"
 
 G_BEGIN_DECLS
 
@@ -45,6 +46,8 @@ struct _GapApp
     char *gap_cmd_line;
     gboolean editor_mode;
     gboolean simple;
+
+    GapSession *session;
 };
 
 struct _GapAppClass
@@ -67,6 +70,8 @@ void        gap_app_feed_gap                (GapApp     *app,
 
 void        gap_app_setup_command           (MooCommand *cmd,
                                              GtkWindow  *window);
+void        gap_app_exec_command            (GapApp     *app,
+                                             const char *data);
 
 
 G_END_DECLS
