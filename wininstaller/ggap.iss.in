@@ -17,16 +17,7 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 Name: quicklaunchicon; Description: {cm:CreateQuickLaunchIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: unchecked
 
 [Files]
-Source: C:\ggap\ggap.exe; DestDir: {app}; Flags: ignoreversion
-Source: C:\ggap\termhelper.exe; DestDir: {app}; Flags: ignoreversion
-Source: C:\ggap\pkg\*; DestDir: {app}\pkg; Flags: ignoreversion recursesubdirs
-Source: C:\ggap\syntax\*; DestDir: {app}\syntax; Flags: ignoreversion recursesubdirs
-Source: C:\ggap\completion\*; DestDir: {app}\completion; Flags: ignoreversion recursesubdirs
-Source: C:\ggap\plugins\*; DestDir: {app}\plugins; Flags: ignoreversion recursesubdirs
-Source: C:\ggap\tools.cfg; DestDir: {app}; Flags: ignoreversion
-Source: C:\ggap\menu.cfg; DestDir: {app}; Flags: ignoreversion
-Source: C:\ggap\as.cfg; DestDir: {app}; Flags: ignoreversion
-Source: C:\ggap\ui.xml.example; DestDir: {app}; Flags: ignoreversion
+Source: C:\ggap\*; DestDir: {app}; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
