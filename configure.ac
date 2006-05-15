@@ -116,8 +116,6 @@ Makefile
 m4/Makefile
 pkg/ggap/PackageInfo.g
 pkg/ggap/init.g
-pkg/gui/PackageInfo.g
-pkg/gui/init.g
 pkg/Makefile
 ggap/Makefile
 ggap/ggap_res.rc
