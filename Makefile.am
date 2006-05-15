@@ -26,3 +26,10 @@ iconthemedir = $(datadir)/icons/hicolor/48x48/apps
 icontheme_DATA = ggap/moo/mooutils/pixmaps/ggap.png
 
 EXTRA_DIST += $(desktop_DATA) $(ggap_DATA)
+
+generated = 			\
+	pkg/ggap/PackageInfo.g	\
+	pkg/ggap/init.g		\
+	wininstaller/ggap.iss
+
+all-am: $(generated)
