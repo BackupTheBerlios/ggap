@@ -16,6 +16,7 @@
 DeclareAutoPackage("ggap", @GGAP_VERSION@, ReturnTrue);
 ReadPkg("ggap", "ggap.gd");
 ReadPkg("ggap", "gobject.gd");
+ReadPkg("ggap", "widgets.gd");
 
 
 #E

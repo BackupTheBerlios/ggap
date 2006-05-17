@@ -13,31 +13,19 @@
 ##
 
 
-###############################################################################
-##
-#C  IsGObject
-##
-##  This is a category parent for all gui objects - windows, controls, graphical
-##  objects, etc.
-##
 DeclareCategory("IsGObject", IsObject);
 
-
-###############################################################################
-##
-#C  IsGWindow
-##
-DeclareCategory("IsGWindow", IsGObject);
-
-
-DeclareGlobalFunction("CreateWindow");
 DeclareOperation("DestroyGObject", [IsGObject]);
+DeclareGlobalFunction("ConnectCallback");
+DeclareGlobalFunction("DisconnectCallback");
 
-DeclareGlobalFunction("GGAP_SEND_COMMAND");
-DeclareGlobalFunction("GGAP_DESTROY_OBJECT");
-DeclareGlobalFunction("GGAP_REGISTER_OBJECT");
-DeclareGlobalFunction("GGAP_LOOKUP_OBJECT");
-DeclareGlobalFunction("GGAP_OBJECT_DESTROYED");
+DeclareGlobalFunction("_GGAP_SEND_COMMAND");
+DeclareGlobalFunction("_GGAP_DESTROY_OBJECT");
+DeclareGlobalFunction("_GGAP_REGISTER_OBJECT");
+DeclareGlobalFunction("_GGAP_LOOKUP_OBJECT");
+DeclareGlobalFunction("_GGAP_OBJECT_DESTROYED");
+DeclareGlobalFunction("_GGAP_SIGNAL");
+DeclareGlobalFunction("_GGAP_GET_TYPE_BY_NAME");
 
 
 #E

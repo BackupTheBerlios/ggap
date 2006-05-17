@@ -29,28 +29,42 @@ if MOO_OS_MINGW
 ggap_LDFLAGS += -mwindows
 endif MOO_OS_MINGW
 
-ggap_SOURCES =      \
-    ggap-ui.h       \
-    gap.c           \
-    gap.h           \
-    ggap.c          \
-    gapapp.c        \
-    gapapp.h        \
-    gapapp-script.c \
-    gapdoc.c        \
-    gapdoc.h        \
-    gapdocwindow.c  \
-    gapdocwindow.h  \
-    gapeditwindow.c \
-    gapeditwindow.h \
-    gapsession.c    \
-    gapsession.h    \
-    gapterm.c       \
-    gapterm.h       \
-    gaptermwindow.c \
-    gaptermwindow.h \
-    gapprefs-glade.h\
-    gapdoc-glade.h
+ggap_SOURCES =				\
+	ggap-ui.h			\
+	gap.c				\
+	gap.h				\
+	ggap.c				\
+	gapapp.c			\
+	gapapp.h			\
+	gapapp-script.c			\
+	gapdoc.c			\
+	gapdoc.h			\
+	gapdocwindow.c			\
+	gapdocwindow.h			\
+	gapeditwindow.c			\
+	gapeditwindow.h			\
+	gapsession.c			\
+	gapsession.h			\
+	gapterm.c			\
+	gapterm.h			\
+	gaptermwindow.c			\
+	gaptermwindow.h			\
+	gapprefs-glade.h		\
+	gapdoc-glade.h			\
+	moocanvas/moocanvas.h		\
+	moocanvas/moocanvas.c		\
+	moocanvas/moocanvasbox.h	\
+	moocanvas/moocanvasbox.c	\
+	moocanvas/moocanvasgraph.h	\
+	moocanvas/moocanvasgraph.c	\
+	moocanvas/moocanvasitem.h	\
+	moocanvas/moocanvasitem.c	\
+	moocanvas/moocanvasline.h	\
+	moocanvas/moocanvasline.c	\
+	moocanvas/moocanvastext.h	\
+	moocanvas/moocanvastext.c	\
+	moocanvas/moocanvaswindow.h	\
+	moocanvas/moocanvaswindow.c
 
 nodist_ggap_SOURCES = ggap_res.res
 CLEANFILES = ggap_res.res

@@ -43,6 +43,9 @@ struct _GapObject {
 
     gpointer obj;
     char *id;
+
+    GSList *callbacks;
+
     guint dead : 1;
     guint destroyed : 1;
     guint toplevel : 1;
@@ -76,6 +79,11 @@ GapObject       *gap_session_find_object    (GapSession *session,
                                              const char *id);
 
 void             gap_object_destroy         (GapObject  *object);
+void             gap_object_connect         (GapObject  *object,
+                                             const char *gap_id,
+                                             gulong      handler);
+void             gap_object_disconnect      (GapObject  *object,
+                                             const char *gap_id);
 
 
 G_END_DECLS

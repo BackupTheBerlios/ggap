@@ -45,7 +45,7 @@ gap_pkg_init_file (void)
 
     in_escaped = gap_escape_filename (in_name ? in_name : "");
     out_escaped = gap_escape_filename (out_name ? out_name : "");
-    init_string = g_strdup_printf ("GGAP_API.INIT(\"%s\", \"%s\");\n",
+    init_string = g_strdup_printf ("_GGAP_INIT(\"%s\", \"%s\");\n",
                                    in_escaped, out_escaped);
 
     if (!moo_save_file_utf8 (filename, init_string, -1, &error))

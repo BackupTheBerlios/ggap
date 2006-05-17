@@ -15,13 +15,26 @@
 #include "gapapp.h"
 #include "mooutils/moomarshals.h"
 #include <gtk/gtk.h>
+#include <string.h>
 
 
-static GapObject   *gap_object_new  (gpointer    object,
-                                     const char *id,
-                                     gboolean    toplevel);
-static void         object_died     (GapObject  *wrapper,
-                                     gpointer    object);
+typedef struct {
+    gulong id;
+    char *gap_id;
+} Callback;
+
+
+static Callback    *callback_new        (const char *gap_id,
+                                         gulong      id);
+static void         callback_free       (Callback   *cb);
+
+static GapObject   *gap_object_new      (gpointer    object,
+                                         const char *id,
+                                         gboolean    toplevel);
+static void         object_died         (GapObject  *wrapper,
+                                         gpointer    object);
+static gboolean     close_window        (GapObject  *wrapper);
+static void         disconnect_wrapper  (GapObject  *wrapper);
 
 
 G_DEFINE_TYPE(GapObject, gap_object, G_TYPE_OBJECT)
@@ -43,16 +56,40 @@ gap_object_init (GapObject *obj)
 
 
 static void
+disconnect_wrapper (GapObject *wrapper)
+{
+    gpointer object;
+
+    g_return_if_fail (GTK_IS_OBJECT (wrapper->obj));
+
+    wrapper->dead = TRUE;
+    object = wrapper->obj;
+    wrapper->obj = NULL;
+
+    g_signal_handlers_disconnect_by_func (object, (gpointer) object_died, wrapper);
+
+    if (GTK_IS_WINDOW (object))
+        g_signal_handlers_disconnect_by_func (object, (gpointer) close_window, wrapper);
+
+    while (wrapper->callbacks)
+    {
+        Callback *cb = wrapper->callbacks->data;
+        wrapper->callbacks = g_slist_delete_link (wrapper->callbacks, wrapper->callbacks);
+        g_signal_handler_disconnect (object, cb->id);
+        callback_free (cb);
+    }
+}
+
+
+static void
 gap_object_finalize (GObject *object)
 {
     GapObject *gap_obj = GAP_OBJECT (object);
 
     g_free (gap_obj->id);
 
-    if (gap_obj->obj && !gap_obj->dead)
-        g_signal_handlers_disconnect_by_func (gap_obj->obj,
-                                              (gpointer) object_died,
-                                              gap_obj);
+    if (gap_obj->obj)
+        disconnect_wrapper (gap_obj);
 
     G_OBJECT_CLASS (gap_object_parent_class)->finalize (object);
 }
@@ -132,6 +169,18 @@ session_object_died (GapSession *session,
 }
 
 
+static char *
+generate_id (gpointer object)
+{
+#ifdef MOO_DEBUG
+    return g_strdup_printf ("%s-%p-%08x", g_type_name (G_OBJECT_TYPE (object)),
+                            object, g_random_int ());
+#else
+    id = g_strdup_printf ("%08x", g_random_int ());
+#endif
+}
+
+
 GapObject *
 gap_session_add_object (GapSession *session,
                         gpointer    object,
@@ -146,14 +195,9 @@ gap_session_add_object (GapSession *session,
     wrapper = g_object_get_data (object, "gap-object");
 
     if (wrapper)
-    {
-        g_critical ("object '%s' at %p already wrapped with id '%s'",
-                    g_type_name (G_OBJECT_TYPE (object)), object,
-                    wrapper->id);
-        return NULL;
-    }
+        return wrapper;
 
-    id = g_strdup_printf ("%s-%p", g_type_name (G_OBJECT_TYPE (object)), object);
+    id = generate_id (object);
 
     if (g_hash_table_lookup (session->objects, id))
     {
@@ -181,12 +225,7 @@ object_died (GapObject *wrapper,
     g_return_if_fail (!wrapper->dead);
     g_return_if_fail (wrapper->obj == object);
 
-    wrapper->dead = TRUE;
-    wrapper->obj = NULL;
-
-    g_signal_handlers_disconnect_by_func (object,
-                                          (gpointer) object_died,
-                                          wrapper);
+    disconnect_wrapper (wrapper);
 
     g_signal_emit (wrapper, object_signals[OBJECT_DIED], 0);
 }
@@ -210,6 +249,11 @@ gap_object_new (gpointer    object,
     g_signal_connect_swapped (object, "destroy",
                               G_CALLBACK (object_died),
                               wrapper);
+
+    if (GTK_IS_WINDOW (object))
+        g_signal_connect_swapped (object, "delete-event",
+                                  G_CALLBACK (close_window),
+                                  wrapper);
 
     return wrapper;
 }
@@ -238,4 +282,89 @@ gap_session_find_object (GapSession  *session,
     g_return_val_if_fail (GAP_IS_SESSION (session), NULL);
     g_return_val_if_fail (id != NULL, NULL);
     return g_hash_table_lookup (session->objects, id);
+}
+
+
+static gboolean
+close_window (GapObject *wrapper)
+{
+    GString *data;
+
+    g_return_val_if_fail (GAP_IS_OBJECT (wrapper) && !wrapper->dead, FALSE);
+
+    data = g_string_new (NULL);
+    gap_data_add_command_close_window  (data, wrapper->id);
+    gap_data_send (data);
+
+    g_string_free (data, TRUE);
+    return TRUE;
+}
+
+
+static Callback *
+callback_new (const char *gap_id,
+              gulong      id)
+{
+    Callback *cb;
+
+    g_return_val_if_fail (gap_id != NULL, NULL);
+    g_return_val_if_fail (id != 0, NULL);
+
+    cb = g_new0 (Callback, 1);
+
+    cb->gap_id = g_strdup (gap_id);
+    cb->id = id;
+
+    return cb;
+}
+
+
+static void
+callback_free (Callback *cb)
+{
+    if (cb)
+    {
+        g_free (cb->gap_id);
+        g_free (cb);
+    }
+}
+
+
+void
+gap_object_connect (GapObject  *object,
+                    const char *gap_id,
+                    gulong      handler)
+{
+    Callback *cb;
+
+    g_return_if_fail (GAP_IS_OBJECT (object));
+    g_return_if_fail (gap_id != NULL);
+    g_return_if_fail (handler != 0);
+
+    cb = callback_new (gap_id, handler);
+    object->callbacks = g_slist_prepend (object->callbacks, cb);
+}
+
+
+void
+gap_object_disconnect (GapObject  *object,
+                       const char *gap_id)
+{
+    GSList *l;
+
+    g_return_if_fail (GAP_IS_OBJECT (object));
+    g_return_if_fail (gap_id != NULL);
+
+    for (l = object->callbacks; l != NULL; l = l->next)
+    {
+        Callback *cb = l->data;
+
+        if (!strcmp (cb->gap_id, gap_id))
+        {
+            object->callbacks = g_slist_delete_link (object->callbacks, l);
+            g_signal_handler_disconnect (object->obj, cb->id);
+            callback_free (cb);
+            return;
+        }
+    }
 }

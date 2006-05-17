@@ -15,21 +15,21 @@
 
 #############################################################################
 ##
-#V  GGAP_PARAMS
+#V  _GGAP_DATA
 ##
 ##  This record contains various variables for ggap package.
 ##
-DeclareGlobalVariable("GGAP_PARAMS", "various variables for ggap package");
+DeclareGlobalVariable("_GGAP_DATA", "ggap package internal data");
 
 
-#############################################################################
-##
-#V  GGAP_API
-##
-##  This record contains all the functions in ggap package. alias.g installs
-##  global names for these functions later.
-##
-DeclareGlobalVariable("GGAP_API", "various functions used in ggap package");
+DeclareGlobalFunction("_GGAP_INIT");
+DeclareGlobalFunction("_GGAP_READ_COMMAND");
+DeclareGlobalFunction("_GGAP_CHECK_INPUT");
+DeclareGlobalFunction("_GGAP_ESCAPE_STRING");
+DeclareGlobalFunction("_GGAP_WRITE_SCRIPT");
+DeclareGlobalFunction("_GGAP_WRITE_PYTHON");
+DeclareGlobalFunction("_GGAP_WRITE");
+DeclareGlobalFunction("_GGAP_READ");
 
 
 #E

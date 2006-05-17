@@ -35,7 +35,7 @@
   </general>
   <kdevautoproject>
     <general>
-      <activetarget>src/script/libscript.la</activetarget>
+      <activetarget>ggap/ggap</activetarget>
       <useconfiguration>debug</useconfiguration>
     </general>
     <run>
