@@ -176,7 +176,7 @@ generate_id (gpointer object)
     return g_strdup_printf ("%s-%p-%08x", g_type_name (G_OBJECT_TYPE (object)),
                             object, g_random_int ());
 #else
-    id = g_strdup_printf ("%08x", g_random_int ());
+    return g_strdup_printf ("%08x", g_random_int ());
 #endif
 }
 
