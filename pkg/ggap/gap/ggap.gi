@@ -21,10 +21,15 @@ InstallValue(_GGAP_DATA,
 rec(init := false,              # ggap package is initialized
     stamp := 0,                 # timestamp used in GAP-ggap communication
     objects := [],              # list of all IsGObject objects
-    async_result := fail,       # result of _GGAP_SEND_COMMAND
     in_read_command := false,   # _GGAP_READ_COMMAND is being executed
     in_check_input := false,    # _GGAP_CHECK_INPUT is being executed
-    in_send_command := false,   # _GGAP_SEND_COMMAND is being executed
+
+    # SEND_COMMAND may be called recursively, so these two play role
+    # of function stack (since commands are sent and results are received
+    # asynchronously, there can't be real stack)
+    commands := [],             # stamps of commands being sent
+    results := [],              # results of commands being sent
+
     types := [
       ["Window", IsWindow],
       ["Object", IsGObject],
@@ -37,6 +42,13 @@ rec(init := false,              # ggap package is initialized
       ["Canvas", IsCanvas],
       ["Statusbar", IsStatusbar]
     ]));
+
+
+#############################################################################
+##
+#V  InfoGGAP
+##
+InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
 
 
 #############################################################################
@@ -92,10 +104,10 @@ function()
   fi;
 
   _GGAP_DATA.in_read_command := true;
-  cmd := _GGAP_READ();
+  cmd := _GGAP_READ_DATA();
   _GGAP_DATA.in_read_command := false;
 
-  Print("got command ", cmd, "\n");
+  Info(InfoGGAP, 5, "got command ", cmd);
 
   # 1 - exec file
   # 2 - signal
@@ -133,12 +145,13 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_READ()
+#F  _GGAP_READ_DATA()
 ##
-InstallGlobalFunction(_GGAP_READ,
+InstallGlobalFunction(_GGAP_READ_DATA,
 function()
   local type, s, s1, s2, size, string, i, tuple, len, val;
 
+  Info(InfoGGAP, 5, "_GGAP_READ_DATA");
   type := ReadByte(_GGAP_DATA.in_pipe);
 
   # these must be kept in sync with gapapp-script.h
@@ -155,16 +168,10 @@ function()
   ## resumed after executing it; or it may be code returning call result,
   ## then the code must set _GGAP_DATA.async_result.
   if type = 0 then
+    Info(InfoGGAP, 5, "_GGAP_READ_DATA: got command");
     _GGAP_READ_COMMAND();
-
-    if _GGAP_DATA.in_check_input then
-      return;
-    elif _GGAP_DATA.in_send_command and
-         _GGAP_DATA.async_result <> fail then
-      return _GGAP_DATA.async_result;
-    else
-      return _GGAP_READ();
-    fi;
+    Info(InfoGGAP, 5, "_GGAP_READ_DATA: command done");
+    return 0;
   ## String: first two bytes are string length; rest is the string itself
   elif type = 1 then
     s1 := ReadByte(_GGAP_DATA.in_pipe);
@@ -185,22 +192,22 @@ function()
   ## A pair: two consequent values
   elif type = 3 then
     tuple := [];
-    tuple[1] := _GGAP_READ();
-    tuple[2] := _GGAP_READ();
+    tuple[1] := _GGAP_READ_DATA();
+    tuple[2] := _GGAP_READ_DATA();
     return tuple;
   ## A triple: three consequent values
   elif type = 4 then
     tuple := [];
-    tuple[1] := _GGAP_READ();
-    tuple[2] := _GGAP_READ();
-    tuple[3] := _GGAP_READ();
+    tuple[1] := _GGAP_READ_DATA();
+    tuple[2] := _GGAP_READ_DATA();
+    tuple[3] := _GGAP_READ_DATA();
     return tuple;
   ## A list: first byte is list length, then go list values
   elif type = 5 then
     tuple := [];
     len := ReadByte(_GGAP_DATA.in_pipe);
     for i in [1..len] do
-      tuple[i] := _GGAP_READ();
+      tuple[i] := _GGAP_READ_DATA();
     od;
     return tuple;
   ## Boolean: false if zero
@@ -218,6 +225,26 @@ function()
     return val;
   else
     Error("unknown data type ", type);
+  fi;
+end);
+
+
+#############################################################################
+##
+#F  _GGAP_READ()
+##
+InstallGlobalFunction(_GGAP_READ,
+function()
+  local result;
+
+  Info(InfoGGAP, 5, "_GGAP_READ");
+  result := _GGAP_READ_DATA();
+
+  if result <> 0 then
+    Info(InfoGGAP, 5, "_GGAP_READ: got result for stamp ", result[1]);
+    AddSet(_GGAP_DATA.results, result);
+  else
+    Info(InfoGGAP, 5, "_GGAP_READ: got nothing");
   fi;
 end);
 

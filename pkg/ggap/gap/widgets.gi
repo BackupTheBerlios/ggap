@@ -45,6 +45,10 @@ InstallGlobalFunction(CloseWindow,
 function(window)
   local result, close;
 
+  if window!.dead then
+    return;
+  fi;
+
   close := true;
 
   if IsFunction(window!.destroy_func) then
@@ -123,18 +127,18 @@ end);
 
 ###############################################################################
 ##
-#F  WindowLookupControl()
+#F  GladeLookupWidget()
 ##
-InstallGlobalFunction(WindowLookupControl,
+InstallGlobalFunction(GladeLookupWidget,
 function(window, name)
     local control, result, ind;
 
     if not IsGladeWindow(window) then
-      Error("WindowLookupControl: first argument must be IsGladeWindow");
+      Error("GladeLookupWidget: first argument must be IsGladeWindow");
     fi;
 
     if not IsString(name) then
-      Error("WindowLookupControl: second argument must be a string");
+      Error("GladeLookupWidget: second argument must be a string");
     fi;
 
     result := _GGAP_SEND_COMMAND("GladeLookup", [window, name]);
@@ -159,6 +163,28 @@ function(window, name)
     _GGAP_REGISTER_OBJECT(control);
 
     return control;
+end);
+
+
+###############################################################################
+##
+#F  RunDialog()
+##
+InstallGlobalFunction(RunDialog,
+function(dialog)
+  local result;
+
+  if not IsWindow(dialog) then
+    Error("RunDialog: argument must be IsWindow");
+  fi;
+
+  result := _GGAP_SEND_COMMAND("RunDialog", [dialog]);
+
+  if result[1] <> _GGAP_STATUS_OK then
+    Error(result[2]);
+  fi;
+
+  return result[2];
 end);
 
 

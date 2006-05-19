@@ -31,21 +31,48 @@ BindGlobal("GObjectFamily", NewFamily("GObjectFamily", IsGObject));
 
 #############################################################################
 ##
+#F  _GGAP_ADD_STAMP(stamp)
+##
+InstallGlobalFunction(_GGAP_ADD_STAMP,
+function(stamp)
+  if stamp in _GGAP_DATA.commands then
+    Error("_GGAP_ADD_STAMP: stamp already in the list");
+  fi;
+  AddSet(_GGAP_DATA.commands, stamp);
+end);
+
+
+#############################################################################
+##
+#F  _GGAP_GET_RESULT(stamp)
+##
+InstallGlobalFunction(_GGAP_GET_RESULT,
+function(stamp)
+  local r;
+
+  if not stamp in _GGAP_DATA.commands then
+    Error("_GGAP_GET_RESULT: stamp is not in the list");
+  fi;
+
+  for r in _GGAP_DATA.results do
+    if r[1] = stamp then
+      RemoveSet(_GGAP_DATA.commands, stamp);
+      RemoveSet(_GGAP_DATA.results, r);
+      return r;
+    fi;
+  od;
+
+  return fail;
+end);
+
+
+#############################################################################
+##
 #F  _GGAP_SEND_COMMAND(arg)
 ##
 InstallGlobalFunction(_GGAP_SEND_COMMAND,
 function(name, args)
   local i, code, a, s, stamp, strstamp, result;
-
-  if _GGAP_DATA.async_result <> fail then
-    _GGAP_DATA.async_result := fail;
-    Error("_GGAP_SEND_COMMAND caused recursion");
-  fi;
-
-  if _GGAP_DATA.in_send_command then
-    _GGAP_DATA.in_send_command := false;
-    Error("_GGAP_SEND_COMMAND caused recursion");
-  fi;
 
   _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
   stamp := _GGAP_DATA.stamp;
@@ -79,22 +106,18 @@ function(name, args)
   od;
   code := Concatenation(code, ");");
 
-  _GGAP_DATA.in_send_command := true;
+  Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", strstamp);
+  _GGAP_ADD_STAMP(strstamp);
   _GGAP_WRITE("g", "SetStamp('", strstamp, "');", code);
-  result := _GGAP_READ();
-  _GGAP_DATA.in_send_command := false;
-  _GGAP_DATA.async_result := fail;
 
-  if not IsList(result) or Length(result) < 2 then
-      Error("Unexpected result ", result);
-  fi;
-
-  if result[1] <> strstamp then
-      Error("Wrong timestamp ", result[1]);
-  fi;
-
-  Print("got response: ", result, "\n");
-  return result{[2..Length(result)]};
+  while true do
+    Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: calling _GGAP_READ");
+    _GGAP_READ();
+    result := _GGAP_GET_RESULT(strstamp);
+    if result <> fail then
+      return result{[2..Length(result)]};
+    fi;
+  od;
 end);
 
 

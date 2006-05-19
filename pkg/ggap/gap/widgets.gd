@@ -37,7 +37,10 @@ DeclareGlobalFunction("CloseWindow");
 ##
 DeclareCategory("IsGladeWindow", IsWindow);
 DeclareGlobalFunction("CreateGladeWindow");
-DeclareGlobalFunction("WindowLookupControl");
+DeclareGlobalFunction("GladeLookupWidget");
+
+
+DeclareGlobalFunction("RunDialog");
 
 
 #############################################################################

@@ -13,6 +13,7 @@
 
 #include "gapapp.h"
 #include "gapapp-script.h"
+#include "gapoutput.h"
 #include <mooscript/mooscript-context.h>
 #include <mooutils/mooglade.h>
 #include <gtk/gtk.h>
@@ -215,6 +216,29 @@ send_bool_result (MSContext  *ctx,
     gap_data_add_string (data, stamp, -1);
     gap_data_add_small_int (data, status);
     gap_data_add_bool (data, val);
+
+    gap_data_send (data);
+    g_string_free (data, TRUE);
+}
+
+
+static void
+send_int_result (MSContext  *ctx,
+                 char        status,
+                 int         val)
+{
+    const char *stamp;
+    GString *data;
+
+    stamp = g_object_get_data (G_OBJECT (ctx), "gap-stamp");
+    g_return_if_fail (stamp != NULL);
+
+    data = g_string_new (NULL);
+
+    gap_data_add_triple (data);
+    gap_data_add_string (data, stamp, -1);
+    gap_data_add_small_int (data, status);
+    gap_data_add_int (data, val);
 
     gap_data_send (data);
     g_string_free (data, TRUE);
@@ -580,6 +604,45 @@ out:
 
 
 static MSValue *
+run_dialog_func (MSValue   *arg,
+                 MSContext *ctx)
+{
+    GapObject *wrapper;
+    char *dialog_id, *msg = NULL;
+    int response;
+
+    if (!GAP_APP_INSTANCE->session)
+        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
+                                     "GAP not running");
+
+    dialog_id = ms_value_print (arg);
+    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, dialog_id);
+
+    if (!wrapper || wrapper->dead)
+    {
+        msg = g_strdup_printf ("Object with id '%s' doesn't exist", dialog_id);
+        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
+        goto out;
+    }
+
+    if (!GTK_IS_DIALOG (wrapper->obj))
+    {
+        msg = g_strdup_printf ("Object with id '%s' is not a dialog", dialog_id);
+        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
+        goto out;
+    }
+
+    response = gtk_dialog_run (wrapper->obj);
+    send_int_result (ctx, GAP_STATUS_OK, response);
+
+out:
+    g_free (dialog_id);
+    g_free (msg);
+    return ms_value_none ();
+}
+
+
+static MSValue *
 show_func (MSValue   *arg,
            MSContext *ctx)
 {
@@ -890,6 +953,7 @@ G_STMT_START {                                  \
     ADD_FUNC (connect_func, ms_cfunc_new_3, "Connect");
     ADD_FUNC (disconnect_func, ms_cfunc_new_var, "Disconnect");
     ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GladeLookup");
+    ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "RunDialog");
     ADD_FUNC (show_func, ms_cfunc_new_1, "Show");
     ADD_FUNC (hide_func, ms_cfunc_new_1, "Hide");
     ADD_FUNC (is_visible_func, ms_cfunc_new_1, "IsVisible");

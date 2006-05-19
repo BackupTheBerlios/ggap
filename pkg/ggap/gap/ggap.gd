@@ -24,6 +24,13 @@ DeclareGlobalVariable("_GGAP_DATA", "ggap package internal data");
 
 #############################################################################
 ##
+#V  InfoGGAP
+##
+DeclareGlobalVariable("InfoGGAP", "ggap info class");
+
+
+#############################################################################
+##
 ##  Private functions, do not use them
 ##
 DeclareGlobalFunction("_GGAP_INIT");
@@ -34,6 +41,7 @@ DeclareGlobalFunction("_GGAP_WRITE_SCRIPT");
 DeclareGlobalFunction("_GGAP_WRITE_PYTHON");
 DeclareGlobalFunction("_GGAP_WRITE");
 DeclareGlobalFunction("_GGAP_READ");
+DeclareGlobalFunction("_GGAP_READ_DATA");
 
 
 #E
