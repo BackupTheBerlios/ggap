@@ -34,44 +34,67 @@ BindGlobal("GObjectFamily", NewFamily("GObjectFamily", IsGObject));
 #F  _GGAP_SEND_COMMAND(arg)
 ##
 InstallGlobalFunction(_GGAP_SEND_COMMAND,
-function(arg)
-    local code, s, stamp, strstamp, result;
+function(name, args)
+  local i, code, a, s, stamp, strstamp, result;
 
-    if _GGAP_DATA.async_result <> fail then
-      _GGAP_DATA.async_result := fail;
-      Error("_GGAP_SEND_COMMAND caused recursion");
-    fi;
-
-    if _GGAP_DATA.in_send_command then
-      _GGAP_DATA.in_send_command := false;
-      Error("_GGAP_SEND_COMMAND caused recursion");
-    fi;
-
-    _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
-    stamp := _GGAP_DATA.stamp;
-    strstamp := HexStringInt(stamp);
-
-    code := "";
-    for s in arg do
-        code := Concatenation(code, s);
-    od;
-
-    _GGAP_DATA.in_send_command := true;
-    _GGAP_WRITE("g", "SetStamp('", strstamp, "');", code);
-    result := _GGAP_READ();
-    _GGAP_DATA.in_send_command := false;
+  if _GGAP_DATA.async_result <> fail then
     _GGAP_DATA.async_result := fail;
+    Error("_GGAP_SEND_COMMAND caused recursion");
+  fi;
 
-    if not IsList(result) or Length(result) < 2 then
-        Error("Unexpected result ", result);
+  if _GGAP_DATA.in_send_command then
+    _GGAP_DATA.in_send_command := false;
+    Error("_GGAP_SEND_COMMAND caused recursion");
+  fi;
+
+  _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
+  stamp := _GGAP_DATA.stamp;
+  strstamp := HexStringInt(stamp);
+
+  code := Concatenation(name, "(");
+  for i in [1..Length(args)] do
+    a := args[i];
+
+    if IsGObject(a) then
+      s := Concatenation("'", a!.id, "'");
+    elif IsBool(a) then
+      if a then
+        s := "true";
+      else
+        s := "false";
+      fi;
+    elif IsInt(a) then
+      s := String(a);
+    elif IsString(a) then
+      s := Concatenation("'", a, "'");
+    else
+      Error("Unknown argument type: ", a);
     fi;
 
-    if result[1] <> strstamp then
-        Error("Wrong timestamp ", result[1]);
+    if i = 1 then
+      code := Concatenation(code, s);
+    else
+      code := Concatenation(code, ", ", s);
     fi;
+  od;
+  code := Concatenation(code, ");");
 
-    Print("got response: ", result, "\n");
-    return result{[2..Length(result)]};
+  _GGAP_DATA.in_send_command := true;
+  _GGAP_WRITE("g", "SetStamp('", strstamp, "');", code);
+  result := _GGAP_READ();
+  _GGAP_DATA.in_send_command := false;
+  _GGAP_DATA.async_result := fail;
+
+  if not IsList(result) or Length(result) < 2 then
+      Error("Unexpected result ", result);
+  fi;
+
+  if result[1] <> strstamp then
+      Error("Wrong timestamp ", result[1]);
+  fi;
+
+  Print("got response: ", result, "\n");
+  return result{[2..Length(result)]};
 end);
 
 
@@ -112,29 +135,15 @@ end);
 ##
 InstallGlobalFunction(_GGAP_GET_TYPE_BY_NAME,
 function(name)
-  if name = "Window" then
-    return NewType(GObjectFamily, IsWindow and IsGObjectRep);
-  elif name = "Object" then
-    return NewType(GObjectFamily, IsGObject and IsGObjectRep);
-  elif name = "Widget" then
-    return NewType(GObjectFamily, IsWidget and IsGObjectRep);
-  elif name = "Entry" then
-    return NewType(GObjectFamily, IsEntry and IsGObjectRep);
-  elif name = "MenuItem" then
-    return NewType(GObjectFamily, IsMenuItem and IsGObjectRep);
-  elif name = "CheckMenuItem" then
-    return NewType(GObjectFamily, IsCheckMenuItem and IsGObjectRep);
-  elif name = "Button" then
-    return NewType(GObjectFamily, IsButton and IsGObjectRep);
-  elif name = "ToggleButton" then
-    return NewType(GObjectFamily, IsToggleButton and IsGObjectRep);
-  elif name = "Canvas" then
-    return NewType(GObjectFamily, IsCanvas and IsGObjectRep);
-  elif name = "Statusbar" then
-    return NewType(GObjectFamily, IsStatusbar and IsGObjectRep);
-  else
-    Error("Unknown type ", name);
-  fi;
+  local t;
+
+  for t in _GGAP_DATA.types do
+    if t[1] = name then
+      return NewType(GObjectFamily, t[2] and IsGObjectRep);
+    fi;
+  od;
+
+  Error("Unknown type ", name);
 end);
 
 
@@ -227,8 +236,7 @@ function(arg)
            data:=arg{[4..Length(arg)]},
            id:=_GGAP_DATA.stamp);
 
-  result := _GGAP_SEND_COMMAND("Connect('", obj!.id, "', '",
-                               signal, "', '", String(c.id), "');");
+  result := _GGAP_SEND_COMMAND("Connect", [obj, signal, String(c.id)]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -246,7 +254,7 @@ end);
 ##
 InstallGlobalFunction(DisconnectCallback,
 function(obj, signal_or_handler)
-  local callbacks, c, cmd, i, result;
+  local callbacks, c, i, result, args;
 
   if not IsGObject(obj) then
     Error("DisonnectCallback: first argument must be IsGObject");
@@ -276,13 +284,12 @@ function(obj, signal_or_handler)
     return 0;
   fi;
 
-  cmd := Concatenation("Disconnect('", obj!.id, "'");
+  args := [obj];
   for c in callbacks do
-    Append(cmd, Concatenation(", '", String(c.id), "'"));
+    Add(args, String(c.id));
   od;
-  Append(cmd, ");");
 
-  result := _GGAP_SEND_COMMAND(cmd);
+  result := _GGAP_SEND_COMMAND("Disconnect", args);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -307,7 +314,7 @@ function(obj)
     fi;
 
     _GGAP_OBJECT_DESTROYED(obj!.id);
-    result := _GGAP_SEND_COMMAND("Destroy('", obj!.id, "');");
+    result := _GGAP_SEND_COMMAND("Destroy", [obj]);
 
     if result[1] <> _GGAP_STATUS_OK then
       Error(result[2]);

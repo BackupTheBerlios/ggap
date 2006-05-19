@@ -22,6 +22,10 @@
 DeclareGlobalVariable("_GGAP_DATA", "ggap package internal data");
 
 
+#############################################################################
+##
+##  Private functions, do not use them
+##
 DeclareGlobalFunction("_GGAP_INIT");
 DeclareGlobalFunction("_GGAP_READ_COMMAND");
 DeclareGlobalFunction("_GGAP_CHECK_INPUT");

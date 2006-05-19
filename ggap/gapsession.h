@@ -43,6 +43,7 @@ struct _GapObject {
 
     gpointer obj;
     char *id;
+    char *type;
 
     GSList *callbacks;
 
@@ -74,6 +75,7 @@ GapSession      *gap_session_new            (void);
 
 GapObject       *gap_session_add_object     (GapSession *session,
                                              gpointer    object,
+                                             const char *type_name,
                                              gboolean    toplevel);
 GapObject       *gap_session_find_object    (GapSession *session,
                                              const char *id);

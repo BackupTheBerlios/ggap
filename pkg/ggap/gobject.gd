@@ -13,12 +13,37 @@
 ##
 
 
+#############################################################################
+##
+#C  IsGObject
+##
+##  Parent category for all ggap objects - controls, graphics objects, etc.
+##
 DeclareCategory("IsGObject", IsObject);
 
+
+#############################################################################
+##
+#O  DestroyGObject(<obj>)
+##
+##  Destroys <obj>. Note, it can't be stopped like CloseWindow.
+##
 DeclareOperation("DestroyGObject", [IsGObject]);
+
+
+#############################################################################
+##
+#O  ConnectCallback(<obj>, <signal>, <func>, [<data>, ...])
+#O  DisconnectCallback(<obj>, <callback_id>)
+##
 DeclareGlobalFunction("ConnectCallback");
 DeclareGlobalFunction("DisconnectCallback");
 
+
+#############################################################################
+##
+##  Private functions, do not use them
+##
 DeclareGlobalFunction("_GGAP_SEND_COMMAND");
 DeclareGlobalFunction("_GGAP_DESTROY_OBJECT");
 DeclareGlobalFunction("_GGAP_REGISTER_OBJECT");

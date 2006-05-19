@@ -13,7 +13,9 @@
 
 #include "gap.h"
 #include "gapapp.h"
+#include "gapoutput.h"
 #include "mooutils/mooutils-fs.h"
+#include "mooutils/mooutils-misc.h"
 #include <string.h>
 
 
@@ -25,14 +27,19 @@ gap_escape_filename (const char *filename)
 }
 
 
-char*
+const char *
 gap_pkg_init_file (void)
 {
     const char *in_name, *out_name;
     char *in_escaped, *out_escaped, *init_string;
-    char *filename;
+    char *appdir, *pipehelper, *pipehelper_escaped;
     MooApp *app;
     GError *error = NULL;
+
+    static char *filename;
+
+    if (filename)
+        return filename;
 
     app = moo_app_get_instance ();
     g_return_val_if_fail (GAP_IS_APP (app), NULL);
@@ -41,12 +48,21 @@ gap_pkg_init_file (void)
     g_return_val_if_fail (filename != NULL, NULL);
 
     in_name = moo_app_get_input_pipe_name (moo_app_get_instance ());
-    out_name = moo_app_get_output_pipe_name (moo_app_get_instance ());
+    out_name = gap_app_output_get_name ();
+
+#ifdef __WIN32__
+    appdir = moo_get_app_dir ();
+    pipehelper = g_build_filename (appdir, "pipehelper.exe", NULL);
+#else
+    appdir = pipehelper = NULL;
+#endif
 
     in_escaped = gap_escape_filename (in_name ? in_name : "");
     out_escaped = gap_escape_filename (out_name ? out_name : "");
-    init_string = g_strdup_printf ("_GGAP_INIT(\"%s\", \"%s\");\n",
-                                   in_escaped, out_escaped);
+    pipehelper_escaped = gap_escape_filename (pipehelper ? pipehelper : "");
+    init_string = g_strdup_printf ("_GGAP_INIT(\"%s\", \"%s\", \"%s\");\n",
+                                   in_escaped, out_escaped,
+                                   pipehelper_escaped);
 
     if (!moo_save_file_utf8 (filename, init_string, -1, &error))
     {
@@ -58,6 +74,9 @@ gap_pkg_init_file (void)
 
     g_free (in_escaped);
     g_free (out_escaped);
+    g_free (appdir);
+    g_free (pipehelper);
+    g_free (pipehelper_escaped);
     g_free (init_string);
 
     return filename;

@@ -91,16 +91,33 @@ gap_data_add_string (GString    *data,
         len = strlen (string);
     }
 
-    if (len >= 256 * 256)
+    if (len >= 128 * 128)
     {
         g_critical ("%s: string too long", G_STRLOC);
         return;
     }
 
     g_string_append_c (data, GAP_DATA_STRING);
-    g_string_append_c (data, len / 256);
-    g_string_append_c (data, len % 256);
+    g_string_append_c (data, len / 128);
+    g_string_append_c (data, len % 128);
     g_string_append_len (data, string, len);
+}
+
+
+void
+gap_data_add_int (GString *data,
+                  int      val)
+{
+    if (ABS (val) >= 128 * 128)
+    {
+        g_critical ("%s: value too big", G_STRLOC);
+        return;
+    }
+
+    g_string_append_c (data, GAP_DATA_INT);
+    g_string_append_c (data, val >= 0 ? 0 : 1);
+    g_string_append_c (data, ABS(val) / 128);
+    g_string_append_c (data, ABS(val) % 128);
 }
 
 
@@ -151,34 +168,6 @@ gap_data_add_command_signal (GString    *data,
 }
 
 
-static const char *
-get_type_name (gpointer object)
-{
-    g_return_val_if_fail (GTK_IS_OBJECT (object), NULL);
-
-    if (GTK_IS_CHECK_MENU_ITEM (object))
-        return "CheckMenuItem";
-    else if (GTK_IS_MENU_ITEM (object))
-        return "MenuItem";
-    else if (GTK_IS_ENTRY (object))
-        return "Entry";
-    else if (GTK_IS_TOGGLE_BUTTON (object))
-        return "ToggleButton";
-    else if (GTK_IS_BUTTON (object))
-        return "Button";
-    else if (GTK_IS_WINDOW (object))
-        return "Window";
-#ifdef GGAP_USE_MOO_CANVAS
-    else if (MOO_IS_CANVAS (object))
-        return "Canvas";
-#endif
-    else if (GTK_IS_STATUSBAR (object))
-        return "Statusbar";
-    else
-        return "Object";
-}
-
-
 /**************************************************************************/
 /* GAP <-> GGAP communication
  */
@@ -187,7 +176,7 @@ void
 gap_data_send (GString *data)
 {
     g_return_if_fail (data != NULL);
-    moo_app_write_output (data->str, data->len);
+    gap_app_output_write (data->str, data->len);
 }
 
 
@@ -270,31 +259,34 @@ send_string_result (MSContext  *ctx,
 
 
 static MSValue *
-create_glade_window_func (MSValue   *arg,
+create_glade_window_func (MSValue   *arg1,
+                          MSValue   *arg2,
                           MSContext *ctx)
 {
     GapObject *wrapper;
     GtkWidget *window;
-    char *file;
+    char *file, *root;
     MooGladeXML *xml;
 
     if (!GAP_APP_INSTANCE->session)
         return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
                                      "GAP not running");
 
-    file = ms_value_print (arg);
-    xml = moo_glade_xml_new (file, NULL);
+    file = ms_value_print (arg1);
+    root = ms_value_print (arg2);
+    xml = moo_glade_xml_new (file, root && root[0] ? root : NULL);
 
     if (!xml)
     {
         send_string_result (ctx, GAP_STATUS_ERROR, "Error loading glade file", NULL);
-        return ms_value_none ();
+        goto out;
     }
 
     window = moo_glade_xml_get_root (xml);
     g_return_val_if_fail (window != NULL, NULL);
 
-    wrapper = gap_session_add_object (GAP_APP_INSTANCE->session, window, TRUE);
+    wrapper = gap_session_add_object (GAP_APP_INSTANCE->session, window,
+                                      "GladeWindow", TRUE);
     g_object_set_data_full (G_OBJECT (window), "moo-glade-xml", xml, g_object_unref);
 
     if (!wrapper)
@@ -302,6 +294,9 @@ create_glade_window_func (MSValue   *arg,
     else
         send_string_result (ctx, GAP_STATUS_OK, wrapper->id, NULL);
 
+out:
+    g_free (file);
+    g_free (root);
     return ms_value_none ();
 }
 
@@ -387,6 +382,33 @@ connect_clicked (GapObject  *wrapper,
 }
 
 
+static void
+dialog_response (GapObject *wrapper,
+                 int        response)
+{
+    GString *data = g_string_new (NULL);
+    gap_data_add_command_signal (data, wrapper->id, "response", 1);
+    gap_data_add_int (data, response);
+    gap_data_send (data);
+    g_string_free (data, TRUE);
+}
+
+
+static gulong
+connect_response (GapObject  *wrapper,
+                  char      **error_message)
+{
+    if (GTK_IS_DIALOG (wrapper->obj))
+        return g_signal_connect_swapped (wrapper->obj, "response",
+                                         G_CALLBACK (dialog_response),
+                                         wrapper);
+
+    *error_message = g_strdup_printf ("Signal 'response' is invalid for object '%s'",
+                                      wrapper->id);
+    return 0;
+}
+
+
 static gulong
 do_connect_signal (GapObject  *wrapper,
                    const char *signal,
@@ -396,6 +418,8 @@ do_connect_signal (GapObject  *wrapper,
         return connect_activate (wrapper, error_message);
     if (!strcmp (signal, "clicked"))
         return connect_clicked (wrapper, error_message);
+    if (!strcmp (signal, "response"))
+        return connect_response (wrapper, error_message);
 
     *error_message = g_strdup_printf ("Uknown signal '%s'", signal);
     return 0;
@@ -535,7 +559,8 @@ glade_lookup_func (MSValue   *arg1,
         goto out;
     }
 
-    new_wrapper = gap_session_add_object (GAP_APP_INSTANCE->session, widget, FALSE);
+    new_wrapper = gap_session_add_object (GAP_APP_INSTANCE->session,
+                                          widget, NULL, FALSE);
 
     if (!new_wrapper)
     {
@@ -544,7 +569,7 @@ glade_lookup_func (MSValue   *arg1,
         goto out;
     }
 
-    send_string_result (ctx, GAP_STATUS_OK, new_wrapper->id, get_type_name (widget));
+    send_string_result (ctx, GAP_STATUS_OK, new_wrapper->id, new_wrapper->type);
 
 out:
     g_free (window_id);
@@ -861,7 +886,7 @@ G_STMT_START {                                  \
     ADD_FUNC (set_stamp_func, ms_cfunc_new_1, "SetStamp");
     ADD_FUNC (get_stamp_func, ms_cfunc_new_0, "GetStamp");
     ADD_FUNC (destroy_func, ms_cfunc_new_1, "Destroy");
-    ADD_FUNC (create_glade_window_func, ms_cfunc_new_1, "CreateGladeWindow");
+    ADD_FUNC (create_glade_window_func, ms_cfunc_new_2, "CreateGladeWindow");
     ADD_FUNC (connect_func, ms_cfunc_new_3, "Connect");
     ADD_FUNC (disconnect_func, ms_cfunc_new_var, "Disconnect");
     ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GladeLookup");

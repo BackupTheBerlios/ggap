@@ -19,15 +19,15 @@
 G_BEGIN_DECLS
 
 
-char    *gap_pkg_init_file      (void);
+const char  *gap_pkg_init_file      (void);
 
-char    *gap_read_file_string   (const char *filename);
-char    *gap_reread_file_string (const char *filename);
+char        *gap_read_file_string   (const char *filename);
+char        *gap_reread_file_string (const char *filename);
 
 #ifdef __WIN32__
-gboolean gap_parse_cmd_line     (const char *command_line,
-                                 char      **bin_dir,
-                                 char      **root_dir);
+gboolean     gap_parse_cmd_line     (const char *command_line,
+                                     char      **bin_dir,
+                                     char      **root_dir);
 #endif
 
 

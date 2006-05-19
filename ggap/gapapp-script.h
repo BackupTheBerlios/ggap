@@ -20,12 +20,13 @@ G_BEGIN_DECLS
 
 
 #define GAP_DATA_COMMAND            '\0'    /* <\0><SMALL_INT>(data) */
-#define GAP_DATA_STRING             '\1'    /* <\1><len_high><len_low>(string bytes) - len_high == len/256; len_low == len%256 */
+#define GAP_DATA_STRING             '\1'    /* <\1><len_high><len_low>(string bytes) - len_high == len/128; len_low == len%128 */
 #define GAP_DATA_SMALL_INT          '\2'    /* <\2><single byte> */
 #define GAP_DATA_PAIR               '\3'    /* <\3>(first)(second) */
 #define GAP_DATA_TRIPLE             '\4'    /* <\4>(first)(second)(third) */
 #define GAP_DATA_LIST               '\5'    /* <\5><SMALL_INT>(first_elm)...(last_elm) */
 #define GAP_DATA_BOOL               '\6'    /* <\6><SMALL_INT> */
+#define GAP_DATA_INT                '\7'    /* <\7><pm><val_high><val_low> */
 
 #define GAP_COMMAND_EXEC_FILE       '\1'
 #define GAP_COMMAND_SIGNAL          '\2'
@@ -41,6 +42,9 @@ void     gap_data_send                      (GString    *data);
 void     gap_data_add_string                (GString    *data,
                                              const char *string,
                                              int         len);
+void     gap_data_add_int                   (GString    *data,
+                                             int         val);
+
 void     gap_data_add_command_object_died   (GString    *data,
                                              const char *id);
 void     gap_data_add_command_exec_file     (GString    *data,

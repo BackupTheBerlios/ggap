@@ -18,6 +18,7 @@
 #include "gap.h"
 #include "gapprefs-glade.h"
 #include "gapdocwindow.h"
+#include "gapoutput.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
 #include <mooutils/mooutils-misc.h>
@@ -272,7 +273,7 @@ gap_died (GapApp *app)
     g_assert (app->session != NULL);
     g_object_unref (app->session);
     app->session = NULL;
-    moo_app_discard_output ();
+    gap_app_output_restart ();
 }
 
 
@@ -306,6 +307,7 @@ gap_app_run (MooApp     *mapp)
 
     if (!GAP_APP_EDITOR_MODE && !app->editor_mode)
     {
+        gap_app_output_start ();
         gap_app_ensure_terminal (app);
         gap_app_start_gap (app);
     }
@@ -324,6 +326,7 @@ gap_app_run (MooApp     *mapp)
 static void
 gap_app_quit (MooApp     *app)
 {
+    gap_app_output_shutdown ();
     MOO_APP_CLASS(gap_app_parent_class)->quit (app);
 }
 
@@ -429,7 +432,7 @@ gap_app_start_gap (GapApp *app)
 
     if (init_pkg)
     {
-        char *init;
+        const char *init;
         char **dirs;
         guint i, n_dirs = 0;
 
@@ -441,10 +444,7 @@ gap_app_start_gap (GapApp *app)
         init = gap_pkg_init_file ();
 
         if (init)
-        {
             g_string_append_printf (cmd, " %s", init);
-            g_free (init);
-        }
 
         g_strfreev (dirs);
     }

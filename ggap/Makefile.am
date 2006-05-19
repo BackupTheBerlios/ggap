@@ -1,8 +1,15 @@
-EXTRA_PROGRAMS = ggap
+EXTRA_PROGRAMS = ggap pipehelper
+bin_PROGRAMS =
 
 if !MOO_OS_CYGWIN
-bin_PROGRAMS = ggap
+bin_PROGRAMS += ggap
 endif
+
+if MOO_OS_MINGW
+bin_PROGRAMS += pipehelper
+endif
+
+pipehelper_SOURCES = pipehelper.c pipehelper.h
 
 AM_CFLAGS =                               \
     -I$(top_builddir)                     \
@@ -43,6 +50,8 @@ ggap_SOURCES =				\
 	gapdocwindow.h			\
 	gapeditwindow.c			\
 	gapeditwindow.h			\
+	gapoutput.c			\
+	gapoutput.h			\
 	gapsession.c			\
 	gapsession.h			\
 	gapterm.c			\

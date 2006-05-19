@@ -387,7 +387,6 @@ int main (int argc, char *argv[])
                         "short-name", "ggap",
                         "full-name", "GGAP",
                         "description", "GGAP is a front end for GAP",
-                        "run-output", (gboolean) !_ggap_opt_simple,
                         "run-input", (gboolean) !_ggap_opt_simple,
                         "default-ui", GGAP_UI,
                         "logo", MOO_STOCK_GGAP,
@@ -399,10 +398,8 @@ int main (int argc, char *argv[])
                         "simple", (gboolean) _ggap_opt_simple,
 
                         NULL);
-    g_strfreev (files);
+    g_free (files);
 
-    if (!moo_app_init (app))
-        return 0;
-
+    moo_app_init (app);
     return moo_app_run (app);
 }

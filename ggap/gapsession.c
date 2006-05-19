@@ -30,6 +30,7 @@ static void         callback_free       (Callback   *cb);
 
 static GapObject   *gap_object_new      (gpointer    object,
                                          const char *id,
+                                         const char *type_name,
                                          gboolean    toplevel);
 static void         object_died         (GapObject  *wrapper,
                                          gpointer    object);
@@ -87,6 +88,7 @@ gap_object_finalize (GObject *object)
     GapObject *gap_obj = GAP_OBJECT (object);
 
     g_free (gap_obj->id);
+    g_free (gap_obj->type);
 
     if (gap_obj->obj)
         disconnect_wrapper (gap_obj);
@@ -184,6 +186,7 @@ generate_id (gpointer object)
 GapObject *
 gap_session_add_object (GapSession *session,
                         gpointer    object,
+                        const char *type_name,
                         gboolean    toplevel)
 {
     GapObject *wrapper;
@@ -205,7 +208,7 @@ gap_session_add_object (GapSession *session,
         return NULL;
     }
 
-    wrapper = gap_object_new (object, id, toplevel);
+    wrapper = gap_object_new (object, id, type_name, toplevel);
     g_hash_table_insert (session->objects, g_strdup (id), wrapper);
 
     g_signal_connect_swapped (wrapper, "object-died",
@@ -234,6 +237,7 @@ object_died (GapObject *wrapper,
 static GapObject *
 gap_object_new (gpointer    object,
                 const char *id,
+                const char *type_name,
                 gboolean    toplevel)
 {
     GapObject *wrapper;
@@ -245,6 +249,34 @@ gap_object_new (gpointer    object,
     wrapper->obj = object;
     wrapper->id = g_strdup (id);
     wrapper->toplevel = toplevel != 0;
+
+    if (!type_name)
+    {
+        if (GTK_IS_CHECK_MENU_ITEM (object))
+            type_name = "CheckMenuItem";
+        else if (GTK_IS_MENU_ITEM (object))
+            type_name = "MenuItem";
+        else if (GTK_IS_ENTRY (object))
+            type_name = "Entry";
+        else if (GTK_IS_TOGGLE_BUTTON (object))
+            type_name = "ToggleButton";
+        else if (GTK_IS_BUTTON (object))
+            type_name = "Button";
+        else if (GTK_IS_WINDOW (object))
+            type_name = "Window";
+#ifdef GGAP_USE_MOO_CANVAS
+        else if (MOO_IS_CANVAS (object))
+            type_name = "Canvas";
+#endif
+        else if (GTK_IS_STATUSBAR (object))
+            type_name = "Statusbar";
+        else if (GTK_IS_WIDGET (object))
+            type_name = "Widget";
+        else
+            type_name = "Object";
+    }
+
+    wrapper->type = g_strdup (type_name);
 
     g_signal_connect_swapped (object, "destroy",
                               G_CALLBACK (object_died),

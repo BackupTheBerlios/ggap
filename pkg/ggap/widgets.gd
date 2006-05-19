@@ -14,9 +14,6 @@
 
 
 DeclareCategory("IsWidget", IsGObject);
-DeclareCategory("IsWindow", IsWidget);
-DeclareCategory("IsGladeWindow", IsWindow);
-DeclareCategory("IsGraphicsWindow", IsWindow);
 DeclareCategory("IsMenuItem", IsWidget);
 DeclareCategory("IsCheckMenuItem", IsMenuItem);
 DeclareCategory("IsButton", IsWidget);
@@ -25,12 +22,28 @@ DeclareCategory("IsCanvas", IsWidget);
 DeclareCategory("IsStatusbar", IsWidget);
 DeclareCategory("IsEntry", IsWidget);
 
-DeclareGlobalFunction("CreateGraphicsWindow");
+
+#############################################################################
+##
+#C  IsWindow
+##
+DeclareCategory("IsWindow", IsWidget);
 DeclareGlobalFunction("CloseWindow");
 
+
+#############################################################################
+##
+##  GladeWindow - window created from a glade file
+##
+DeclareCategory("IsGladeWindow", IsWindow);
 DeclareGlobalFunction("CreateGladeWindow");
 DeclareGlobalFunction("WindowLookupControl");
 
+
+#############################################################################
+##
+##  Miscelanneous widgets methods
+##
 DeclareOperation("IsActive", [IsGObject]);
 DeclareOperation("SetActive", [IsGObject, IsBool]);
 DeclareOperation("IsVisible", [IsGObject]);
@@ -38,6 +51,11 @@ DeclareOperation("SetVisible", [IsGObject, IsBool]);
 DeclareOperation("GetText", [IsGObject]);
 DeclareOperation("SetText", [IsGObject, IsString]);
 
+
+#############################################################################
+##
+##  Private functions, do not use them
+##
 DeclareGlobalFunction("_GGAP_CLOSE_WINDOW");
 
 

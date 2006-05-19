@@ -109,7 +109,6 @@ int main (int argc, char *argv[])
                         "short-name", "ggap",
                         "full-name", "GGAP",
                         "description", "GGAP is a front end for GAP",
-                        "run-output", (gboolean) !_ggap_opt_simple,
                         "run-input", (gboolean) !_ggap_opt_simple,
                         "default-ui", GGAP_UI,
                         "logo", MOO_STOCK_GGAP,

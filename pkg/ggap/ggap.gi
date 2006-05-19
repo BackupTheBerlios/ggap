@@ -24,7 +24,19 @@ rec(init := false,              # ggap package is initialized
     async_result := fail,       # result of _GGAP_SEND_COMMAND
     in_read_command := false,   # _GGAP_READ_COMMAND is being executed
     in_check_input := false,    # _GGAP_CHECK_INPUT is being executed
-    in_send_command := false)); # _GGAP_SEND_COMMAND
+    in_send_command := false,   # _GGAP_SEND_COMMAND is being executed
+    types := [
+      ["Window", IsWindow],
+      ["Object", IsGObject],
+      ["Widget", IsWidget],
+      ["Entry", IsEntry],
+      ["MenuItem", IsMenuItem],
+      ["CheckMenuItem", IsCheckMenuItem],
+      ["Button", IsButton],
+      ["ToggleButton", IsToggleButton],
+      ["Canvas", IsCanvas],
+      ["Statusbar", IsStatusbar]
+    ]));
 
 
 #############################################################################
@@ -32,7 +44,7 @@ rec(init := false,              # ggap package is initialized
 #F  _GGAP_INIT(<out_pipe>, <in_pipe>)
 ##
 InstallGlobalFunction(_GGAP_INIT,
-function(out_pipe, in_pipe)
+function(out_pipe, in_pipe, pipehelper)
   if _GGAP_DATA.init then
     Error("GGAP package is already initialized");
   fi;
@@ -48,7 +60,11 @@ function(out_pipe, in_pipe)
   _GGAP_DATA.in_pipe_name := in_pipe;
 
   if in_pipe <> "" then
-    _GGAP_DATA.in_pipe := InputTextFile(in_pipe);
+    if ARCH_IS_WINDOWS() then
+      _GGAP_DATA.in_pipe := InputOutputLocalProcess(DirectoryCurrent(), pipehelper, [in_pipe]);
+    else
+      _GGAP_DATA.in_pipe := InputTextFile(in_pipe);
+    fi;
     InstallCharReadHookFunc(_GGAP_DATA.in_pipe, "r", _GGAP_CHECK_INPUT);
   else
     _GGAP_DATA.in_pipe := fail;
@@ -121,18 +137,19 @@ end);
 ##
 InstallGlobalFunction(_GGAP_READ,
 function()
-  local type, s1, s2, size, string, i, tuple, len;
+  local type, s, s1, s2, size, string, i, tuple, len, val;
 
   type := ReadByte(_GGAP_DATA.in_pipe);
 
   # these must be kept in sync with gapapp-script.h
   # 0 - command
   # 1 - string
-  # 2 - one byte integer
+  # 2 - one-byte integer
   # 3 - pair
   # 4 - triple
   # 5 - list
   # 6 - boolean
+  # 7 - two-byte integer
 
   ## ggap sent a command: it may be an async command, READ() must be
   ## resumed after executing it; or it may be code returning call result,
@@ -152,7 +169,7 @@ function()
   elif type = 1 then
     s1 := ReadByte(_GGAP_DATA.in_pipe);
     s2 := ReadByte(_GGAP_DATA.in_pipe);
-    size := s1 * 256 + s2;
+    size := s1 * 128 + s2;
     if size = 0 then
       return "";
     else
@@ -189,6 +206,16 @@ function()
   ## Boolean: false if zero
   elif type = 6 then
     return ReadByte(_GGAP_DATA.in_pipe) <> 0;
+  ## Integer: first byte - sign (minus if non-zero), next two bytes - the value
+  elif type = 7 then
+    s := ReadByte(_GGAP_DATA.in_pipe);
+    s1 := ReadByte(_GGAP_DATA.in_pipe);
+    s2 := ReadByte(_GGAP_DATA.in_pipe);
+    val := s1 * 128 + s2;
+    if s <> 0 then
+      val := -val;
+    fi;
+    return val;
   else
     Error("unknown data type ", type);
   fi;

@@ -13,13 +13,22 @@
 ##
 
 
+BindGlobal("DIALOG_RESPONSE_DESTROY", -4);
+BindGlobal("DIALOG_RESPONSE_OK", -5);
+BindGlobal("DIALOG_RESPONSE_CANCEL", -6);
+BindGlobal("DIALOG_RESPONSE_CLOSE", -7);
+BindGlobal("DIALOG_RESPONSE_YES", -8);
+BindGlobal("DIALOG_RESPONSE_NO", -9);
+BindGlobal("DIALOG_RESPONSE_APPLY", -10);
+BindGlobal("DIALOG_RESPONSE_HELP", -11);
+
+
 ###############################################################################
 ##
 #M  PrintObj()
 ##
 InstallMethod(PrintObj, [IsWindow], function (win) Print("<Window '", win!.id, "'>"); end);
 InstallMethod(PrintObj, [IsGladeWindow], function (win) Print("<GladeWindow '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsGraphicsWindow], function (win) Print("<GraphicsWindow '", win!.id, "'>"); end);
 InstallMethod(PrintObj, [IsMenuItem], function (win) Print("<MenuItem '", win!.id, "'>"); end);
 InstallMethod(PrintObj, [IsCheckMenuItem], function (win) Print("<CheckMenuItem '", win!.id, "'>"); end);
 InstallMethod(PrintObj, [IsButton], function (win) Print("<Button '", win!.id, "'>"); end);
@@ -72,33 +81,43 @@ end);
 #F  CreateGladeWindow()
 ##
 InstallGlobalFunction(CreateGladeWindow,
-function(file)
-    local window, result, path;
+function(arg)
+  local window, result, path, file, root;
 
-    if not IsExistingFile(file) then
-      path := Concatenation("pkg/ggap/glade/", file);
-      path := Filename(DirectoriesLibrary(""), path);
+  if Length(arg) <> 1 and Length(arg) <> 2 then
+    Error("Number of arguments must be one or two");
+  fi;
 
-      if path = fail then
-        Error("Could not find file ", file);
-        return;
-      fi;
+  file := arg[1];
+  root := "";
 
-      file := path;
+  if Length(arg) = 2 then
+    root := arg[2];
+  fi;
+
+  if not IsExistingFile(file) then
+    path := Concatenation("pkg/ggap/glade/", file);
+    path := Filename(DirectoriesLibrary(""), path);
+
+    if path = fail then
+      Error("Could not find file ", file);
     fi;
 
-    result := _GGAP_SEND_COMMAND("CreateGladeWindow('", file, "');");
+    file := path;
+  fi;
 
-    if result[1] <> _GGAP_STATUS_OK then
-        Error(result[2]);
-    fi;
+  result := _GGAP_SEND_COMMAND("CreateGladeWindow", [file, root]);
 
-    window := Objectify(NewType(GObjectFamily, IsGladeWindow and IsGObjectRep),
-                        rec(id := result[2], dead := false, callbacks := [],
-                            destroy_func := false));
-    _GGAP_REGISTER_OBJECT(window);
+  if result[1] <> _GGAP_STATUS_OK then
+    Error(result[2]);
+  fi;
 
-    return window;
+  window := Objectify(NewType(GObjectFamily, IsGladeWindow and IsGObjectRep),
+                      rec(id := result[2], dead := false, callbacks := [],
+                          destroy_func := false));
+  _GGAP_REGISTER_OBJECT(window);
+
+  return window;
 end);
 
 
@@ -118,8 +137,7 @@ function(window, name)
       Error("WindowLookupControl: second argument must be a string");
     fi;
 
-    result := _GGAP_SEND_COMMAND("GladeLookup('", window!.id, "', '",
-                                 name, "');");
+    result := _GGAP_SEND_COMMAND("GladeLookup", [window, name]);
 
     if result[1] <> _GGAP_STATUS_OK then
         Error(result[2]);
@@ -153,9 +171,9 @@ function(wid, visible)
   local result;
 
   if visible then
-    result := _GGAP_SEND_COMMAND("Show('", wid!.id, "');");
+    result := _GGAP_SEND_COMMAND("Show", [wid]);
   else
-    result := _GGAP_SEND_COMMAND("Hide('", wid!.id, "');");
+    result := _GGAP_SEND_COMMAND("Hide", [wid]);
   fi;
 
   if result[1] <> _GGAP_STATUS_OK then
@@ -169,10 +187,10 @@ end);
 #F  IsActive()
 ##
 BindGlobal("_IS_ACTIVE",
-function(id)
+function(wid)
   local result;
 
-  result := _GGAP_SEND_COMMAND("IsActive('", id, "');");
+  result := _GGAP_SEND_COMMAND("IsActive", [wid]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -181,28 +199,33 @@ function(id)
   fi;
 end);
 
-InstallMethod(IsActive, [IsCheckMenuItem], function(wid) return _IS_ACTIVE(wid!.id); end);
-InstallMethod(IsActive, [IsToggleButton], function(wid) return _IS_ACTIVE(wid!.id); end);
+InstallMethod(IsActive, [IsCheckMenuItem], function(wid) return _IS_ACTIVE(wid); end);
+InstallMethod(IsActive, [IsToggleButton], function(wid) return _IS_ACTIVE(wid); end);
 
 
 ###############################################################################
 ##
 #F  SetActive()
 ##
-InstallMethod(SetActive, [IsWidget, IsBool],
+BindGlobal("_SET_ACTIVE",
 function(wid, active)
   local result;
 
   if active then
-    result := _GGAP_SEND_COMMAND("SetActive('", wid!.id, "', true);");
+    result := _GGAP_SEND_COMMAND("SetActive", [wid, true]);
   else
-    result := _GGAP_SEND_COMMAND("SetActive('", wid!.id, "', false);");
+    result := _GGAP_SEND_COMMAND("SetActive", [wid, false]);
   fi;
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
   fi;
 end);
+
+InstallMethod(SetActive, [IsCheckMenuItem, IsBool],
+function(wid, active) _SET_ACTIVE(wid, active); end);
+InstallMethod(SetActive, [IsToggleButton, IsBool],
+function(wid, active) _SET_ACTIVE(wid, active); end);
 
 
 ###############################################################################
@@ -210,10 +233,10 @@ end);
 #F  IsVisible()
 ##
 BindGlobal("_IS_VISIBLE",
-function(id)
+function(wid)
   local result;
 
-  result := _GGAP_SEND_COMMAND("IsVisible('", id, "');");
+  result := _GGAP_SEND_COMMAND("IsVisible", [wid]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -222,7 +245,7 @@ function(id)
   fi;
 end);
 
-InstallMethod(IsVisible, [IsWidget], function(wid) return _IS_VISIBLE(wid!.id); end);
+InstallMethod(IsVisible, [IsWidget], function(wid) return _IS_VISIBLE(wid); end);
 
 
 ###############################################################################
@@ -230,10 +253,10 @@ InstallMethod(IsVisible, [IsWidget], function(wid) return _IS_VISIBLE(wid!.id); 
 #F  GetText()
 ##
 BindGlobal("_GET_TEXT",
-function(id)
+function(obj)
   local result;
 
-  result := _GGAP_SEND_COMMAND("GetText('", id, "');");
+  result := _GGAP_SEND_COMMAND("GetText", [obj]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -242,7 +265,7 @@ function(id)
   fi;
 end);
 
-InstallMethod(GetText, [IsEntry], function(wid) return _GET_TEXT(wid!.id); end);
+InstallMethod(GetText, [IsEntry], function(wid) return _GET_TEXT(wid); end);
 
 
 ###############################################################################
@@ -250,18 +273,18 @@ InstallMethod(GetText, [IsEntry], function(wid) return _GET_TEXT(wid!.id); end);
 #F  SetText()
 ##
 BindGlobal("_SET_TEXT",
-function(id, text)
+function(obj, text)
   local result;
 
-  result := _GGAP_SEND_COMMAND("SetText('", id, "', '",
-                               _GGAP_ESCAPE_STRING(text), "');");
+  result := _GGAP_SEND_COMMAND("SetText", [obj, _GGAP_ESCAPE_STRING(text)]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
   fi;
 end);
 
-InstallMethod(SetText, [IsEntry, IsString], function(wid, text) _SET_TEXT(wid!.id, text); end);
+InstallMethod(SetText, [IsEntry, IsString],
+function(wid, text) _SET_TEXT(wid, text); end);
 
 
 #E

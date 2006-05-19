@@ -257,7 +257,7 @@ do_analyze (GapTerm *term)
                                                      err_info_new (file_string, info_string, line_no - 1),
                                                      (GDestroyNotify) err_info_free);
                     }
-	        }
+                }
             }
 
             g_free (file_string);
