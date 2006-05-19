@@ -13,9 +13,9 @@
 ##
 
 
-ReadPkg("ggap", "ggap.gi");
-ReadPkg("ggap", "gobject.gi");
-ReadPkg("ggap", "widgets.gi");
+ReadPkg("ggap", "gap/ggap.gi");
+ReadPkg("ggap", "gap/gobject.gi");
+ReadPkg("ggap", "gap/widgets.gi");
 
 
 #E
