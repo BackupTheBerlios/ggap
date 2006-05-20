@@ -27,7 +27,7 @@
     </ignoreparts>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description></description>
+    <description/>
     <secondaryLanguages>
       <language>C</language>
     </secondaryLanguages>
@@ -45,7 +45,9 @@
       <programargs/>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
-      <envvars/>
+      <envvars>
+        <envvar value="always-malloc" name="G_SLICE" />
+      </envvars>
     </run>
     <configurations>
       <optimized>
@@ -90,14 +92,14 @@
         <f77compiler>kdevpgf77options</f77compiler>
         <cflags>-O0 -g3 -pg</cflags>
         <cxxflags>-O0 -g3 -pg</cxxflags>
-        <topsourcedir></topsourcedir>
-        <cppflags></cppflags>
-        <ldflags></ldflags>
-        <f77compilerbinary></f77compilerbinary>
-        <f77flags></f77flags>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <f77compilerbinary/>
+        <f77flags/>
         <envvars/>
-        <ccompilerbinary></ccompilerbinary>
-        <cxxcompilerbinary></cxxcompilerbinary>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
       </no-python>
       <no-pygtk>
         <configargs>--enable-debug=full --enable-all-gcc-warnings=fatal --enable-developer-mode --without-pygtk</configargs>
@@ -368,12 +370,12 @@
   </kdevautoproject>
   <kdevdebugger>
     <general>
-      <dbgshell></dbgshell>
+      <dbgshell/>
       <programargs> --g-fatal-warnings</programargs>
-      <gdbpath></gdbpath>
-      <configGdbScript></configGdbScript>
-      <runShellScript></runShellScript>
-      <runGdbScript></runGdbScript>
+      <gdbpath/>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>true</floatingtoolbar>
@@ -474,7 +476,7 @@
     </codecompletion>
     <references/>
     <creategettersetter>
-      <prefixGet></prefixGet>
+      <prefixGet/>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
@@ -484,7 +486,7 @@
     <qt>
       <used>false</used>
       <version>3</version>
-      <root></root>
+      <root/>
     </qt>
   </kdevcppsupport>
   <kdevdocumentation>

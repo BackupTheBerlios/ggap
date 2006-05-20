@@ -349,6 +349,7 @@ int main (int argc, char *argv[])
     MooApp *app;
     int opt_remain;
     char **files;
+    int retval;
 
     gtk_init (&argc, &argv);
 
@@ -401,5 +402,8 @@ int main (int argc, char *argv[])
     g_free (files);
 
     moo_app_init (app);
-    return moo_app_run (app);
+    retval = moo_app_run (app);
+
+    g_object_unref (app);
+    return retval;
 }
