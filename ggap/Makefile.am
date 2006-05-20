@@ -60,21 +60,7 @@ ggap_SOURCES =				\
 	gaptermwindow.c			\
 	gaptermwindow.h			\
 	gapprefs-glade.h		\
-	gapdoc-glade.h			\
-	moocanvas/moocanvas.h		\
-	moocanvas/moocanvas.c		\
-	moocanvas/moocanvasbox.h	\
-	moocanvas/moocanvasbox.c	\
-	moocanvas/moocanvasgraph.h	\
-	moocanvas/moocanvasgraph.c	\
-	moocanvas/moocanvasitem.h	\
-	moocanvas/moocanvasitem.c	\
-	moocanvas/moocanvasline.h	\
-	moocanvas/moocanvasline.c	\
-	moocanvas/moocanvastext.h	\
-	moocanvas/moocanvastext.c	\
-	moocanvas/moocanvaswindow.h	\
-	moocanvas/moocanvaswindow.c
+	gapdoc-glade.h
 
 nodist_ggap_SOURCES = ggap_res.res
 CLEANFILES = ggap_res.res
