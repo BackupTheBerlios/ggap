@@ -17,7 +17,9 @@ ggap_pkg_gap_DATA =		\
 
 ggap_pkg_tst_DATA =		\
 	ggap/tst/testglade.g	\
-	ggap/tst/file1.glade
+	ggap/tst/testgui.g	\
+	ggap/tst/file1.glade	\
+	ggap/tst/file2.glade
 
 EXTRA_DIST =			\
 	$(ggap_pkg_DATA)	\

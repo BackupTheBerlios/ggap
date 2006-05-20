@@ -36,7 +36,7 @@ BindGlobal("GObjectFamily", NewFamily("GObjectFamily", IsGObject));
 InstallGlobalFunction(_GGAP_ADD_STAMP,
 function(stamp)
   if stamp in _GGAP_DATA.commands then
-    Error("_GGAP_ADD_STAMP: stamp already in the list");
+    Error("stamp already in the list");
   fi;
   AddSet(_GGAP_DATA.commands, stamp);
 end);
@@ -51,7 +51,7 @@ function(stamp)
   local r;
 
   if not stamp in _GGAP_DATA.commands then
-    Error("_GGAP_GET_RESULT: stamp is not in the list");
+    Error("stamp is not in the list");
   fi;
 
   for r in _GGAP_DATA.results do
@@ -68,43 +68,86 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_SEND_COMMAND(arg)
+#F  _GGAP_PRINT_ARG(a)
+##
+InstallGlobalFunction(_GGAP_PRINT_ARG,
+function(a)
+  local i, keys, string;
+
+  if IsGObject(a) then
+    return Concatenation("GObject('", a!.id, "')");
+  elif IsBool(a) then
+    if a then
+      return "true";
+    else
+      return "false";
+    fi;
+  elif IsInt(a) then
+    return String(a);
+  elif IsString(a) then
+    return Concatenation("'", a, "'");
+  elif IsList(a) then
+    string := "[";
+    for i in [1..Length(a)] do
+      if i <> 1 then
+        Append(string, ", ");
+      fi;
+      Append(string, _GGAP_PRINT_ARG(a[i]));
+    od;
+    Append(string, "]");
+    return string;
+  elif IsRecord(a) then
+    string := "{";
+    keys := RecNames(a);
+    for i in [1..Length(keys)] do
+      if i <> 1 then
+        Append(string, ", ");
+      fi;
+      Append(string, Concatenation(keys[i], " = "));
+      Append(string, _GGAP_PRINT_ARG(a.(keys[i])));
+    od;
+    Append(string, "}");
+    return string;
+  else
+    Error("unknown argument type: ", a);
+  fi;
+end);
+
+
+#############################################################################
+##
+#F  _GGAP_PRINT_COMMAND(name, args)
+##
+InstallGlobalFunction(_GGAP_PRINT_COMMAND,
+function(name, args)
+  local i, code, s, stamp, strstamp, result, append_arg;
+
+  code := Concatenation(name, "(");
+  for i in [1..Length(args)] do
+    if i <> 1 then
+      Append(code, ", ");
+    fi;
+    Append(code, _GGAP_PRINT_ARG(args[i]));
+  od;
+  Append(code, ");");
+
+  return code;
+end);
+
+
+#############################################################################
+##
+#F  _GGAP_SEND_COMMAND(name, args)
 ##
 InstallGlobalFunction(_GGAP_SEND_COMMAND,
 function(name, args)
-  local i, code, a, s, stamp, strstamp, result;
+  local i, code, s, stamp, strstamp, result, append_arg;
 
   _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
   stamp := _GGAP_DATA.stamp;
   strstamp := HexStringInt(stamp);
 
-  code := Concatenation(name, "(");
-  for i in [1..Length(args)] do
-    a := args[i];
-
-    if IsGObject(a) then
-      s := Concatenation("'", a!.id, "'");
-    elif IsBool(a) then
-      if a then
-        s := "true";
-      else
-        s := "false";
-      fi;
-    elif IsInt(a) then
-      s := String(a);
-    elif IsString(a) then
-      s := Concatenation("'", a, "'");
-    else
-      Error("Unknown argument type: ", a);
-    fi;
-
-    if i = 1 then
-      code := Concatenation(code, s);
-    else
-      code := Concatenation(code, ", ", s);
-    fi;
-  od;
-  code := Concatenation(code, ");");
+  code := _GGAP_PRINT_COMMAND(name, args);
 
   Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", strstamp);
   _GGAP_ADD_STAMP(strstamp);
@@ -166,7 +209,7 @@ function(name)
     fi;
   od;
 
-  Error("Unknown type ", name);
+  Error("unknown type ", name);
 end);
 
 
@@ -199,7 +242,7 @@ function(id)
   ind := _GGAP_LOOKUP_OBJECT(id);
 
   if ind = 0 then
-    Error("Object '", id, "' doesn't exist");
+    Error("object '", id, "' doesn't exist");
   fi;
 
   obj := _GGAP_DATA.objects[ind];
@@ -280,10 +323,10 @@ function(obj, signal_or_handler)
   local callbacks, c, i, result, args;
 
   if not IsGObject(obj) then
-    Error("DisonnectCallback: first argument must be IsGObject");
+    Error("first argument must be IsGObject");
   fi;
   if not IsString(signal_or_handler) and not IsInt(signal_or_handler) then
-    Error("DisonnectCallback: second argument must be a string or callback id");
+    Error("second argument must be a string or callback id");
   fi;
 
   callbacks := [];

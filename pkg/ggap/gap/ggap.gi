@@ -122,7 +122,7 @@ function()
   elif cmd[1] = 4 then
     _GGAP_CLOSE_WINDOW(cmd[2]);
   else
-    Error("Unknown command ", cmd);
+    Error("unknown command ", cmd);
   fi;
 end);
 

@@ -173,6 +173,12 @@ gap_data_add_command_signal (GString    *data,
 /* GAP <-> GGAP communication
  */
 
+
+static gpointer send_error (MSContext  *ctx,
+                            const char *format,
+                            ...) G_GNUC_PRINTF (2, 3);
+
+
 void
 gap_data_send (GString *data)
 {
@@ -282,6 +288,76 @@ send_string_result (MSContext  *ctx,
 }
 
 
+static gpointer
+send_error (MSContext  *ctx,
+            const char *format,
+            ...)
+{
+    va_list var_args;
+    char *message;
+    const char *stamp;
+    GString *data;
+
+    g_return_val_if_fail (format != NULL, NULL);
+
+    stamp = g_object_get_data (G_OBJECT (ctx), "gap-stamp");
+    g_return_val_if_fail (stamp != NULL, NULL);
+
+    va_start (var_args, format);
+    message = g_strdup_vprintf (format, var_args);
+    va_end (var_args);
+
+    data = g_string_new (NULL);
+    gap_data_add_triple (data);
+    gap_data_add_string (data, stamp, -1);
+    gap_data_add_small_int (data, GAP_STATUS_ERROR);
+    gap_data_add_string (data, message, -1);
+
+    gap_data_send (data);
+    ms_context_set_error (ctx, MS_ERROR_RUNTIME, message);
+
+    g_string_free (data, TRUE);
+    g_free (message);
+
+    return NULL;
+}
+
+
+/****************************************************************************/
+/* GAP api
+ */
+
+#define CHECK_SESSION()                                                 \
+G_STMT_START {                                                          \
+    if (!GAP_APP_INSTANCE->session)                                     \
+        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,             \
+                                     "GAP not running");                \
+} G_STMT_END
+
+#define GET_OBJECT_BY_ID(wrapper_, arg_)                                \
+G_STMT_START {                                                          \
+    char *id_;                                                          \
+                                                                        \
+    id_ = ms_value_print (arg_);                                        \
+    wrapper_ = gap_session_find_object (GAP_APP_INSTANCE->session, id_);\
+                                                                        \
+    if (!wrapper_ || wrapper_->dead)                                    \
+    {                                                                   \
+        send_error (ctx, "object <%s> doesn't exist", id_);             \
+        g_free (id_);                                                   \
+        return NULL;                                                    \
+    }                                                                   \
+                                                                        \
+    g_free (id_);                                                       \
+} G_STMT_END
+
+#define GET_OBJECT(wrapper_, arg_)                                      \
+G_STMT_START {                                                          \
+    wrapper_ = ms_value_get_object (arg_);                              \
+    g_return_val_if_fail (GAP_IS_OBJECT (wrapper_), NULL);              \
+} G_STMT_END
+
+
 static MSValue *
 create_glade_window_func (MSValue   *arg1,
                           MSValue   *arg2,
@@ -291,10 +367,9 @@ create_glade_window_func (MSValue   *arg1,
     GtkWidget *window;
     char *file, *root;
     MooGladeXML *xml;
+    MSValue *retval = NULL;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
     file = ms_value_print (arg1);
     root = ms_value_print (arg2);
@@ -302,26 +377,32 @@ create_glade_window_func (MSValue   *arg1,
 
     if (!xml)
     {
-        send_string_result (ctx, GAP_STATUS_ERROR, "Error loading glade file", NULL);
+        send_error (ctx, "Error loading glade file");
         goto out;
     }
 
     window = moo_glade_xml_get_root (xml);
     g_return_val_if_fail (window != NULL, NULL);
+    gtk_window_set_transient_for (GTK_WINDOW (window), GTK_WINDOW (GAP_APP_INSTANCE->term_window));
 
     wrapper = gap_session_add_object (GAP_APP_INSTANCE->session, window,
                                       "GladeWindow", TRUE);
     g_object_set_data_full (G_OBJECT (window), "moo-glade-xml", xml, g_object_unref);
 
     if (!wrapper)
-        send_string_result (ctx, GAP_STATUS_ERROR, "Oops", NULL);
+    {
+        send_error (ctx, "oops");
+    }
     else
+    {
         send_string_result (ctx, GAP_STATUS_OK, wrapper->id, NULL);
+        retval = ms_value_none ();
+    }
 
 out:
     g_free (file);
     g_free (root);
-    return ms_value_none ();
+    return retval;
 }
 
 
@@ -329,29 +410,13 @@ static MSValue *
 destroy_func (MSValue   *arg,
               MSContext *ctx)
 {
-    char *id;
     GapObject *wrapper;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
+    GET_OBJECT (wrapper, arg);
+    gap_object_destroy (wrapper);
+    send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
 
-    id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
-
-    if (!wrapper)
-    {
-        char *msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        g_free (msg);
-    }
-    else
-    {
-        gap_object_destroy (wrapper);
-        send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
-    }
-
-    g_free (id);
     return ms_value_none ();
 }
 
@@ -457,43 +522,33 @@ connect_func (MSValue   *arg1,
               MSContext *ctx)
 {
     GapObject *wrapper;
-    char *id, *signal, *gap_id, *msg = NULL;
+    char *signal, *gap_id, *msg = NULL;
     gulong handler_id;
+    MSValue *retval = NULL;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg1);
+    GET_OBJECT (wrapper, arg1);
     signal = ms_value_print (arg2);
     gap_id = ms_value_print (arg3);
-
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
-
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object with id '%s' doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
 
     handler_id = do_connect_signal (wrapper, signal, &msg);
 
     if (!handler_id)
     {
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
+        send_error (ctx, "%s", msg);
         goto out;
     }
 
     gap_object_connect (wrapper, gap_id, handler_id);
     send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
+    retval = ms_value_none ();
 
 out:
-    g_free (id);
     g_free (signal);
-    g_free (msg);
     g_free (gap_id);
-    return ms_value_none ();
+    g_free (msg);
+    return retval;
 }
 
 
@@ -504,25 +559,14 @@ disconnect_func (MSValue  **args,
 {
     guint i;
     GapObject *wrapper;
-    char *id, *msg = NULL;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
     if (n_args < 2)
         return ms_context_set_error (ctx, MS_ERROR_VALUE,
                                      "Too few arguments in Disconnect");
 
-    id = ms_value_print (args[0]);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
-
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object with id '%s' doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
+    GET_OBJECT (wrapper, args[0]);
 
     for (i = 1; i < n_args; ++i)
     {
@@ -532,10 +576,6 @@ disconnect_func (MSValue  **args,
     }
 
     send_string_result (ctx, GAP_STATUS_OK, "", NULL);
-
-out:
-    g_free (id);
-    g_free (msg);
     return ms_value_none ();
 }
 
@@ -547,31 +587,20 @@ glade_lookup_func (MSValue   *arg1,
 {
     GapObject *wrapper, *new_wrapper;
     gpointer widget;
-    char *window_id, *widget_name, *msg = NULL;
+    char *widget_name;
     MooGladeXML *xml;
+    MSValue *retval = NULL;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    window_id = ms_value_print (arg1);
+    GET_OBJECT (wrapper, arg1);
     widget_name = ms_value_print (arg2);
-
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, window_id);
-
-    if (!wrapper || wrapper->dead)
-    {
-        msg = g_strdup_printf ("Object with id '%s' doesn't exist", window_id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
 
     xml = g_object_get_data (wrapper->obj, "moo-glade-xml");
 
     if (!xml)
     {
-        msg = g_strdup_printf ("Object with id '%s' is not a glade object", window_id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
+        send_error (ctx, "object <%s> is not a glade object", wrapper->id);
         goto out;
     }
 
@@ -580,6 +609,7 @@ glade_lookup_func (MSValue   *arg1,
     if (!widget)
     {
         send_string_result (ctx, GAP_STATUS_OK, "", NULL);
+        retval = ms_value_none ();
         goto out;
     }
 
@@ -589,17 +619,16 @@ glade_lookup_func (MSValue   *arg1,
     if (!new_wrapper)
     {
         g_critical ("oops");
-        send_string_result (ctx, GAP_STATUS_ERROR, "Oops", NULL);
+        send_error (ctx, "oops");
         goto out;
     }
 
     send_string_result (ctx, GAP_STATUS_OK, new_wrapper->id, new_wrapper->type);
+    retval = ms_value_none ();
 
 out:
-    g_free (window_id);
     g_free (widget_name);
-    g_free (msg);
-    return ms_value_none ();
+    return retval;
 }
 
 
@@ -608,36 +637,20 @@ run_dialog_func (MSValue   *arg,
                  MSContext *ctx)
 {
     GapObject *wrapper;
-    char *dialog_id, *msg = NULL;
     int response;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    dialog_id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, dialog_id);
-
-    if (!wrapper || wrapper->dead)
-    {
-        msg = g_strdup_printf ("Object with id '%s' doesn't exist", dialog_id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
+    GET_OBJECT (wrapper, arg);
 
     if (!GTK_IS_DIALOG (wrapper->obj))
     {
-        msg = g_strdup_printf ("Object with id '%s' is not a dialog", dialog_id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
+        send_error (ctx, "object <%s> is not a dialog", wrapper->id);
+        return NULL;
     }
 
     response = gtk_dialog_run (wrapper->obj);
     send_int_result (ctx, GAP_STATUS_OK, response);
-
-out:
-    g_free (dialog_id);
-    g_free (msg);
     return ms_value_none ();
 }
 
@@ -646,35 +659,23 @@ static MSValue *
 show_func (MSValue   *arg,
            MSContext *ctx)
 {
-    char *id;
     GapObject *wrapper;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
+    GET_OBJECT (wrapper, arg);
 
-    if (!wrapper)
-    {
-        char *msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        g_free (msg);
-    }
-    else if (GTK_IS_WIDGET (wrapper->obj))
+    if (GTK_IS_WIDGET (wrapper->obj))
     {
         gtk_widget_show (wrapper->obj);
         send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
     }
     else
     {
-        char *msg = g_strdup_printf ("Show() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        g_free (msg);
+        return send_error (ctx, "Show() is not applicable to object <%s>",
+                           wrapper->id);
     }
 
-    g_free (id);
     return ms_value_none ();
 }
 
@@ -683,35 +684,23 @@ static MSValue *
 hide_func (MSValue   *arg,
            MSContext *ctx)
 {
-    char *id;
     GapObject *wrapper;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
+    GET_OBJECT (wrapper, arg);
 
-    if (!wrapper)
-    {
-        char *msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        g_free (msg);
-    }
-    else if (GTK_IS_WIDGET (wrapper->obj))
+    if (GTK_IS_WIDGET (wrapper->obj))
     {
         gtk_widget_hide (wrapper->obj);
         send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
     }
     else
     {
-        char *msg = g_strdup_printf ("Hide() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        g_free (msg);
+        return send_error (ctx, "Hide() is not applicable to object <%s>",
+                           wrapper->id);
     }
 
-    g_free (id);
     return ms_value_none ();
 }
 
@@ -720,39 +709,24 @@ static MSValue *
 is_visible_func (MSValue   *arg,
                  MSContext *ctx)
 {
-    char *id, *msg = NULL;
     GapObject *wrapper;
     gboolean visible;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
+    GET_OBJECT (wrapper, arg);
 
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
-    else if (GTK_IS_WIDGET (wrapper->obj))
+    if (GTK_IS_WIDGET (wrapper->obj))
     {
         visible = GTK_WIDGET_VISIBLE (wrapper->obj);
     }
     else
     {
-        msg = g_strdup_printf ("IsVisible() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
+        return send_error (ctx, "IsVisible() is not applicable to object <%s>",
+                           wrapper->id);
     }
 
     send_bool_result (ctx, GAP_STATUS_OK, visible);
-
-out:
-    g_free (id);
-    g_free (msg);
     return ms_value_none ();
 }
 
@@ -761,24 +735,14 @@ static MSValue *
 is_active_func (MSValue   *arg,
                 MSContext *ctx)
 {
-    char *id, *msg = NULL;
     GapObject *wrapper;
     gboolean active;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
+    GET_OBJECT (wrapper, arg);
 
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
-    else if (GTK_IS_TOGGLE_BUTTON (wrapper->obj))
+    if (GTK_IS_TOGGLE_BUTTON (wrapper->obj))
     {
         active = gtk_toggle_button_get_active (wrapper->obj);
     }
@@ -788,16 +752,11 @@ is_active_func (MSValue   *arg,
     }
     else
     {
-        msg = g_strdup_printf ("IsActive() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
+        return send_error (ctx, "IsActive() is not applicable to object <%s>",
+                           wrapper->id);
     }
 
     send_bool_result (ctx, GAP_STATUS_OK, active);
-
-out:
-    g_free (id);
-    g_free (msg);
     return ms_value_none ();
 }
 
@@ -806,41 +765,32 @@ static MSValue *
 get_text_func (MSValue   *arg,
                MSContext *ctx)
 {
-    char *id, *msg = NULL, *freeme = NULL;
+    char *freeme = NULL;
     const char *text;
     GapObject *wrapper;
+    MSValue *retval = NULL;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
+    GET_OBJECT (wrapper, arg);
 
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
-    else if (GTK_IS_ENTRY (wrapper->obj))
+    if (GTK_IS_ENTRY (wrapper->obj))
     {
         text = gtk_entry_get_text (wrapper->obj);
     }
     else
     {
-        msg = g_strdup_printf ("GetText() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
+        send_error (ctx, "GetText() is not applicable to object <%s>",
+                    wrapper->id);
         goto out;
     }
 
     send_string_result (ctx, GAP_STATUS_OK, text, NULL);
+    retval = ms_value_none ();
 
 out:
-    g_free (id);
-    g_free (msg);
     g_free (freeme);
-    return ms_value_none ();
+    return retval;
 }
 
 
@@ -849,41 +799,32 @@ set_text_func (MSValue   *arg1,
                MSValue   *arg2,
                MSContext *ctx)
 {
-    char *id, *msg = NULL, *text;
+    char *text;
     GapObject *wrapper;
+    MSValue *retval = NULL;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg1);
+    GET_OBJECT (wrapper, arg1);
     text = ms_value_print (arg2);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
 
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
-    else if (GTK_IS_ENTRY (wrapper->obj))
+    if (GTK_IS_ENTRY (wrapper->obj))
     {
         gtk_entry_set_text (wrapper->obj, text);
     }
     else
     {
-        msg = g_strdup_printf ("GetText() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
+        send_error (ctx, "GetText() is not applicable to object <%s>",
+                    wrapper->id);
         goto out;
     }
 
     send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
+    retval = ms_value_none ();
 
 out:
-    g_free (id);
-    g_free (msg);
     g_free (text);
-    return ms_value_none ();
+    return retval;
 }
 
 
@@ -892,25 +833,15 @@ set_active_func (MSValue   *arg1,
                  MSValue   *arg2,
                  MSContext *ctx)
 {
-    char *id, *msg = NULL;
     gboolean active;
     GapObject *wrapper;
 
-    if (!GAP_APP_INSTANCE->session)
-        return ms_context_set_error (ctx, MS_ERROR_RUNTIME,
-                                     "GAP not running");
+    CHECK_SESSION ();
 
-    id = ms_value_print (arg1);
+    GET_OBJECT (wrapper, arg1);
     active = ms_value_get_bool (arg2);
-    wrapper = gap_session_find_object (GAP_APP_INSTANCE->session, id);
 
-    if (!wrapper)
-    {
-        msg = g_strdup_printf ("Object <%s> doesn't exist", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
-    }
-    else if (GTK_IS_TOGGLE_BUTTON (wrapper->obj))
+    if (GTK_IS_TOGGLE_BUTTON (wrapper->obj))
     {
         gtk_toggle_button_set_active (wrapper->obj, active);
     }
@@ -920,17 +851,23 @@ set_active_func (MSValue   *arg1,
     }
     else
     {
-        msg = g_strdup_printf ("SetActive() is not applicable to object <%s>", id);
-        send_string_result (ctx, GAP_STATUS_ERROR, msg, NULL);
-        goto out;
+        return send_error (ctx, "SetActive() is not applicable to object <%s>",
+                           wrapper->id);
     }
 
     send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
-
-out:
-    g_free (id);
-    g_free (msg);
     return ms_value_none ();
+}
+
+
+static MSValue *
+gobject_func (MSValue   *arg,
+              MSContext *ctx)
+{
+    GapObject *wrapper;
+    CHECK_SESSION ();
+    GET_OBJECT_BY_ID (wrapper, arg);
+    return ms_value_object (wrapper);
 }
 
 
@@ -961,6 +898,7 @@ G_STMT_START {                                  \
     ADD_FUNC (get_text_func, ms_cfunc_new_1, "GetText");
     ADD_FUNC (set_text_func, ms_cfunc_new_2, "SetText");
     ADD_FUNC (set_active_func, ms_cfunc_new_2, "SetActive");
+    ADD_FUNC (gobject_func, ms_cfunc_new_1, "GObject");
 }
 
 
