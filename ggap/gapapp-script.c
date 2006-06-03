@@ -774,9 +774,18 @@ get_text_func (MSValue   *arg,
 
     GET_OBJECT (wrapper, arg);
 
-    if (GTK_IS_ENTRY (wrapper->obj))
+    if (GTK_IS_EDITABLE (wrapper->obj))
     {
-        text = gtk_entry_get_text (wrapper->obj);
+        freeme = gtk_editable_get_chars (wrapper->obj, 0, -1);
+        text = freeme;
+    }
+    else if (GTK_IS_TEXT_BUFFER (wrapper->obj))
+    {
+        GtkTextIter start, end;
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer (wrapper->obj);
+        gtk_text_buffer_get_bounds (buffer, &start, &end);
+        freeme = gtk_text_buffer_get_text (buffer, &start, &end, TRUE);
+        text = freeme;
     }
     else
     {
@@ -811,6 +820,15 @@ set_text_func (MSValue   *arg1,
     if (GTK_IS_ENTRY (wrapper->obj))
     {
         gtk_entry_set_text (wrapper->obj, text);
+    }
+    else if (GTK_IS_TEXT_VIEW (wrapper->obj))
+    {
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer (wrapper->obj);
+        gtk_text_buffer_set_text (buffer, text, -1);
+    }
+    else if (GTK_IS_TEXT_BUFFER (wrapper->obj))
+    {
+        gtk_text_buffer_set_text (wrapper->obj, text, -1);
     }
     else
     {
@@ -886,11 +904,15 @@ G_STMT_START {                                  \
     ADD_FUNC (set_stamp_func, ms_cfunc_new_1, "SetStamp");
     ADD_FUNC (get_stamp_func, ms_cfunc_new_0, "GetStamp");
     ADD_FUNC (destroy_func, ms_cfunc_new_1, "Destroy");
-    ADD_FUNC (create_glade_window_func, ms_cfunc_new_2, "CreateGladeWindow");
     ADD_FUNC (connect_func, ms_cfunc_new_3, "Connect");
     ADD_FUNC (disconnect_func, ms_cfunc_new_var, "Disconnect");
+    ADD_FUNC (gobject_func, ms_cfunc_new_1, "GObject");
+
+    ADD_FUNC (create_glade_window_func, ms_cfunc_new_2, "CreateGladeWindow");
     ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GladeLookup");
+
     ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "RunDialog");
+
     ADD_FUNC (show_func, ms_cfunc_new_1, "Show");
     ADD_FUNC (hide_func, ms_cfunc_new_1, "Hide");
     ADD_FUNC (is_visible_func, ms_cfunc_new_1, "IsVisible");
@@ -898,7 +920,6 @@ G_STMT_START {                                  \
     ADD_FUNC (get_text_func, ms_cfunc_new_1, "GetText");
     ADD_FUNC (set_text_func, ms_cfunc_new_2, "SetText");
     ADD_FUNC (set_active_func, ms_cfunc_new_2, "SetActive");
-    ADD_FUNC (gobject_func, ms_cfunc_new_1, "GObject");
 }
 
 
