@@ -30,10 +30,9 @@
 #include <string.h>
 
 
-#define APP_PREFS_PREFIX            "GAP"
-#define APP_PREFS_GAP_COMMAND       APP_PREFS_PREFIX "/command"
-#define APP_PREFS_GAP_INIT_PKG      APP_PREFS_PREFIX "/init_pkg"
-#define APP_PREFS_GAP_WORKING_DIR   APP_PREFS_PREFIX "/working_dir"
+#define APP_PREFS_GAP_COMMAND       GGAP_PREFS_PREFIX "/command"
+#define APP_PREFS_GAP_INIT_PKG      GGAP_PREFS_PREFIX "/init_pkg"
+#define APP_PREFS_GAP_WORKING_DIR   GGAP_PREFS_PREFIX "/working_dir"
 
 
 gboolean GAP_APP_EDITOR_MODE;
@@ -497,7 +496,7 @@ gap_prefs_page_new (void)
 
     page = moo_prefs_dialog_page_new_from_xml ("GAP", MOO_STOCK_GAP, NULL,
                                                GAP_PREFS_GLADE_UI, -1,
-                                               "page", APP_PREFS_PREFIX);
+                                               "page", GGAP_PREFS_PREFIX);
 
     return page;
 }
