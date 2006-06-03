@@ -36,7 +36,7 @@
   <kdevautoproject>
     <general>
       <activetarget>ggap/ggap</activetarget>
-      <useconfiguration>no-python</useconfiguration>
+      <useconfiguration>debug</useconfiguration>
     </general>
     <run>
       <mainprogram>ggap/ggap</mainprogram>
@@ -45,9 +45,7 @@
       <programargs/>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
-      <envvars>
-        <envvar value="always-malloc" name="G_SLICE" />
-      </envvars>
+      <envvars/>
     </run>
     <configurations>
       <optimized>
