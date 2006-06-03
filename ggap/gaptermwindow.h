@@ -29,14 +29,12 @@ G_BEGIN_DECLS
 
 
 typedef struct _GapTermWindow        GapTermWindow;
-typedef struct _GapTermWindowPrivate GapTermWindowPrivate;
 typedef struct _GapTermWindowClass   GapTermWindowClass;
 
 
 struct _GapTermWindow
 {
     MooTermWindow base;
-    GapTermWindowPrivate *priv;
 };
 
 struct _GapTermWindowClass

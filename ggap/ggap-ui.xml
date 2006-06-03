@@ -124,6 +124,13 @@
       <separator/>
     </item>
 
+    <item name="Window" label="_Window">
+      <separator/>
+      <item action="NoDocuments"/>
+      <placeholder name="DocList"/>
+      <separator/>
+    </item>
+
     <item name="Help" label="_Help">
       <separator/>
       <item action="About"/>
@@ -190,9 +197,8 @@
 
     <item name="File" label="_File">
       <separator/>
+      <item action="GAPRead"/>
       <item action="SwitchToEditor"/>
-      <item action="OpenFile"/>
-      <separator/>
       <item action="SaveSelection"/>
       <separator/>
       <item action="Quit"/>
@@ -210,7 +216,6 @@
 
     <item name="GAP" label="_GAP">
       <separator/>
-      <item action="GAPRead"/>
       <separator/>
       <item action="Restart"/>
       <separator/>
@@ -246,6 +251,8 @@
 
   <!-- GAP window toolbar -->
   <widget name="Toolbar">
+    <item action="GAPRead"/>
+    <separator/>
     <item action="SwitchToEditor"/>
     <separator/>
     <item action="Copy"/>

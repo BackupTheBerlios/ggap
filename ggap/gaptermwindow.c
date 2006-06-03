@@ -11,8 +11,10 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#include "gaptermwindow.h"
+#include "gapapp.h"
+#include "gap.h"
 #include <mooutils/eggregex.h>
+#include <mooutils/moofiledialog.h>
 #include <mooapp/mooapp.h>
 #include <mooutils/moocompat.h>
 #include <string.h>
@@ -21,30 +23,20 @@
 #include <stdlib.h>
 
 
-struct _GapTermWindowPrivate {
-};
-
-
-static void     gap_term_window_class_init  (GapTermWindowClass *klass);
-static void     gap_term_window_init        (GapTermWindow      *window);
-static void     gap_term_window_destroy     (GtkObject          *object);
-
 static void     switch_to_editor            (void);
-static void     open_file                   (GapTermWindow      *window);
+static void     gap_read_file               (GapTermWindow      *window);
 
 
 /* GAP_TYPE_TERM_WINDOW */
 G_DEFINE_TYPE (GapTermWindow, gap_term_window, MOO_TYPE_TERM_WINDOW)
 
 
-static void gap_term_window_class_init (GapTermWindowClass *klass)
+static void
+gap_term_window_class_init (GapTermWindowClass *klass)
 {
-    GtkObjectClass *gtkobject_class = GTK_OBJECT_CLASS (klass);
     MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
 
     moo_window_class_set_id (window_class, "Terminal", "Terminal");
-
-    gtkobject_class->destroy = gap_term_window_destroy;
 
     moo_window_class_new_action (window_class, "SwitchToEditor",
                                  "display-name", "Switch to Editor",
@@ -54,32 +46,20 @@ static void gap_term_window_class_init (GapTermWindowClass *klass)
                                  "closure-callback", switch_to_editor,
                                  NULL);
 
-    moo_window_class_new_action (window_class, "OpenFile",
-                                 "display-name", "Open File",
-                                 "label", "Open File",
-                                 "tooltip", "Open File",
+    moo_window_class_new_action (window_class, "GAPRead",
+                                 "display-name", "Read File",
+                                 "label", "Read File",
+                                 "tooltip", "Read File",
                                  "stock-id", GTK_STOCK_OPEN,
-                                 "closure-callback", open_file,
+                                 "closure-callback", gap_read_file,
                                  NULL);
 }
 
 
-static void gap_term_window_init (GapTermWindow *window)
-{
-    window->priv = g_new0 (GapTermWindowPrivate, 1);
-    moo_term_window_set_term_type (MOO_TERM_WINDOW (window), GAP_TYPE_TERM);
-}
-
-
 static void
-gap_term_window_destroy (GtkObject          *object)
+gap_term_window_init (GapTermWindow *window)
 {
-    GapTermWindow *window = GAP_TERM_WINDOW (object);
-
-    g_free (window->priv);
-    window->priv = NULL;
-
-    GTK_OBJECT_CLASS(gap_term_window_parent_class)->destroy (object);
+    moo_term_window_set_term_type (MOO_TERM_WINDOW (window), GAP_TYPE_TERM);
 }
 
 
@@ -93,9 +73,21 @@ switch_to_editor (void)
 
 
 static void
-open_file (GapTermWindow *window)
+gap_read_file (GapTermWindow *window)
 {
-    MooApp *app = moo_app_get_instance ();
-    MooEditor *editor = moo_app_get_editor (app);
-    moo_editor_open_file (editor, NULL, GTK_WIDGET (window), NULL, NULL);
+    const char *file;
+    char *string;
+
+    file = moo_file_dialogp (GTK_WIDGET (window),
+                             MOO_DIALOG_FILE_OPEN_EXISTING,
+                             "Read File",
+                             GGAP_PREFS_PREFIX "/read_file",
+                             NULL);
+
+    if (!file)
+        return;
+
+    string = gap_read_file_string (file);
+    gap_app_feed_gap (GAP_APP_INSTANCE, string);
+    g_free (string);
 }
