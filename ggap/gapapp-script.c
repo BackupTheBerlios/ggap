@@ -15,9 +15,13 @@
 #include "gapapp-script.h"
 #include "gapoutput.h"
 #include <mooscript/mooscript-context.h>
+#include <mooscript/mooscript-parser.h>
 #include <mooutils/mooglade.h>
 #include <gtk/gtk.h>
 #include <string.h>
+
+
+#define STAMP_LEN 4
 
 
 /**************************************************************************/
@@ -184,24 +188,6 @@ gap_data_send (GString *data)
 {
     g_return_if_fail (data != NULL);
     gap_app_output_write (data->str, data->len);
-}
-
-
-static MSValue *
-set_stamp_func (MSValue   *arg,
-                MSContext *ctx)
-{
-    char *stamp = ms_value_print (arg);
-    g_object_set_data_full (G_OBJECT (ctx), "gap-stamp", stamp, g_free);
-    return ms_value_none ();
-}
-
-
-static MSValue *
-get_stamp_func (MSContext *ctx)
-{
-    char *stamp = g_object_get_data (G_OBJECT (ctx), "gap-stamp");
-    return ms_value_string (stamp);
 }
 
 
@@ -890,9 +876,14 @@ gobject_func (MSValue   *arg,
 
 
 static void
-setup_gap_context (MSContext *ctx)
+setup_gap_context (MSContext  *ctx,
+                   const char *stamp)
 {
     MSFunc *func;
+
+    g_object_set_data_full (G_OBJECT (ctx), "gap-stamp",
+                            g_strndup (stamp, STAMP_LEN),
+                            g_free);
 
 #define ADD_FUNC(func__,typ__,name__)           \
 G_STMT_START {                                  \
@@ -901,8 +892,6 @@ G_STMT_START {                                  \
     g_object_unref (func);                      \
 } G_STMT_END
 
-    ADD_FUNC (set_stamp_func, ms_cfunc_new_1, "GapSetStamp");
-    ADD_FUNC (get_stamp_func, ms_cfunc_new_0, "GapGetStamp");
     ADD_FUNC (destroy_func, ms_cfunc_new_1, "GapDestroy");
     ADD_FUNC (connect_func, ms_cfunc_new_3, "GapConnect");
     ADD_FUNC (disconnect_func, ms_cfunc_new_var, "GapDisconnect");
@@ -925,20 +914,39 @@ G_STMT_START {                                  \
 
 void
 gap_app_exec_command (GapApp     *app,
-                      const char *data)
+                      const char *data,
+                      guint       len)
 {
     MSContext *ctx;
-    MSValue *val;
+    MSNode *node;
+
+    if (len < STAMP_LEN)
+    {
+        g_critical ("%s: could not get stamp", G_STRLOC);
+        return;
+    }
 
     ctx = ms_context_new (app->term_window);
     setup_terminal_context (ctx);
-    setup_gap_context (ctx);
+    setup_gap_context (ctx, data);
 
-    val = ms_context_run_script (ctx, data);
+    node = ms_script_parse (data + STAMP_LEN);
 
-    if (!val)
-        g_warning ("%s", ms_context_get_error_msg (ctx));
+    if (!node)
+    {
+        g_critical ("%s: oops", G_STRLOC);
+        send_error (ctx, "Parse error");
+    }
+    else
+    {
+        MSValue *val = ms_top_node_eval (node, ctx);
 
-    ms_value_unref (val);
+        if (!val)
+            g_warning ("%s", ms_context_get_error_msg (ctx));
+
+        ms_node_unref (node);
+        ms_value_unref (val);
+    }
+
     g_object_unref (ctx);
 }

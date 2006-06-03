@@ -346,7 +346,7 @@ gap_app_exec_cmd (MooApp     *app,
     if (cmd != 'g')
         MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
     else
-        gap_app_exec_command (GAP_APP (app), data);
+        gap_app_exec_command (GAP_APP (app), data, len);
 }
 
 

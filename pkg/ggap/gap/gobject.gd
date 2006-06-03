@@ -48,6 +48,7 @@ DeclareGlobalFunction("_GGAP_SEND_COMMAND");
 DeclareGlobalFunction("_GGAP_PRINT_ARG");
 DeclareGlobalFunction("_GGAP_PRINT_COMMAND");
 DeclareGlobalFunction("_GGAP_GET_RESULT");
+DeclareGlobalFunction("_GGAP_GET_STAMP");
 DeclareGlobalFunction("_GGAP_ADD_STAMP");
 DeclareGlobalFunction("_GGAP_DESTROY_OBJECT");
 DeclareGlobalFunction("_GGAP_REGISTER_OBJECT");

@@ -241,7 +241,7 @@ function()
   result := _GGAP_READ_DATA();
 
   if result <> 0 then
-    Info(InfoGGAP, 5, "_GGAP_READ: got result for stamp ", result[1]);
+    Info(InfoGGAP, 5, "_GGAP_READ: got result for stamp '", result[1], "'");
     AddSet(_GGAP_DATA.results, result);
   else
     Info(InfoGGAP, 5, "_GGAP_READ: got nothing");

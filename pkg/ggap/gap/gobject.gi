@@ -36,7 +36,7 @@ BindGlobal("GObjectFamily", NewFamily("GObjectFamily", IsGObject));
 InstallGlobalFunction(_GGAP_ADD_STAMP,
 function(stamp)
   if stamp in _GGAP_DATA.commands then
-    Error("stamp already in the list");
+    Error("stamp '", stamp, "' already in the list");
   fi;
   AddSet(_GGAP_DATA.commands, stamp);
 end);
@@ -51,7 +51,7 @@ function(stamp)
   local r;
 
   if not stamp in _GGAP_DATA.commands then
-    Error("stamp is not in the list");
+    Error("stamp '", stamp, "' is not in the list");
   fi;
 
   for r in _GGAP_DATA.results do
@@ -120,7 +120,7 @@ end);
 ##
 InstallGlobalFunction(_GGAP_PRINT_COMMAND,
 function(name, args)
-  local i, code, s, stamp, strstamp, result, append_arg;
+  local i, code;
 
   code := Concatenation(name, "(");
   for i in [1..Length(args)] do
@@ -137,22 +137,45 @@ end);
 
 #############################################################################
 ##
+#F  _GGAP_GET_STAMP()
+##
+InstallGlobalFunction(_GGAP_GET_STAMP,
+function()
+  local stamp, strstamp;
+
+  _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
+
+  if _GGAP_DATA.stamp >= 16^4 then
+    _GGAP_DATA.stamp := 0;
+  fi;
+
+  stamp := _GGAP_DATA.stamp;
+
+  strstamp := HexStringInt(stamp);
+  if Length(strstamp) < 4 then
+    strstamp := String(strstamp, 4);
+  fi;
+
+  return strstamp;
+end);
+
+
+#############################################################################
+##
 #F  _GGAP_SEND_COMMAND(name, args)
 ##
 InstallGlobalFunction(_GGAP_SEND_COMMAND,
 function(name, args)
-  local i, code, s, stamp, strstamp, result, append_arg;
+  local code, strstamp, result;
 
-  _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
-  stamp := _GGAP_DATA.stamp;
-  strstamp := HexStringInt(stamp);
+  strstamp := _GGAP_GET_STAMP();
+  Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", strstamp);
 
   code := _GGAP_PRINT_COMMAND(name, args);
   Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", code);
 
-  Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", strstamp);
   _GGAP_ADD_STAMP(strstamp);
-  _GGAP_WRITE("g", "GapSetStamp('", strstamp, "');", code);
+  _GGAP_WRITE("g", strstamp, code);
 
   while true do
     Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: calling _GGAP_READ");
