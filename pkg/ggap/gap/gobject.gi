@@ -75,7 +75,7 @@ function(a)
   local i, keys, string;
 
   if IsGObject(a) then
-    return Concatenation("GObject('", a!.id, "')");
+    return Concatenation("GapGObject('", a!.id, "')");
   elif IsBool(a) then
     if a then
       return "true";
@@ -148,10 +148,11 @@ function(name, args)
   strstamp := HexStringInt(stamp);
 
   code := _GGAP_PRINT_COMMAND(name, args);
+  Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", code);
 
   Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: ", strstamp);
   _GGAP_ADD_STAMP(strstamp);
-  _GGAP_WRITE("g", "SetStamp('", strstamp, "');", code);
+  _GGAP_WRITE("g", "GapSetStamp('", strstamp, "');", code);
 
   while true do
     Info(InfoGGAP, 5, "_GGAP_SEND_COMMAND: calling _GGAP_READ");
@@ -302,7 +303,7 @@ function(arg)
            data:=arg{[4..Length(arg)]},
            id:=_GGAP_DATA.stamp);
 
-  result := _GGAP_SEND_COMMAND("Connect", [obj, signal, String(c.id)]);
+  result := _GGAP_SEND_COMMAND("GapConnect", [obj, signal, String(c.id)]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -355,7 +356,7 @@ function(obj, signal_or_handler)
     Add(args, String(c.id));
   od;
 
-  result := _GGAP_SEND_COMMAND("Disconnect", args);
+  result := _GGAP_SEND_COMMAND("GapDisconnect", args);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -380,7 +381,7 @@ function(obj)
     fi;
 
     _GGAP_OBJECT_DESTROYED(obj!.id);
-    result := _GGAP_SEND_COMMAND("Destroy", [obj]);
+    result := _GGAP_SEND_COMMAND("GapDestroy", [obj]);
 
     if result[1] <> _GGAP_STATUS_OK then
       Error(result[2]);

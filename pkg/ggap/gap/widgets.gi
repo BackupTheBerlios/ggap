@@ -110,7 +110,7 @@ function(arg)
     file := path;
   fi;
 
-  result := _GGAP_SEND_COMMAND("CreateGladeWindow", [file, root]);
+  result := _GGAP_SEND_COMMAND("GapCreateGladeWindow", [file, root]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -141,7 +141,7 @@ function(window, name)
       Error("GladeLookupWidget: second argument must be a string");
     fi;
 
-    result := _GGAP_SEND_COMMAND("GladeLookup", [window, name]);
+    result := _GGAP_SEND_COMMAND("GapGladeLookup", [window, name]);
 
     if result[1] <> _GGAP_STATUS_OK then
         Error(result[2]);
@@ -178,7 +178,7 @@ function(dialog)
     Error("RunDialog: argument must be IsWindow");
   fi;
 
-  result := _GGAP_SEND_COMMAND("RunDialog", [dialog]);
+  result := _GGAP_SEND_COMMAND("GapRunDialog", [dialog]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -197,9 +197,9 @@ function(wid, visible)
   local result;
 
   if visible then
-    result := _GGAP_SEND_COMMAND("Show", [wid]);
+    result := _GGAP_SEND_COMMAND("GapShow", [wid]);
   else
-    result := _GGAP_SEND_COMMAND("Hide", [wid]);
+    result := _GGAP_SEND_COMMAND("GapHide", [wid]);
   fi;
 
   if result[1] <> _GGAP_STATUS_OK then
@@ -216,7 +216,7 @@ BindGlobal("_IS_ACTIVE",
 function(wid)
   local result;
 
-  result := _GGAP_SEND_COMMAND("IsActive", [wid]);
+  result := _GGAP_SEND_COMMAND("GapIsActive", [wid]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -238,9 +238,9 @@ function(wid, active)
   local result;
 
   if active then
-    result := _GGAP_SEND_COMMAND("SetActive", [wid, true]);
+    result := _GGAP_SEND_COMMAND("GapSetActive", [wid, true]);
   else
-    result := _GGAP_SEND_COMMAND("SetActive", [wid, false]);
+    result := _GGAP_SEND_COMMAND("GapSetActive", [wid, false]);
   fi;
 
   if result[1] <> _GGAP_STATUS_OK then
@@ -262,7 +262,7 @@ BindGlobal("_IS_VISIBLE",
 function(wid)
   local result;
 
-  result := _GGAP_SEND_COMMAND("IsVisible", [wid]);
+  result := _GGAP_SEND_COMMAND("GapIsVisible", [wid]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -282,7 +282,7 @@ BindGlobal("_GET_TEXT",
 function(obj)
   local result;
 
-  result := _GGAP_SEND_COMMAND("GetText", [obj]);
+  result := _GGAP_SEND_COMMAND("GapGetText", [obj]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -302,7 +302,7 @@ BindGlobal("_SET_TEXT",
 function(obj, text)
   local result;
 
-  result := _GGAP_SEND_COMMAND("SetText", [obj, _GGAP_ESCAPE_STRING(text)]);
+  result := _GGAP_SEND_COMMAND("GapSetText", [obj, _GGAP_ESCAPE_STRING(text)]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);

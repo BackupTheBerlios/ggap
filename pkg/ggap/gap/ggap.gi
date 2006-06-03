@@ -257,6 +257,7 @@ InstallGlobalFunction(_GGAP_WRITE,
 function(arg)
   local s;
   for s in arg do
+    Info(InfoGGAP, 6, "_GGAP_WRITE: ", s);
     AppendTo(_GGAP_DATA.out_pipe, s);
   od;
   AppendTo(_GGAP_DATA.out_pipe, "\000");
@@ -272,6 +273,7 @@ function(arg)
   local s;
   AppendTo(_GGAP_DATA.out_pipe, "p");
   for s in arg do
+    Info(InfoGGAP, 6, "_GGAP_WRITE_PYTHON: ", s);
     AppendTo (_GGAP_DATA.out_pipe, s);
   od;
   AppendTo(_GGAP_DATA.out_pipe, "\000");
@@ -287,6 +289,7 @@ function(arg)
   local s;
   AppendTo(_GGAP_DATA.out_pipe, "s");
   for s in arg do
+    Info(InfoGGAP, 6, "_GGAP_WRITE_SCRIPT: ", s);
     AppendTo (_GGAP_DATA.out_pipe, s);
   od;
   AppendTo(_GGAP_DATA.out_pipe, "\000");

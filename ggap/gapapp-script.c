@@ -832,7 +832,7 @@ set_text_func (MSValue   *arg1,
     }
     else
     {
-        send_error (ctx, "GetText() is not applicable to object <%s>",
+        send_error (ctx, "SetText() is not applicable to object <%s>",
                     wrapper->id);
         goto out;
     }
@@ -901,25 +901,25 @@ G_STMT_START {                                  \
     g_object_unref (func);                      \
 } G_STMT_END
 
-    ADD_FUNC (set_stamp_func, ms_cfunc_new_1, "SetStamp");
-    ADD_FUNC (get_stamp_func, ms_cfunc_new_0, "GetStamp");
-    ADD_FUNC (destroy_func, ms_cfunc_new_1, "Destroy");
-    ADD_FUNC (connect_func, ms_cfunc_new_3, "Connect");
-    ADD_FUNC (disconnect_func, ms_cfunc_new_var, "Disconnect");
-    ADD_FUNC (gobject_func, ms_cfunc_new_1, "GObject");
+    ADD_FUNC (set_stamp_func, ms_cfunc_new_1, "GapSetStamp");
+    ADD_FUNC (get_stamp_func, ms_cfunc_new_0, "GapGetStamp");
+    ADD_FUNC (destroy_func, ms_cfunc_new_1, "GapDestroy");
+    ADD_FUNC (connect_func, ms_cfunc_new_3, "GapConnect");
+    ADD_FUNC (disconnect_func, ms_cfunc_new_var, "GapDisconnect");
+    ADD_FUNC (gobject_func, ms_cfunc_new_1, "GapGObject");
 
-    ADD_FUNC (create_glade_window_func, ms_cfunc_new_2, "CreateGladeWindow");
-    ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GladeLookup");
+    ADD_FUNC (create_glade_window_func, ms_cfunc_new_2, "GapCreateGladeWindow");
+    ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GapGladeLookup");
 
-    ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "RunDialog");
+    ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "GapRunDialog");
 
-    ADD_FUNC (show_func, ms_cfunc_new_1, "Show");
-    ADD_FUNC (hide_func, ms_cfunc_new_1, "Hide");
-    ADD_FUNC (is_visible_func, ms_cfunc_new_1, "IsVisible");
-    ADD_FUNC (is_active_func, ms_cfunc_new_1, "IsActive");
-    ADD_FUNC (get_text_func, ms_cfunc_new_1, "GetText");
-    ADD_FUNC (set_text_func, ms_cfunc_new_2, "SetText");
-    ADD_FUNC (set_active_func, ms_cfunc_new_2, "SetActive");
+    ADD_FUNC (show_func, ms_cfunc_new_1, "GapShow");
+    ADD_FUNC (hide_func, ms_cfunc_new_1, "GapHide");
+    ADD_FUNC (is_visible_func, ms_cfunc_new_1, "GapIsVisible");
+    ADD_FUNC (is_active_func, ms_cfunc_new_1, "GapIsActive");
+    ADD_FUNC (get_text_func, ms_cfunc_new_1, "GapGetText");
+    ADD_FUNC (set_text_func, ms_cfunc_new_2, "GapSetText");
+    ADD_FUNC (set_active_func, ms_cfunc_new_2, "GapSetActive");
 }
 
 
