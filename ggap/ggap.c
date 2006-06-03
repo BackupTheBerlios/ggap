@@ -1,6 +1,6 @@
 /* This file has been generated with opag 0.8.0.  */
 /*
- *   ggap.c
+ *   ggap.opag
  *
  *   Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
  *
@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+
+#define DEFAULT_NEW_INSTANCE 0
 
 
 int _ggap_parse_options (const char *const program_name,
@@ -68,6 +71,9 @@ int _ggap_parse_options (const char *const program_name,
 #define STR_HELP_NEW_APP "\
   -n, --new-app            Run new instance of application\n"
 
+#define STR_HELP_UNIQUE "\
+  -u, --unique             Use running instance of application\n"
+
 #define STR_HELP_SIMPLE "\
       --simple             Simple mode\n"
 
@@ -85,6 +91,7 @@ int _ggap_parse_options (const char *const program_name,
   -e, --editor             Do not start GAP automatically\n\
   -E, --pure-editor        Do not enable any GAP stuff\n\
   -n, --new-app            Run new instance of application\n\
+  -u, --unique             Use running instance of application\n\
       --simple             Simple mode\n\
   -l, --log[=FILE]         Show debug output or write it to FILE\n\
       --version            Display version information and exit\n\
@@ -101,6 +108,9 @@ char _ggap_opt_pure_editor;
 
 /* Set to 1 if option --new-app (-n) has been specified.  */
 char _ggap_opt_new_app;
+
+/* Set to 1 if option --unique (-u) has been specified.  */
+char _ggap_opt_unique;
 
 /* Set to 1 if option --simple has been specified.  */
 char _ggap_opt_simple;
@@ -128,6 +138,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   static const char *const optstr__editor = "editor";
   static const char *const optstr__pure_editor = "pure-editor";
   static const char *const optstr__new_app = "new-app";
+  static const char *const optstr__unique = "unique";
   static const char *const optstr__simple = "simple";
   static const char *const optstr__version = "version";
   static const char *const optstr__help = "help";
@@ -136,6 +147,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   _ggap_opt_editor = 0;
   _ggap_opt_pure_editor = 0;
   _ggap_opt_new_app = 0;
+  _ggap_opt_unique = 0;
   _ggap_opt_simple = 0;
   _ggap_opt_log = 0;
   _ggap_opt_version = 0;
@@ -248,6 +260,18 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
           break;
         }
         goto error_unknown_long_opt;
+       case 'u':
+        if (strncmp (option + 1, optstr__unique + 1, option_len - 1) == 0)
+        {
+          if (argument != 0)
+          {
+            option = optstr__unique;
+            goto error_unexpec_arg_long;
+          }
+          _ggap_opt_unique = 1;
+          break;
+        }
+        goto error_unknown_long_opt;
        case 'v':
         if (strncmp (option + 1, optstr__version + 1, option_len - 1) == 0)
         {
@@ -308,6 +332,9 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
          case 'n':
           _ggap_opt_new_app = 1;
           break;
+         case 'u':
+          _ggap_opt_unique = 1;
+          break;
          default:
           fprintf (stderr, STR_ERR_UNKNOWN_SHORT_OPT, program_name, *option);
           return -1;
@@ -332,6 +359,7 @@ static void usage (void)
     g_print ("%s", STR_HELP_EDITOR);
     g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
+    g_print ("%s", STR_HELP_UNIQUE);
     g_print ("%s", STR_HELP_SIMPLE);
     g_print ("%s", STR_HELP_LOG);
     g_print ("%s", STR_HELP_VERSION);
@@ -350,6 +378,7 @@ int main (int argc, char *argv[])
     int opt_remain;
     char **files;
     int retval;
+    gboolean new_instance;
 
     gtk_init (&argc, &argv);
 
@@ -380,9 +409,20 @@ int main (int argc, char *argv[])
             moo_set_log_func_window (TRUE);
     }
 
-    GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
+    if (_ggap_opt_unique)
+        new_instance = FALSE;
+    else if (_ggap_opt_new_app)
+        new_instance = TRUE;
+    else
+#if DEFAULT_NEW_INSTANCE
+        new_instance = TRUE;
+#else
+        new_instance = FALSE;
+#endif
 
+    GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
     files = moo_filenames_from_locale (argv + opt_remain);
+
     app = g_object_new (GAP_TYPE_APP,
                         "argv", argv,
                         "short-name", "ggap",
@@ -394,14 +434,34 @@ int main (int argc, char *argv[])
 
                         "gap-cmd-line", _ggap_arg_gap_cmd,
                         "editor-mode", (gboolean) _ggap_opt_editor,
-                        "open-files", files && *files ? files : NULL,
-                        "new-app", (gboolean) _ggap_opt_new_app,
                         "simple", (gboolean) _ggap_opt_simple,
 
                         NULL);
-    g_free (files);
 
-    moo_app_init (app);
+    if ((!new_instance && moo_app_send_files (app, files)) ||
+          !moo_app_init (app))
+    {
+        gdk_notify_startup_complete ();
+        g_strfreev (files);
+        g_object_unref (app);
+        return 0;
+    }
+
+    if (files && *files)
+    {
+        char **p;
+        MooEditor *editor;
+        MooEditWindow *window;
+
+        editor = moo_app_get_editor (app);
+        window = moo_editor_new_window (editor);
+
+        for (p = files; p && *p; ++p)
+            moo_editor_new_file (editor, window, NULL, *p, NULL);
+    }
+
+    g_strfreev (files);
+
     retval = moo_app_run (app);
 
     g_object_unref (app);
