@@ -50,6 +50,7 @@ InstallMethod(PrintObj, [IsCanvas], function (wid) Print("<Canvas '", wid!.id, "
 InstallMethod(PrintObj, [IsStatusbar], function (wid) Print("<Statusbar '", wid!.id, "'>"); end);
 InstallMethod(PrintObj, [IsTreeView], function (wid) Print("<TreeView '", wid!.id, "'>"); end);
 InstallMethod(PrintObj, [IsTextView], function (wid) Print("<TextView '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsHtml], function (wid) Print("<Html '", wid!.id, "'>"); end);
 
 
 ###############################################################################
@@ -101,17 +102,25 @@ end);
 ##
 InstallGlobalFunction(CreateGladeWindow,
 function(arg)
-  local window, result, path, file, root;
+  local window, result, path, file, root, types;
 
-  if Length(arg) <> 1 and Length(arg) <> 2 then
-    Error("Number of arguments must be one or two");
+  if Length(arg) < 1 or Length(arg) > 3 then
+    Error("invalid arguments");
   fi;
 
   file := arg[1];
-  root := "";
+  root := fail;
+  types := rec();
 
   if Length(arg) = 2 then
+    if IsRecord(arg[2]) then
+      types := arg[2];
+    else
+      root := arg[2];
+    fi;
+  elif Length(arg) = 3 then
     root := arg[2];
+    types := arg[3];
   fi;
 
   if not IsExistingFile(file) then
@@ -125,7 +134,7 @@ function(arg)
     file := path;
   fi;
 
-  result := _GGAP_SEND_COMMAND("GapCreateGladeWindow", [file, root]);
+  result := _GGAP_SEND_COMMAND("GapCreateGladeWindow", [file, root, types]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -166,18 +175,7 @@ function(window, name)
       return fail;
     fi;
 
-    ind := _GGAP_LOOKUP_OBJECT(result[2]);
-
-    if ind > 0 then
-      return _GGAP_DATA.objects[ind];
-    fi;
-
-    control := Objectify(_GGAP_GET_TYPE_BY_NAME(result[3]),
-                         rec(id := result[2], dead := false, callbacks := [],
-                             destroy_func := false));
-    _GGAP_REGISTER_OBJECT(control);
-
-    return control;
+    return _GGAP_MAKE_OBJECT(result[2], result[3]);
 end);
 
 

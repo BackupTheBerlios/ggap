@@ -43,6 +43,7 @@ rec(init := false,              # ggap package is initialized
       ["Statusbar", IsStatusbar],
       ["TreeView", IsTreeView],
       ["TextView", IsTextView],
+      ["Html", IsHtml],
     ]));
 
 

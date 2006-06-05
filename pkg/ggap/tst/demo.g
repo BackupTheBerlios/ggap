@@ -29,7 +29,7 @@ function(listview, data)
     return;
   fi;
 
-  SetText(data.window.info, demo[3]);
+  GObjectSetProperty(data.window.info, "markup", demo[3]);
   SetText(data.window.source, source);
 end;
 
@@ -54,7 +54,7 @@ GGAPDemo := function()
     Error("could not find glade file");
   fi;
 
-  window := CreateGladeWindow(file);
+  window := CreateGladeWindow(file, rec(info:="MooHtml"));
   data := rec(window:=window, file:=file, row:=0);
 
   SetFont(window.source, "Monospace");
@@ -64,10 +64,12 @@ GGAPDemo := function()
   ConnectCallback(window.list, "row-activated", _GGAPDemoListRowActivated, data);
 
   data.demos := [
-    ["Message dialogs", "message.g", "Message dialogs"]
+    ["Message dialogs", "message.g", "<H1>Message dialogs</H1>"]
   ];
   names := List(data.demos, l->l[1]);
   SetList(window.list, names);
+
+  return window;
 end;
 
 

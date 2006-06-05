@@ -11,10 +11,12 @@
  *   See COPYING file that comes with this distribution.
  */
 
+#include "config.h"
 #include "gapsession.h"
 #include "gap-widgets.h"
 #include "mooutils/moomarshals.h"
 #include "mooedit/mooeditor.h"
+#include "mooapp/moohtml.h"
 #include <gtk/gtk.h>
 
 
@@ -641,9 +643,48 @@ gap_glade_xml_signal_func (MooGladeXML *xml,
 }
 
 
+static void
+map_id (const char  *id,
+        MSValue     *val,
+        MooGladeXML *xml)
+{
+    char *typename;
+    GType type;
+
+    typename = ms_value_print (val);
+    type = g_type_from_name (typename);
+
+    if (!type)
+        g_warning ("no type '%s' for id '%s'", typename, id);
+    else
+        moo_glade_xml_map_id (xml, id, type);
+
+    g_free (typename);
+}
+
+
+static void
+ref_types (void)
+{
+    static gboolean been_here;
+    volatile GType type;
+
+    if (!been_here)
+    {
+        been_here = TRUE;
+
+        type = MOO_TYPE_EDIT;
+#ifdef MOO_USE_XML
+        type = MOO_TYPE_HTML;
+#endif
+    }
+}
+
+
 gboolean
 gap_glade_xml_new (const char     *file,
                    const char     *root,
+                   MSValue        *type_dict,
                    MooGladeXML   **xml_p,
                    GSList        **callbacks_p)
 {
@@ -653,6 +694,9 @@ gap_glade_xml_new (const char     *file,
     g_return_val_if_fail (file != NULL, FALSE);
     g_return_val_if_fail (xml_p != NULL, FALSE);
     g_return_val_if_fail (callbacks_p != NULL, FALSE);
+    g_return_val_if_fail (!type_dict || MS_VALUE_TYPE (type_dict) == MS_VALUE_DICT, FALSE);
+
+    ref_types ();
 
     root = root && root[0] ? root : NULL;
     xml = moo_glade_xml_new_empty ();
@@ -660,6 +704,9 @@ gap_glade_xml_new (const char     *file,
     moo_glade_xml_map_class (xml, "GtkTextView", MOO_TYPE_TEXT_VIEW);
     moo_glade_xml_map_class (xml, "GtkTreeView", GAP_TYPE_TREE_VIEW);
     moo_glade_xml_set_signal_func (xml, gap_glade_xml_signal_func, &callbacks);
+
+    if (type_dict)
+        g_hash_table_foreach (type_dict->hash, (GHFunc) map_id, xml);
 
     if (!moo_glade_xml_parse_file (xml, file, root))
     {

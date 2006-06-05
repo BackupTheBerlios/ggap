@@ -23,6 +23,7 @@ DeclareCategory("IsStatusbar", IsWidget);
 DeclareCategory("IsEntry", IsWidget);
 DeclareCategory("IsTreeView", IsWidget);
 DeclareCategory("IsTextView", IsWidget);
+DeclareCategory("IsHtml", IsTextView);
 
 
 #############################################################################

@@ -11,9 +11,11 @@
  *   See COPYING file that comes with this distribution.
  */
 
+#include "config.h"
 #include "gap-script.h"
 #include "gapapp.h"
 #include "mooutils/moomarshals.h"
+#include "mooapp/moohtml.h"
 #include <gtk/gtk.h>
 #include <string.h>
 
@@ -279,6 +281,10 @@ gap_object_new (gpointer    object,
             type_name = "Statusbar";
         else if (GTK_IS_TREE_VIEW (object))
             type_name = "TreeView";
+#ifdef MOO_USE_XML
+        else if (MOO_IS_HTML (object))
+            type_name = "Html";
+#endif
         else if (GTK_IS_TEXT_VIEW (object))
             type_name = "TextView";
         else if (GTK_IS_WIDGET (object))

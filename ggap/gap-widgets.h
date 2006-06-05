@@ -78,6 +78,7 @@ struct _GapCallback {
 void        gap_callback_free   (GapCallback    *cb);
 gboolean    gap_glade_xml_new   (const char     *file,
                                  const char     *root,
+                                 MSValue        *type_dict,
                                  MooGladeXML   **xml,
                                  GSList        **callbacks);
 

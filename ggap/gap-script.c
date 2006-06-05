@@ -547,21 +547,37 @@ G_STMT_START {                                                          \
 static MSValue *
 create_glade_window_func (MSValue   *arg1,
                           MSValue   *arg2,
+                          MSValue   *arg3,
                           MSContext *ctx)
 {
     GapObject *wrapper;
     GtkWidget *window;
-    char *file, *root;
+    char *file = NULL, *root = NULL;
     MooGladeXML *xml;
     MSValue *retval = NULL;
     GSList *callbacks = NULL;
 
     CHECK_SESSION ();
 
-    file = ms_value_print (arg1);
-    root = ms_value_print (arg2);
+    if (ms_value_is_none (arg2))
+        arg2 = NULL;
+    if (ms_value_is_none (arg3))
+        arg3 = NULL;
 
-    if (!gap_glade_xml_new (file, root, &xml, &callbacks))
+    if (arg3 && MS_VALUE_TYPE (arg3) != MS_VALUE_DICT)
+    {
+        char *s = ms_value_print (arg3);
+        ctx_send_error (ctx, "invalid argument '%s'", s);
+        g_free (s);
+        goto out;
+    }
+
+    file = ms_value_print (arg1);
+
+    if (arg2)
+        root = ms_value_print (arg2);
+
+    if (!gap_glade_xml_new (file, root, arg3, &xml, &callbacks))
     {
         ctx_send_error (ctx, "Error loading glade file");
         goto out;
@@ -1251,7 +1267,7 @@ G_STMT_START {                                  \
     ADD_FUNC (set_property_func, ms_cfunc_new_2, "GapSetProperty");
     ADD_FUNC (get_property_func, ms_cfunc_new_2, "GapGetProperty");
 
-    ADD_FUNC (create_glade_window_func, ms_cfunc_new_2, "GapCreateGladeWindow");
+    ADD_FUNC (create_glade_window_func, ms_cfunc_new_3, "GapCreateGladeWindow");
     ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GapGladeLookup");
 
     ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "GapRunDialog");
