@@ -79,6 +79,8 @@ GapObject       *gap_session_add_object     (GapSession *session,
                                              gboolean    toplevel);
 GapObject       *gap_session_find_object    (GapSession *session,
                                              const char *id);
+GapObject       *gap_session_find_wrapper   (GapSession *session,
+                                             gpointer    object);
 
 void             gap_object_destroy         (GapObject  *object);
 void             gap_object_connect         (GapObject  *object,

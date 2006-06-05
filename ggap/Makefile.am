@@ -40,11 +40,13 @@ ggap_SOURCES =				\
 	ggap-ui.h			\
 	gap.c				\
 	gap.h				\
+	gap-script.c			\
+	gap-script.h			\
+	gap-widgets.c			\
+	gap-widgets.h			\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\
-	gapapp-script.c			\
-	gapapp-script.h			\
 	gapdoc.c			\
 	gapdoc.h			\
 	gapdocwindow.c			\

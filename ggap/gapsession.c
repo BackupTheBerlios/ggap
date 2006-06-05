@@ -11,7 +11,7 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#include "gapapp-script.h"
+#include "gap-script.h"
 #include "gapapp.h"
 #include "mooutils/moomarshals.h"
 #include <gtk/gtk.h>
@@ -114,10 +114,18 @@ gap_object_class_init (GapObjectClass *klass)
 
 
 static void
+unref_wrapped_object (gpointer object)
+{
+    g_object_set_data (object, "gap-session-wrapper", NULL);
+    g_object_unref (object);
+}
+
+
+static void
 gap_session_init (GapSession *session)
 {
     session->objects = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                              g_free, g_object_unref);
+                                              g_free, unref_wrapped_object);
 }
 
 
@@ -172,14 +180,12 @@ session_object_died (GapSession *session,
 
 
 static char *
-generate_id (gpointer object)
+generate_id (GapSession *session,
+             gpointer    object)
 {
-#ifdef MOO_DEBUG
-    return g_strdup_printf ("%s-%p-%08x", g_type_name (G_OBJECT_TYPE (object)),
-                            object, g_random_int ());
-#else
-    return g_strdup_printf ("%08x", g_random_int ());
-#endif
+    return g_strdup_printf ("%s-%p-%p",
+                            g_type_name (G_OBJECT_TYPE (object)),
+                            object, session);
 }
 
 
@@ -195,12 +201,12 @@ gap_session_add_object (GapSession *session,
     g_return_val_if_fail (GAP_IS_SESSION (session), NULL);
     g_return_val_if_fail (GTK_IS_OBJECT (object), NULL);
 
-    wrapper = g_object_get_data (object, "gap-object");
+    wrapper = gap_session_find_wrapper (session, object);
 
     if (wrapper)
         return wrapper;
 
-    id = generate_id (object);
+    id = generate_id (session, object);
 
     if (g_hash_table_lookup (session->objects, id))
     {
@@ -249,6 +255,7 @@ gap_object_new (gpointer    object,
     wrapper->obj = object;
     wrapper->id = g_strdup (id);
     wrapper->toplevel = toplevel != 0;
+    g_object_set_data (object, "gap-session-wrapper", wrapper);
 
     if (!type_name)
     {
@@ -270,6 +277,10 @@ gap_object_new (gpointer    object,
 #endif
         else if (GTK_IS_STATUSBAR (object))
             type_name = "Statusbar";
+        else if (GTK_IS_TREE_VIEW (object))
+            type_name = "TreeView";
+        else if (GTK_IS_TEXT_VIEW (object))
+            type_name = "TextView";
         else if (GTK_IS_WIDGET (object))
             type_name = "Widget";
         else
@@ -314,6 +325,22 @@ gap_session_find_object (GapSession  *session,
     g_return_val_if_fail (GAP_IS_SESSION (session), NULL);
     g_return_val_if_fail (id != NULL, NULL);
     return g_hash_table_lookup (session->objects, id);
+}
+
+
+GapObject *
+gap_session_find_wrapper (GapSession *session,
+                          gpointer    object)
+{
+    GapObject *wrapper;
+
+    g_return_val_if_fail (GAP_IS_SESSION (session), NULL);
+    g_return_val_if_fail (G_IS_OBJECT (object), NULL);
+
+    wrapper = g_object_get_data (object, "gap-session-wrapper");
+    g_return_val_if_fail (!wrapper || GAP_IS_OBJECT (wrapper), NULL);
+
+    return wrapper;
 }
 
 

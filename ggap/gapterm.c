@@ -321,7 +321,8 @@ gap_term_button_press (GtkWidget      *widget,
 
         if (err)
         {
-            gap_edit_window_open_file (err->file, err->line, widget);
+            MooEditor *editor = moo_app_get_editor (moo_app_get_instance ());
+            moo_editor_open_file_line (editor, err->file, err->line);
             return TRUE;
         }
     }

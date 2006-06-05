@@ -22,19 +22,34 @@ BindGlobal("DIALOG_RESPONSE_NO", -9);
 BindGlobal("DIALOG_RESPONSE_APPLY", -10);
 BindGlobal("DIALOG_RESPONSE_HELP", -11);
 
+BindGlobal("DIALOG_BUTTONS_NONE", 0);
+BindGlobal("DIALOG_BUTTONS_OK", 1);
+BindGlobal("DIALOG_BUTTONS_CLOSE", 2);
+BindGlobal("DIALOG_BUTTONS_CANCEL", 3);
+BindGlobal("DIALOG_BUTTONS_YES_NO", 4);
+BindGlobal("DIALOG_BUTTONS_OK_CANCEL", 4);
+
+BindGlobal("DIALOG_INFO", 0);
+BindGlobal("DIALOG_WARNING", 1);
+BindGlobal("DIALOG_QUESTION", 2);
+BindGlobal("DIALOG_ERROR", 3);
+
 
 ###############################################################################
 ##
 #M  PrintObj()
 ##
-InstallMethod(PrintObj, [IsWindow], function (win) Print("<Window '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsGladeWindow], function (win) Print("<GladeWindow '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsMenuItem], function (win) Print("<MenuItem '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsCheckMenuItem], function (win) Print("<CheckMenuItem '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsButton], function (win) Print("<Button '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsToggleButton], function (win) Print("<ToggleButton '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsCanvas], function (win) Print("<Canvas '", win!.id, "'>"); end);
-InstallMethod(PrintObj, [IsStatusbar], function (win) Print("<Statusbar '", win!.id, "'>"); end);
+InstallMethod(PrintObj, [IsWidget], function (wid) Print("<Widget '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsWindow], function (wid) Print("<Window '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsGladeWindow], function (wid) Print("<GladeWindow '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsMenuItem], function (wid) Print("<MenuItem '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsCheckMenuItem], function (wid) Print("<CheckMenuItem '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsButton], function (wid) Print("<Button '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsToggleButton], function (wid) Print("<ToggleButton '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsCanvas], function (wid) Print("<Canvas '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsStatusbar], function (wid) Print("<Statusbar '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsTreeView], function (wid) Print("<TreeView '", wid!.id, "'>"); end);
+InstallMethod(PrintObj, [IsTextView], function (wid) Print("<TextView '", wid!.id, "'>"); end);
 
 
 ###############################################################################
@@ -159,10 +174,20 @@ function(window, name)
 
     control := Objectify(_GGAP_GET_TYPE_BY_NAME(result[3]),
                          rec(id := result[2], dead := false, callbacks := [],
-                            destroy_func := false));
+                             destroy_func := false));
     _GGAP_REGISTER_OBJECT(control);
 
     return control;
+end);
+
+
+###############################################################################
+##
+#M  \.
+##
+InstallMethod(\., [IsGladeWindow, IsPosInt],
+function (window, rnam)
+  return GladeLookupWidget(window, NameRNam(rnam));
 end);
 
 
@@ -190,21 +215,43 @@ end);
 
 ###############################################################################
 ##
-#F  SetVisible()
+#F  RunDialogMessage()
 ##
-InstallMethod(SetVisible, [IsWidget, IsBool],
-function(wid, visible)
-  local result;
+InstallGlobalFunction(RunDialogMessage,
+function(arg)
+  local result, secondary, params;
 
-  if visible then
-    result := _GGAP_SEND_COMMAND("GapShow", [wid]);
-  else
-    result := _GGAP_SEND_COMMAND("GapHide", [wid]);
+  secondary := fail;
+  params := fail;
+
+  if Length(arg) = 4 then
+    secondary := arg[3];
+    params := arg[4];
+  elif Length(arg) = 3 then
+    if IsRecord(arg[3]) then
+      params := arg[3];
+    else
+      secondary := arg[3];
+    fi;
   fi;
+
+  result := _GGAP_SEND_COMMAND("GapRunDialogMessage", [arg[1], arg[2], secondary, params]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
   fi;
+
+  return result[2];
+end);
+
+
+###############################################################################
+##
+#F  SetVisible()
+##
+InstallMethod(SetVisible, [IsWidget, IsBool],
+function(wid, visible)
+  GObjectSetProperty(wid, "visible", visible);
 end);
 
 
@@ -214,15 +261,7 @@ end);
 ##
 BindGlobal("_IS_ACTIVE",
 function(wid)
-  local result;
-
-  result := _GGAP_SEND_COMMAND("GapIsActive", [wid]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  else
-    return result[2];
-  fi;
+  return GObjectGetProperty(wid, "active");
 end);
 
 InstallMethod(IsActive, [IsCheckMenuItem], function(wid) return _IS_ACTIVE(wid); end);
@@ -235,17 +274,7 @@ InstallMethod(IsActive, [IsToggleButton], function(wid) return _IS_ACTIVE(wid); 
 ##
 BindGlobal("_SET_ACTIVE",
 function(wid, active)
-  local result;
-
-  if active then
-    result := _GGAP_SEND_COMMAND("GapSetActive", [wid, true]);
-  else
-    result := _GGAP_SEND_COMMAND("GapSetActive", [wid, false]);
-  fi;
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
+  GObjectSetProperty(wid, "active", active);
 end);
 
 InstallMethod(SetActive, [IsCheckMenuItem, IsBool],
@@ -256,22 +285,12 @@ function(wid, active) _SET_ACTIVE(wid, active); end);
 
 ###############################################################################
 ##
-#F  IsVisible()
+#M  IsVisible(<widget>)
 ##
-BindGlobal("_IS_VISIBLE",
+InstallMethod(IsVisible, [IsWidget],
 function(wid)
-  local result;
-
-  result := _GGAP_SEND_COMMAND("GapIsVisible", [wid]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  else
-    return result[2];
-  fi;
+  return GObjectGetProperty(wid, "visible");
 end);
-
-InstallMethod(IsVisible, [IsWidget], function(wid) return _IS_VISIBLE(wid); end);
 
 
 ###############################################################################
@@ -280,9 +299,57 @@ InstallMethod(IsVisible, [IsWidget], function(wid) return _IS_VISIBLE(wid); end)
 ##
 BindGlobal("_GET_TEXT",
 function(obj)
+  return GObjectGetProperty(obj, "gap-text");
+end);
+
+InstallMethod(GetText, [IsEntry], function(wid) return _GET_TEXT(wid); end);
+InstallMethod(GetText, [IsTextView], function(wid) return _GET_TEXT(wid); end);
+
+
+###############################################################################
+##
+#F  _SET_TEXT()
+#M  SetText(<entry>, <text>)
+#M  SetText(<text_view>, <text>)
+##
+BindGlobal("_SET_TEXT",
+function(obj, text)
+  GObjectSetProperty(obj, "gap-text", text);
+end);
+
+InstallMethod(SetText, [IsEntry, IsString], function(wid, text) _SET_TEXT(wid, text); end);
+InstallMethod(SetText, [IsTextView, IsString], function(wid, text) _SET_TEXT(wid, text); end);
+
+
+###############################################################################
+##
+#M  GetList(<tree>)
+##
+InstallMethod(GetList, [IsTreeView],
+function(wid)
+  return GObjectGetProperty(wid, "gap-items");
+end);
+
+
+###############################################################################
+##
+#M  SetList(<tree>, <list>)
+##
+InstallMethod(SetList, [IsTreeView, IsList],
+function(wid, list)
+  GObjectSetProperty(wid, "gap-items", list);
+end);
+
+
+###############################################################################
+##
+#M  GetSelectedRow()
+##
+InstallMethod(GetSelectedRow, [IsTreeView],
+function(wid)
   local result;
 
-  result := _GGAP_SEND_COMMAND("GapGetText", [obj]);
+  result := _GGAP_SEND_COMMAND("GapGetSelectedRow", [wid]);
 
   if result[1] <> _GGAP_STATUS_OK then
     Error(result[2]);
@@ -291,26 +358,28 @@ function(obj)
   fi;
 end);
 
-InstallMethod(GetText, [IsEntry], function(wid) return _GET_TEXT(wid); end);
+
+###############################################################################
+##
+#M  SetFont(<widget>, <font>)
+##
+InstallMethod(SetFont, [IsWidget, IsString],
+function(wid, font)
+  GObjectSetProperty(wid, "gap-font", font);
+end);
 
 
 ###############################################################################
 ##
-#F  SetText()
+#F  _SET_HIGHLIGHT()
 ##
-BindGlobal("_SET_TEXT",
-function(obj, text)
-  local result;
-
-  result := _GGAP_SEND_COMMAND("GapSetText", [obj, _GGAP_ESCAPE_STRING(text)]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
+BindGlobal("_SET_HIGHLIGHT",
+function(wid, whatever)
+  GObjectSetProperty(wid, "gap-highlight", whatever);
 end);
 
-InstallMethod(SetText, [IsEntry, IsString],
-function(wid, text) _SET_TEXT(wid, text); end);
+InstallMethod(SetHighlight, [IsTextView, IsBool], function(wid, highlight) _SET_HIGHLIGHT(wid, highlight); end);
+InstallOtherMethod(SetHighlight, [IsTextView, IsString], function(wid, lang) _SET_HIGHLIGHT(wid, lang); end);
 
 
 #E

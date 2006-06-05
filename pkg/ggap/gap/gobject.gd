@@ -24,6 +24,20 @@ DeclareCategory("IsGObject", IsObject);
 
 #############################################################################
 ##
+#O  GObjectSetProperty(<obj>, <propname>, <value>)
+##
+DeclareOperation("GObjectSetProperty", [IsGObject, IsString, IsObject]);
+
+
+#############################################################################
+##
+#O  GObjectGetProperty(<obj>, <propname>)
+##
+DeclareOperation("GObjectGetProperty", [IsGObject, IsString]);
+
+
+#############################################################################
+##
 #O  DestroyGObject(<obj>)
 ##
 ##  Destroys <obj>. Note, it can't be stopped like CloseWindow.
@@ -53,6 +67,7 @@ DeclareGlobalFunction("_GGAP_ADD_STAMP");
 DeclareGlobalFunction("_GGAP_DESTROY_OBJECT");
 DeclareGlobalFunction("_GGAP_REGISTER_OBJECT");
 DeclareGlobalFunction("_GGAP_LOOKUP_OBJECT");
+DeclareGlobalFunction("_GGAP_MAKE_OBJECT");
 DeclareGlobalFunction("_GGAP_OBJECT_DESTROYED");
 DeclareGlobalFunction("_GGAP_SIGNAL");
 DeclareGlobalFunction("_GGAP_GET_TYPE_BY_NAME");

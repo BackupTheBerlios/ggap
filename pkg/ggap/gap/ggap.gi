@@ -40,7 +40,9 @@ rec(init := false,              # ggap package is initialized
       ["Button", IsButton],
       ["ToggleButton", IsToggleButton],
       ["Canvas", IsCanvas],
-      ["Statusbar", IsStatusbar]
+      ["Statusbar", IsStatusbar],
+      ["TreeView", IsTreeView],
+      ["TextView", IsTextView],
     ]));
 
 
@@ -155,25 +157,20 @@ function()
   type := ReadByte(_GGAP_DATA.in_pipe);
 
   # these must be kept in sync with gapapp-script.h
-  # 0 - command
-  # 1 - string
-  # 2 - one-byte integer
-  # 3 - pair
-  # 4 - triple
-  # 5 - list
-  # 6 - boolean
-  # 7 - two-byte integer
 
+  ## fail
+  if type = 0 then
+    return fail;
   ## ggap sent a command: it may be an async command, READ() must be
   ## resumed after executing it; or it may be code returning call result,
   ## then the code must set _GGAP_DATA.async_result.
-  if type = 0 then
+  elif type = 1 then
     Info(InfoGGAP, 5, "_GGAP_READ_DATA: got command");
     _GGAP_READ_COMMAND();
     Info(InfoGGAP, 5, "_GGAP_READ_DATA: command done");
     return 0;
   ## String: first two bytes are string length; rest is the string itself
-  elif type = 1 then
+  elif type = 2 then
     s1 := ReadByte(_GGAP_DATA.in_pipe);
     s2 := ReadByte(_GGAP_DATA.in_pipe);
     size := s1 * 128 + s2;
@@ -187,34 +184,27 @@ function()
       return string;
     fi;
   ## One byte integer
-  elif type = 2 then
-    return ReadByte(_GGAP_DATA.in_pipe);
-  ## A pair: two consequent values
   elif type = 3 then
-    tuple := [];
-    tuple[1] := _GGAP_READ_DATA();
-    tuple[2] := _GGAP_READ_DATA();
-    return tuple;
-  ## A triple: three consequent values
+    return ReadByte(_GGAP_DATA.in_pipe);
+  ## A list: first two bytes are list length, then go list values
   elif type = 4 then
-    tuple := [];
-    tuple[1] := _GGAP_READ_DATA();
-    tuple[2] := _GGAP_READ_DATA();
-    tuple[3] := _GGAP_READ_DATA();
-    return tuple;
-  ## A list: first byte is list length, then go list values
-  elif type = 5 then
-    tuple := [];
-    len := ReadByte(_GGAP_DATA.in_pipe);
-    for i in [1..len] do
-      tuple[i] := _GGAP_READ_DATA();
-    od;
-    return tuple;
+    s1 := ReadByte(_GGAP_DATA.in_pipe);
+    s2 := ReadByte(_GGAP_DATA.in_pipe);
+    size := s1 * 128 + s2;
+    if size = 0 then
+      return [];
+    else
+      tuple := [];
+      for i in [1..size] do
+        tuple[i] := _GGAP_READ_DATA();
+      od;
+      return tuple;
+    fi;
   ## Boolean: false if zero
-  elif type = 6 then
+  elif type = 5 then
     return ReadByte(_GGAP_DATA.in_pipe) <> 0;
   ## Integer: first byte - sign (minus if non-zero), next two bytes - the value
-  elif type = 7 then
+  elif type = 6 then
     s := ReadByte(_GGAP_DATA.in_pipe);
     s1 := ReadByte(_GGAP_DATA.in_pipe);
     s2 := ReadByte(_GGAP_DATA.in_pipe);
@@ -223,6 +213,11 @@ function()
       val := -val;
     fi;
     return val;
+  ## object: type, id
+  elif type = 7 then
+    s1 := _GGAP_READ_DATA();
+    s2 := _GGAP_READ_DATA();
+    return _GGAP_MAKE_OBJECT(s1, s2);
   else
     Error("unknown data type ", type);
   fi;
@@ -258,9 +253,9 @@ function(arg)
   local s;
   for s in arg do
     Info(InfoGGAP, 6, "_GGAP_WRITE: ", s);
-    AppendTo(_GGAP_DATA.out_pipe, s);
+    WriteAll(_GGAP_DATA.out_pipe, s);
   od;
-  AppendTo(_GGAP_DATA.out_pipe, "\000");
+  WriteAll(_GGAP_DATA.out_pipe, "\000");
 end);
 
 
@@ -271,12 +266,12 @@ end);
 InstallGlobalFunction(_GGAP_WRITE_PYTHON,
 function(arg)
   local s;
-  AppendTo(_GGAP_DATA.out_pipe, "p");
+  WriteAll(_GGAP_DATA.out_pipe, "p");
   for s in arg do
     Info(InfoGGAP, 6, "_GGAP_WRITE_PYTHON: ", s);
-    AppendTo (_GGAP_DATA.out_pipe, s);
+    WriteAll(_GGAP_DATA.out_pipe, s);
   od;
-  AppendTo(_GGAP_DATA.out_pipe, "\000");
+  WriteAll(_GGAP_DATA.out_pipe, "\000");
 end);
 
 
@@ -287,12 +282,12 @@ end);
 InstallGlobalFunction(_GGAP_WRITE_SCRIPT,
 function(arg)
   local s;
-  AppendTo(_GGAP_DATA.out_pipe, "s");
+  WriteAll(_GGAP_DATA.out_pipe, "s");
   for s in arg do
     Info(InfoGGAP, 6, "_GGAP_WRITE_SCRIPT: ", s);
-    AppendTo (_GGAP_DATA.out_pipe, s);
+    WriteAll(_GGAP_DATA.out_pipe, s);
   od;
-  AppendTo(_GGAP_DATA.out_pipe, "\000");
+  WriteAll(_GGAP_DATA.out_pipe, "\000");
 end);
 
 
@@ -307,8 +302,14 @@ function(string)
   for c in string do
     if c = '\\' then
       Append(result, "\\\\");
-    elif c = '\"' then
-      Append(result, "\\\"");
+#     elif c = '\"' then
+#       Append(result, "\\\"");
+    elif c = '\'' then
+      Append(result, "\\\'");
+    elif c = '\n' then
+      Append(result, "\\n");
+    elif c = '\r' then
+      Append(result, "\\r");
     else
       Add(result, c);
     fi;

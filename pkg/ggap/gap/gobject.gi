@@ -74,7 +74,9 @@ InstallGlobalFunction(_GGAP_PRINT_ARG,
 function(a)
   local i, keys, string;
 
-  if IsGObject(a) then
+  if a = fail then
+    return "none";
+  elif IsGObject(a) then
     return Concatenation("GapGObject('", a!.id, "')");
   elif IsBool(a) then
     if a then
@@ -85,7 +87,7 @@ function(a)
   elif IsInt(a) then
     return String(a);
   elif IsString(a) then
-    return Concatenation("'", a, "'");
+    return Concatenation("'", _GGAP_ESCAPE_STRING(a), "'");
   elif IsList(a) then
     string := "[";
     for i in [1..Length(a)] do
@@ -103,7 +105,7 @@ function(a)
       if i <> 1 then
         Append(string, ", ");
       fi;
-      Append(string, Concatenation(keys[i], " = "));
+      Append(string, Concatenation(ReplacedString(keys[i], "-", "_"), " = "));
       Append(string, _GGAP_PRINT_ARG(a.(keys[i])));
     od;
     Append(string, "}");
@@ -257,6 +259,30 @@ end);
 
 ###############################################################################
 ##
+#F  _GGAP_MAKE_OBJECT()
+##
+InstallGlobalFunction(_GGAP_MAKE_OBJECT,
+function(typename, id)
+  local ind, obj;
+
+  ind := _GGAP_LOOKUP_OBJECT(id);
+
+  if ind > 0 then
+    return _GGAP_DATA.objects[ind];
+  fi;
+
+  Info(InfoGGAP, 4, "_GGAP_MAKE_OBJECT: creating object ", id, " of type ", typename);
+  obj := Objectify(_GGAP_GET_TYPE_BY_NAME(typename),
+                   rec(id := id, dead := false, callbacks := [],
+                       destroy_func := false));
+  _GGAP_REGISTER_OBJECT(obj);
+
+  return obj;
+end);
+
+
+###############################################################################
+##
 #F  _GGAP_OBJECT_DESTROYED()
 ##
 InstallGlobalFunction(_GGAP_OBJECT_DESTROYED,
@@ -280,31 +306,33 @@ end);
 #F  _GGAP_SIGNAL(<obj_id>, <signal>, <data>)
 ##
 InstallGlobalFunction(_GGAP_SIGNAL,
-function(id, signal, params)
-  local data, ind, obj, callbacks, c;
+function(signal, obj, params)
+  local data, callbacks, c;
 
-  ind := _GGAP_LOOKUP_OBJECT(id);
+  Info(InfoGGAP, 5, "_GGAP_SIGNAL: ", signal, obj, params);
 
-  if ind = 0 then
-    Print("Oops\n");
+  if obj!.dead then
+    Info(InfoGGAP, 5, "_GGAP_SIGNAL: dead object");
     return;
   fi;
 
-  obj := _GGAP_DATA.objects[ind];
   callbacks := obj!.callbacks;
 
   for c in callbacks do
     if c.signal = signal then
+      Info(InfoGGAP, 5, "_GGAP_SIGNAL: executing callback");
       data := Concatenation([obj], params, c.data);
       CallFuncList(c.func, data);
     fi;
   od;
+
+  Info(InfoGGAP, 5, "_GGAP_SIGNAL: done");
 end);
 
 
 ###############################################################################
 ##
-#F  ConnectCallback(<obj>, <signal>)
+#F  ConnectCallback(<obj>, <signal>, <callback>, ...)
 ##
 InstallGlobalFunction(ConnectCallback,
 function(arg)
@@ -397,18 +425,18 @@ end);
 ##
 InstallGlobalFunction(_GGAP_DESTROY_OBJECT,
 function(obj)
-    local result;
+  local result;
 
-    if obj!.dead then
-      return;
-    fi;
+  if obj!.dead then
+    return;
+  fi;
 
-    _GGAP_OBJECT_DESTROYED(obj!.id);
-    result := _GGAP_SEND_COMMAND("GapDestroy", [obj]);
+  _GGAP_OBJECT_DESTROYED(obj!.id);
+  result := _GGAP_SEND_COMMAND("GapDestroy", [obj]);
 
-    if result[1] <> _GGAP_STATUS_OK then
-      Error(result[2]);
-    fi;
+  if result[1] <> _GGAP_STATUS_OK then
+    Error(result[2]);
+  fi;
 end);
 
 
@@ -418,7 +446,68 @@ end);
 ##
 InstallMethod(DestroyGObject, "method for IsGObject", [IsGObject and IsGObjectRep],
 function(obj)
-    _GGAP_DESTROY_OBJECT(obj);
+  _GGAP_DESTROY_OBJECT(obj);
+end);
+
+
+###############################################################################
+##
+#M  GObjectSetProperty(<obj>, <propname>, <value>)
+##
+InstallMethod(GObjectSetProperty, [IsGObject and IsGObjectRep, IsString, IsObject],
+function(obj, name, value)
+  local result, props;
+
+  if obj!.dead then
+    Error("object is destroyed");
+  fi;
+
+  props := rec();
+  props.(name) := value;
+
+  GObjectSetProperty(obj, props);
+end);
+
+
+###############################################################################
+##
+#M  GObjectSetProperty(<obj>, <props>)
+##
+InstallOtherMethod(GObjectSetProperty, [IsGObject and IsGObjectRep, IsRecord],
+function(obj, props)
+  local result;
+
+  if obj!.dead then
+    Error("object is destroyed");
+  fi;
+
+  result := _GGAP_SEND_COMMAND("GapSetProperty", [obj, props]);
+
+  if result[1] <> _GGAP_STATUS_OK then
+    Error(result[2]);
+  fi;
+end);
+
+
+###############################################################################
+##
+#M  GObjectGetProperty(<obj>, <propname>)
+##
+InstallMethod(GObjectGetProperty, [IsGObject and IsGObjectRep, IsString],
+function(obj, propname)
+  local result;
+
+  if obj!.dead then
+    Error("object is destroyed");
+  fi;
+
+  result := _GGAP_SEND_COMMAND("GapGetProperty", [obj, propname]);
+
+  if result[1] <> _GGAP_STATUS_OK then
+    Error(result[2]);
+  fi;
+
+  return result[2];
 end);
 
 

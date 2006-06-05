@@ -21,6 +21,8 @@ DeclareCategory("IsToggleButton", IsButton);
 DeclareCategory("IsCanvas", IsWidget);
 DeclareCategory("IsStatusbar", IsWidget);
 DeclareCategory("IsEntry", IsWidget);
+DeclareCategory("IsTreeView", IsWidget);
+DeclareCategory("IsTextView", IsWidget);
 
 
 #############################################################################
@@ -40,7 +42,49 @@ DeclareGlobalFunction("CreateGladeWindow");
 DeclareGlobalFunction("GladeLookupWidget");
 
 
+#############################################################################
+##
+#F  RunDialog(<dlg>)
+##
+## Presents the dialog and waits for user response, i.e. until user clicks
+## a button or closes the dialog.
+## Returns integer representing the response, see DIALOG_RESPONSE_* constants.
+##
 DeclareGlobalFunction("RunDialog");
+
+
+#############################################################################
+##
+#F  RunDialogMessage(type, primary_text, [secondary_text,] [params])
+##
+## Presents message dialog and waits for user response.
+## Returns integer, analogous to RunDialog.
+##
+DeclareGlobalFunction("RunDialogMessage");
+
+
+#############################################################################
+##
+#F  RunDialogEntry(...)
+#F  RunDialogText(...)
+##
+## Runs an entry dialog. DialogEntry is intended for short one-line strings,
+## DialogText may contain arbitrary amount of text, broken into lines.
+## Returns pair [response, text].
+##
+DeclareGlobalFunction("RunDialogEntry");
+DeclareGlobalFunction("RunDialogText");
+
+
+#############################################################################
+##
+#F  RunDialogFileChooser(...)
+##
+## Runs a file chooser dialog.
+## Returns pair [response, filenames], where <filenames> is list of files
+## selected in the dialog.
+##
+DeclareGlobalFunction("RunDialogFileChooser");
 
 
 #############################################################################
@@ -53,6 +97,12 @@ DeclareOperation("IsVisible", [IsGObject]);
 DeclareOperation("SetVisible", [IsGObject, IsBool]);
 DeclareOperation("GetText", [IsGObject]);
 DeclareOperation("SetText", [IsGObject, IsString]);
+DeclareOperation("GetList", [IsGObject]);
+DeclareOperation("SetList", [IsGObject, IsList]);
+DeclareOperation("GetSelectedRow", [IsTreeView]);
+
+DeclareOperation("SetFont", [IsGObject, IsString]);
+DeclareOperation("SetHighlight", [IsTextView, IsBool]);
 
 
 #############################################################################

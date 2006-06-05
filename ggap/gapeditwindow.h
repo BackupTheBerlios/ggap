@@ -46,10 +46,6 @@ struct _GapEditWindowClass
 
 GType   gap_edit_window_get_type    (void) G_GNUC_CONST;
 
-void    gap_edit_window_open_file   (const char *filename,
-                                     int         line,
-                                     GtkWidget  *widget);
-
 
 G_END_DECLS
 
