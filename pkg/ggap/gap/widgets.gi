@@ -175,7 +175,7 @@ function(window, name)
       return fail;
     fi;
 
-    return _GGAP_MAKE_OBJECT(result[2], result[3]);
+    return _GGAP_MAKE_OBJECT(result[3], result[2]);
 end);
 
 
