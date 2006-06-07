@@ -17,6 +17,7 @@
 #include "mooutils/mooutils-fs.h"
 #include "mooutils/mooutils-misc.h"
 #include <string.h>
+#include <errno.h>
 
 
 static char *
@@ -27,19 +28,38 @@ gap_escape_filename (const char *filename)
 }
 
 
+#define INIT_PKG                            \
+"if IsBoundGlobal(\"_GGAP_INIT\") then\n"   \
+"  _GGAP_INIT(\"%s\", \"%s\", \"%s\");\n"   \
+"fi;\n"
+
+#define SAVE_WORKSPACE                      \
+"SaveWorkspace(\"%s\");\n"
+
+
 const char *
-gap_pkg_init_file (void)
+gap_init_file (const char *workspace,
+               gboolean    init_pkg)
 {
-    const char *in_name, *out_name;
-    char *in_escaped, *out_escaped, *init_string;
-    char *appdir, *pipehelper, *pipehelper_escaped;
+    GString *contents;
     MooApp *app;
     GError *error = NULL;
 
     static char *filename;
 
     if (filename)
-        return filename;
+    {
+        if (m_unlink (filename))
+        {
+            int err = errno;
+            g_warning ("%s: %s", G_STRLOC, g_strerror (err));
+        }
+
+        g_free (filename);
+        filename = NULL;
+    }
+
+    g_return_val_if_fail (workspace || init_pkg, NULL);
 
     app = moo_app_get_instance ();
     g_return_val_if_fail (GAP_IS_APP (app), NULL);
@@ -47,24 +67,44 @@ gap_pkg_init_file (void)
     filename = moo_app_tempnam (app);
     g_return_val_if_fail (filename != NULL, NULL);
 
-    in_name = moo_app_get_input_pipe_name (moo_app_get_instance ());
-    out_name = gap_app_output_get_name ();
+    contents = g_string_new (NULL);
+
+    if (workspace)
+    {
+        char *wsp_escaped = gap_escape_filename (workspace);
+        g_string_append_printf (contents, SAVE_WORKSPACE, wsp_escaped);
+        g_free (wsp_escaped);
+    }
+
+    if (init_pkg)
+    {
+        const char *in_name, *out_name;
+        char *in_escaped, *out_escaped;
+        char *appdir = NULL, *ph = NULL, *ph_escaped;
+
+        in_name = moo_app_get_input_pipe_name (moo_app_get_instance ());
+        out_name = gap_app_output_get_name ();
 
 #ifdef __WIN32__
-    appdir = moo_get_app_dir ();
-    pipehelper = g_build_filename (appdir, "pipehelper.exe", NULL);
-#else
-    appdir = pipehelper = NULL;
+        appdir = moo_get_app_dir ();
+        ph = g_build_filename (appdir, "pipehelper.exe", NULL);
 #endif
 
-    in_escaped = gap_escape_filename (in_name ? in_name : "");
-    out_escaped = gap_escape_filename (out_name ? out_name : "");
-    pipehelper_escaped = gap_escape_filename (pipehelper ? pipehelper : "");
-    init_string = g_strdup_printf ("_GGAP_INIT(\"%s\", \"%s\", \"%s\");\n",
-                                   in_escaped, out_escaped,
-                                   pipehelper_escaped);
+        ph_escaped = gap_escape_filename (ph ? ph : "");
 
-    if (!moo_save_file_utf8 (filename, init_string, -1, &error))
+        in_escaped = gap_escape_filename (in_name ? in_name : "");
+        out_escaped = gap_escape_filename (out_name ? out_name : "");
+
+        g_string_append_printf (contents, INIT_PKG, in_escaped, out_escaped, ph_escaped);
+
+        g_free (appdir);
+        g_free (ph);
+        g_free (ph_escaped);
+        g_free (in_escaped);
+        g_free (out_escaped);
+    }
+
+    if (!moo_save_file_utf8 (filename, contents->str, -1, &error))
     {
         g_critical ("%s: %s", G_STRLOC, error->message);
         g_error_free (error);
@@ -72,13 +112,7 @@ gap_pkg_init_file (void)
         filename = NULL;
     }
 
-    g_free (in_escaped);
-    g_free (out_escaped);
-    g_free (appdir);
-    g_free (pipehelper);
-    g_free (pipehelper_escaped);
-    g_free (init_string);
-
+    g_string_free (contents, TRUE);
     return filename;
 }
 

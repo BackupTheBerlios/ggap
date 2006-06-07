@@ -22,6 +22,7 @@
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
 #include <mooutils/mooutils-misc.h>
+#include <mooutils/mooutils-fs.h>
 #include <mooterm/mooterm-prefs.h>
 #include <mooedit/mooeditprefs.h>
 #include <mooedit/mooplugin.h>
@@ -30,9 +31,12 @@
 #include <string.h>
 
 
-#define APP_PREFS_GAP_COMMAND       GGAP_PREFS_PREFIX "/command"
-#define APP_PREFS_GAP_INIT_PKG      GGAP_PREFS_PREFIX "/init_pkg"
-#define APP_PREFS_GAP_WORKING_DIR   GGAP_PREFS_PREFIX "/working_dir"
+#define APP_PREFS_GAP_COMMAND           GGAP_PREFS_PREFIX "/command"
+#define APP_PREFS_GAP_INIT_PKG          GGAP_PREFS_PREFIX "/init_pkg"
+#define APP_PREFS_GAP_WORKING_DIR       GGAP_PREFS_PREFIX "/working_dir"
+#define APP_PREFS_GAP_SAVE_WORKSPACE    GGAP_PREFS_PREFIX "/save_workspace"
+
+#define WORKSPACE_FILE "workspace"
 
 
 gboolean GAP_APP_EDITOR_MODE;
@@ -220,6 +224,7 @@ gap_app_init (G_GNUC_UNUSED GapApp *app)
 #endif
     moo_prefs_new_key_bool (APP_PREFS_GAP_INIT_PKG, TRUE); /* XXX */
     moo_prefs_new_key_string (APP_PREFS_GAP_WORKING_DIR, NULL);
+    moo_prefs_new_key_bool (APP_PREFS_GAP_SAVE_WORKSPACE, TRUE);
 }
 
 
@@ -369,12 +374,82 @@ gap_app_restart_gap (GapApp *app)
 }
 
 
-void
-gap_app_start_gap (GapApp *app)
+static char *
+saved_workspace_filename (void)
+{
+    return moo_get_user_data_file (WORKSPACE_FILE);
+}
+
+
+static GString *
+make_command_line (const char *cmd_base,
+                   const char *custom_wsp)
+{
+    gboolean init_pkg, save_workspace;
+    gboolean wsp_already_saved = FALSE;
+    char *wsp_file = NULL;
+    const char *init_file = NULL;
+    GString *cmd;
+
+    init_pkg = moo_prefs_get_bool (APP_PREFS_GAP_INIT_PKG);
+    save_workspace = moo_prefs_get_bool (APP_PREFS_GAP_SAVE_WORKSPACE);
+
+    cmd = g_string_new (cmd_base);
+
+    if (!custom_wsp && save_workspace)
+    {
+        wsp_file = saved_workspace_filename ();
+        g_return_val_if_fail (wsp_file != NULL, cmd);
+        wsp_already_saved = g_file_test (wsp_file, G_FILE_TEST_EXISTS);
+    }
+
+    if (custom_wsp)
+    {
+        g_string_append_printf (cmd, " -L \"%s\"", wsp_file);
+    }
+    else if (save_workspace)
+    {
+        if (wsp_already_saved)
+            g_string_append_printf (cmd, " -L \"%s\"", wsp_file);
+
+        if (!wsp_already_saved && !moo_make_user_data_dir ())
+            g_critical ("%s: could not create user data dir", G_STRLOC);
+
+        if (!wsp_already_saved || init_pkg)
+            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file, init_pkg);
+    }
+
+    if (init_pkg && !init_file)
+        init_file = gap_init_file (NULL, TRUE);
+
+    if (init_pkg)
+    {
+        char **dirs;
+        guint i, n_dirs = 0;
+
+        dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
+
+        for (i = 0; i < n_dirs; ++i)
+            g_string_append_printf (cmd, " -l \"%s\";", dirs[i]);
+
+        g_strfreev (dirs);
+    }
+
+    if (init_file)
+        g_string_append_printf (cmd, " \"%s\"", init_file);
+
+    g_free (wsp_file);
+    return cmd;
+}
+
+
+static void
+start_gap (GapApp     *app,
+           const char *workspace)
 {
     const char *cmd_base;
     GString *cmd;
-    gboolean result, init_pkg;
+    gboolean result;
 
     g_return_if_fail (GAP_IS_APP (app));
 
@@ -425,42 +500,27 @@ gap_app_start_gap (GapApp *app)
     }
 #endif
 
-    cmd = g_string_new (cmd_base);
+    cmd = make_command_line (cmd_base, workspace);
 
-    init_pkg = moo_prefs_get_bool (APP_PREFS_GAP_INIT_PKG);
-
-    if (init_pkg)
-    {
-        const char *init;
-        char **dirs;
-        guint i, n_dirs = 0;
-
-        dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
-
-        for (i = 0; i < n_dirs; ++i)
-            g_string_append_printf (cmd, " -l \"%s\";", dirs[i]);
-
-        init = gap_pkg_init_file ();
-
-        if (init)
-            g_string_append_printf (cmd, " %s", init);
-
-        g_strfreev (dirs);
-    }
-
+    g_message ("starting GAP: %s", cmd->str);
     result = moo_term_fork_command_line (app->term, cmd->str,
                                          moo_prefs_get_filename (APP_PREFS_GAP_WORKING_DIR),
                                          NULL, NULL);
 
     if (!result)
-    {
         g_critical ("%s: could not start gap", G_STRLOC);
-    }
 
     g_assert (app->session == NULL);
     app->session = gap_session_new ();
 
     g_string_free (cmd, TRUE);
+}
+
+
+void
+gap_app_start_gap (GapApp *app)
+{
+    start_gap (app, NULL);
 }
 
 
@@ -489,14 +549,38 @@ gap_app_feed_gap (GapApp     *app,
 }
 
 
+static void
+remove_saved_workspace (void)
+{
+    char *wsp = saved_workspace_filename ();
+
+    g_return_if_fail (wsp != NULL);
+
+    if (g_file_test (wsp, G_FILE_TEST_EXISTS))
+        m_unlink (wsp);
+
+    g_free (wsp);
+}
+
+static void
+prefs_page_apply (void)
+{
+    if (!moo_prefs_get_bool (APP_PREFS_GAP_SAVE_WORKSPACE))
+        remove_saved_workspace ();
+}
+
 static GtkWidget *
 gap_prefs_page_new (void)
 {
-    GtkWidget *page;
+    GtkWidget *page, *button;
 
     page = moo_prefs_dialog_page_new_from_xml ("GAP", MOO_STOCK_GAP, NULL,
                                                GAP_PREFS_GLADE_UI, -1,
                                                "page", GGAP_PREFS_PREFIX);
+
+    button = moo_glade_xml_get_widget (MOO_PREFS_DIALOG_PAGE (page)->xml, "clear_workspace");
+    g_signal_connect (button, "clicked", G_CALLBACK (remove_saved_workspace), NULL);
+    g_signal_connect (page, "apply", G_CALLBACK (prefs_page_apply), NULL);
 
     return page;
 }

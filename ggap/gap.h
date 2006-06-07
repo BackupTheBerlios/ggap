@@ -19,7 +19,8 @@
 G_BEGIN_DECLS
 
 
-const char  *gap_pkg_init_file      (void);
+const char  *gap_init_file          (const char *workspace,
+                                     gboolean    init_pkg);
 
 char        *gap_read_file_string   (const char *filename);
 char        *gap_reread_file_string (const char *filename);
