@@ -1296,6 +1296,13 @@ gap_app_exec_command (GapApp     *app,
         return;
     }
 
+    {
+        char *stamp = g_strndup (data, STAMP_LEN);
+        g_print ("gap_app_exec_command: %s\n%s\n-----\n",
+                 stamp, data + STAMP_LEN);
+        g_free (stamp);
+    }
+
     script = g_strdup (data + STAMP_LEN);
     ctx = ms_context_new (app->term_window);
     setup_terminal_context (ctx);
