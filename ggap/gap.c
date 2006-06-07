@@ -28,13 +28,17 @@ gap_escape_filename (const char *filename)
 }
 
 
-#define INIT_PKG                            \
-"if IsBoundGlobal(\"_GGAP_INIT\") then\n"   \
-"  _GGAP_INIT(\"%s\", \"%s\", \"%s\");\n"   \
+#define INIT_PKG                                        \
+"if IsBoundGlobal(\"_GGAP_INIT\") then\n"               \
+"  _GGAP_INIT(\"%s\", \"%s\", \"%s\");\n"               \
 "fi;\n"
 
-#define SAVE_WORKSPACE                      \
-"SaveWorkspace(\"%s\");\n"
+#define SAVE_WORKSPACE                                  \
+"SaveWorkspace(\"%s\");\n"                              \
+"if ARCH_IS_UNIX() then\n"                              \
+"  Exec(\"rm -f\", Concatenation(\"%s\", \".gz\"));\n"  \
+"  Exec(\"gzip\", \"%s\");\n"                           \
+"fi;\n"
 
 
 const char *
@@ -72,7 +76,9 @@ gap_init_file (const char *workspace,
     if (workspace)
     {
         char *wsp_escaped = gap_escape_filename (workspace);
-        g_string_append_printf (contents, SAVE_WORKSPACE, wsp_escaped);
+        g_string_append_printf (contents, SAVE_WORKSPACE,
+                                wsp_escaped, wsp_escaped,
+                                wsp_escaped);
         g_free (wsp_escaped);
     }
 

@@ -399,8 +399,17 @@ make_command_line (const char *cmd_base,
     if (!custom_wsp && save_workspace)
     {
         wsp_file = saved_workspace_filename ();
+
         g_return_val_if_fail (wsp_file != NULL, cmd);
+
         wsp_already_saved = g_file_test (wsp_file, G_FILE_TEST_EXISTS);
+
+        if (!wsp_already_saved)
+        {
+            char *gzipped = g_strdup_printf ("%s.gz", wsp_file);
+            wsp_already_saved = g_file_test (gzipped, G_FILE_TEST_EXISTS);
+            g_free (gzipped);
+        }
     }
 
     if (custom_wsp)
@@ -552,14 +561,19 @@ gap_app_feed_gap (GapApp     *app,
 static void
 remove_saved_workspace (void)
 {
-    char *wsp = saved_workspace_filename ();
+    char *wsp, *gzipped;
 
+    wsp = saved_workspace_filename ();
     g_return_if_fail (wsp != NULL);
+    gzipped = g_strdup_printf ("%s.gz", wsp);
 
     if (g_file_test (wsp, G_FILE_TEST_EXISTS))
         m_unlink (wsp);
+    if (g_file_test (gzipped, G_FILE_TEST_EXISTS))
+        m_unlink (gzipped);
 
     g_free (wsp);
+    g_free (gzipped);
 }
 
 static void
