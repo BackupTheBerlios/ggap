@@ -49,6 +49,22 @@ rec(init := false,              # ggap package is initialized
 
 #############################################################################
 ##
+#F  _GGAP_DATA_RESET
+##
+InstallGlobalFunction(_GGAP_DATA_RESET,
+function()
+  _GGAP_DATA.init := false;
+  _GGAP_DATA.stamp := 0;
+  _GGAP_DATA.objects := [];
+  _GGAP_DATA.in_read_command := false;
+  _GGAP_DATA.in_check_input := false;
+  _GGAP_DATA.commands := [];
+  _GGAP_DATA.results := [];
+end);
+
+
+#############################################################################
+##
 #V  InfoGGAP
 ##
 InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
@@ -61,7 +77,10 @@ InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
 InstallGlobalFunction(_GGAP_INIT,
 function(out_pipe, in_pipe, pipehelper)
   if _GGAP_DATA.init then
-    Error("GGAP package is already initialized");
+    Info(InfoGGAP, 3, "GGAP package initialized, assuming loaded workspace");
+    _GGAP_DATA_RESET();
+  else
+    Info(InfoGGAP, 3, "initializing GGAP package");
   fi;
 
   if not IsString(out_pipe) then
@@ -80,6 +99,7 @@ function(out_pipe, in_pipe, pipehelper)
     else
       _GGAP_DATA.in_pipe := InputTextFile(in_pipe);
     fi;
+    _GGAP_DATA.in_pipe_fd := FileDescriptorOfStream(_GGAP_DATA.in_pipe);
     InstallCharReadHookFunc(_GGAP_DATA.in_pipe, "r", _GGAP_CHECK_INPUT);
   else
     _GGAP_DATA.in_pipe := fail;
@@ -102,6 +122,8 @@ InstallGlobalFunction(_GGAP_READ_COMMAND,
 function()
   local cmd;
 
+  Info(InfoGGAP, 5, "_GGAP_READ_COMMAND");
+
   if _GGAP_DATA.in_read_command then
     Error("_GGAP_READ_COMMAND caused recursion");
   fi;
@@ -110,7 +132,7 @@ function()
   cmd := _GGAP_READ_DATA();
   _GGAP_DATA.in_read_command := false;
 
-  Info(InfoGGAP, 5, "got command ", cmd);
+  Info(InfoGGAP, 5, "_GGAP_READ_COMMAND: got command ", cmd);
 
   # 1 - exec file
   # 2 - signal
@@ -155,7 +177,16 @@ function()
   local type, s, s1, s2, size, string, i, tuple, len, val;
 
   Info(InfoGGAP, 5, "_GGAP_READ_DATA");
+
+  if not _GGAP_DATA.in_check_input then
+    if UNIXSelect([_GGAP_DATA.in_pipe_fd], [], [], 0, 100000) = 0 then
+      Error("input error, no data available in 0.1 sec");
+    fi;
+  fi;
+
+  Info(InfoGGAP, 5, "_GGAP_READ_DATA: reading byte");
   type := ReadByte(_GGAP_DATA.in_pipe);
+  Info(InfoGGAP, 5, "_GGAP_READ_DATA: got byte ", type);
 
   # these must be kept in sync with gapapp-script.h
 
@@ -256,7 +287,7 @@ function(arg)
     Info(InfoGGAP, 6, "_GGAP_WRITE: ", s);
     WriteAll(_GGAP_DATA.out_pipe, s);
   od;
-  WriteAll(_GGAP_DATA.out_pipe, "\000");
+  WriteByte(_GGAP_DATA.out_pipe, 0);
 end);
 
 
@@ -272,7 +303,7 @@ function(arg)
     Info(InfoGGAP, 6, "_GGAP_WRITE_PYTHON: ", s);
     WriteAll(_GGAP_DATA.out_pipe, s);
   od;
-  WriteAll(_GGAP_DATA.out_pipe, "\000");
+  WriteByte(_GGAP_DATA.out_pipe, 0);
 end);
 
 
@@ -288,7 +319,7 @@ function(arg)
     Info(InfoGGAP, 6, "_GGAP_WRITE_SCRIPT: ", s);
     WriteAll(_GGAP_DATA.out_pipe, s);
   od;
-  WriteAll(_GGAP_DATA.out_pipe, "\000");
+  WriteByte(_GGAP_DATA.out_pipe, 0);
 end);
 
 

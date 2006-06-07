@@ -18,6 +18,7 @@
 #V  _GGAP_DATA
 ##
 ##  This record contains various variables for ggap package.
+##  Private, do not use it
 ##
 DeclareGlobalVariable("_GGAP_DATA", "ggap package internal data");
 
@@ -34,6 +35,7 @@ DeclareGlobalVariable("InfoGGAP", "ggap info class");
 ##  Private functions, do not use them
 ##
 DeclareGlobalFunction("_GGAP_INIT");
+DeclareGlobalFunction("_GGAP_DATA_RESET");
 DeclareGlobalFunction("_GGAP_READ_COMMAND");
 DeclareGlobalFunction("_GGAP_CHECK_INPUT");
 DeclareGlobalFunction("_GGAP_ESCAPE_STRING");
