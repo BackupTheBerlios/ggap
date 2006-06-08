@@ -26,7 +26,9 @@ ggap_pkg_tst_glade_DATA =		\
 	ggap/tst/glade/file1.glade
 
 ggap_pkg_tst_demo_DATA =		\
-	ggap/tst/demo/message.g
+	ggap/tst/demo/message.g		\
+	ggap/tst/demo/entries.g		\
+	ggap/tst/demo/filechooser.g
 
 EXTRA_DIST =				\
 	$(ggap_pkg_DATA)		\

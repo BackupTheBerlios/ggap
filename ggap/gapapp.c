@@ -64,6 +64,9 @@ static void         gap_app_cmd_setup       (MooApp     *app,
                                              MooCommand *cmd,
                                              GtkWindow  *window);
 
+static void         gap_app_start_gap_real  (GapApp     *app,
+                                             const char *workspace);
+
 
 G_DEFINE_TYPE(GapApp, gap_app, MOO_TYPE_APP)
 
@@ -374,6 +377,22 @@ gap_app_restart_gap (GapApp *app)
 }
 
 
+void
+gap_app_open_workspace (GapApp     *app,
+                        const char *file)
+{
+    g_return_if_fail (GAP_IS_APP (app));
+    g_return_if_fail (file != NULL);
+
+    gap_app_ensure_terminal (app);
+    g_return_if_fail (MOO_IS_TERM (app->term));
+
+    gap_app_stop_gap (app);
+    g_usleep (100000);
+    gap_app_start_gap_real (app, file);
+}
+
+
 static char *
 saved_workspace_filename (void)
 {
@@ -414,7 +433,7 @@ make_command_line (const char *cmd_base,
 
     if (custom_wsp)
     {
-        g_string_append_printf (cmd, " -L \"%s\"", wsp_file);
+        g_string_append_printf (cmd, " -L \"%s\"", custom_wsp);
     }
     else if (save_workspace)
     {
@@ -453,8 +472,8 @@ make_command_line (const char *cmd_base,
 
 
 static void
-start_gap (GapApp     *app,
-           const char *workspace)
+gap_app_start_gap_real (GapApp     *app,
+                        const char *workspace)
 {
     const char *cmd_base;
     GString *cmd;
@@ -529,7 +548,7 @@ start_gap (GapApp     *app,
 void
 gap_app_start_gap (GapApp *app)
 {
-    start_gap (app, NULL);
+    gap_app_start_gap_real (app, NULL);
 }
 
 

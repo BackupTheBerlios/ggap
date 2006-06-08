@@ -59,6 +59,7 @@ DeclareGlobalFunction("DisconnectCallback");
 ##  Private functions, do not use them
 ##
 DeclareGlobalFunction("_GGAP_SEND_COMMAND");
+DeclareGlobalFunction("_GGAP_DO_COMMAND");
 DeclareGlobalFunction("_GGAP_PRINT_ARG");
 DeclareGlobalFunction("_GGAP_PRINT_COMMAND");
 DeclareGlobalFunction("_GGAP_GET_RESULT");

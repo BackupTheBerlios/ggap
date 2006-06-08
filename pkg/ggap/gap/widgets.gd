@@ -79,13 +79,12 @@ DeclareGlobalFunction("RunDialogText");
 
 #############################################################################
 ##
-#F  RunDialogFileChooser(...)
+#F  RunDialogFile(type, [start_file,] [params])
 ##
 ## Runs a file chooser dialog.
-## Returns pair [response, filenames], where <filenames> is list of files
-## selected in the dialog.
+## Returns list of filenames chosen or fail.
 ##
-DeclareGlobalFunction("RunDialogFileChooser");
+DeclareGlobalFunction("RunDialogFile");
 
 
 #############################################################################
@@ -98,8 +97,13 @@ DeclareOperation("IsVisible", [IsGObject]);
 DeclareOperation("SetVisible", [IsGObject, IsBool]);
 DeclareOperation("GetText", [IsGObject]);
 DeclareOperation("SetText", [IsGObject, IsString]);
-DeclareOperation("GetList", [IsGObject]);
-DeclareOperation("SetList", [IsGObject, IsList]);
+
+DeclareOperation("GetList", [IsTreeView]);
+DeclareOperation("SetList", [IsTreeView, IsList]);
+DeclareOperation("SelectRow", [IsTreeView, IsList]);
+DeclareOperation("UnselectRow", [IsTreeView, IsList]);
+DeclareOperation("SelectAllRows", [IsTreeView]);
+DeclareOperation("UnselectAllRows", [IsTreeView]);
 DeclareOperation("GetSelectedRow", [IsTreeView]);
 
 DeclareOperation("SetFont", [IsGObject, IsString]);

@@ -25,6 +25,7 @@
 
 static void     switch_to_editor            (void);
 static void     gap_read_file               (GapTermWindow      *window);
+static void     gap_open_workspace          (GapTermWindow      *window);
 
 
 /* GAP_TYPE_TERM_WINDOW */
@@ -53,6 +54,12 @@ gap_term_window_class_init (GapTermWindowClass *klass)
                                  "stock-id", GTK_STOCK_OPEN,
                                  "closure-callback", gap_read_file,
                                  NULL);
+    moo_window_class_new_action (window_class, "GAPOpenWorkspace",
+                                 "display-name", "Open Workspace",
+                                 "label", "Open _Workspace",
+                                 "stock-id", GTK_STOCK_OPEN,
+                                 "closure-callback", gap_open_workspace,
+                                 NULL);
 }
 
 
@@ -79,7 +86,7 @@ gap_read_file (GapTermWindow *window)
     char *string;
 
     file = moo_file_dialogp (GTK_WIDGET (window),
-                             MOO_DIALOG_FILE_OPEN_EXISTING,
+                             MOO_FILE_DIALOG_OPEN,
                              "Read File",
                              GGAP_PREFS_PREFIX "/read_file",
                              NULL);
@@ -90,4 +97,22 @@ gap_read_file (GapTermWindow *window)
     string = gap_read_file_string (file);
     gap_app_feed_gap (GAP_APP_INSTANCE, string);
     g_free (string);
+}
+
+
+static void
+gap_open_workspace (GapTermWindow *window)
+{
+    const char *file;
+
+    file = moo_file_dialogp (GTK_WIDGET (window),
+                             MOO_FILE_DIALOG_OPEN,
+                             "Choose Saved Workspace File",
+                             GGAP_PREFS_PREFIX "/open_workspace",
+                             NULL);
+
+    if (!file)
+        return;
+
+    gap_app_open_workspace (GAP_APP_INSTANCE, file);
 }

@@ -178,11 +178,11 @@ function()
 
   Info(InfoGGAP, 5, "_GGAP_READ_DATA");
 
-  if not _GGAP_DATA.in_check_input then
-    if UNIXSelect([_GGAP_DATA.in_pipe_fd], [], [], 0, 100000) = 0 then
-      Error("input error, no data available in 0.1 sec");
-    fi;
-  fi;
+#   if not _GGAP_DATA.in_check_input then
+#     if UNIXSelect([_GGAP_DATA.in_pipe_fd], [], [], 0, 100000) = 0 then
+#       Error("input error, no data available in 0.1 sec");
+#     fi;
+#   fi;
 
   Info(InfoGGAP, 5, "_GGAP_READ_DATA: reading byte");
   type := ReadByte(_GGAP_DATA.in_pipe);

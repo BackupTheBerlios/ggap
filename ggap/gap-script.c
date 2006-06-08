@@ -19,6 +19,8 @@
 #include <mooscript/mooscript-parser.h>
 #include <mooutils/mooglade.h>
 #include <mooutils/mooutils-misc.h>
+#include <mooutils/moofiledialog.h>
+#include <mooutils/moodialogs.h>
 #include <gtk/gtk.h>
 #include <string.h>
 
@@ -229,7 +231,7 @@ tree_path_from_value (MSValue *val)
     {
         MSValue *elm = val->list.elms[i];
 
-        if (MS_VALUE_TYPE (val) != MS_VALUE_INT)
+        if (MS_VALUE_TYPE (elm) != MS_VALUE_INT)
         {
             gtk_tree_path_free (ret);
             g_return_val_if_reached (NULL);
@@ -305,19 +307,19 @@ gap_data_add_gvalue (GString      *data,
 
         case G_TYPE_INT:
             lval = g_value_get_int (value);
-            gap_data_add_int (data, ival);
+            gap_data_add_int (data, lval);
             return TRUE;
         case G_TYPE_UINT:
             lval = g_value_get_uint (value);
-            gap_data_add_int (data, ival);
+            gap_data_add_int (data, lval);
             return TRUE;
         case G_TYPE_LONG:
             lval = g_value_get_long (value);
-            gap_data_add_int (data, ival);
+            gap_data_add_int (data, lval);
             return TRUE;
         case G_TYPE_ULONG:
             lval = g_value_get_ulong (value);
-            gap_data_add_int (data, ival);
+            gap_data_add_int (data, lval);
             return TRUE;
 
         case G_TYPE_STRING:
@@ -356,6 +358,7 @@ gap_data_send (GString *data)
 {
     g_return_if_fail (data != NULL);
     gap_app_output_write (data->str, data->len);
+    g_string_free (data, TRUE);
 }
 
 
@@ -397,7 +400,6 @@ make_result_data (MSContext  *ctx,
 //     gap_data_add_bool (data, val);
 //
 //     gap_data_send (data);
-//     g_string_free (data, TRUE);
 // }
 
 
@@ -412,7 +414,6 @@ send_int_result (MSContext  *ctx,
     gap_data_add_int (data, val);
 
     gap_data_send (data);
-    g_string_free (data, TRUE);
 }
 
 
@@ -440,7 +441,6 @@ send_string_result (MSContext  *ctx,
         gap_data_add_string (data, string2, -1);
 
     gap_data_send (data);
-    g_string_free (data, TRUE);
 }
 
 
@@ -467,7 +467,6 @@ send_string_result (MSContext  *ctx,
 //     }
 //
 //     gap_data_send (data);
-//     g_string_free (data, TRUE);
 // }
 
 
@@ -496,15 +495,13 @@ ctx_send_error (MSContext  *ctx,
 
     data = make_result_data (ctx, GAP_STATUS_ERROR, 1);
     gap_data_add_string (data, message, -1);
-
     gap_data_send (data);
+
     ms_context_set_error (ctx, MS_ERROR_RUNTIME, message);
     g_object_set_data (G_OBJECT (ctx), "gap-context-error-sent",
                        GINT_TO_POINTER (TRUE));
 
-    g_string_free (data, TRUE);
     g_free (message);
-
     return NULL;
 }
 
@@ -637,7 +634,6 @@ tree_view_row_activated (GapObject   *wrapper,
     gap_data_add_tree_path (data, path);
 
     gap_data_send (data);
-    g_string_free (data, TRUE);
 }
 
 
@@ -649,10 +645,6 @@ connect_special_signal (GapObject  *wrapper,
         return g_signal_connect_swapped (wrapper->obj, "row-activated",
                                          G_CALLBACK (tree_view_row_activated),
                                          wrapper);
-//     if (!strcmp (signal, "selection-changed") && GAP_IS_TREE_VIEW (wrapper->obj))
-//         return g_signal_connect_swapped (wrapper->obj, "selection-changed",
-//                                          G_CALLBACK (tree_view_selection_changed),
-//                                          wrapper);
     return 0;
 }
 
@@ -688,7 +680,6 @@ gap_callback_marshal (GClosure      *closure,
     }
 
     gap_data_send (data);
-    g_string_free (data, TRUE);
 }
 
 
@@ -911,10 +902,9 @@ get_property_func (MSValue   *arg1,
     }
 
     gap_data_send (data);
-    g_string_free (data, TRUE);
+
     g_free (property);
     g_value_unset (&value);
-
     return ms_value_none ();
 }
 
@@ -1006,7 +996,7 @@ run_dialog_message_func (MSValue   *arg_type,
     char *primary = NULL, *secondary = NULL;
     char *title = NULL;
     GtkWidget *dialog;
-    GtkWindow *parent = moo_get_toplevel_window ();;
+    GtkWindow *parent = moo_get_toplevel_window ();
 
     CHECK_SESSION ();
 
@@ -1108,6 +1098,344 @@ run_dialog_message_func (MSValue   *arg_type,
 
 
 static MSValue *
+run_dialog_file_func (MSValue   *arg_type,
+                      MSValue   *arg_start,
+                      MSValue   *params,
+                      MSContext *ctx)
+{
+    int type;
+    char *start = NULL, *title = NULL;
+    gboolean multiple = FALSE;
+    MooFileDialog *dialog;
+    GtkWindow *parent = moo_get_toplevel_window ();
+    GString *data;
+
+    CHECK_SESSION ();
+
+    if (!ms_value_get_int (arg_type, &type))
+        return ctx_send_error (ctx, "RunDialogFile: first argument must be an integer");
+
+    if (!ms_value_is_none (params) && MS_VALUE_TYPE (params) != MS_VALUE_DICT)
+        return ctx_send_error (ctx, "RunDialogFile: params must be fail or a record");
+
+    if (!ms_value_is_none (arg_start))
+        start = ms_value_print (arg_start);
+
+    if (!ms_value_is_none (params))
+    {
+        MSValue *val;
+
+        if ((val = ms_value_dict_get_elm (params, "title")))
+        {
+            title = ms_value_print (val);
+            ms_value_unref (val);
+        }
+
+        if ((val = ms_value_dict_get_elm (params, "multiple")))
+        {
+            multiple = ms_value_get_bool (val);
+            ms_value_unref (val);
+        }
+
+        if ((val = ms_value_dict_get_elm (params, "parent")))
+        {
+            GapObject *wrapper = ms_value_get_object (val);
+
+            if (wrapper && GTK_IS_WINDOW (wrapper->obj))
+            {
+                parent = GTK_WINDOW (wrapper->obj);
+            }
+            else
+            {
+                g_warning ("%s: invalid parent value", G_STRLOC);
+            }
+
+            ms_value_unref (val);
+        }
+    }
+
+    dialog = moo_file_dialog_new (type, (GtkWidget*) parent,
+                                  multiple, title, start, NULL);
+    g_return_val_if_fail (dialog != NULL, NULL);
+
+    data = make_result_data (ctx, GAP_STATUS_OK, 1);
+
+    if (!moo_file_dialog_run (dialog))
+    {
+        gap_data_add_none (data);
+    }
+    else if (multiple)
+    {
+        GSList *filenames = moo_file_dialog_get_filenames (dialog);
+
+        gap_data_add_list (data, g_slist_length (filenames));
+
+        while (filenames)
+        {
+            gap_data_add_string (data, filenames->data, -1);
+            g_free (filenames->data);
+            filenames = g_slist_delete_link (filenames, filenames);
+        }
+    }
+    else
+    {
+        const char *filename = moo_file_dialog_get_filename (dialog);
+        gap_data_add_list (data, 1);
+        gap_data_add_string (data, filename, -1);
+    }
+
+    gap_data_send (data);
+
+    g_object_unref (dialog);
+    g_free (title);
+    g_free (start);
+    return ms_value_none ();
+}
+
+
+static GtkWidget *
+create_entry_dialog (gboolean        entry,
+                     const char     *text,
+                     const char     *caption,
+                     const char     *title,
+                     GtkButtonsType  buttons,
+                     int             default_response,
+                     GtkWindow      *parent)
+{
+    GtkWidget *dialog;
+
+    dialog = gtk_dialog_new ();
+
+    switch (buttons)
+    {
+        case GTK_BUTTONS_NONE:
+            break;
+        case GTK_BUTTONS_OK:
+            gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                    GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                    NULL);
+            gtk_dialog_set_default_response (GTK_DIALOG (dialog),
+                                             GTK_RESPONSE_OK);
+            break;
+        case GTK_BUTTONS_CLOSE:
+            gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                    GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                    NULL);
+            gtk_dialog_set_default_response (GTK_DIALOG (dialog),
+                                             GTK_RESPONSE_CLOSE);
+            break;
+        case GTK_BUTTONS_CANCEL:
+            gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                    NULL);
+            gtk_dialog_set_default_response (GTK_DIALOG (dialog),
+                                             GTK_RESPONSE_CANCEL);
+            break;
+        case GTK_BUTTONS_YES_NO:
+            gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                    GTK_STOCK_NO, GTK_RESPONSE_NO,
+                                    GTK_STOCK_YES, GTK_RESPONSE_YES,
+                                    NULL);
+            gtk_dialog_set_alternative_button_order (GTK_DIALOG (dialog),
+                                                     GTK_RESPONSE_YES,
+                                                     GTK_RESPONSE_NO,
+                                                     -1);
+            break;
+        case GTK_BUTTONS_OK_CANCEL:
+            gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                    GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                    NULL);
+            gtk_dialog_set_alternative_button_order (GTK_DIALOG (dialog),
+                                                     GTK_RESPONSE_OK,
+                                                     GTK_RESPONSE_CANCEL,
+                                                     -1);
+            break;
+    }
+
+    if (default_response < G_MAXINT)
+        gtk_dialog_set_default_response (GTK_DIALOG (dialog), default_response);
+
+    if (title)
+        gtk_window_set_title (GTK_WINDOW (dialog), title);
+
+    if (caption && caption[0])
+    {
+        GtkWidget *label = gtk_label_new (caption);
+        gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), label,
+                            FALSE, FALSE, 0);
+    }
+
+    if (entry)
+    {
+        GtkWidget *entry = gtk_entry_new ();
+
+        if (text)
+            gtk_entry_set_text (GTK_ENTRY (entry), text);
+
+        gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), entry,
+                            FALSE, FALSE, 0);
+        gtk_entry_set_activates_default (GTK_ENTRY (entry), TRUE);
+        g_object_set_data (G_OBJECT (dialog), "gap-dialog-text", entry);
+    }
+    else
+    {
+        GtkWidget *swin, *view;
+
+        swin = gtk_scrolled_window_new (NULL, NULL);
+        gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), swin,
+                            TRUE, TRUE, 0);
+
+        view = moo_text_view_new ();
+        gtk_container_add (GTK_CONTAINER (swin), view);
+
+        if (text)
+        {
+            GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
+            gtk_text_buffer_set_text (buffer, text, -1);
+        }
+
+        g_object_set_data (G_OBJECT (dialog), "gap-dialog-text", view);
+    }
+
+    gtk_widget_show_all (GTK_DIALOG (dialog)->vbox);
+
+    if (parent)
+        moo_position_window (dialog, GTK_WIDGET (parent),
+                             FALSE, FALSE, 0, 0);
+
+    return dialog;
+}
+
+
+static char *
+entry_dialog_get_text (GtkWidget *dialog)
+{
+    GtkWidget *text_widget;
+    GtkTextBuffer *buffer;
+    GtkTextIter start, end;
+
+    text_widget = g_object_get_data (G_OBJECT (dialog), "gap-dialog-text");
+    g_return_val_if_fail (text_widget != NULL, NULL);
+
+    if (GTK_IS_ENTRY (text_widget))
+        return g_strdup (gtk_entry_get_text (GTK_ENTRY (text_widget)));
+
+    g_return_val_if_fail (GTK_IS_TEXT_VIEW (text_widget), NULL);
+
+    buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (text_widget));
+    gtk_text_buffer_get_bounds (buffer, &start, &end);
+    return gtk_text_buffer_get_text (buffer, &start, &end, TRUE);
+}
+
+
+static MSValue *
+run_dialog_entry_func (MSValue   *arg_entry,
+                       MSValue   *arg_text,
+                       MSValue   *arg_caption,
+                       MSValue   *params,
+                       MSContext *ctx)
+{
+    char *text = NULL, *caption = NULL, *title = NULL;
+    int response, default_response = G_MAXINT;
+    GtkButtonsType buttons = GTK_BUTTONS_CLOSE;
+    GtkWidget *dialog;
+    GtkWindow *parent = moo_get_toplevel_window ();
+    GString *data;
+
+    CHECK_SESSION ();
+
+    if (!ms_value_is_none (params) && MS_VALUE_TYPE (params) != MS_VALUE_DICT)
+        return ctx_send_error (ctx, "RunDialogMessage: params must be fail or a record");
+
+    if (!ms_value_is_none (arg_text))
+        text = ms_value_print (arg_text);
+    if (!ms_value_is_none (arg_caption))
+        caption = ms_value_print (arg_caption);
+
+    if (!ms_value_is_none (params))
+    {
+        MSValue *val;
+
+        if ((val = ms_value_dict_get_elm (params, "title")))
+        {
+            title = ms_value_print (val);
+            ms_value_unref (val);
+        }
+
+        if ((val = ms_value_dict_get_elm (params, "buttons")))
+        {
+            if (MS_VALUE_TYPE (val) == MS_VALUE_INT)
+            {
+                buttons = val->ival;
+            }
+            else
+            {
+                char *string = ms_value_print (val);
+                g_warning ("%s: invalid buttons value: %s", G_STRLOC, string);
+                g_free (string);
+            }
+
+            ms_value_unref (val);
+        }
+
+        if ((val = ms_value_dict_get_elm (params, "parent")))
+        {
+            GapObject *wrapper = ms_value_get_object (val);
+
+            if (wrapper && GTK_IS_WINDOW (wrapper->obj))
+            {
+                parent = GTK_WINDOW (wrapper->obj);
+            }
+            else
+            {
+                g_warning ("%s: invalid parent value", G_STRLOC);
+            }
+
+            ms_value_unref (val);
+        }
+
+        if ((val = ms_value_dict_get_elm (params, "default")))
+        {
+            if (MS_VALUE_TYPE (val) == MS_VALUE_INT)
+            {
+                default_response = val->ival;
+            }
+            else
+            {
+                char *string = ms_value_print (val);
+                g_warning ("%s: invalid default response: %s", G_STRLOC, string);
+                g_free (string);
+            }
+
+            ms_value_unref (val);
+        }
+    }
+
+    dialog = create_entry_dialog (ms_value_get_bool (arg_entry),
+                                  text, caption, title, buttons,
+                                  default_response, parent);
+    g_return_val_if_fail (dialog != NULL, NULL);
+
+    response = gtk_dialog_run (GTK_DIALOG (dialog));
+    g_free (text);
+    text = entry_dialog_get_text (dialog);
+    gtk_widget_destroy (dialog);
+
+    data = make_result_data (ctx, GAP_STATUS_OK, 1);
+    gap_data_add_list (data, 2);
+    gap_data_add_int (data, response);
+    gap_data_add_string (data, text, -1);
+    gap_data_send (data);
+
+    g_free (text);
+    g_free (caption);
+    g_free (title);
+    return ms_value_none ();
+}
+
+
+static MSValue *
 gobject_func (MSValue   *arg,
               MSContext *ctx)
 {
@@ -1141,7 +1469,6 @@ get_selected_row_func (MSValue   *arg,
     gap_data_add_tree_path (data, path);
     gap_data_send (data);
 
-    g_string_free (data, TRUE);
     gtk_tree_path_free (path);
     return ms_value_none ();
 }
@@ -1272,6 +1599,8 @@ G_STMT_START {                                  \
 
     ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "GapRunDialog");
     ADD_FUNC (run_dialog_message_func, ms_cfunc_new_4, "GapRunDialogMessage");
+    ADD_FUNC (run_dialog_file_func, ms_cfunc_new_3, "GapRunDialogFile");
+    ADD_FUNC (run_dialog_entry_func, ms_cfunc_new_4, "GapRunDialogEntry");
 
     ADD_FUNC (get_selected_row_func, ms_cfunc_new_1, "GapGetSelectedRow");
     ADD_FUNC (select_row_func, ms_cfunc_new_2, "GapSelectRow");

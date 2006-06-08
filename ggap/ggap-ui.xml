@@ -197,7 +197,9 @@
 
     <item name="File" label="_File">
       <separator/>
+      <item action="GAPOpenWorkspace"/>
       <item action="GAPRead"/>
+      <separator/>
       <item action="SwitchToEditor"/>
       <item action="SaveSelection"/>
       <separator/>

@@ -190,6 +190,24 @@ function(name, args)
 end);
 
 
+#############################################################################
+##
+#F  _GGAP_DO_COMMAND(name, args)
+##
+InstallGlobalFunction(_GGAP_DO_COMMAND,
+function(name, args)
+  local result;
+
+  result := _GGAP_SEND_COMMAND(name, args);
+
+  if result[1] <> _GGAP_STATUS_OK then
+    Error(result[2]);
+  fi;
+
+  return result{[2..Length(result)]};
+end);
+
+
 ###############################################################################
 ##
 #R  IsGObjectRep
@@ -336,7 +354,7 @@ end);
 ##
 InstallGlobalFunction(ConnectCallback,
 function(arg)
-  local obj, signal, func, c, result;
+  local obj, signal, func, c;
 
   if Length(arg) < 3 then
     Error();
@@ -354,11 +372,7 @@ function(arg)
            data:=arg{[4..Length(arg)]},
            id:=_GGAP_DATA.stamp);
 
-  result := _GGAP_SEND_COMMAND("GapConnect", [obj, signal, String(c.id)]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
+  _GGAP_DO_COMMAND("GapConnect", [obj, signal, String(c.id)]);
 
   Add(obj!.callbacks, c);
   return c.id;
@@ -372,7 +386,7 @@ end);
 ##
 InstallGlobalFunction(DisconnectCallback,
 function(obj, signal_or_handler)
-  local callbacks, c, i, result, args;
+  local callbacks, c, i, args;
 
   if not IsGObject(obj) then
     Error("first argument must be IsGObject");
@@ -407,11 +421,7 @@ function(obj, signal_or_handler)
     Add(args, String(c.id));
   od;
 
-  result := _GGAP_SEND_COMMAND("GapDisconnect", args);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
+  _GGAP_DO_COMMAND("GapDisconnect", args);
 
   obj!.callbacks := Difference(obj!.callbacks, callbacks);
 
@@ -425,17 +435,9 @@ end);
 ##
 InstallGlobalFunction(_GGAP_DESTROY_OBJECT,
 function(obj)
-  local result;
-
-  if obj!.dead then
-    return;
-  fi;
-
-  _GGAP_OBJECT_DESTROYED(obj!.id);
-  result := _GGAP_SEND_COMMAND("GapDestroy", [obj]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
+  if not obj!.dead then
+    _GGAP_OBJECT_DESTROYED(obj!.id);
+    _GGAP_DO_COMMAND("GapDestroy", [obj]);
   fi;
 end);
 
@@ -481,11 +483,7 @@ function(obj, props)
     Error("object is destroyed");
   fi;
 
-  result := _GGAP_SEND_COMMAND("GapSetProperty", [obj, props]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
+  _GGAP_DO_COMMAND("GapSetProperty", [obj, props]);
 end);
 
 
@@ -501,13 +499,9 @@ function(obj, propname)
     Error("object is destroyed");
   fi;
 
-  result := _GGAP_SEND_COMMAND("GapGetProperty", [obj, propname]);
+  result := _GGAP_DO_COMMAND("GapGetProperty", [obj, propname]);
 
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
-
-  return result[2];
+  return result[1];
 end);
 
 

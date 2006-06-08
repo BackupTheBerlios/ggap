@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 #define GAP_STATUS_ERROR            1
 
 
+/* frees data */
 void     gap_data_send                      (GString        *data);
 
 void     gap_data_add_string                (GString        *data,

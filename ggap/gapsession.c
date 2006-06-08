@@ -174,7 +174,6 @@ session_object_died (GapSession *session,
         GString *data = g_string_new (NULL);
         gap_data_add_command_object_died (data, wrapper->id);
         gap_data_send (data);
-        g_string_free (data, TRUE);;
     }
 
     g_object_unref (wrapper);
@@ -361,7 +360,6 @@ close_window (GapObject *wrapper)
     gap_data_add_command_close_window  (data, wrapper->id);
     gap_data_send (data);
 
-    g_string_free (data, TRUE);
     return TRUE;
 }
 

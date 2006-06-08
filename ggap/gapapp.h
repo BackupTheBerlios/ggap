@@ -66,6 +66,9 @@ void        gap_app_start_gap               (GapApp     *app);
 void        gap_app_stop_gap                (GapApp     *app);
 void        gap_app_send_intr               (GapApp     *app);
 
+void        gap_app_open_workspace          (GapApp     *app,
+                                             const char *file);
+
 void        gap_app_feed_gap                (GapApp     *app,
                                              const char *text);
 

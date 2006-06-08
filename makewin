@@ -8,7 +8,8 @@ dir = os.getcwd()
 builddir = "/home/muntyan/projects/ggap/build"
 cygwin_builddir = builddir + "/cygwin"
 termhelper_exe = cygwin_builddir + "/ggap/termhelper.exe"
-build_termhelper = True
+build_termhelper = False
+termhelper_exe = builddir + "/termhelper.exe"
 ggap_windir = "/usr/local/win/ggap"
 
 
@@ -54,10 +55,11 @@ def copy_files():
              "share/ggap/ui.xml.example",
              "share/ggap/pkg", "share/ggap/syntax",
              "share/ggap/tools.cfg", "share/ggap/menu.cfg",
-	     "share/ggap/as.cfg", "share/ggap/completion",
-	     "lib/ggap/plugins"]
+             "share/ggap/as.cfg", "share/ggap/completion",
+             "lib/ggap/plugins"]
     for f in files:
         do_cmd("cp -r %s/usr/local/%s %s/" % (installdir, f, ggap_windir))
+    do_cmd("cp %s/libxml2-2.dll %s/" % (builddir, ggap_windir))
 
 def make_termhelper():
     if build_termhelper:

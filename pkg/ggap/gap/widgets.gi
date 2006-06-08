@@ -27,12 +27,17 @@ BindGlobal("DIALOG_BUTTONS_OK", 1);
 BindGlobal("DIALOG_BUTTONS_CLOSE", 2);
 BindGlobal("DIALOG_BUTTONS_CANCEL", 3);
 BindGlobal("DIALOG_BUTTONS_YES_NO", 4);
-BindGlobal("DIALOG_BUTTONS_OK_CANCEL", 4);
+BindGlobal("DIALOG_BUTTONS_OK_CANCEL", 5);
 
 BindGlobal("DIALOG_INFO", 0);
 BindGlobal("DIALOG_WARNING", 1);
 BindGlobal("DIALOG_QUESTION", 2);
 BindGlobal("DIALOG_ERROR", 3);
+
+BindGlobal("FILE_DIALOG_OPEN", 0);
+BindGlobal("FILE_DIALOG_OPEN_ANY", 1);
+BindGlobal("FILE_DIALOG_SAVE", 2);
+BindGlobal("FILE_DIALOG_OPEN_DIR", 3);
 
 
 ###############################################################################
@@ -134,14 +139,10 @@ function(arg)
     file := path;
   fi;
 
-  result := _GGAP_SEND_COMMAND("GapCreateGladeWindow", [file, root, types]);
-
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
+  result := _GGAP_DO_COMMAND("GapCreateGladeWindow", [file, root, types]);
 
   window := Objectify(NewType(GObjectFamily, IsGladeWindow and IsGObjectRep),
-                      rec(id := result[2], dead := false, callbacks := [],
+                      rec(id := result[1], dead := false, callbacks := [],
                           destroy_func := false));
   _GGAP_REGISTER_OBJECT(window);
 
@@ -165,17 +166,13 @@ function(window, name)
       Error("GladeLookupWidget: second argument must be a string");
     fi;
 
-    result := _GGAP_SEND_COMMAND("GapGladeLookup", [window, name]);
+    result := _GGAP_DO_COMMAND("GapGladeLookup", [window, name]);
 
-    if result[1] <> _GGAP_STATUS_OK then
-        Error(result[2]);
-    fi;
-
-    if result[2] = "" then
+    if result[1] = "" then
       return fail;
     fi;
 
-    return _GGAP_MAKE_OBJECT(result[3], result[2]);
+    return _GGAP_MAKE_OBJECT(result[2], result[1]);
 end);
 
 
@@ -201,13 +198,9 @@ function(dialog)
     Error("RunDialog: argument must be IsWindow");
   fi;
 
-  result := _GGAP_SEND_COMMAND("GapRunDialog", [dialog]);
+  result := _GGAP_DO_COMMAND("GapRunDialog", [dialog]);
 
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  fi;
-
-  return result[2];
+  return result[1];
 end);
 
 
@@ -233,13 +226,103 @@ function(arg)
     fi;
   fi;
 
-  result := _GGAP_SEND_COMMAND("GapRunDialogMessage", [arg[1], arg[2], secondary, params]);
+  result := _GGAP_DO_COMMAND("GapRunDialogMessage", [arg[1], arg[2], secondary, params]);
 
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
+  return result[1];
+end);
+
+
+###############################################################################
+##
+#F  RunDialogEntry()
+#F  RunDialogText()
+##
+BindGlobal("_RUN_DIALOG_ENTRY",
+function(entry, args)
+  local result, text, caption, params;
+
+  text := "";
+  caption := fail;
+  params := fail;
+
+  if Length(args) = 1 then
+    if IsRecord(args[1]) then
+      params := args[1];
+    else
+      text := args[1];
+    fi;
+  elif Length(args) = 2 then
+    text := args[1];
+    if IsRecord(args[2]) then
+      params := args[2];
+    else
+      caption := args[2];
+    fi;
+  elif Length(args) = 3 then
+    text := args[1];
+    caption := args[2];
+    params := args[3];
   fi;
 
-  return result[2];
+  result := _GGAP_DO_COMMAND("GapRunDialogEntry", [entry, text, caption, params]);
+  return result[1];
+end);
+
+InstallGlobalFunction(RunDialogEntry,
+function(arg)
+  return _RUN_DIALOG_ENTRY(true, arg);
+end);
+
+InstallGlobalFunction(RunDialogText,
+function(arg)
+  return _RUN_DIALOG_ENTRY(false, arg);
+end);
+
+
+###############################################################################
+##
+#F  RunDialogFile()
+##
+InstallGlobalFunction(RunDialogFile,
+function(arg)
+  local result, type, start, params;
+
+  type := FILE_DIALOG_OPEN;
+  start := fail;
+  params := fail;
+
+  if Length(arg) = 3 then
+    type := arg[1];
+    start := arg[2];
+    params := arg[3];
+  elif Length(arg) = 2 then
+    type := arg[1];
+    if IsRecord(arg[2]) then
+      params := arg[2];
+    else
+      start := arg[2];
+    fi;
+  elif Length(arg) = 1 then
+    if IsRecord(arg[1]) then
+      params := arg[1];
+    elif IsInt(arg[1]) then
+      type := arg[1];
+    else
+      start := arg[1];
+    fi;
+  fi;
+
+  if IsDirectory(start) then
+    start := start![1];
+  fi;
+
+  result := _GGAP_DO_COMMAND("GapRunDialogFile", [type, start, params]);
+
+  if Length(result) > 0 then
+    return result[1];
+  else
+    return fail;
+  fi;
 end);
 
 
@@ -346,14 +429,29 @@ end);
 InstallMethod(GetSelectedRow, [IsTreeView],
 function(wid)
   local result;
+  result := _GGAP_DO_COMMAND("GapGetSelectedRow", [wid]);
+  return result[1];
+end);
 
-  result := _GGAP_SEND_COMMAND("GapGetSelectedRow", [wid]);
 
-  if result[1] <> _GGAP_STATUS_OK then
-    Error(result[2]);
-  else
-    return result[2];
-  fi;
+InstallMethod(SelectRow, [IsTreeView, IsList],
+function(wid, row)
+  _GGAP_DO_COMMAND("GapSelectRow", [wid, row]);
+end);
+
+InstallMethod(UnselectRow, [IsTreeView, IsList],
+function(wid, row)
+  _GGAP_DO_COMMAND("GapUnselectRow", [wid, row]);
+end);
+
+InstallMethod(SelectAllRows, [IsTreeView],
+function(wid)
+  _GGAP_DO_COMMAND("GapSelectAllRows", [wid]);
+end);
+
+InstallMethod(UnselectAllRows, [IsTreeView],
+function(wid)
+  _GGAP_DO_COMMAND("GapUnselectAllRows", [wid]);
 end);
 
 
