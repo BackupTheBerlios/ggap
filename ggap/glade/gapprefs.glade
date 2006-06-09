@@ -156,9 +156,11 @@
                     </child>
                     <child>
                       <widget class="GtkCheckButton" id="checkbutton2">
+                        <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="label" translatable="yes">Exit when GAP quits</property>
+                        <property name="label" translatable="yes">Clear terminal for new GAP session</property>
                         <property name="draw_indicator">True</property>
+                        <property name="moo_prefs_key">clear_terminal</property>
                       </widget>
                       <packing>
                         <property name="expand">False</property>

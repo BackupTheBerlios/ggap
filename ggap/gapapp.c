@@ -35,6 +35,7 @@
 #define APP_PREFS_GAP_INIT_PKG          GGAP_PREFS_PREFIX "/init_pkg"
 #define APP_PREFS_GAP_WORKING_DIR       GGAP_PREFS_PREFIX "/working_dir"
 #define APP_PREFS_GAP_SAVE_WORKSPACE    GGAP_PREFS_PREFIX "/save_workspace"
+#define APP_PREFS_GAP_CLEAR_TERMINAL    GGAP_PREFS_PREFIX "/clear_terminal"
 
 #define WORKSPACE_FILE "workspace"
 
@@ -228,6 +229,7 @@ gap_app_init (G_GNUC_UNUSED GapApp *app)
     moo_prefs_new_key_bool (APP_PREFS_GAP_INIT_PKG, TRUE); /* XXX */
     moo_prefs_new_key_string (APP_PREFS_GAP_WORKING_DIR, NULL);
     moo_prefs_new_key_bool (APP_PREFS_GAP_SAVE_WORKSPACE, TRUE);
+    moo_prefs_new_key_bool (APP_PREFS_GAP_CLEAR_TERMINAL, FALSE);
 }
 
 
@@ -531,6 +533,10 @@ gap_app_start_gap_real (GapApp     *app,
     cmd = make_command_line (cmd_base, workspace);
 
     g_message ("starting GAP: %s", cmd->str);
+
+    if (moo_prefs_get_bool (APP_PREFS_GAP_CLEAR_TERMINAL))
+        moo_term_reset (app->term);
+
     result = moo_term_fork_command_line (app->term, cmd->str,
                                          moo_prefs_get_filename (APP_PREFS_GAP_WORKING_DIR),
                                          NULL, NULL);
