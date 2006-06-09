@@ -15,9 +15,11 @@
 #include "gapsession.h"
 #include "gap-widgets.h"
 #include "mooutils/moomarshals.h"
+#include "mooutils/mooutils-gobject.h"
 #include "mooedit/mooeditor.h"
 #include "mooapp/moohtml.h"
 #include <gtk/gtk.h>
+#include <string.h>
 
 
 /**********************************************************************************/
@@ -277,6 +279,9 @@ ms_value_to_gvalue (MSValue    *mval,
                     GValue     *gval,
                     GParamSpec *pspec)
 {
+    GValue gval_here;
+    gboolean result;
+
     g_return_val_if_fail (mval != NULL, FALSE);
     g_return_val_if_fail (G_IS_VALUE (gval), FALSE);
     g_return_val_if_fail (pspec != NULL, FALSE);
@@ -292,7 +297,22 @@ ms_value_to_gvalue (MSValue    *mval,
         return TRUE;
     }
 
-    return FALSE;
+    if (G_VALUE_TYPE (gval) == G_TYPE_BOOLEAN)
+    {
+        g_value_set_boolean (gval, ms_value_get_bool (mval));
+        return TRUE;
+    }
+
+    memset (&gval_here, 0, sizeof (gval_here));
+
+    if (!ms_value_get_gvalue (mval, &gval_here))
+        return FALSE;
+
+    result = moo_value_convert (&gval_here, gval);
+
+    g_value_unset (&gval_here);
+
+    return result;
 }
 
 
