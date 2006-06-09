@@ -37,7 +37,7 @@
   <kdevautoproject>
     <general>
       <activetarget>ggap/ggap</activetarget>
-      <useconfiguration>optimized</useconfiguration>
+      <useconfiguration>debug</useconfiguration>
     </general>
     <run>
       <mainprogram>ggap/ggap</mainprogram>
