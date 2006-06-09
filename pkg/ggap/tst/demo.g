@@ -105,6 +105,8 @@ GGAPDemo := function()
   SetList(window.list, names);
   SelectRow(window.list, [1]);
 
+  SetVisible(window, true);
+
   return data;
 end;
 
