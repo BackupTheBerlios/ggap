@@ -38,11 +38,11 @@ DeclareOperation("GObjectGetProperty", [IsGObject, IsString]);
 
 #############################################################################
 ##
-#O  DestroyGObject(<obj>)
+#O  GObjectDestroy(<obj>)
 ##
-##  Destroys <obj>. Note, it can't be stopped like CloseWindow.
+##  Destroys <obj>. Note, it can't be stopped like WindowClose.
 ##
-DeclareOperation("DestroyGObject", [IsGObject]);
+DeclareOperation("GObjectDestroy", [IsGObject]);
 
 
 #############################################################################

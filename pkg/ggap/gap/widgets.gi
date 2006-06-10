@@ -60,11 +60,11 @@ InstallMethod(PrintObj, [IsHtml], function (wid) Print("<Html '", wid!.id, "'>")
 
 ###############################################################################
 ##
-#F  CloseWindow(window)
+#F  WindowClose(window)
 ##
-InstallGlobalFunction(CloseWindow,
+InstallGlobalFunction(WindowClose,
 function(window)
-  local result, close;
+  local result, close, f;
 
   if window!.dead then
     return;
@@ -72,13 +72,75 @@ function(window)
 
   close := true;
 
-  if IsFunction(window!.destroy_func) then
-    close := window!.destroy_func(window);
-  fi;
+  for f in window!.destroy_funcs do
+    if f(window) then
+      close := false;
+      break;
+    fi;
+  od;
 
   if close then
-    DestroyGObject(window);
+    GObjectDestroy(window);
   fi;
+end);
+
+
+###############################################################################
+##
+#F  WindowPresent(window)
+##
+InstallGlobalFunction(WindowPresent,
+function(window)
+  _GGAP_DO_COMMAND("GapPresent", [window]);
+end);
+
+
+###############################################################################
+##
+#F  _GGAP_HIDE_ON_CLOSE(window)
+##
+InstallGlobalFunction(_GGAP_HIDE_ON_CLOSE,
+function(window)
+  SetVisible(window, false);
+  return true;
+end);
+
+
+###############################################################################
+##
+#F  WindowSetHideOnClose(window, hide)
+##
+InstallGlobalFunction(WindowSetHideOnClose,
+function(window, hide)
+  local f;
+
+  if hide then
+    if not _GGAP_HIDE_ON_CLOSE in window!.destroy_funcs then
+      Add(window!.destroy_funcs, _GGAP_HIDE_ON_CLOSE);
+    fi;
+  else
+    Remove(window!.destroy_funcs, _GGAP_HIDE_ON_CLOSE);
+  fi;
+end);
+
+
+###############################################################################
+##
+#F  WindowAddCloseHook(window, func)
+##
+InstallGlobalFunction(WindowAddCloseHook,
+function(window, func)
+  Add(window!.destroy_funcs, func);
+end);
+
+
+###############################################################################
+##
+#F  WindowRemoveCloseHook(window, func)
+##
+InstallGlobalFunction(WindowRemoveCloseHook,
+function(window, func)
+  Remove(window!.destroy_funcs, func);
 end);
 
 
@@ -97,15 +159,15 @@ function(id)
     return;
   fi;
 
-  CloseWindow(_GGAP_DATA.objects[ind]);
+  WindowClose(_GGAP_DATA.objects[ind]);
 end);
 
 
 ###############################################################################
 ##
-#F  CreateGladeWindow()
+#F  GladeWindow()
 ##
-InstallGlobalFunction(CreateGladeWindow,
+InstallGlobalFunction(GladeWindow,
 function(arg)
   local window, result, path, file, root, types;
 
@@ -139,11 +201,11 @@ function(arg)
     file := path;
   fi;
 
-  result := _GGAP_DO_COMMAND("GapCreateGladeWindow", [file, root, types]);
+  result := _GGAP_DO_COMMAND("GapGladeWindow", [file, root, types]);
 
   window := Objectify(NewType(GObjectFamily, IsGladeWindow and IsGObjectRep),
                       rec(id := result[1], dead := false, callbacks := [],
-                          destroy_func := false));
+                          destroy_funcs := []));
   _GGAP_REGISTER_OBJECT(window);
 
   return window;

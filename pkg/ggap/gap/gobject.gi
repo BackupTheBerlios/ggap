@@ -216,7 +216,7 @@ DeclareRepresentation("IsGObjectRep", IsComponentObjectRep and IsAttributeStorin
 ["id",              # unique object id, set in ggap
  "dead",            # set after the underlying object is destroyed
  "callbacks",       # list of connected callbacks
- "destroy_func"]);  # function which is called when object is about to be destroyed
+ "destroy_funcs"]); # function which is called when object is about to be destroyed
 
 
 ###############################################################################
@@ -292,7 +292,7 @@ function(typename, id)
   Info(InfoGGAP, 4, "_GGAP_MAKE_OBJECT: creating object ", id, " of type ", typename);
   obj := Objectify(_GGAP_GET_TYPE_BY_NAME(typename),
                    rec(id := id, dead := false, callbacks := [],
-                       destroy_func := false));
+                       destroy_funcs := []));
   _GGAP_REGISTER_OBJECT(obj);
 
   return obj;
@@ -444,9 +444,9 @@ end);
 
 ###############################################################################
 ##
-#M  DestroyGObject(<obj>)
+#M  GObjectDestroy(<obj>)
 ##
-InstallMethod(DestroyGObject, "method for IsGObject", [IsGObject and IsGObjectRep],
+InstallMethod(GObjectDestroy, "method for IsGObject", [IsGObject and IsGObjectRep],
 function(obj)
   _GGAP_DESTROY_OBJECT(obj);
 end);

@@ -16,6 +16,7 @@
 #include "gap-widgets.h"
 #include "mooutils/moomarshals.h"
 #include "mooutils/mooutils-gobject.h"
+#include "mooutils/mooutils-misc.h"
 #include "mooedit/mooeditor.h"
 #include "mooapp/moohtml.h"
 #include <gtk/gtk.h>
@@ -683,8 +684,26 @@ map_id (const char  *id,
 }
 
 
+#if GTK_CHECK_VERSION(2,6,0)
 static void
-ref_types (void)
+activate_url (G_GNUC_UNUSED GtkAboutDialog *about,
+              const char *link,
+              G_GNUC_UNUSED gpointer data)
+{
+    moo_open_url (link);
+}
+
+static void
+activate_email (G_GNUC_UNUSED GtkAboutDialog *about,
+                const char *email,
+                G_GNUC_UNUSED gpointer data)
+{
+    moo_open_email (email, NULL, NULL);
+}
+#endif
+
+static void
+init_gtk_stuff (void)
 {
     static gboolean been_here;
     volatile GType type;
@@ -696,6 +715,11 @@ ref_types (void)
         type = MOO_TYPE_EDIT;
 #ifdef MOO_USE_XML
         type = MOO_TYPE_HTML;
+#endif
+
+#if GTK_CHECK_VERSION(2,6,0)
+        gtk_about_dialog_set_email_hook (activate_url, NULL, NULL);
+        gtk_about_dialog_set_url_hook (activate_url, NULL, NULL);
 #endif
     }
 }
@@ -716,7 +740,7 @@ gap_glade_xml_new (const char     *file,
     g_return_val_if_fail (callbacks_p != NULL, FALSE);
     g_return_val_if_fail (!type_dict || MS_VALUE_TYPE (type_dict) == MS_VALUE_DICT, FALSE);
 
-    ref_types ();
+    init_gtk_stuff ();
 
     root = root && root[0] ? root : NULL;
     xml = moo_glade_xml_new_empty ();

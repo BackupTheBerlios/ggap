@@ -58,6 +58,16 @@ function(listview, row, data)
 end;
 
 
+_GGAPDemoAbout :=
+function(menuitem, data)
+  if not IsBound(data.about) then
+    data.about := GladeWindow(data.file, "aboutdialog");
+    WindowSetHideOnClose(data.about, true);
+  fi;
+  WindowPresent(data.about);
+end;
+
+
 GGAPDemo := function()
   local window, file, data, names;
 
@@ -67,7 +77,7 @@ GGAPDemo := function()
     Error("could not find glade file");
   fi;
 
-  window := CreateGladeWindow(file, rec(info:="MooHtml"));
+  window := GladeWindow(file, "window", rec(info:="MooHtml"));
   data := rec(window:=window, file:=file, row:=0);
 
   SetFont(window.source, "Monospace");
@@ -75,6 +85,7 @@ GGAPDemo := function()
 
   ConnectCallback(window.list, "selection-changed", _GGAPDemoListSelectionChanged, data);
   ConnectCallback(window.list, "row-activated", _GGAPDemoListRowActivated, data);
+  ConnectCallback(window.about, "activate", _GGAPDemoAbout, data);
 
   data.demos := [
     ["This demo", # Text that appears in the list

@@ -542,6 +542,24 @@ G_STMT_START {                                                          \
 
 
 static MSValue *
+present_func (MSValue   *arg,
+              MSContext *ctx)
+{
+    GapObject *wrapper;
+
+    CHECK_SESSION ();
+    GET_OBJECT (wrapper, arg);
+
+    g_return_val_if_fail (GTK_IS_WINDOW (wrapper->obj), NULL);
+
+    gtk_window_present (wrapper->obj);
+    send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
+
+    return ms_value_none ();
+}
+
+
+static MSValue *
 create_glade_window_func (MSValue   *arg1,
                           MSValue   *arg2,
                           MSValue   *arg3,
@@ -1594,7 +1612,8 @@ G_STMT_START {                                  \
     ADD_FUNC (set_property_func, ms_cfunc_new_2, "GapSetProperty");
     ADD_FUNC (get_property_func, ms_cfunc_new_2, "GapGetProperty");
 
-    ADD_FUNC (create_glade_window_func, ms_cfunc_new_3, "GapCreateGladeWindow");
+    ADD_FUNC (present_func, ms_cfunc_new_1, "GapPresent");
+    ADD_FUNC (create_glade_window_func, ms_cfunc_new_3, "GapGladeWindow");
     ADD_FUNC (glade_lookup_func, ms_cfunc_new_2, "GapGladeLookup");
 
     ADD_FUNC (run_dialog_func, ms_cfunc_new_1, "GapRunDialog");

@@ -31,7 +31,11 @@ DeclareCategory("IsHtml", IsTextView);
 #C  IsWindow
 ##
 DeclareCategory("IsWindow", IsWidget);
-DeclareGlobalFunction("CloseWindow");
+DeclareGlobalFunction("WindowPresent");
+DeclareGlobalFunction("WindowClose");
+DeclareGlobalFunction("WindowSetHideOnClose");
+DeclareGlobalFunction("WindowAddCloseHook");
+DeclareGlobalFunction("WindowRemoveCloseHook");
 
 
 #############################################################################
@@ -39,7 +43,7 @@ DeclareGlobalFunction("CloseWindow");
 ##  GladeWindow - window created from a glade file
 ##
 DeclareCategory("IsGladeWindow", IsWindow);
-DeclareGlobalFunction("CreateGladeWindow");
+DeclareGlobalFunction("GladeWindow");
 DeclareGlobalFunction("GladeLookupWidget");
 
 
@@ -115,6 +119,7 @@ DeclareOperation("SetHighlight", [IsTextView, IsBool]);
 ##  Private functions, do not use them
 ##
 DeclareGlobalFunction("_GGAP_CLOSE_WINDOW");
+DeclareGlobalFunction("_GGAP_HIDE_ON_CLOSE");
 
 
 #E
