@@ -18,23 +18,13 @@
 #include <gtk/gtkstock.h>
 
 
-struct _GapEditWindowPrivate {
-};
-
-
 static GHashTable *tmp_to_real;    /* char* -> MooEdit* */
 static GHashTable *real_to_tmp;    /* MooEdit* -> GSList* (char*) */
 
 
-static void     gap_edit_window_class_init  (GapEditWindowClass *klass);
-static void     gap_edit_window_init        (GapEditWindow      *window);
-static void     gap_edit_window_destroy     (GtkObject          *object);
-
 static void     gap_edit_window_close_doc   (MooEditWindow      *window,
                                              MooEdit            *doc);
-
 static void     gap_edit_window_send_file   (GapEditWindow      *window);
-static void     gap_edit_window_send_copy   (GapEditWindow      *window);
 static void     gap_edit_window_send_selection (GapEditWindow   *window);
 
 
@@ -42,9 +32,9 @@ static void     gap_edit_window_send_selection (GapEditWindow   *window);
 G_DEFINE_TYPE (GapEditWindow, gap_edit_window, MOO_TYPE_EDIT_WINDOW)
 
 
-static void gap_edit_window_class_init (GapEditWindowClass *klass)
+static void
+gap_edit_window_class_init (GapEditWindowClass *klass)
 {
-    GtkObjectClass *gtkobject_class = GTK_OBJECT_CLASS (klass);
     MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
     MooEditWindowClass *edit_window_class = MOO_EDIT_WINDOW_CLASS (klass);
 
@@ -53,7 +43,6 @@ static void gap_edit_window_class_init (GapEditWindowClass *klass)
 
     moo_window_class_set_id (window_class, "Editor", "Editor");
 
-    gtkobject_class->destroy = gap_edit_window_destroy;
     edit_window_class->close_doc = gap_edit_window_close_doc;
 
     if (!GAP_APP_EDITOR_MODE)
@@ -64,14 +53,6 @@ static void gap_edit_window_class_init (GapEditWindowClass *klass)
                                      "tooltip", "Send File",
                                      "stock-id", GTK_STOCK_EXECUTE,
                                      "closure-callback", gap_edit_window_send_file,
-                                     "condition::sensitive", "has-open-document",
-                                     NULL);
-        moo_window_class_new_action (window_class, "SendCopy",
-                                     "display-name", "Send Copy",
-                                     "label", "Send Copy",
-                                     "tooltip", "Send Copy",
-                                     "stock-id", GTK_STOCK_CONVERT,
-                                     "closure-callback", gap_edit_window_send_copy,
                                      "condition::sensitive", "has-open-document",
                                      NULL);
         moo_window_class_new_action (window_class, "SendSelection",
@@ -86,24 +67,9 @@ static void gap_edit_window_class_init (GapEditWindowClass *klass)
 }
 
 
-static void gap_edit_window_init (GapEditWindow *window)
-{
-    window->priv = g_new0 (GapEditWindowPrivate, 1);
-}
-
-
 static void
-gap_edit_window_destroy (GtkObject          *object)
+gap_edit_window_init (G_GNUC_UNUSED GapEditWindow *window)
 {
-    GapEditWindow *window = GAP_EDIT_WINDOW (object);
-
-    if (window->priv)
-    {
-        g_free (window->priv);
-        window->priv = NULL;
-    }
-
-    GTK_OBJECT_CLASS(gap_edit_window_parent_class)->destroy (object);
 }
 
 
@@ -169,17 +135,6 @@ send_copy (GapEditWindow *window,
 
 
 static void
-gap_edit_window_send_copy (GapEditWindow *window)
-{
-    MooEdit *doc;
-
-    doc = moo_edit_window_get_active_doc (MOO_EDIT_WINDOW (window));
-    g_return_if_fail (doc != NULL);
-    send_copy (window, doc);
-}
-
-
-static void
 gap_edit_window_send_file (GapEditWindow *window)
 {
     MooEdit *doc;
@@ -211,9 +166,11 @@ gap_edit_window_send_selection (GapEditWindow *window)
     if (!text)
         text = moo_text_view_get_text (MOO_TEXT_VIEW (doc));
 
-    send_and_bring_to_front (text);
-
-    g_free (text);
+    if (text)
+    {
+        send_and_bring_to_front (text);
+        g_free (text);
+    }
 }
 
 

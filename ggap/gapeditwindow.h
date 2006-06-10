@@ -28,14 +28,12 @@ G_BEGIN_DECLS
 
 
 typedef struct _GapEditWindow        GapEditWindow;
-typedef struct _GapEditWindowPrivate GapEditWindowPrivate;
 typedef struct _GapEditWindowClass   GapEditWindowClass;
 
 
 struct _GapEditWindow
 {
     MooEditWindow base;
-    GapEditWindowPrivate *priv;
 };
 
 struct _GapEditWindowClass

@@ -313,10 +313,10 @@ gap_app_run (MooApp     *mapp)
     MooEditor *editor;
 
     app = GAP_APP (mapp);
+    gap_app_output_start ();
 
     if (!GAP_APP_EDITOR_MODE && !app->editor_mode)
     {
-        gap_app_output_start ();
         gap_app_ensure_terminal (app);
         gap_app_start_gap (app);
     }
@@ -333,7 +333,7 @@ gap_app_run (MooApp     *mapp)
 
 
 static void
-gap_app_quit (MooApp     *app)
+gap_app_quit (MooApp *app)
 {
     gap_app_output_shutdown ();
     MOO_APP_CLASS(gap_app_parent_class)->quit (app);
@@ -578,6 +578,10 @@ gap_app_feed_gap (GapApp     *app,
 {
     g_return_if_fail (GAP_IS_APP (app) && text != NULL);
     gap_app_ensure_terminal (app);
+
+    if (!moo_term_child_alive (app->term))
+        gap_app_start_gap (app);
+
     g_return_if_fail (moo_term_child_alive (app->term));
     moo_term_feed_child (app->term, text, -1);
 }
