@@ -20,12 +20,27 @@ ggap_DATA = ui.xml.example
 
 desktopdir = $(datadir)/applications
 desktop_DATA = ggap.desktop
+mimedir = $(datadir)/mime
+mime_packagesdir = $(mimedir)/packages
+mime_packages_DATA = gap.xml
 appicondir = $(datadir)/pixmaps
 appicon_DATA = ggap/moo/mooutils/pixmaps/ggap.png
 iconthemedir = $(datadir)/icons/hicolor/48x48/apps
 icontheme_DATA = ggap/moo/mooutils/pixmaps/ggap.png
 
-EXTRA_DIST += $(desktop_DATA) $(ggap_DATA)
+
+update_mime = update-mime-database $(mimedir)
+
+install-data-hook:
+	if echo "Updating mime database." && $(update_mime); then		\
+		echo "Done.";							\
+	else									\
+		echo "*** Mime database not updated. After install, run this:";	\
+		echo $(update_mime);						\
+	fi
+
+
+EXTRA_DIST += $(desktop_DATA) $(ggap_DATA) $(mime_packages_DATA)
 
 generated = 			\
 	pkg/ggap/PackageInfo.g	\
