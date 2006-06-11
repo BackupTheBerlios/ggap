@@ -49,6 +49,7 @@ static gboolean gap_term_key_press      (GtkWidget      *widget,
 static gboolean gap_term_button_press   (GtkWidget      *widget,
                                          GdkEventButton *event);
 static void     gap_term_new_line       (MooTerm        *term);
+static void     gap_term_reset          (MooTerm        *term);
 static gboolean do_analyze              (GapTerm        *term);
 
 static ErrInfo *err_info_new            (const char         *file,
@@ -61,7 +62,8 @@ static void     err_info_free           (ErrInfo            *err);
 G_DEFINE_TYPE (GapTerm, gap_term, MOO_TYPE_TERM)
 
 
-static void gap_term_class_init (GapTermClass *klass)
+static void
+gap_term_class_init (GapTermClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GtkObjectClass *gtkobject_class = GTK_OBJECT_CLASS (klass);
@@ -73,10 +75,12 @@ static void gap_term_class_init (GapTermClass *klass)
     gtkwidget_class->button_press_event = gap_term_button_press;
     gtkwidget_class->key_press_event = gap_term_key_press;
     term_class->new_line = gap_term_new_line;
+    term_class->reset = gap_term_reset;
 }
 
 
-static void gap_term_init (GapTerm *term)
+static void
+gap_term_init (GapTerm *term)
 {
     term->priv = g_new0 (GapTermPrivate, 1);
     term->priv->last_line_checked = -1;
@@ -126,6 +130,14 @@ gap_term_destroy (GtkObject *object)
     }
 
     GTK_OBJECT_CLASS(gap_term_parent_class)->destroy (object);
+}
+
+
+static void
+gap_term_reset (MooTerm *term)
+{
+    GAP_TERM (term)->priv->last_line_checked = -1;
+    MOO_TERM_CLASS(gap_term_parent_class)->reset (term);
 }
 
 
@@ -321,8 +333,7 @@ gap_term_button_press (GtkWidget      *widget,
 
         if (err)
         {
-            MooEditor *editor = moo_app_get_editor (moo_app_get_instance ());
-            moo_editor_open_file_line (editor, err->file, err->line);
+            gap_edit_window_open_file (err->file, err->line, widget);
             return TRUE;
         }
     }

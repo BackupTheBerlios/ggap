@@ -194,3 +194,30 @@ gap_edit_window_close_doc (MooEditWindow      *window,
     if (MOO_EDIT_WINDOW_CLASS(gap_edit_window_parent_class)->close_doc)
         MOO_EDIT_WINDOW_CLASS(gap_edit_window_parent_class)->close_doc (window, doc);
 }
+
+
+void
+gap_edit_window_open_file (const char *filename,
+                           int         line,
+                           GtkWidget  *widget)
+{
+    MooEdit *doc;
+    MooEditor *editor;
+
+    g_return_if_fail (filename != NULL);
+
+    editor = moo_app_get_editor (moo_app_get_instance ());
+    doc = g_hash_table_lookup (tmp_to_real, filename);
+
+    if (!doc)
+    {
+        if (moo_editor_open_file (editor, NULL, widget, filename, NULL))
+            doc = moo_editor_get_doc (editor, filename);
+    }
+
+    if (doc)
+    {
+        moo_editor_set_active_doc (editor, doc);
+        moo_text_view_move_cursor (MOO_TEXT_VIEW (doc), line, 0, FALSE, TRUE);
+    }
+}
