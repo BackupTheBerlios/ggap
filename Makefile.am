@@ -33,6 +33,7 @@ icontheme_DATA = ggap/moo/mooutils/pixmaps/ggap.png
 update_mime = update-mime-database $(mimedir)
 update_icon_cache = gtk-update-icon-cache -f -t $(hicolor)
 
+# XXX make distclean ignore this
 install-data-hook:
 	if echo "Updating mime database" && $(update_mime); then		\
 		echo "Done.";							\
