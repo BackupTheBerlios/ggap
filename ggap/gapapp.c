@@ -135,11 +135,22 @@ gap_app_class_init (GapAppClass *klass)
 //                                  "closure-callback", execute_selection,
 //                                  NULL);
 
+    moo_window_class_new_action (term_class, "Quit",
+                                 "display-name", "Quit",
+                                 "label", "_Quit",
+                                 "tooltip", "Quit",
+                                 "stock-id", GTK_STOCK_QUIT,
+                                 "accel", "<alt>Q",
+                                 "closure-callback", moo_app_quit,
+                                 "closure-proxy-func", moo_app_get_instance,
+                                 NULL);
+
     moo_window_class_new_action (term_class, "Restart",
                                  "display-name", "Restart",
                                  "label", "_Restart",
                                  "tooltip", "Restart GAP",
                                  "stock-id", MOO_STOCK_RESTART,
+                                 "accel", "<alt>R",
                                  "closure-callback", gap_app_restart_gap,
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
@@ -229,7 +240,7 @@ gap_app_init (G_GNUC_UNUSED GapApp *app)
     moo_prefs_new_key_bool (APP_PREFS_GAP_INIT_PKG, TRUE); /* XXX */
     moo_prefs_new_key_string (APP_PREFS_GAP_WORKING_DIR, NULL);
     moo_prefs_new_key_bool (APP_PREFS_GAP_SAVE_WORKSPACE, TRUE);
-    moo_prefs_new_key_bool (APP_PREFS_GAP_CLEAR_TERMINAL, FALSE);
+    moo_prefs_new_key_bool (APP_PREFS_GAP_CLEAR_TERMINAL, TRUE);
 }
 
 
