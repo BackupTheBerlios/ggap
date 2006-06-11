@@ -7,7 +7,8 @@ Recommended GTK version is the latest (today it's 2.8).
 Recommended way to obtain GTK libraries for windows users is to download installer
 from http://gladewin32.sf.net .
 
-Optional dependensies are: python, pygtk, libxml2.
+Optional dependensies are: python, pygtk, libxml2 (this is a very important
+dependency, without it syntax highlighting in the text editor will not work).
 
 Building GGAP on Unix-like system
 =================================
@@ -66,7 +67,7 @@ cd ../cygwin-build
 Installer is made with Inno Setup; there is ggap.iss setup scripts
 in wininstaller directory. I do it with wine, and use makewin script for this.
 
-If you need help with building GGAP for windows, contact me at muntyan@math.tamu.edu (I
+If you need help with building GGAP for windows, contact me at muntyan at tamu.edu (I
 doubt anyone will want to do it, but anyway).
 
 
