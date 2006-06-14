@@ -145,10 +145,11 @@ gap_edit_window_send_file (GapEditWindow *window)
 
     filename = moo_edit_get_filename (doc);
 
-    if (filename)
+    if (!filename)
+        return send_copy (window, doc);
+
+    if (!MOO_EDIT_IS_MODIFIED (doc) || moo_edit_save (doc, NULL))
         send_filename (filename);
-    else
-        send_copy (window, doc);
 }
 
 
