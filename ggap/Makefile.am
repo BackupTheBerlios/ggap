@@ -105,6 +105,7 @@ ggap.c: ggap.opag
 # moo
 #
 
+THANKS = $(top_srcdir)/THANKS
 noinst_PROGRAMS =
 moo_prefix = moo
 SUBDIRS =

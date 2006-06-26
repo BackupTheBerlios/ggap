@@ -8,7 +8,8 @@ EXTRA_DIST =            \
     INSTALL             \
     mingw-configure     \
     cygwin-configure    \
-    autogen.sh
+    autogen.sh          \
+    THANKS
 
 ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
 
