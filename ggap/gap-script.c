@@ -1319,8 +1319,7 @@ create_entry_dialog (gboolean        entry,
     gtk_widget_show_all (GTK_DIALOG (dialog)->vbox);
 
     if (parent)
-        moo_position_window (dialog, GTK_WIDGET (parent),
-                             FALSE, FALSE, 0, 0);
+        moo_window_set_parent (dialog, GTK_WIDGET (parent));
 
     return dialog;
 }

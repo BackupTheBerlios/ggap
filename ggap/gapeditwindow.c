@@ -77,7 +77,7 @@ static void
 send_and_bring_to_front (const char *string)
 {
     gap_app_feed_gap (GAP_APP_INSTANCE, string);
-    moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window));
+    moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window), 0);
 }
 
 

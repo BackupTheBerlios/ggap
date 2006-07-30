@@ -75,7 +75,7 @@ switch_to_editor (void)
 {
     MooApp *app = moo_app_get_instance ();
     MooEditor *editor = moo_app_get_editor (app);
-    moo_editor_present (editor);
+    moo_editor_present (editor, 0);
 }
 
 

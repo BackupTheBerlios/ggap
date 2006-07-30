@@ -438,7 +438,7 @@ int main (int argc, char *argv[])
 
                         NULL);
 
-    if ((!new_instance && moo_app_send_files (app, files)) ||
+    if ((!new_instance && moo_app_send_files (app, files, 0)) ||
           !moo_app_init (app))
     {
         gdk_notify_startup_complete ();
