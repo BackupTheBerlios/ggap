@@ -72,8 +72,6 @@ void        gap_app_open_workspace          (GapApp     *app,
 void        gap_app_feed_gap                (GapApp     *app,
                                              const char *text);
 
-void        gap_app_setup_command           (MooCommand *cmd,
-                                             GtkWindow  *window);
 void        gap_app_exec_command            (GapApp     *app,
                                              const char *data,
                                              guint       len);

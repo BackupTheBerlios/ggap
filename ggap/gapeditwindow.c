@@ -47,7 +47,7 @@ gap_edit_window_class_init (GapEditWindowClass *klass)
 
     if (!GAP_APP_EDITOR_MODE)
     {
-        moo_window_class_new_action (window_class, "SendFile",
+        moo_window_class_new_action (window_class, "SendFile", NULL,
                                      "display-name", "Send File",
                                      "label", "Send File",
                                      "tooltip", "Send File",
@@ -55,7 +55,7 @@ gap_edit_window_class_init (GapEditWindowClass *klass)
                                      "closure-callback", gap_edit_window_send_file,
                                      "condition::sensitive", "has-open-document",
                                      NULL);
-        moo_window_class_new_action (window_class, "SendSelection",
+        moo_window_class_new_action (window_class, "SendSelection", NULL,
                                      "display-name", "Send Selection",
                                      "label", "Send Selection",
                                      "tooltip", "Send Selection",
@@ -77,7 +77,7 @@ static void
 send_and_bring_to_front (const char *string)
 {
     gap_app_feed_gap (GAP_APP_INSTANCE, string);
-    moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window), 0);
+    _moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window), 0);
 }
 
 

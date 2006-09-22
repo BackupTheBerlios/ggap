@@ -124,7 +124,7 @@ gap_term_destroy (GtkObject *object)
         if (term->priv->analyze_idle_id)
             g_source_remove (term->priv->analyze_idle_id);
         term->priv->analyze_idle_id = 0;
-        egg_regex_free (term->priv->error_regex);
+        egg_regex_unref (term->priv->error_regex);
         g_free (term->priv);
         term->priv = NULL;
     }
@@ -230,14 +230,14 @@ do_analyze (GapTerm *term)
 
         egg_regex_clear (term->priv->error_regex);
 
-        if (egg_regex_match (term->priv->error_regex, message->str, message->len, 0) > 0)
+        if (egg_regex_match (term->priv->error_regex, message->str, 0) > 0)
         {
             char *file_string, *info_string, *line_string;
             long line_no;
 
-            info_string = egg_regex_fetch (term->priv->error_regex, message->str, 1);
-            file_string = egg_regex_fetch (term->priv->error_regex, message->str, 2);
-            line_string = egg_regex_fetch (term->priv->error_regex, message->str, 3);
+            info_string = egg_regex_fetch (term->priv->error_regex, 1, message->str);
+            file_string = egg_regex_fetch (term->priv->error_regex, 2, message->str);
+            line_string = egg_regex_fetch (term->priv->error_regex, 3, message->str);
 
             g_assert (info_string && file_string && line_string);
 

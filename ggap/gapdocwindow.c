@@ -84,8 +84,8 @@ gap_doc_window_init_gui (GapDocWindow *win)
 static void
 gap_doc_window_init (GapDocWindow *win)
 {
-    win->xml = moo_glade_xml_new_empty ();
-    moo_glade_xml_parse_memory (win->xml, GAP_DOC_GLADE_UI, -1, "hpaned");
+    win->xml = moo_glade_xml_new_empty (NULL);
+    moo_glade_xml_parse_memory (win->xml, GAP_DOC_GLADE_UI, -1, "hpaned", NULL);
 
     gtk_container_add (GTK_CONTAINER (MOO_WINDOW(win)->vbox),
                        moo_glade_xml_get_widget (win->xml, "hpaned"));

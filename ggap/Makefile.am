@@ -1,3 +1,5 @@
+SUBDIRS = moo .
+
 EXTRA_PROGRAMS = ggap pipehelper
 bin_PROGRAMS =
 
@@ -25,6 +27,7 @@ AM_CFLAGS =                               \
     $(MOO_DEBUG_CFLAGS)
 
 ggap_LDADD =                \
+    moo/libmoo.la           \
     $(MOO_LIBS)             \
     $(PYTHON_LDFLAGS)       \
     $(PYTHON_EXTRA_LIBS)
@@ -99,63 +102,3 @@ gapdoc-glade.h: glade/gapdoc.glade $(XML2H)
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c
-
-
-###########################################################################
-# moo
-#
-
-THANKS = $(top_srcdir)/THANKS
-noinst_PROGRAMS =
-moo_prefix = moo
-SUBDIRS =
-
-# common moo Makefile
-include moo/Makefile.incl
-# mooutils
-include moo/mooutils/Makefile.incl
-include moo/mooutils/glade/Makefile.incl
-include moo/mooutils/moofileview/Makefile.incl
-include moo/mooutils/mooscript/Makefile.incl
-include moo/mooutils/newgtk/Makefile.incl
-include moo/mooutils/pcre/Makefile.incl
-include moo/mooutils/pixmaps/Makefile.incl
-include moo/mooutils/xdgmime/Makefile.incl
-# mooedit
-include moo/mooedit/Makefile.incl
-include moo/mooedit/glade/Makefile.incl
-include moo/mooedit/syntax/Makefile.incl
-include moo/mooedit/plugins/Makefile.incl
-include moo/mooedit/plugins/activestrings/Makefile.incl
-include moo/mooedit/plugins/completion/Makefile.incl
-include moo/mooedit/plugins/fileselector/Makefile.incl
-# mooterm
-include moo/mooterm/Makefile.incl
-include moo/mooterm/glade/Makefile.incl
-# mooapp
-include moo/mooapp/Makefile.incl
-include moo/mooapp/glade/Makefile.incl
-# moopython
-include moo/moopython/Makefile.incl
-include moo/moopython/codegen/Makefile.incl
-include moo/moopython/pygtk/Makefile.incl
-include moo/moopython/plugins/Makefile.incl
-
-
-CLEANFILES += $(moo_cleanfiles)
-
-ggap_SOURCES += $(moo_sources)
-nodist_ggap_SOURCES += $(moo_nodist_sources)
-BUILT_SOURCES += $(moo_built_sources)
-
-if MOO_OS_MINGW
-ggap_SOURCES += $(moo_win32_sources)
-EXTRA_DIST += $(moo_unix_sources)
-endif
-
-if MOO_OS_UNIX
-ggap_SOURCES += $(moo_unix_sources)
-EXTRA_DIST += $(moo_win32_sources)
-endif
-
-EXTRA_DIST += $(moo_extra_dist)

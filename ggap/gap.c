@@ -53,7 +53,7 @@ gap_init_file (const char *workspace,
 
     if (filename)
     {
-        if (m_unlink (filename))
+        if (_m_unlink (filename))
         {
             int err = errno;
             g_warning ("%s: %s", G_STRLOC, g_strerror (err));
@@ -110,7 +110,7 @@ gap_init_file (const char *workspace,
         g_free (out_escaped);
     }
 
-    if (!moo_save_file_utf8 (filename, contents->str, -1, &error))
+    if (!_moo_save_file_utf8 (filename, contents->str, -1, &error))
     {
         g_critical ("%s: %s", G_STRLOC, error->message);
         g_error_free (error);

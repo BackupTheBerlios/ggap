@@ -14,6 +14,7 @@
 #include "config.h"
 #include "gapsession.h"
 #include "gap-widgets.h"
+#include "mooscript/mooscript-value-private.h"
 #include "mooutils/moomarshals.h"
 #include "mooutils/mooutils-gobject.h"
 #include "mooutils/mooutils-misc.h"
@@ -309,7 +310,7 @@ ms_value_to_gvalue (MSValue    *mval,
     if (!ms_value_get_gvalue (mval, &gval_here))
         return FALSE;
 
-    result = moo_value_convert (&gval_here, gval);
+    result = _moo_value_convert (&gval_here, gval);
 
     g_value_unset (&gval_here);
 
@@ -512,7 +513,7 @@ tree_view_set_items (GapTreeView *gtv,
         return FALSE;
     }
 
-    gap_tree_view_set_val_list (gtv, arg->list.elms, arg->list.n_elms);
+    gap_tree_view_set_val_list (gtv, arg->u.list.elms, arg->u.list.n_elms);
     return TRUE;
 }
 
@@ -730,7 +731,8 @@ gap_glade_xml_new (const char     *file,
                    const char     *root,
                    MSValue        *type_dict,
                    MooGladeXML   **xml_p,
-                   GSList        **callbacks_p)
+                   GSList        **callbacks_p,
+                   GError        **error)
 {
     MooGladeXML *xml;
     GSList *callbacks = NULL;
@@ -743,16 +745,16 @@ gap_glade_xml_new (const char     *file,
     init_gtk_stuff ();
 
     root = root && root[0] ? root : NULL;
-    xml = moo_glade_xml_new_empty ();
+    xml = moo_glade_xml_new_empty (NULL);
 
     moo_glade_xml_map_class (xml, "GtkTextView", MOO_TYPE_TEXT_VIEW);
     moo_glade_xml_map_class (xml, "GtkTreeView", GAP_TYPE_TREE_VIEW);
     moo_glade_xml_set_signal_func (xml, gap_glade_xml_signal_func, &callbacks);
 
     if (type_dict)
-        g_hash_table_foreach (type_dict->hash, (GHFunc) map_id, xml);
+        g_hash_table_foreach (type_dict->u.hash, (GHFunc) map_id, xml);
 
-    if (!moo_glade_xml_parse_file (xml, file, root))
+    if (!moo_glade_xml_parse_file (xml, file, root, error))
     {
         g_object_unref (xml);
         g_slist_foreach (callbacks, (GFunc) gap_callback_free, NULL);

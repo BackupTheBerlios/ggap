@@ -39,7 +39,7 @@ gap_term_window_class_init (GapTermWindowClass *klass)
 
     moo_window_class_set_id (window_class, "Terminal", "Terminal");
 
-    moo_window_class_new_action (window_class, "SwitchToEditor",
+    moo_window_class_new_action (window_class, "SwitchToEditor", NULL,
                                  "display-name", "Switch to Editor",
                                  "label", "Switch to Editor",
                                  "tooltip", "Switch to Editor",
@@ -47,14 +47,14 @@ gap_term_window_class_init (GapTermWindowClass *klass)
                                  "closure-callback", switch_to_editor,
                                  NULL);
 
-    moo_window_class_new_action (window_class, "GAPRead",
+    moo_window_class_new_action (window_class, "GAPRead", NULL,
                                  "display-name", "Read File",
                                  "label", "Read File",
                                  "tooltip", "Read File",
                                  "stock-id", GTK_STOCK_OPEN,
                                  "closure-callback", gap_read_file,
                                  NULL);
-    moo_window_class_new_action (window_class, "GAPOpenWorkspace",
+    moo_window_class_new_action (window_class, "GAPOpenWorkspace", NULL,
                                  "display-name", "Open Workspace",
                                  "label", "Open _Workspace",
                                  "stock-id", GTK_STOCK_OPEN,

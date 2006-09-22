@@ -8,8 +8,8 @@ m4_define([ggap_micro_version], [91])
 m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_version])
 
 m4_define([moo_major_version], [0])
-m4_define([moo_minor_version], [6])
-m4_define([moo_micro_version], [999])
+m4_define([moo_minor_version], [8])
+m4_define([moo_micro_version], [0])
 m4_define([moo_version], [moo_major_version.moo_minor_version.moo_micro_version])
 
 AC_INIT(GGAP, [ggap_version], [muntyan@tamu.edu], ggap)
@@ -31,11 +31,13 @@ AC_SUBST(GGAP_VERSION_MINOR)
 AC_SUBST(GGAP_VERSION_MICRO)
 MOO_DEFINE_VERSIONS
 
+MOO_AC_I18N(ggap, [])
+
 AC_PROG_CC
 AC_PROG_CC_STDC
 AC_HEADER_STDC
-# AC_LIBTOOL_WIN32_DLL
-# AC_PROG_LIBTOOL
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 MOO_AC_PROGS
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
@@ -89,6 +91,16 @@ AC_SUBST(MOO_BUILD_APP)
 AM_CONDITIONAL(MOO_BUILD_PLUGINS,   false)
 AM_CONDITIONAL(MOO_STANDALONE,      false)
 
+if test x$MOO_OS_UNIX != xyes; then
+AM_CONDITIONAL(MOO_INSTALL_LIB, true)
+AM_CONDITIONAL(MOO_BUILD_PYTHON_MODULE, true)
+AM_CONDITIONAL(MOO_INSTALL_HEADERS, false)
+AC_DEFINE(MOO_BUILD_PYTHON_MODULE, 1, MOO_BUILD_PYTHON_MODULE)
+else
+AM_CONDITIONAL(MOO_INSTALL_LIB, false)
+AM_CONDITIONAL(MOO_BUILD_PYTHON_MODULE, false)
+AM_CONDITIONAL(MOO_INSTALL_HEADERS, false)
+fi
 
 ################################################################################
 #  Installation directories, etc.
@@ -97,7 +109,7 @@ MOO_SRC_PREFIX="ggap/moo"
 AC_SUBST(MOO_SRC_PREFIX)
 MOO_AC_RELOC
 MOO_AC_SET_DIRS(ggap)
-MOO_AC_FLAGS
+MOO_AC_FLAGS(ggap/moo)
 
 GGAP_DATA_DIR="${MOO_DATA_DIR}"
 AC_SUBST(GGAP_DATA_DIR)
@@ -114,6 +126,7 @@ MOO_CFLAGS="$MOO_CFLAGS -DGGAP_GAP_DIR=\\\"${GGAP_GAP_DIR}\\\""
 AC_OUTPUT([
 Makefile
 m4/Makefile
+po/Makefile.in
 pkg/ggap/PackageInfo.g
 pkg/ggap/init.g
 pkg/Makefile
@@ -122,6 +135,27 @@ ggap/ggap_res.rc
 ggap/moo/mooterm/termhelper_res.rc
 ggap/moo/moo.pc
 ggap/moo/moo-version.h
+
+ggap/moo/Makefile
+ggap/moo/mooutils/Makefile
+ggap/moo/mooscript/Makefile
+ggap/moo/moofileview/Makefile
+ggap/moo/mooterm/Makefile
+ggap/moo/mooedit/Makefile
+ggap/moo/mooedit/language-specs/Makefile
+ggap/moo/mooedit/gtksourceview/Makefile
+ggap/moo/mooedit/plugins/Makefile
+ggap/moo/mooedit/plugins/activestrings/Makefile
+ggap/moo/mooedit/plugins/completion/Makefile
+ggap/moo/mooedit/plugins/fileselector/Makefile
+ggap/moo/mooapp/Makefile
+ggap/moo/moopython/Makefile
+ggap/moo/moopython/plugins/Makefile
+ggap/moo/moopython/plugins/pyproject/Makefile
+ggap/moo/moopython/pygtk/Makefile
+ggap/moo/mooutils/pcre/Makefile
+ggap/moo/mooutils/xdgmime/Makefile
+
 wininstaller/ggap.iss
 ])
 
@@ -139,13 +173,16 @@ if test x$MOO_OS_CYGWIN != "xyes"; then
     fi
 
     echo
-    echo "    OS                        = $system"
-    echo "    prefix                    = $prefix"
-    echo "    python support            = $MOO_USE_PYGTK"
-    echo "    build pcre library        = $MOO_BUILD_PCRE"
+    echo "    OS                                        = $system"
+    echo "    python support                            = $MOO_USE_PYTHON"
+    echo "    pygtk support                             = $MOO_USE_PYGTK"
+    echo "    xml support                               = $MOO_USE_XML"
+    echo "    xdgmime support                           = $MOO_USE_XDGMIME"
+    echo "    build pcre library                        = $MOO_BUILD_PCRE"
     echo
-    echo "    editor lang files go to   = $MOO_TEXT_LANG_FILES_DIR"
-    echo "    shared package goes to    = $GGAP_GAP_DIR"
+    echo "    prefix                                    = $prefix"
+    echo "    editor lang files go to                   = $MOO_TEXT_LANG_FILES_DIR"
+    echo "    shared package goes to                    = $GGAP_GAP_DIR"
     echo
 else
     echo

@@ -80,7 +80,8 @@ gboolean    gap_glade_xml_new   (const char     *file,
                                  const char     *root,
                                  MSValue        *type_dict,
                                  MooGladeXML   **xml,
-                                 GSList        **callbacks);
+                                 GSList        **callbacks,
+                                 GError        **error);
 
 
 /**********************************************************************************/

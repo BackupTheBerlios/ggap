@@ -39,7 +39,6 @@ g  gap-cmd      "=COMMAND GAP command line"                     reqarg
 e  editor       "Do not start GAP automatically"
 E  pure-editor  "Do not enable any GAP stuff"
 n  new-app      "Run new instance of application"
-u  unique       "Use running instance of application"
    simple       "Simple mode"
 l  log          "[=FILE] Show debug output or write it to FILE" optarg
    version      "Display version information and exit"          return
@@ -58,7 +57,6 @@ static void usage (void)
     g_print ("%s", STR_HELP_EDITOR);
     g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
-    g_print ("%s", STR_HELP_UNIQUE);
     g_print ("%s", STR_HELP_SIMPLE);
     g_print ("%s", STR_HELP_LOG);
     g_print ("%s", STR_HELP_VERSION);
@@ -108,9 +106,7 @@ int main (int argc, char *argv[])
             moo_set_log_func_window (TRUE);
     }
 
-    if (_ggap_opt_unique)
-        new_instance = FALSE;
-    else if (_ggap_opt_new_app)
+    if (_ggap_opt_new_app)
         new_instance = TRUE;
     else
 #if DEFAULT_NEW_INSTANCE
@@ -137,7 +133,7 @@ int main (int argc, char *argv[])
 
                         NULL);
 
-    if ((!new_instance && moo_app_send_files (app, files, 0)) ||
+    if ((!new_instance && moo_app_send_files (app, files, 0, 0, NULL)) ||
           !moo_app_init (app))
     {
         gdk_notify_startup_complete ();

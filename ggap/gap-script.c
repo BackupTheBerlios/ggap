@@ -17,6 +17,7 @@
 #include "gapoutput.h"
 #include <mooscript/mooscript-context.h>
 #include <mooscript/mooscript-parser.h>
+#include <mooscript/mooscript-value-private.h>
 #include <mooutils/mooglade.h>
 #include <mooutils/mooutils-misc.h>
 #include <mooutils/moofiledialog.h>
@@ -70,15 +71,15 @@ setup_terminal_context (MSContext *ctx)
 }
 
 
-void
-gap_app_setup_command (MooCommand *cmd,
-                       GtkWindow  *window)
-{
-    if (MOO_IS_EDIT_WINDOW (window))
-        setup_editor_context (cmd->context);
-    else
-        setup_terminal_context (cmd->context);
-}
+// void
+// gap_app_setup_command (MooCommand *cmd,
+//                        GtkWindow  *window)
+// {
+//     if (MOO_IS_EDIT_WINDOW (window))
+//         setup_editor_context (cmd->context);
+//     else
+//         setup_terminal_context (cmd->context);
+// }
 
 
 /**************************************************************************/
@@ -227,9 +228,9 @@ tree_path_from_value (MSValue *val)
 
     ret = gtk_tree_path_new ();
 
-    for (i = 0; i < val->list.n_elms; ++i)
+    for (i = 0; i < val->u.list.n_elms; ++i)
     {
-        MSValue *elm = val->list.elms[i];
+        MSValue *elm = val->u.list.elms[i];
 
         if (MS_VALUE_TYPE (elm) != MS_VALUE_INT)
         {
@@ -237,7 +238,7 @@ tree_path_from_value (MSValue *val)
             g_return_val_if_reached (NULL);
         }
 
-        gtk_tree_path_append_index (ret, elm->ival - 1);
+        gtk_tree_path_append_index (ret, elm->u.ival - 1);
     }
 
     return ret;
@@ -592,7 +593,7 @@ create_glade_window_func (MSValue   *arg1,
     if (arg2)
         root = ms_value_print (arg2);
 
-    if (!gap_glade_xml_new (file, root, arg3, &xml, &callbacks))
+    if (!gap_glade_xml_new (file, root, arg3, &xml, &callbacks, NULL))
     {
         ctx_send_error (ctx, "Error loading glade file");
         goto out;
@@ -868,7 +869,7 @@ set_property_func (MSValue   *obj,
                                      "Invalid argument in SetProperty");
 
     data.wrapper = wrapper;
-    g_hash_table_foreach (dict->hash, (GHFunc) set_one_property, &data);
+    g_hash_table_foreach (dict->u.hash, (GHFunc) set_one_property, &data);
 
     if (!data.error)
         send_string_result (ctx, GAP_STATUS_OK, NULL, NULL);
@@ -1014,7 +1015,7 @@ run_dialog_message_func (MSValue   *arg_type,
     char *primary = NULL, *secondary = NULL;
     char *title = NULL;
     GtkWidget *dialog;
-    GtkWindow *parent = moo_get_toplevel_window ();
+    GtkWindow *parent = _moo_get_toplevel_window ();
 
     CHECK_SESSION ();
 
@@ -1043,7 +1044,7 @@ run_dialog_message_func (MSValue   *arg_type,
         {
             if (MS_VALUE_TYPE (val) == MS_VALUE_INT)
             {
-                buttons = val->ival;
+                buttons = val->u.ival;
             }
             else
             {
@@ -1075,7 +1076,7 @@ run_dialog_message_func (MSValue   *arg_type,
         {
             if (MS_VALUE_TYPE (val) == MS_VALUE_INT)
             {
-                default_response = val->ival;
+                default_response = val->u.ival;
             }
             else
             {
@@ -1125,7 +1126,7 @@ run_dialog_file_func (MSValue   *arg_type,
     char *start = NULL, *title = NULL;
     gboolean multiple = FALSE;
     MooFileDialog *dialog;
-    GtkWindow *parent = moo_get_toplevel_window ();
+    GtkWindow *parent = _moo_get_toplevel_window ();
     GString *data;
 
     CHECK_SESSION ();
@@ -1357,7 +1358,7 @@ run_dialog_entry_func (MSValue   *arg_entry,
     int response, default_response = G_MAXINT;
     GtkButtonsType buttons = GTK_BUTTONS_CLOSE;
     GtkWidget *dialog;
-    GtkWindow *parent = moo_get_toplevel_window ();
+    GtkWindow *parent = _moo_get_toplevel_window ();
     GString *data;
 
     CHECK_SESSION ();
@@ -1384,7 +1385,7 @@ run_dialog_entry_func (MSValue   *arg_entry,
         {
             if (MS_VALUE_TYPE (val) == MS_VALUE_INT)
             {
-                buttons = val->ival;
+                buttons = val->u.ival;
             }
             else
             {
@@ -1416,7 +1417,7 @@ run_dialog_entry_func (MSValue   *arg_entry,
         {
             if (MS_VALUE_TYPE (val) == MS_VALUE_INT)
             {
-                default_response = val->ival;
+                default_response = val->u.ival;
             }
             else
             {

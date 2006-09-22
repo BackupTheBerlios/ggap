@@ -61,9 +61,9 @@ static void         gap_app_exec_cmd        (MooApp     *app,
                                              const char *data,
                                              guint       len);
 static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
-static void         gap_app_cmd_setup       (MooApp     *app,
-                                             MooCommand *cmd,
-                                             GtkWindow  *window);
+// static void         gap_app_cmd_setup       (MooApp     *app,
+//                                              MooCommand *cmd,
+//                                              GtkWindow  *window);
 
 static void         gap_app_start_gap_real  (GapApp     *app,
                                              const char *workspace);
@@ -91,7 +91,7 @@ gap_app_class_init (GapAppClass *klass)
     app_class->try_quit = gap_app_try_quit;
     app_class->prefs_dialog = gap_app_prefs_dialog;
     app_class->exec_cmd = gap_app_exec_cmd;
-    app_class->cmd_setup = gap_app_cmd_setup;
+//     app_class->cmd_setup = gap_app_cmd_setup;
 
     gobject_class->set_property = gap_app_set_property;
     gobject_class->get_property = gap_app_get_property;
@@ -126,7 +126,7 @@ gap_app_class_init (GapAppClass *klass)
     edit_class = g_type_class_ref (GAP_TYPE_EDIT_WINDOW);
     term_class = g_type_class_ref (GAP_TYPE_TERM_WINDOW);
 
-//     moo_window_class_new_action (edit_class, "ExecuteSelection",
+//     moo_window_class_new_action (edit_class, "ExecuteSelection", NULL,
 //                                  "display-name", "Execute Selection",
 //                                  "label", "_Execute Selection",
 //                                  "tooltip", "Execute Selection",
@@ -135,7 +135,7 @@ gap_app_class_init (GapAppClass *klass)
 //                                  "closure-callback", execute_selection,
 //                                  NULL);
 
-    moo_window_class_new_action (term_class, "Quit",
+    moo_window_class_new_action (term_class, "Quit", NULL,
                                  "display-name", "Quit",
                                  "label", "_Quit",
                                  "tooltip", "Quit",
@@ -145,7 +145,7 @@ gap_app_class_init (GapAppClass *klass)
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
-    moo_window_class_new_action (term_class, "Restart",
+    moo_window_class_new_action (term_class, "Restart", NULL,
                                  "display-name", "Restart",
                                  "label", "_Restart",
                                  "tooltip", "Restart GAP",
@@ -155,7 +155,7 @@ gap_app_class_init (GapAppClass *klass)
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
-    moo_window_class_new_action (term_class, "Interrupt",
+    moo_window_class_new_action (term_class, "Interrupt", NULL,
                                  "display-name", "Interrupt",
                                  "label", "_Interrupt",
                                  "tooltip", "Interrupt computation",
@@ -164,14 +164,14 @@ gap_app_class_init (GapAppClass *klass)
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
-    moo_window_class_new_action (edit_class, "GapDoc",
+    moo_window_class_new_action (edit_class, "GapDoc", NULL,
                                  "display-name", "GAP Documentation",
                                  "label", "_GAP Documentation",
                                  "stock-id", GTK_STOCK_HELP,
                                  "closure-callback", gap_doc_window_show,
                                  NULL);
 
-    moo_window_class_new_action (term_class, "GapDoc",
+    moo_window_class_new_action (term_class, "GapDoc", NULL,
                                  "display-name", "GAP Documentation",
                                  "label", "_GAP Documentation",
                                  "stock-id", GTK_STOCK_HELP,
@@ -453,7 +453,7 @@ make_command_line (const char *cmd_base,
         if (wsp_already_saved)
             g_string_append_printf (cmd, " -L \"%s\"", wsp_file);
 
-        if (!wsp_already_saved && !moo_make_user_data_dir ())
+        if (!wsp_already_saved && !moo_make_user_data_dir (NULL))
             g_critical ("%s: could not create user data dir", G_STRLOC);
 
         if (!wsp_already_saved || init_pkg)
@@ -608,9 +608,9 @@ remove_saved_workspace (void)
     gzipped = g_strdup_printf ("%s.gz", wsp);
 
     if (g_file_test (wsp, G_FILE_TEST_EXISTS))
-        m_unlink (wsp);
+        _m_unlink (wsp);
     if (g_file_test (gzipped, G_FILE_TEST_EXISTS))
-        m_unlink (gzipped);
+        _m_unlink (gzipped);
 
     g_free (wsp);
     g_free (gzipped);
@@ -626,17 +626,18 @@ prefs_page_apply (void)
 static GtkWidget *
 gap_prefs_page_new (void)
 {
-    GtkWidget *page, *button;
+    MooPrefsDialogPage *page;
+    GtkWidget *button;
 
     page = moo_prefs_dialog_page_new_from_xml ("GAP", MOO_STOCK_GAP, NULL,
-                                               GAP_PREFS_GLADE_UI, -1,
+                                               GAP_PREFS_GLADE_UI,
                                                "page", GGAP_PREFS_PREFIX);
 
-    button = moo_glade_xml_get_widget (MOO_PREFS_DIALOG_PAGE (page)->xml, "clear_workspace");
+    button = moo_glade_xml_get_widget (page->xml, "clear_workspace");
     g_signal_connect (button, "clicked", G_CALLBACK (remove_saved_workspace), NULL);
     g_signal_connect (page, "apply", G_CALLBACK (prefs_page_apply), NULL);
 
-    return page;
+    return GTK_WIDGET (page);
 }
 
 
@@ -665,13 +666,13 @@ gap_app_prefs_dialog (MooApp     *app)
 }
 
 
-static void
-gap_app_cmd_setup (MooApp     *app,
-                   MooCommand *cmd,
-                   GtkWindow  *window)
-{
-    MOO_APP_CLASS(gap_app_parent_class)->cmd_setup (app, cmd, window);
-
-    if (!GAP_APP_EDITOR_MODE)
-        gap_app_setup_command (cmd, window);
-}
+// static void
+// gap_app_cmd_setup (MooApp     *app,
+//                    MooCommand *cmd,
+//                    GtkWindow  *window)
+// {
+//     MOO_APP_CLASS(gap_app_parent_class)->cmd_setup (app, cmd, window);
+//
+//     if (!GAP_APP_EDITOR_MODE)
+//         gap_app_setup_command (cmd, window);
+// }
