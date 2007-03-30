@@ -13,10 +13,10 @@
 
 #include "gapapp.h"
 #include "gap.h"
-#include <mooutils/eggregex.h>
+#include <mooutils/mooregex.h>
 #include <mooutils/moofiledialog.h>
 #include <mooapp/mooapp.h>
-#include <mooutils/moocompat.h>
+#include <gtk/gtk.h>
 #include <string.h>
 #include <errno.h>
 #include <string.h>
@@ -67,6 +67,7 @@ static void
 gap_term_window_init (GapTermWindow *window)
 {
     moo_term_window_set_term_type (MOO_TERM_WINDOW (window), GAP_TYPE_TERM);
+    moo_window_set_global_accels (MOO_WINDOW (window), TRUE);
 }
 
 

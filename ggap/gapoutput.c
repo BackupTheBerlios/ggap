@@ -179,12 +179,17 @@ output_start (GapAppOutput *ch)
         return FALSE;
     }
 
+    g_message ("created output pipe %s", ch->pipe_name);
     ch->ready = TRUE;
     return TRUE;
 }
 
 
-#define DATASIZE (PIPEHELPER_BUFSIZE - sizeof(unsigned))
+#define DATASIZE (PIPEHELPER_BUFSIZE - 1)
+
+#if PIPEHELPER_BUFSIZE > 256
+#error "Oops"
+#endif
 
 static void
 output_write (GapAppOutput *ch,
@@ -201,14 +206,14 @@ output_write (GapAppOutput *ch,
     while (len)
     {
         unsigned chunk_len, data_len;
-        char buf[PIPEHELPER_BUFSIZE];
+        guchar buf[PIPEHELPER_BUFSIZE];
         BOOL result;
         DWORD written;
 
         chunk_len = MIN ((guint) len, DATASIZE);
-        memcpy (buf, &chunk_len, sizeof (guint));
-        memcpy (buf + sizeof (guint), data, chunk_len);
-        data_len = chunk_len + sizeof (guint);
+        buf[0] = len;
+        memcpy (buf + 1, data, chunk_len);
+        data_len = chunk_len + 1;
 
         result = WriteFile (ch->pipe, buf, PIPEHELPER_BUFSIZE, &written, NULL);
 

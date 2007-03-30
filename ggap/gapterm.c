@@ -14,7 +14,7 @@
 #include "gapterm.h"
 #include "gapapp.h"
 #include "gapeditwindow.h"
-#include <mooutils/eggregex.h>
+#include <mooutils/mooregex.h>
 #include <mooterm/mooterm-text.h>
 #include <errno.h>
 #include <string.h>
@@ -26,7 +26,7 @@
 struct _GapTermPrivate {
     guint analyze_idle_id;
     MooTermTag *error_tag;
-    EggRegex *error_regex;
+    MooRegex *error_regex;
     int last_line_checked;
 };
 
@@ -85,10 +85,9 @@ gap_term_init (GapTerm *term)
     term->priv = g_new0 (GapTermPrivate, 1);
     term->priv->last_line_checked = -1;
 
-    term->priv->error_regex = egg_regex_new ("Syntax error: (.*) in (.*) line (\\d+)",
-                                             EGG_REGEX_ANCHORED, 0, NULL);
+    term->priv->error_regex = moo_regex_new ("Syntax error: (.*) in (.*) line (\\d+)",
+                                             MOO_REGEX_ANCHORED, 0, NULL);
     g_return_if_fail (term->priv->error_regex != NULL);
-    egg_regex_optimize (term->priv->error_regex, NULL);
 }
 
 
@@ -124,7 +123,7 @@ gap_term_destroy (GtkObject *object)
         if (term->priv->analyze_idle_id)
             g_source_remove (term->priv->analyze_idle_id);
         term->priv->analyze_idle_id = 0;
-        egg_regex_unref (term->priv->error_regex);
+        moo_regex_free (term->priv->error_regex);
         g_free (term->priv);
         term->priv = NULL;
     }
@@ -228,16 +227,16 @@ do_analyze (GapTerm *term)
         g_string_append (message, text);
         g_free (text);
 
-        egg_regex_clear (term->priv->error_regex);
+        moo_regex_clear (term->priv->error_regex);
 
-        if (egg_regex_match (term->priv->error_regex, message->str, 0) > 0)
+        if (moo_regex_match (term->priv->error_regex, message->str, 0) > 0)
         {
             char *file_string, *info_string, *line_string;
             long line_no;
 
-            info_string = egg_regex_fetch (term->priv->error_regex, 1, message->str);
-            file_string = egg_regex_fetch (term->priv->error_regex, 2, message->str);
-            line_string = egg_regex_fetch (term->priv->error_regex, 3, message->str);
+            info_string = moo_regex_fetch (term->priv->error_regex, 1, message->str);
+            file_string = moo_regex_fetch (term->priv->error_regex, 2, message->str);
+            line_string = moo_regex_fetch (term->priv->error_regex, 3, message->str);
 
             g_assert (info_string && file_string && line_string);
 

@@ -26,8 +26,6 @@
 #include <mooterm/mooterm-prefs.h>
 #include <mooedit/mooeditprefs.h>
 #include <mooedit/mooplugin.h>
-#define WANT_MOO_APP_CMD_STRINGS
-#include <mooapp/mooappinput.h>
 #include <string.h>
 
 
@@ -290,9 +288,13 @@ term_window_close (GapApp         *app,
 static void
 gap_died (GapApp *app)
 {
-    g_assert (app->session != NULL);
-    g_object_unref (app->session);
-    app->session = NULL;
+    if (app->session)
+    {
+        gap_session_shutdown (app->session);
+        g_object_unref (app->session);
+        app->session = NULL;
+    }
+
     gap_app_output_restart ();
 }
 
@@ -364,10 +366,14 @@ gap_app_exec_cmd (MooApp     *app,
                   const char *data,
                   guint       len)
 {
-    if (cmd != 'g')
-        MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
-    else
-        gap_app_exec_command (GAP_APP (app), data, len);
+    switch (cmd)
+    {
+        case 'g':
+            gap_session_execute (GAP_APP(app)->session, data, len);
+            break;
+        default:
+            MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
+    }
 }
 
 
@@ -377,7 +383,7 @@ gap_app_send_intr (GapApp *app)
     g_return_if_fail (GAP_IS_APP (app) && MOO_IS_TERM (app->term));
 
     if (moo_term_child_alive (app->term))
-        moo_term_send_intr (app->term);
+        moo_term_ctrl_c (app->term);
 }
 
 
@@ -415,7 +421,8 @@ saved_workspace_filename (void)
 
 static GString *
 make_command_line (const char *cmd_base,
-                   const char *custom_wsp)
+                   const char *custom_wsp,
+                   guint       session_id)
 {
     gboolean init_pkg, save_workspace;
     gboolean wsp_already_saved = FALSE;
@@ -457,11 +464,12 @@ make_command_line (const char *cmd_base,
             g_critical ("%s: could not create user data dir", G_STRLOC);
 
         if (!wsp_already_saved || init_pkg)
-            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file, init_pkg);
+            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file,
+                                       init_pkg, session_id);
     }
 
     if (init_pkg && !init_file)
-        init_file = gap_init_file (NULL, TRUE);
+        init_file = gap_init_file (NULL, TRUE, session_id);
 
     if (init_pkg)
     {
@@ -488,6 +496,7 @@ static void
 gap_app_start_gap_real (GapApp     *app,
                         const char *workspace)
 {
+    static guint session_id;
     const char *cmd_base;
     GString *cmd;
     gboolean result;
@@ -541,7 +550,10 @@ gap_app_start_gap_real (GapApp     *app,
     }
 #endif
 
-    cmd = make_command_line (cmd_base, workspace);
+    if (session_id++ > 9999)
+        session_id = 1;
+
+    cmd = make_command_line (cmd_base, workspace, session_id);
 
     g_message ("starting GAP: %s", cmd->str);
 
@@ -556,7 +568,7 @@ gap_app_start_gap_real (GapApp     *app,
         g_critical ("%s: could not start gap", G_STRLOC);
 
     g_assert (app->session == NULL);
-    app->session = gap_session_new ();
+    app->session = gap_session_new (gap_app_output_get_name (), session_id);
 
     g_string_free (cmd, TRUE);
 }
@@ -608,9 +620,9 @@ remove_saved_workspace (void)
     gzipped = g_strdup_printf ("%s.gz", wsp);
 
     if (g_file_test (wsp, G_FILE_TEST_EXISTS))
-        _m_unlink (wsp);
+        _moo_unlink (wsp);
     if (g_file_test (gzipped, G_FILE_TEST_EXISTS))
-        _m_unlink (gzipped);
+        _moo_unlink (gzipped);
 
     g_free (wsp);
     g_free (gzipped);
@@ -629,7 +641,7 @@ gap_prefs_page_new (void)
     MooPrefsDialogPage *page;
     GtkWidget *button;
 
-    page = moo_prefs_dialog_page_new_from_xml ("GAP", MOO_STOCK_GAP, NULL,
+    page = moo_prefs_dialog_page_new_from_xml ("GAP", "gap", NULL,
                                                GAP_PREFS_GLADE_UI,
                                                "page", GGAP_PREFS_PREFIX);
 
@@ -660,7 +672,7 @@ gap_app_prefs_dialog (MooApp     *app)
     }
 
     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
-    _moo_plugin_attach_prefs (GTK_WIDGET (dialog));
+    moo_plugin_attach_prefs (GTK_WIDGET (dialog));
 
     return GTK_WIDGET (dialog);
 }

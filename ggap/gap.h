@@ -20,7 +20,8 @@ G_BEGIN_DECLS
 
 
 const char  *gap_init_file          (const char *workspace,
-                                     gboolean    init_pkg);
+                                     gboolean    init_pkg,
+                                     guint       session_id);
 
 char        *gap_read_file_string   (const char *filename);
 char        *gap_reread_file_string (const char *filename);

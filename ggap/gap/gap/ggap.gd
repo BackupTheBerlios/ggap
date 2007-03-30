@@ -15,12 +15,24 @@
 
 #############################################################################
 ##
-#V  _GGAP_DATA
+#F  GMain
+#F  GMainQuit
 ##
-##  This record contains various variables for ggap package.
-##  Private, do not use it
+DeclareGlobalFunction("GMain");
+DeclareGlobalFunction("GMainQuit");
+
+
+#############################################################################
 ##
-DeclareGlobalVariable("_GGAP_DATA", "ggap package internal data");
+#O  GCallFunc
+#F  GEval
+#F  GExec
+##
+DeclareOperation("GCallFunc", [IsString]);
+DeclareOperation("GCallFunc", [IsString, IsList]);
+DeclareOperation("GCallFunc", [IsString, IsList, IsRecord]);
+DeclareGlobalFunction("GEval");
+DeclareGlobalFunction("GExec");
 
 
 #############################################################################
@@ -32,18 +44,24 @@ DeclareGlobalVariable("InfoGGAP", "ggap info class");
 
 #############################################################################
 ##
+#V  _GGAP_DATA
+##
+##  This record contains various variables for ggap package.
+##  Private, do not use it
+##
+DeclareGlobalVariable("_GGAP_DATA", "ggap package internal data");
+
+
+#############################################################################
+##
 ##  Private functions, do not use them
 ##
 DeclareGlobalFunction("_GGAP_INIT");
-DeclareGlobalFunction("_GGAP_DATA_RESET");
-DeclareGlobalFunction("_GGAP_READ_COMMAND");
-DeclareGlobalFunction("_GGAP_CHECK_INPUT");
-DeclareGlobalFunction("_GGAP_ESCAPE_STRING");
-DeclareGlobalFunction("_GGAP_WRITE_SCRIPT");
-DeclareGlobalFunction("_GGAP_WRITE_PYTHON");
-DeclareGlobalFunction("_GGAP_WRITE");
-DeclareGlobalFunction("_GGAP_READ");
-DeclareGlobalFunction("_GGAP_READ_DATA");
+DeclareGlobalFunction("_GGAP_PEEK_RETURN");
+DeclareGlobalFunction("_GGAP_POP_RETURN");
+DeclareGlobalFunction("_GGAP_PUSH_RETURN");
+DeclareGlobalFunction("_GGAP_GET_STAMP");
+DeclareGlobalFunction("_GGAP_EXEC_FUNC");
 
 
 #E

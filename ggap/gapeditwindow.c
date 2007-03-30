@@ -62,14 +62,16 @@ gap_edit_window_class_init (GapEditWindowClass *klass)
                                      "stock-id", GTK_STOCK_JUMP_TO,
                                      "closure-callback", gap_edit_window_send_selection,
                                      "condition::sensitive", "has-open-document",
+                                     "accel", "<ctrl>Return",
                                      NULL);
     }
 }
 
 
 static void
-gap_edit_window_init (G_GNUC_UNUSED GapEditWindow *window)
+gap_edit_window_init (GapEditWindow *window)
 {
+    moo_window_set_global_accels (MOO_WINDOW (window), TRUE);
 }
 
 
@@ -77,7 +79,7 @@ static void
 send_and_bring_to_front (const char *string)
 {
     gap_app_feed_gap (GAP_APP_INSTANCE, string);
-    _moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window), 0);
+    moo_window_present (GTK_WINDOW (GAP_APP_INSTANCE->term_window), 0);
 }
 
 

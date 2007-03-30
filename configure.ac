@@ -3,189 +3,64 @@
 #
 
 m4_define([ggap_major_version], [0])
-m4_define([ggap_minor_version], [6])
-m4_define([ggap_micro_version], [91])
-m4_define([ggap_version], [ggap_major_version.ggap_minor_version.ggap_micro_version])
+m4_define([ggap_minor_version], [7])
+m4_define([ggap_micro_version], [0])
 
-m4_define([moo_major_version], [0])
-m4_define([moo_minor_version], [8])
-m4_define([moo_micro_version], [0])
-m4_define([moo_version], [moo_major_version.moo_minor_version.moo_micro_version])
-
-AC_INIT(GGAP, [ggap_version], [muntyan@tamu.edu], ggap)
-AM_INIT_AUTOMAKE(ggap, [ggap_version])
+AC_INIT([GGAP],[ggap_major_version.ggap_minor_version.ggap_micro_version],[muntyan@tamu.edu],[ggap])
+AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADERS(config.h)
 
-AC_DEFINE(GGAP_VERSION, ["ggap_version"], "GGAP package version")
-
-GGAP_VERSION=\"ggap_version\"
-GGAP_VERSION_UNQUOTED=ggap_version
-GGAP_VERSION_MAJOR=ggap_major_version
-GGAP_VERSION_MINOR=ggap_minor_version
-GGAP_VERSION_MICRO=ggap_micro_version
-AC_SUBST(GGAP_VERSION)
-AC_SUBST(GGAP_VERSION_UNQUOTED)
-AC_SUBST(GGAP_VERSION_MAJOR)
-AC_SUBST(GGAP_VERSION_MINOR)
-AC_SUBST(GGAP_VERSION_MICRO)
-MOO_DEFINE_VERSIONS
-
-MOO_AC_I18N(ggap, [])
+MOO_DEFINE_VERSIONS(ggap,ggap_major_version,ggap_minor_version,ggap_micro_version)
 
 AC_PROG_CC
-AC_PROG_CC_STDC
-AC_HEADER_STDC
+AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-AC_PROG_INSTALL
 MOO_AC_PROGS
+
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
 
-#  Check debug options
-MOO_AC_DEBUG
-#  Check operating system
+PKG_CHECK_MODULES(MOO, moo)
+
 MOO_AC_CHECK_OS
-#  GTK libraries
-MOO_PKG_CHECK_GTK_VERSIONS
-#  File monitoring
-MOO_AC_FAM
-#  libxml2
-MOO_AC_XML
-#  xdgmime
-MOO_AC_XDGMIME
-#  Python stuff
-MOO_AC_PYGTK
-#  Different stuff needed for moo
-MOO_AC_FUNCS
-# pcre
-MOO_AC_PCRE
+_MOO_AC_CONFIGARGS_H
+MOO_AC_DEBUG
 
+MOO_INI_IN_IN_RULE='%.ini.desktop.in: %.ini.desktop.in.in $(top_builddir)/config.status ; cd $(top_builddir) && $(SHELL) ./config.status --file=$(subdir)/[$]@'
+MOO_INI_IN_RULE='%.ini: %.ini.in $(top_builddir)/config.status ; cd $(top_builddir) && $(SHELL) ./config.status --file=$(subdir)/[$]@'
+MOO_WIN32_RC_RULE='%.res: %.rc.in $(top_builddir)/config.status ; cd $(top_builddir) && $(SHELL) ./config.status --file=$(subdir)/[$]*.rc && cd $(subdir) && $(WINDRES) -i [$]*.rc --input-format=rc -o [$]@ -O coff && rm [$]*.rc'
+AC_SUBST(MOO_INI_IN_IN_RULE)
+AC_SUBST(MOO_INI_IN_RULE)
+AC_SUBST(MOO_WIN32_RC_RULE)
 
-AM_CONDITIONAL(MOO_BUILD_UTILS, test x$MOO_OS_CYGWIN != xyes)
-AM_CONDITIONAL(MOO_BUILD_EDIT, test x$MOO_OS_CYGWIN != xyes)
-AM_CONDITIONAL(MOO_BUILD_APP, test x$MOO_OS_CYGWIN != xyes)
-AM_CONDITIONAL(MOO_BUILD_TERM,  true)
-
-if test x$MOO_OS_CYGWIN != xyes; then
-    MOO_BUILD_UTILS=1
-    MOO_BUILD_EDIT=1
-    MOO_BUILD_APP=1
-    AC_DEFINE(MOO_BUILD_UTILS, 1, [build mooutils])
-    AC_DEFINE(MOO_BUILD_EDIT, 1, [build mooedit])
-    AC_DEFINE(MOO_BUILD_APP, 1, [build mooapp])
-else
-    MOO_BUILD_UTILS=0
-    MOO_BUILD_EDIT=0
-    MOO_BUILD_APP=0
-fi
-
-AC_DEFINE(MOO_BUILD_TERM, 1, [build mooterm])
-MOO_BUILD_TERM=1
-
-AC_SUBST(MOO_BUILD_UTILS)
-AC_SUBST(MOO_BUILD_EDIT)
-AC_SUBST(MOO_BUILD_TERM)
-AC_SUBST(MOO_BUILD_APP)
-
-AM_CONDITIONAL(MOO_BUILD_PLUGINS,   false)
-AM_CONDITIONAL(MOO_STANDALONE,      false)
-
-if test x$MOO_OS_UNIX != xyes; then
-AM_CONDITIONAL(MOO_INSTALL_LIB, true)
-AM_CONDITIONAL(MOO_BUILD_PYTHON_MODULE, true)
-AM_CONDITIONAL(MOO_INSTALL_HEADERS, false)
-AC_DEFINE(MOO_BUILD_PYTHON_MODULE, 1, MOO_BUILD_PYTHON_MODULE)
-else
-AM_CONDITIONAL(MOO_INSTALL_LIB, false)
-AM_CONDITIONAL(MOO_BUILD_PYTHON_MODULE, false)
-AM_CONDITIONAL(MOO_INSTALL_HEADERS, false)
-fi
-
-################################################################################
-#  Installation directories, etc.
-#
-MOO_SRC_PREFIX="ggap/moo"
-AC_SUBST(MOO_SRC_PREFIX)
-MOO_AC_RELOC
-MOO_AC_SET_DIRS(ggap)
-MOO_AC_FLAGS(ggap/moo)
-
-GGAP_DATA_DIR="${MOO_DATA_DIR}"
+GGAP_DATA_DIR="${datadir}/ggap"
 AC_SUBST(GGAP_DATA_DIR)
-MOO_CFLAGS="$MOO_CFLAGS -DGGAP_DATA_DIR=\\\"${GGAP_DATA_DIR}\\\""
-
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
-MOO_CFLAGS="$MOO_CFLAGS -DGGAP_GAP_DIR=\\\"${GGAP_GAP_DIR}\\\""
 
 
 ################################################################################
 #  Created files
 #
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
-m4/Makefile
-po/Makefile.in
-pkg/ggap/PackageInfo.g
-pkg/ggap/init.g
-pkg/Makefile
+config.py
 ggap/Makefile
 ggap/ggap_res.rc
-ggap/moo/mooterm/termhelper_res.rc
-ggap/moo/moo.pc
-ggap/moo/moo-version.h
-
-ggap/moo/Makefile
-ggap/moo/mooutils/Makefile
-ggap/moo/mooscript/Makefile
-ggap/moo/moofileview/Makefile
-ggap/moo/mooterm/Makefile
-ggap/moo/mooedit/Makefile
-ggap/moo/mooedit/language-specs/Makefile
-ggap/moo/mooedit/gtksourceview/Makefile
-ggap/moo/mooedit/plugins/Makefile
-ggap/moo/mooedit/plugins/activestrings/Makefile
-ggap/moo/mooedit/plugins/completion/Makefile
-ggap/moo/mooedit/plugins/fileselector/Makefile
-ggap/moo/mooapp/Makefile
-ggap/moo/moopython/Makefile
-ggap/moo/moopython/plugins/Makefile
-ggap/moo/moopython/plugins/pyproject/Makefile
-ggap/moo/moopython/pygtk/Makefile
-ggap/moo/mooutils/pcre/Makefile
-ggap/moo/mooutils/xdgmime/Makefile
-
+ggap/gap/PackageInfo.g
+ggap/gap/init.g
+ggap/gap/Makefile
 wininstaller/ggap.iss
 ])
+AC_OUTPUT
 
 
 ################################################################################
 #  Configuration info
 #
-if test x$MOO_OS_CYGWIN != "xyes"; then
-    if test "x$MOO_OS_MINGW" = "xyes"; then
-        system="MINGW"
-    elif test "x$MOO_OS_DARWIN" = "xyes"; then
-        system="DARWIN"
-    else
-        system="UNIX"
-    fi
-
-    echo
-    echo "    OS                                        = $system"
-    echo "    python support                            = $MOO_USE_PYTHON"
-    echo "    pygtk support                             = $MOO_USE_PYGTK"
-    echo "    xml support                               = $MOO_USE_XML"
-    echo "    xdgmime support                           = $MOO_USE_XDGMIME"
-    echo "    build pcre library                        = $MOO_BUILD_PCRE"
-    echo
-    echo "    prefix                                    = $prefix"
-    echo "    editor lang files go to                   = $MOO_TEXT_LANG_FILES_DIR"
-    echo "    shared package goes to                    = $GGAP_GAP_DIR"
-    echo
-else
-    echo
-    echo "    Building termhelper.exe on CYGWIN"
-    echo
-fi
+echo
+echo "    OS........................... $MOO_OS_NAME"
+echo "    installation prefix.......... $prefix"
+echo "    shared package goes to....... $GGAP_GAP_DIR"
+echo

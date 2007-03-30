@@ -37,13 +37,13 @@
   <kdevautoproject>
     <general>
       <activetarget>ggap/ggap</activetarget>
-      <useconfiguration>debug</useconfiguration>
+      <useconfiguration>mingw</useconfiguration>
     </general>
     <run>
       <mainprogram>ggap/ggap</mainprogram>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs>-e</programargs>
+      <programargs/>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
       <envvars/>
@@ -370,7 +370,7 @@
   <kdevdebugger>
     <general>
       <dbgshell/>
-      <programargs> --g-fatal-warnings -e</programargs>
+      <programargs> --g-fatal-warnings </programargs>
       <gdbpath/>
       <configGdbScript/>
       <runShellScript/>

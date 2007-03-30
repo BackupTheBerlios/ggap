@@ -30,7 +30,7 @@ gap_escape_filename (const char *filename)
 
 #define INIT_PKG                                        \
 "if IsBoundGlobal(\"_GGAP_INIT\") then\n"               \
-"  _GGAP_INIT(\"%s\", \"%s\", \"%s\");\n"               \
+"  _GGAP_INIT(\"%s\", \"%s\", %d, \"%s\");\n"           \
 "fi;\n"
 
 #define SAVE_WORKSPACE                                  \
@@ -43,7 +43,8 @@ gap_escape_filename (const char *filename)
 
 const char *
 gap_init_file (const char *workspace,
-               gboolean    init_pkg)
+               gboolean    init_pkg,
+               guint       session_id)
 {
     GString *contents;
     MooApp *app;
@@ -53,7 +54,7 @@ gap_init_file (const char *workspace,
 
     if (filename)
     {
-        if (_m_unlink (filename))
+        if (_moo_unlink (filename))
         {
             int err = errno;
             g_warning ("%s: %s", G_STRLOC, g_strerror (err));
@@ -92,7 +93,7 @@ gap_init_file (const char *workspace,
         out_name = gap_app_output_get_name ();
 
 #ifdef __WIN32__
-        appdir = moo_get_app_dir ();
+        appdir = moo_win32_get_app_dir ();
         ph = g_build_filename (appdir, "pipehelper.exe", NULL);
 #endif
 
@@ -101,7 +102,8 @@ gap_init_file (const char *workspace,
         in_escaped = gap_escape_filename (in_name ? in_name : "");
         out_escaped = gap_escape_filename (out_name ? out_name : "");
 
-        g_string_append_printf (contents, INIT_PKG, in_escaped, out_escaped, ph_escaped);
+        g_string_append_printf (contents, INIT_PKG, in_escaped,
+                                out_escaped, session_id, ph_escaped);
 
         g_free (appdir);
         g_free (ph);

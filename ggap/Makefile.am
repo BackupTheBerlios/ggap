@@ -1,4 +1,4 @@
-SUBDIRS = moo .
+SUBDIRS = gap .
 
 EXTRA_PROGRAMS = ggap pipehelper
 bin_PROGRAMS =
@@ -13,27 +13,17 @@ endif
 
 pipehelper_SOURCES = pipehelper.c pipehelper.h
 
-AM_CFLAGS =                               \
-    -I$(top_builddir)                     \
-    -I$(top_builddir)/ggap                \
-    -I$(top_srcdir)/ggap                  \
-    -I$(top_builddir)/ggap/moo            \
-    -I$(top_srcdir)/ggap/moo              \
-    -I$(top_srcdir)/ggap/moo/mooutils     \
-    -I$(top_builddir)/ggap/moo/mooutils   \
-    $(PYTHON_INCLUDES)                    \
-    $(MOO_CFLAGS)                         \
-    $(PYGTK_CFLAGS)                       \
+AM_CFLAGS =			\
+    -I$(top_builddir)		\
+    -I$(top_builddir)/ggap	\
+    -I$(top_srcdir)/ggap	\
+    $(MOO_CFLAGS)		\
     $(MOO_DEBUG_CFLAGS)
 
-ggap_LDADD =                \
-    moo/libmoo.la           \
-    $(MOO_LIBS)             \
-    $(PYTHON_LDFLAGS)       \
-    $(PYTHON_EXTRA_LIBS)
+ggap_LDADD =			\
+    $(MOO_LIBS)
 
-# ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
-ggap_LDFLAGS = -export-dynamic
+ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
 if MOO_OS_MINGW
 ggap_LDFLAGS += -mwindows
@@ -41,12 +31,9 @@ endif MOO_OS_MINGW
 
 ggap_SOURCES =				\
 	ggap-ui.h			\
+	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
-	gap-script.c			\
-	gap-script.h			\
-	gap-widgets.c			\
-	gap-widgets.h			\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\
@@ -65,7 +52,8 @@ ggap_SOURCES =				\
 	gaptermwindow.c			\
 	gaptermwindow.h			\
 	gapprefs-glade.h		\
-	gapdoc-glade.h
+	gapdoc-glade.h			\
+	ggap-credits.h
 
 nodist_ggap_SOURCES = ggap_res.res
 CLEANFILES = ggap_res.res
@@ -85,12 +73,15 @@ EXTRA_DIST =		\
     ggap-ui.xml		\
     ggap.opag		\
     glade/gapprefs.glade\
-    glade/gapdoc.glade
+    glade/gapdoc.glade	\
+    python/ggap.py
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c
-XML2H = $(srcdir)/moo/mooutils/xml2h.sh
-PY2H = $(srcdir)/moo/mooutils/py2h.sh
+BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c ggap-mod.h ggap-credits.h
+XML2H = $(top_srcdir)/xml2h.sh
+PY2H = $(top_srcdir)/py2h.sh
 
+ggap-credits.h: ../THANKS $(XML2H)
+	$(SHELL) $(XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h
 ggap-ui.h: ggap-ui.xml $(XML2H)
 	sh $(XML2H) GGAP_UI $(srcdir)/ggap-ui.xml > ggap-ui.h
 
@@ -102,3 +93,6 @@ gapdoc-glade.h: glade/gapdoc.glade $(XML2H)
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c
+
+ggap-mod.h: $(srcdir)/python/ggap.py $(PY2H)
+	$(SHELL) $(PY2H) GGAP_PY $(srcdir)/python/ggap.py > ggap-mod.h

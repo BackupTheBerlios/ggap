@@ -14,8 +14,66 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <time.h>
 #include "pipehelper.h"
 
+#if PIPEHELPER_BUFSIZE > 256
+#error "Oops"
+#endif
+
+#ifdef __GNUC__
+#define ATTR_PRINTF __attribute__((__format__ (__printf__, 1, 2)))
+#define UNUSED __attribute__((__unused__))
+#else
+#define ATTR_PRINTF
+#define UNUSED
+#endif
+
+#if 0
+ATTR_PRINTF static void
+writelog (const char *format,
+          ...)
+{
+    FILE *file;
+    va_list vargs;
+    time_t t;
+    struct tm *tmbuf;
+    char buf[1024];
+
+    static int been_here = 0;
+
+    if (!been_here)
+    {
+        been_here = 1;
+        remove ("c:\\log.txt");
+    }
+
+    file = fopen ("c:\\log.txt", "a");
+
+    if (!file)
+        return;
+
+    time (&t);
+    tmbuf = localtime (&t);
+    strftime (buf, sizeof buf, "%X", tmbuf);
+
+    va_start (vargs, format);
+    fprintf (file, "%s: ", buf);
+    vfprintf (file, format, vargs);
+    fprintf (file, "\n");
+    va_end (vargs);
+
+    fclose (file);
+}
+#else
+static void
+writelog (UNUSED const char *format,
+          ...)
+{
+}
+#endif
 
 int main (int argc, char *argv[])
 {
@@ -23,53 +81,53 @@ int main (int argc, char *argv[])
 
     if (argc != 2)
     {
-        fprintf (stderr, "usage: %s <file>\n", argv[0]);
-        return 1;
+        writelog ("usage: %s <file>", argv[0]);
+        exit (1);
     }
 
     if (!WaitNamedPipe (argv[1], NMPWAIT_WAIT_FOREVER))
     {
-        fprintf (stderr, "could not open pipe '%s'\n", argv[1]);
-        return 1;
+        writelog ("could not open pipe '%s'", argv[1]);
+        exit (1);
     }
 
     file = CreateFile (argv[1], GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (file == INVALID_HANDLE_VALUE)
     {
-        fprintf (stderr, "could not open file '%s'\n", argv[1]);
-        return 1;
+        writelog ("could not open file '%s'", argv[1]);
+        exit (1);
     }
+
+    writelog ("Opened pipe %s for reading", argv[1]);
 
     while (1)
     {
-        char buf[PIPEHELPER_BUFSIZE];
+        unsigned char buf[PIPEHELPER_BUFSIZE];
         DWORD bytes_read;
         unsigned len;
 
         if (!ReadFile (file, buf, PIPEHELPER_BUFSIZE, &bytes_read, NULL))
         {
-            fprintf (stderr, "error in ReadFile\n");
-            return 1;
+            writelog ("error in ReadFile");
+            exit (1);
         }
 
         if (bytes_read < PIPEHELPER_BUFSIZE)
         {
-            fprintf (stderr, "got less bytes when asked\n");
-            return 1;
+            writelog ("got less bytes when asked");
+            exit (1);
         }
 
-        memcpy (&len, buf, sizeof (len));
+        len = buf[0];
+        writelog ("got %d bytes", len);
 
         if (len)
         {
-            fwrite (buf + sizeof (len), 1, len, stdout);
+            fwrite (buf + 1, 1, len, stdout);
             fflush (stdout);
         }
     }
-
-    MessageBox (NULL, "bye", "bye",
-                MB_ICONERROR | MB_APPLMODAL | MB_SETFOREGROUND);
 
     return 0;
 }

@@ -11,14 +11,15 @@ termhelper_exe = cygwin_builddir + "/ggap/termhelper.exe"
 build_termhelper = False
 termhelper_exe = builddir + "/termhelper.exe"
 ggap_windir = "/usr/local/win/ggap"
+bin_only = False
 
 
 def usage():
-    print "Usage:", sys.argv[0], "[--termhelper=<BINARY>] [build_dir]"
+    print "Usage:", sys.argv[0], "[--termhelper=<BINARY>] [build_dir] [runtime]"
     sys.exit(2)
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["termhelper="])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["termhelper=", "bin-only"])
 except getopt.GetoptError:
     usage()
 
@@ -26,11 +27,17 @@ for o, a in opts:
     if o == "--termhelper":
         termhelper_exe = os.path.abspath(a)
         build_termhelper = False
+    elif o == "--bin-only":
+        bin_only = True
 if args:
-    if args[1:]: usage()
+    if args[2:]: usage()
     ggap_builddir = os.path.abspath(args[0])
 else:
     ggap_builddir = builddir + "/mingw"
+if args[1:]:
+    runtime = os.path.abspath(args[1])
+else:
+    runtime = None
 
 config = os.path.basename(ggap_builddir)
 installdir = "%s/%s-inst" % (dir, config)
@@ -50,35 +57,49 @@ def do_cmd(cmd):
     if status:
         raise Error(status)
 
+def strip_files():
+    strip = 'i586-mingw32msvc-strip'
+    files = ['ggap.exe', 'pipehelper.exe', 'libmoo.dll']
+    do_cmd(strip + ' ' + ' '.join(['%s/bin/%s' % (ggap_windir, f) for f in files]))
+    if not bin_only:
+        do_cmd("%s %s/lib/ggap/plugins/*/*.dll" % (strip, ggap_windir))
+
 def copy_files():
-    files = ["bin/ggap.exe", "bin/pipehelper.exe",
-             "share/ggap/ui.xml.example",
-             "share/ggap/pkg", "share/ggap/syntax",
-             "share/ggap/tools.cfg", "share/ggap/menu.cfg",
-             "share/ggap/as.cfg", "share/ggap/completion",
-             "lib/ggap/plugins"]
-    for f in files:
-        do_cmd("cp -r %s/usr/local/%s %s/" % (installdir, f, ggap_windir))
-    do_cmd("cp %s/libxml2-2.dll %s/" % (builddir, ggap_windir))
+    if runtime is not None:
+        do_cmd("cp -r %s/* %s/" % (runtime, ggap_windir))
+
+    do_cmd("mkdir -p %s/bin" % (ggap_windir,))
+    do_cmd("cp -r %s/usr/local/bin/ggap.exe %s/bin/" % (installdir, ggap_windir))
+    do_cmd("cp -r %s/usr/local/bin/pipehelper.exe %s/bin/" % (installdir, ggap_windir))
+    do_cmd("cp -r %s/usr/local/bin/libmoo.dll %s/bin/" % (installdir, ggap_windir))
+
+    if not bin_only:
+        do_cmd("mkdir -p %s/share" % (ggap_windir,))
+        do_cmd("mkdir -p %s/lib/ggap" % (ggap_windir,))
+
+        do_cmd("cp -r %s/usr/local/share/ggap %s/share/" % (installdir, ggap_windir))
+
+        do_cmd("cp -r %s/usr/local/lib/ggap/plugins %s/lib/ggap/" % (installdir, ggap_windir))
+        do_cmd("cp -r %s/usr/local/lib/ggap/projects %s/lib/ggap/" % (installdir, ggap_windir))
+
+        do_cmd("mkdir -p %s/lib/ggap/plugins/pymoo25 %s/lib/ggap/plugins/pymoo24" % (ggap_windir, ggap_windir))
+        do_cmd("cp %s/usr/local/lib/pymoo25.dll %s/lib/ggap/plugins/pymoo25/pymoo.dll" % (installdir, ggap_windir))
+        do_cmd("cp %s/usr/local/lib/moo25.dll %s/lib/ggap/plugins/pymoo25/moo.pyd" % (installdir, ggap_windir))
+        do_cmd("cp %s/usr/local/lib/pymoo24.dll %s/lib/ggap/plugins/pymoo24/pymoo.dll" % (installdir, ggap_windir))
+        do_cmd("cp %s/usr/local/lib/moo24.dll %s/lib/ggap/plugins/pymoo24/moo.pyd" % (installdir, ggap_windir))
+
+    strip_files()
 
 def make_termhelper():
     if build_termhelper:
         os.chdir(cygwin_builddir)
         do_cmd("make")
         do_cmd("i686-pc-cygwin-strip " + termhelper_exe)
-    do_cmd("cp %s %s/" % (termhelper_exe, ggap_windir))
+    do_cmd("cp %s %s/bin/" % (termhelper_exe, ggap_windir))
 
-config_template = """
-version = @GGAP_VERSION@
-"""
 
 def get_version():
     sys.path.insert(0, ggap_builddir)
-    if not os.path.exists('config.py.in'):
-        file = open('config.py.in', 'w+')
-        file.write(config_template)
-        file.close()
-    do_cmd('./config.status --file config.py:config.py.in')
     import config
     return config.version
 
@@ -86,7 +107,7 @@ def build():
     do_cmd("mkdir " + ggap_windir)
     do_cmd("mkdir " + installdir)
     os.chdir(ggap_builddir)
-    do_cmd("make install-strip DESTDIR=" + installdir)
+    do_cmd("make install DESTDIR=" + installdir)
     copy_files()
     make_termhelper()
     do_cmd("wine /usr/local/win/InnoSetup5/ISCC.exe " + iss)

@@ -1,6 +1,6 @@
 #############################################################################
 ##
-#W  read.g                     ggap package                    Yevgen Muntyan
+#W  utils.gi                   ggap package                    Yevgen Muntyan
 #W
 #Y  Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
 ##
@@ -13,9 +13,20 @@
 ##
 
 
-ReadPkg("ggap", "gap/ggap.gi");
-ReadPkg("ggap", "gap/gobject.gi");
-ReadPkg("ggap", "gap/widgets.gi");
+#############################################################################
+##
+#O  GOpen
+##
+InstallMethod(GOpen, [IsString],
+function(file)
+  GOpen(file, -1);
+end);
+
+InstallMethod(GOpen, [IsString, IsInt],
+function(file, line)
+  GExec("moo.edit.editor_instance().open_file_line('",
+        _GGAP_ESCAPE_STRING(file), "', ", line, ")");
+end);
 
 
 #E

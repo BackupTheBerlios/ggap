@@ -21,11 +21,15 @@ Source: C:\ggap\*; DestDir: {app}; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: {group}\GGAP; Filename: {app}\ggap.exe
+Name: {group}\GGAP; Filename: {app}\bin\ggap.exe
 Name: {group}\{cm:UninstallProgram,GGAP}; Filename: {uninstallexe}
-Name: {userdesktop}\GGAP; Filename: {app}\ggap.exe; Tasks: desktopicon
-Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\GGAP; Filename: {app}\ggap.exe; Tasks: quicklaunchicon
-Name: {userdesktop}\GGAP Editor; Filename: {app}\ggap.exe; Tasks: desktopicon; Parameters: -e
+Name: {userdesktop}\GGAP; Filename: {app}\bin\ggap.exe; Tasks: desktopicon
+Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\GGAP; Filename: {app}\bin\ggap.exe; Tasks: quicklaunchicon
+Name: {userdesktop}\GGAP Editor; Filename: {app}\bin\ggap.exe; Tasks: desktopicon; Parameters: -e
 
 [Run]
-Filename: {app}\ggap.exe; Description: {cm:LaunchProgram,GGAP}; Flags: nowait postinstall skipifsilent
+Filename: {app}\bin\ggap.exe; Description: {cm:LaunchProgram,GGAP}; Flags: nowait postinstall skipifsilent
+[UninstallDelete]
+Name: {app}\lib\ggap\plugins\lib\*.pyc; Type: files; Tasks: 
+Name: {app}\lib\ggap\plugins\project\mprj\config\*.pyc; Type: files; Tasks: 
+Name: {app}\lib\ggap\plugins\project\mprj\*.pyc; Type: files; Tasks: 

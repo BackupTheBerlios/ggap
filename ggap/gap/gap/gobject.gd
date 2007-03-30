@@ -24,25 +24,20 @@ DeclareCategory("IsGObject", IsObject);
 
 #############################################################################
 ##
-#O  GObjectSetProperty(<obj>, <propname>, <value>)
+#C  IsGNone
+#V  GNone
 ##
-DeclareOperation("GObjectSetProperty", [IsGObject, IsString, IsObject]);
+DeclareCategory("IsGNone", IsObject);
+DeclareGlobalVariable("GNone", "null");
 
 
 #############################################################################
 ##
-#O  GObjectGetProperty(<obj>, <propname>)
+#C  IsGError
+#F  GError
 ##
-DeclareOperation("GObjectGetProperty", [IsGObject, IsString]);
-
-
-#############################################################################
-##
-#O  GObjectDestroy(<obj>)
-##
-##  Destroys <obj>. Note, it can't be stopped like WindowClose.
-##
-DeclareOperation("GObjectDestroy", [IsGObject]);
+DeclareCategory("IsGError", IsObject);
+DeclareGlobalFunction("GError");
 
 
 #############################################################################
@@ -50,28 +45,23 @@ DeclareOperation("GObjectDestroy", [IsGObject]);
 #O  ConnectCallback(<obj>, <signal>, <func>, [<data>, ...])
 #O  DisconnectCallback(<obj>, <callback_id>)
 ##
-DeclareGlobalFunction("ConnectCallback");
-DeclareGlobalFunction("DisconnectCallback");
+DeclareOperation("ConnectCallback", [IsGObject, IsString, IsFunction]);
+DeclareOperation("DisconnectCallback", [IsGObject, IsInt]);
 
 
 #############################################################################
 ##
 ##  Private functions, do not use them
 ##
-DeclareGlobalFunction("_GGAP_SEND_COMMAND");
-DeclareGlobalFunction("_GGAP_DO_COMMAND");
-DeclareGlobalFunction("_GGAP_PRINT_ARG");
-DeclareGlobalFunction("_GGAP_PRINT_COMMAND");
-DeclareGlobalFunction("_GGAP_GET_RESULT");
-DeclareGlobalFunction("_GGAP_GET_STAMP");
-DeclareGlobalFunction("_GGAP_ADD_STAMP");
-DeclareGlobalFunction("_GGAP_DESTROY_OBJECT");
-DeclareGlobalFunction("_GGAP_REGISTER_OBJECT");
+DeclareGlobalFunction("_GGAP_WRAP_OBJECT");
 DeclareGlobalFunction("_GGAP_LOOKUP_OBJECT");
-DeclareGlobalFunction("_GGAP_MAKE_OBJECT");
-DeclareGlobalFunction("_GGAP_OBJECT_DESTROYED");
-DeclareGlobalFunction("_GGAP_SIGNAL");
 DeclareGlobalFunction("_GGAP_GET_TYPE_BY_NAME");
+DeclareGlobalFunction("_GGAP_INIT_TYPES");
+DeclareGlobalFunction("_GGAP_REGISTER_TYPE");
+DeclareGlobalFunction("_GGAP_GC");
+DeclareGlobalFunction("_GGAP_CALLBACK");
+DeclareGlobalFunction("_GGAP_CONNECT");
+DeclareGlobalFunction("_GGAP_DISCONNECT");
 
 
 #E

@@ -19,13 +19,6 @@
 G_BEGIN_DECLS
 
 
-#define GAP_TYPE_OBJECT                 (gap_object_get_type ())
-#define GAP_OBJECT(object)              (G_TYPE_CHECK_INSTANCE_CAST ((object), GAP_TYPE_OBJECT, GapObject))
-#define GAP_OBJECT_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GAP_TYPE_OBJECT, GapObjectClass))
-#define GAP_IS_OBJECT(object)           (G_TYPE_CHECK_INSTANCE_TYPE ((object), GAP_TYPE_OBJECT))
-#define GAP_IS_OBJECT_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GAP_TYPE_OBJECT))
-#define GAP_OBJECT_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_OBJECT, GapObjectClass))
-
 #define GAP_TYPE_SESSION                (gap_session_get_type ())
 #define GAP_SESSION(object)             (G_TYPE_CHECK_INSTANCE_CAST ((object), GAP_TYPE_SESSION, GapSession))
 #define GAP_SESSION_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GAP_TYPE_SESSION, GapSessionClass))
@@ -33,34 +26,13 @@ G_BEGIN_DECLS
 #define GAP_IS_SESSION_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), GAP_TYPE_SESSION))
 #define GAP_SESSION_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_SESSION, GapSessionClass))
 
-typedef struct _GapObject GapObject;
-typedef struct _GapObjectClass GapObjectClass;
 typedef struct _GapSession GapSession;
+typedef struct _GapSessionPrivate GapSessionPrivate;
 typedef struct _GapSessionClass GapSessionClass;
-
-struct _GapObject {
-    GObject parent;
-
-    gpointer obj;
-    char *id;
-    char *type;
-
-    GSList *callbacks;
-
-    guint dead : 1;
-    guint destroyed : 1;
-    guint toplevel : 1;
-};
-
-struct _GapObjectClass {
-    GObjectClass parent_class;
-
-    void (*object_died) (GapObject *object);
-};
 
 struct _GapSession {
     GObject parent;
-    GHashTable *objects;
+    GapSessionPrivate *priv;
 };
 
 struct _GapSessionClass {
@@ -68,26 +40,15 @@ struct _GapSessionClass {
 };
 
 
-GType            gap_object_get_type        (void) G_GNUC_CONST;
 GType            gap_session_get_type       (void) G_GNUC_CONST;
 
-GapSession      *gap_session_new            (void);
+GapSession      *gap_session_new            (const char *output,
+                                             guint       session_id);
 
-GapObject       *gap_session_add_object     (GapSession *session,
-                                             gpointer    object,
-                                             const char *type_name,
-                                             gboolean    toplevel);
-GapObject       *gap_session_find_object    (GapSession *session,
-                                             const char *id);
-GapObject       *gap_session_find_wrapper   (GapSession *session,
-                                             gpointer    object);
-
-void             gap_object_destroy         (GapObject  *object);
-void             gap_object_connect         (GapObject  *object,
-                                             const char *gap_id,
-                                             gulong      handler);
-void             gap_object_disconnect      (GapObject  *object,
-                                             const char *gap_id);
+void             gap_session_execute        (GapSession *session,
+                                             const char *data,
+                                             guint       len);
+void             gap_session_shutdown       (GapSession *session);
 
 
 G_END_DECLS

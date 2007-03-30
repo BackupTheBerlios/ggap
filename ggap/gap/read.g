@@ -1,6 +1,6 @@
 #############################################################################
 ##
-#W  init.g                     ggap package                    Yevgen Muntyan
+#W  read.g                     ggap package                    Yevgen Muntyan
 #W
 #Y  Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
 ##
@@ -13,10 +13,11 @@
 ##
 
 
-DeclareAutoPackage("ggap", @GGAP_VERSION@, ReturnTrue);
-ReadPkg("ggap", "gap/ggap.gd");
-ReadPkg("ggap", "gap/gobject.gd");
-ReadPkg("ggap", "gap/widgets.gd");
+ReadPkg("ggap", "gap/ggap.gi");
+ReadPkg("ggap", "gap/io.gi");
+ReadPkg("ggap", "gap/gobject.gi");
+ReadPkg("ggap", "gap/types.gi");
+ReadPkg("ggap", "gap/utils.gi");
 
 
 #E
