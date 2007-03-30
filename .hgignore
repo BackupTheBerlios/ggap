@@ -13,6 +13,8 @@ missing
 .*~
 .*pcs
 .*kdevses
+.*\.P?o
+Makefile$
 .*\.(bak|backup)
 .*\.gladep
 .*\.(aux|log|out|dvi)
