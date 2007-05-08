@@ -11,6 +11,7 @@
  *   See COPYING file that comes with this distribution.
  */
 
+#include "ggap-i18n.h"
 #include "gapapp.h"
 #include "gap.h"
 #include "mooutils/moofiledialog.h"
@@ -39,23 +40,24 @@ gap_term_window_class_init (GapTermWindowClass *klass)
     moo_window_class_set_id (window_class, "Terminal", "Terminal");
 
     moo_window_class_new_action (window_class, "SwitchToEditor", NULL,
-                                 "display-name", "Switch to Editor",
-                                 "label", "Switch to Editor",
-                                 "tooltip", "Switch to Editor",
+                                 "display-name", _("Switch to Editor"),
+                                 "label", _("Switch to Editor"),
+                                 "tooltip", _("Switch to editor"),
                                  "stock-id", GTK_STOCK_EDIT,
                                  "closure-callback", switch_to_editor,
                                  NULL);
 
     moo_window_class_new_action (window_class, "GAPRead", NULL,
-                                 "display-name", "Read File",
-                                 "label", "Read File",
-                                 "tooltip", "Read File",
+                                 "display-name", _("Read File"),
+                                 "label", _("Read File"),
+                                 "tooltip", _("Read file"),
                                  "stock-id", GTK_STOCK_OPEN,
                                  "closure-callback", gap_read_file,
                                  NULL);
     moo_window_class_new_action (window_class, "GAPOpenWorkspace", NULL,
-                                 "display-name", "Open Workspace",
-                                 "label", "Open _Workspace",
+                                 "display-name", _("Open Workspace"),
+                                 "label", _("Open _Workspace"),
+                                 "tooltip", _("Open workspace"),
                                  "stock-id", GTK_STOCK_OPEN,
                                  "closure-callback", gap_open_workspace,
                                  NULL);

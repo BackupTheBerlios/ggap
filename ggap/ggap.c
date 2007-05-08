@@ -24,15 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <locale.h>
 
 
 #define DEFAULT_NEW_INSTANCE 0
-
-
-#ifdef __WIN32__
-#undef GGAP_LOCALE_DIR
-#define GGAP_LOCALE_DIR (moo_win32_get_locale_dir (NULL))
-#endif /* __WIN32__ */
 
 
 int _ggap_parse_options (const char *const program_name,
@@ -364,7 +359,7 @@ int main (int argc, char *argv[])
     gboolean new_instance;
 
 #ifdef ENABLE_NLS
-    bindtextdomain (GETTEXT_PACKAGE, GGAP_LOCALE_DIR);
+    bindtextdomain (GETTEXT_PACKAGE, _moo_get_locale_dir ());
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif

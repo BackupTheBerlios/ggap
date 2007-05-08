@@ -37,6 +37,7 @@ ggap_SOURCES =				\
 	gap.c				\
 	gap.h				\
 	ggap-i18n.h			\
+	ggap-i18n.c			\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\

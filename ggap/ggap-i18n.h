@@ -23,11 +23,14 @@ G_BEGIN_DECLS
 
 #ifdef ENABLE_NLS
 
-#define _(String) gettext (String)
-#define Q_(String) g_strip_context ((String), gettext (String))
+#define _(String) _ggap_gettext (String)
+#define Q_(String) _ggap_Q_gettext (String)
 #define N_(String) (String)
 #define D_(String,Domain) dgettext (Domain, String)
 #define QD_(String,Domain) g_strip_context ((String), D_ (String, Domain))
+
+const char *_ggap_gettext   (const char *string);
+const char *_ggap_Q_gettext (const char *string);
 
 #else /* !ENABLE_NLS */
 

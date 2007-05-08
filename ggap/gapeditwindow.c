@@ -11,6 +11,7 @@
  *   See COPYING file that comes with this distribution.
  */
 
+#include "ggap-i18n.h"
 #include "gapeditwindow.h"
 #include "gapapp.h"
 #include "gap.h"
@@ -48,17 +49,17 @@ gap_edit_window_class_init (GapEditWindowClass *klass)
     if (!GAP_APP_EDITOR_MODE)
     {
         moo_window_class_new_action (window_class, "SendFile", NULL,
-                                     "display-name", "Send File",
-                                     "label", "Send File",
-                                     "tooltip", "Send File",
+                                     "display-name", _("Send File"),
+                                     "label", _("Send File"),
+                                     "tooltip", _("Send file"),
                                      "stock-id", GTK_STOCK_EXECUTE,
                                      "closure-callback", gap_edit_window_send_file,
                                      "condition::sensitive", "has-open-document",
                                      NULL);
         moo_window_class_new_action (window_class, "SendSelection", NULL,
-                                     "display-name", "Send Selection",
-                                     "label", "Send Selection",
-                                     "tooltip", "Send Selection",
+                                     "display-name", _("Send Selection"),
+                                     "label", _("Send Selection"),
+                                     "tooltip", _("Send selection"),
                                      "stock-id", GTK_STOCK_JUMP_TO,
                                      "closure-callback", gap_edit_window_send_selection,
                                      "condition::sensitive", "has-open-document",

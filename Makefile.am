@@ -66,3 +66,10 @@ generated =			\
 	wininstaller/ggap.iss
 
 all-am: $(generated)
+
+bin-dist: all
+	rm -fr _ggap_bin_inst _ggap_bin
+	$(MAKE) install DESTDIR=`pwd`/_ggap_bin_inst && \
+	mv _ggap_bin_inst/$(prefix) _ggap_bin && \
+	cp $(srcdir)/ggap.sh _ggap_bin/ && \
+	rm -fr _ggap_bin_inst

@@ -12,6 +12,7 @@
  */
 
 #include "config.h"
+#include "ggap-i18n.h"
 #include "gapapp.h"
 #include "gaptermwindow.h"
 #include "gapeditwindow.h"
@@ -144,9 +145,9 @@ gap_app_class_init (GapAppClass *klass)
                                  NULL);
 
     moo_window_class_new_action (term_class, "Restart", NULL,
-                                 "display-name", "Restart",
-                                 "label", "_Restart",
-                                 "tooltip", "Restart GAP",
+                                 "display-name", _("Restart"),
+                                 "label", _("_Restart"),
+                                 "tooltip", _("Restart GAP"),
                                  "stock-id", MOO_STOCK_RESTART,
                                  "accel", "<alt>R",
                                  "closure-callback", gap_app_restart_gap,
@@ -154,24 +155,24 @@ gap_app_class_init (GapAppClass *klass)
                                  NULL);
 
     moo_window_class_new_action (term_class, "Interrupt", NULL,
-                                 "display-name", "Interrupt",
-                                 "label", "_Interrupt",
-                                 "tooltip", "Interrupt computation",
+                                 "display-name", _("Interrupt"),
+                                 "label", _("_Interrupt"),
+                                 "tooltip", _("Interrupt computation"),
                                  "stock-id", GTK_STOCK_STOP,
                                  "closure-callback", gap_app_send_intr,
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
     moo_window_class_new_action (edit_class, "GapDoc", NULL,
-                                 "display-name", "GAP Documentation",
-                                 "label", "_GAP Documentation",
+                                 "display-name", _("GAP Documentation"),
+                                 "label", _("_GAP Documentation"),
                                  "stock-id", GTK_STOCK_HELP,
                                  "closure-callback", gap_doc_window_show,
                                  NULL);
 
     moo_window_class_new_action (term_class, "GapDoc", NULL,
-                                 "display-name", "GAP Documentation",
-                                 "label", "_GAP Documentation",
+                                 "display-name", _("GAP Documentation"),
+                                 "label", _("_GAP Documentation"),
                                  "stock-id", GTK_STOCK_HELP,
                                  "closure-callback", gap_doc_window_show,
                                  NULL);
