@@ -34,10 +34,15 @@ ggap_pkg_tst_demo_DATA =	\
 	tst/demo/entries.g	\
 	tst/demo/filechooser.g
 
+BUILT_SOURCES =			\
+	gap/types.gi		\
+	gap/types.gd
+
 gen_types:
 	$(PYTHON) $(srcdir)/gap/types.py $(srcdir)/gap/types.gd $(srcdir)/gap/types.gi
-all-am: $(srcdir)/gap/types.gd
 $(srcdir)/gap/types.gd: $(srcdir)/gap/types.py
+	$(MAKE) gen_types
+$(srcdir)/gap/types.gi: $(srcdir)/gap/types.py
 	$(MAKE) gen_types
 
 EXTRA_DIST =			\

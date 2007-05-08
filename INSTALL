@@ -1,7 +1,7 @@
 Building and installing GGAP (http://ggap.sourceforge.net)
 ----------------------------------------------------------
 
-    GGAP is a GTK+ (http://gtk.org) program, so it requires installed
+GGAP is a GTK+ (http://gtk.org) program, so it requires installed
 GTK+ of version 2.6 or higher (2.4 might work too, and 2.2 works periodically).
 Recommended GTK version is the latest (today it's 2.8).
 Recommended way to obtain GTK libraries for windows users is to download installer
@@ -13,11 +13,11 @@ dependency, without it syntax highlighting in the text editor will not work).
 Building GGAP on Unix-like system
 =================================
 
-    GGAP uses autotools system, so the following should be enough:
+GGAP uses autotools system, so the following should be enough:
 
 ./configure; make; make install
 
-    configure script supports usual options like prefix, and environment
+configure script supports usual options like prefix, and environment
 variables like CFLAGS, CC, etc. See generic installation instructions in the
 end of this file.
 
@@ -31,16 +31,13 @@ end of this file.
                                 binary, e.g.
                                 PYTHON=/usr/bin/python2.3 ./configure ...
 
-    --with-pygtk            -   enables pygtk function in 'ggap' python
-                                module. By default it's autodetected.
-
     --without-xml           -   disables using libxml2 in editor. libxml2
                                 allows storing editor syntax highlighting
                                 rules in files, so using libxml2 is recommended.
                                 Default is autodetect.
 
-    Note that GGAP can not be built on cygwin currently. If you'll try, it
-will build termhelper.exe - auxilary application used by windows version of GGAP.
+Note that GGAP can not be built on cygwin currently. If you try, it will build
+termhelper.exe - auxilary application used by windows version of GGAP.
 
 
 Building GGAP for Windows
