@@ -13,9 +13,8 @@
 
 #include "gapapp.h"
 #include "gap.h"
-#include <mooutils/mooregex.h>
-#include <mooutils/moofiledialog.h>
-#include <mooapp/mooapp.h>
+#include "mooutils/moofiledialog.h"
+#include "mooapp/mooapp.h"
 #include <gtk/gtk.h>
 #include <string.h>
 #include <errno.h>

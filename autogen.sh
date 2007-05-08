@@ -9,8 +9,9 @@ srcdir=`cd $rel_srcdir && pwd`
 echo "srcdir=" $srcdir
 
 if test -d $rel_srcdir/m4 ; then
-    m4dir=`cd $rel_srcdir/m4 && pwd`
-    aclocal_extra="-I $m4dir"
+  aclocal_extra="-I m4"
+elif test -d $rel_srcdir/moo/m4 ; then
+  aclocal_extra="-I moo/m4"
 fi
 
 cd $srcdir
@@ -30,8 +31,8 @@ $LIBTOOLIZE --automake --copy || exit $?
 
 echo glib-gettextize --force
 glib-gettextize --force
-echo intltoolize --force --automake
-intltoolize --force --automake
+echo intltoolize --automake --force
+intltoolize --automake --force
 
 echo $ACLOCAL $ACLOCAL_FLAGS
 $ACLOCAL $ACLOCAL_FLAGS || exit $?

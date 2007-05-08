@@ -13,15 +13,17 @@ endif
 
 pipehelper_SOURCES = pipehelper.c pipehelper.h
 
-AM_CFLAGS =			\
-    -I$(top_builddir)		\
-    -I$(top_builddir)/ggap	\
-    -I$(top_srcdir)/ggap	\
-    $(MOO_CFLAGS)		\
-    $(MOO_DEBUG_CFLAGS)
+AM_CFLAGS =				\
+    -I$(top_builddir)			\
+    -I$(top_builddir)/ggap		\
+    -I$(top_srcdir)/ggap		\
+    -I$(top_builddir)/moo/moo		\
+    -I$(top_srcdir)/moo/moo		\
+    $(MOO_DEBUG_CFLAGS)			\
+    $(GTK_CFLAGS)			\
+    -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"
 
-ggap_LDADD =			\
-    $(MOO_LIBS)
+ggap_LDADD = $(top_builddir)/moo/moo/libmoo.la
 
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
@@ -34,6 +36,7 @@ ggap_SOURCES =				\
 	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
+	ggap-i18n.h			\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\
@@ -74,6 +77,7 @@ EXTRA_DIST =		\
     ggap.opag		\
     glade/gapprefs.glade\
     glade/gapdoc.glade	\
+    glade/usermenu.glade\
     python/ggap.py
 
 BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c ggap-mod.h ggap-credits.h

@@ -1,0 +1,176 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ggap\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-04-27 21:47-0500\n"
+"PO-Revision-Date: 2007-04-27 21:27-0600\n"
+"Last-Translator: Yevgen Muntyan <muntyan@tamu.edu>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../ggap/gap/tst/glade/demo.glade.h:1
+msgid "GGAP Demo"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/demo.glade.h:2
+msgid "Info"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/demo.glade.h:3
+msgid "Open GAP File"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/demo.glade.h:4
+msgid "Source"
+msgstr ""
+
+#. menu item label
+#: ../ggap/gap/tst/glade/demo.glade.h:5 ../ggap/ggap-ui.xml.h:4
+msgid "_File"
+msgstr ""
+
+#. menu item label
+#: ../ggap/gap/tst/glade/demo.glade.h:6 ../ggap/ggap-ui.xml.h:6
+msgid "_Help"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/demo.glade.h:7
+msgid "http://ggap.sourceforge.net/"
+msgstr ""
+
+#. TRANSLATORS: Replace this string with your names, one name per line.
+#: ../ggap/gap/tst/glade/demo.glade.h:9
+msgid "translator-credits"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/file1.glade.h:1
+msgid "An entry:"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/file1.glade.h:2
+msgid "Another entry:"
+msgstr ""
+
+#: ../ggap/gap/tst/glade/file1.glade.h:3
+msgid "Dialog Demo"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:2
+msgid "_Edit"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:8 ../ggap/glade/gapdoc.glade.h:4
+msgid "_Search"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:10
+msgid "_Settings"
+msgstr ""
+
+#: ../ggap/ggap-ui.xml.h:11
+msgid "_Tools"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:13
+msgid "_View"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:15
+msgid "_Window"
+msgstr ""
+
+#: ../ggap/glade/gapdoc.glade.h:1
+msgid "GAP Documentation"
+msgstr ""
+
+#: ../ggap/glade/gapdoc.glade.h:2
+msgid "_Contents"
+msgstr ""
+
+#: ../ggap/glade/gapdoc.glade.h:3
+msgid "_Index"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:1
+msgid "Browse..."
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:2
+msgid "Clear terminal for new GAP session"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:3
+msgid "Command line:"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:4
+msgid "GAP"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:5
+msgid "GGAP"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:6
+msgid "Remove saved workspace"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:7
+msgid "Save workspace for faster startup"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:8
+msgid "Saved workspace"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:9
+msgid "Use GGAP shared package"
+msgstr ""
+
+#: ../ggap/glade/gapprefs.glade.h:10
+msgid "Working directory:"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:1
+msgid "Delete item"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:2
+msgid "Label:"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:3
+msgid "Move item down"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:4
+msgid "Move item up"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:5
+msgid "New item"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:6
+msgid "Script:"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:7
+msgid "Set whether the menu item is enabled"
+msgstr ""
+
+#: ../ggap/glade/usermenu.glade.h:8
+msgid "Visible"
+msgstr ""

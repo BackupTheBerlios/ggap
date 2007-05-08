@@ -134,11 +134,11 @@ gap_app_class_init (GapAppClass *klass)
 //                                  NULL);
 
     moo_window_class_new_action (term_class, "Quit", NULL,
-                                 "display-name", "Quit",
-                                 "label", "_Quit",
-                                 "tooltip", "Quit",
+                                 "display-name", GTK_STOCK_QUIT,
+                                 "label", GTK_STOCK_QUIT,
+                                 "tooltip", GTK_STOCK_QUIT,
                                  "stock-id", GTK_STOCK_QUIT,
-                                 "accel", "<alt>Q",
+                                 "accel", "<ctrl>Q",
                                  "closure-callback", moo_app_quit,
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
@@ -263,6 +263,7 @@ gap_app_init_real (MooApp *app)
 
     editor = moo_app_get_editor (app);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
+    g_object_set (editor, "allow-empty-window", TRUE, NULL);
     g_signal_connect_swapped (editor, "all-windows-closed",
                               G_CALLBACK (editor_windows_closed), app);
 

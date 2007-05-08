@@ -5,7 +5,7 @@
   <debug>
    <build_dir>build/debug</build_dir>
    <configure>
-    <args>--enable-debug=full --enable-all-warnings</args>
+    <args>--enable-debug=full --enable-all-warnings --disable-medit</args>
     <vars>
      <var name="CFLAGS">-g</var>
     </vars>
@@ -23,14 +23,14 @@
   <optimized>
    <build_dir>build/optimized</build_dir>
    <configure>
-    <args>--enable-all-gcc-warnings</args>
+    <args>--enable-all-gcc-warnings --disable-medit</args>
     <vars>
-     <var name="CFLAGS">-g -O2</var>
+     <var name="CFLAGS">-O2</var>
     </vars>
    </configure>
   </optimized>
  </configurations>
- <file_selector_dir>/home/muntyan/projects/ggap/ggap/</file_selector_dir>
+ <file_selector_dir>/home/muntyan/projects/ggap/ggap/gap/gap/</file_selector_dir>
  <run>
   <args>--g-fatal-warnings --new-app</args>
   <exe>ggap/ggap</exe>

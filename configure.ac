@@ -2,16 +2,16 @@
 # ggap/configure.ac
 #
 
-m4_define([ggap_major_version], [0])
-m4_define([ggap_minor_version], [7])
-m4_define([ggap_micro_version], [0])
+m4_define([ggap_version], [0.7.0])
 
-AC_INIT([GGAP],[ggap_major_version.ggap_minor_version.ggap_micro_version],[muntyan@tamu.edu],[ggap])
+AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADERS(config.h)
 
-MOO_DEFINE_VERSIONS(ggap,ggap_major_version,ggap_minor_version,ggap_micro_version)
+MOO_DEFINE_VERSIONS(ggap,[ggap_version])
+
+export MOO_PACKAGE_NAME=ggap
 
 AC_PROG_CC
 AC_DISABLE_STATIC
@@ -19,9 +19,11 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 MOO_AC_PROGS
 
+MOO_AC_I18N(ggap)
+
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
 
-PKG_CHECK_MODULES(MOO, moo)
+PKG_CHECK_MODULES(GTK, gtk+-2.0)
 
 MOO_AC_CHECK_OS
 _MOO_AC_CONFIGARGS_H
@@ -39,10 +41,8 @@ AC_SUBST(GGAP_DATA_DIR)
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 
+AC_CONFIG_SUBDIRS(moo)
 
-################################################################################
-#  Created files
-#
 AC_CONFIG_FILES([
 Makefile
 config.py
@@ -51,6 +51,7 @@ ggap/ggap_res.rc
 ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
+po/Makefile.in
 wininstaller/ggap.iss
 ])
 AC_OUTPUT

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import gtk
 import gobject
@@ -47,6 +49,7 @@ GtkButtonBoxStyle = IsInt
 GtkOrientation = IsInt
 GtkToolbarStyle = IsInt
 GtkIconSize = IsInt
+GtkFileChooserAction = IsInt
 
 
 class FuncBase(object):
@@ -70,7 +73,9 @@ class FuncBase(object):
         if not self.py_name:
             raise RuntimeError(self)
         if not hasattr(self, 'gap_name'):
-            self.gap_name = ''.join([c.capitalize() for c in self.py_name.replace('.', '_').split('_')])
+            def cap(s):
+                return s[0].title() + s[1:]
+            self.gap_name = ''.join([cap(c) for c in self.py_name.replace('.', '_').split('_')])
         return self.gap_name
 
 def format_func(py_name, n_args, meth):
@@ -1023,6 +1028,7 @@ class GObject:
                             class GtkTearoffMenuItem: pass
 #                                 GtkWidget*  gtk_tearoff_menu_item_new       (void);
                     class GtkComboBox:
+                        __new__ = Function(gap_name='GtkComboBox', py_name='gtk.combo_box_new_text')
 #                         __new__ = Function(py_name='gtk.ComboBox', opt_args=['IsGtkTreeModel'])
 #                         GtkWidget*  gtk_combo_box_new_text          (void);
                         get_wrap_width = []
@@ -1050,6 +1056,7 @@ class GObject:
                         get_focus_on_click = []
 
                         class GtkComboBoxEntry:
+                            __new__ = Function(gap_name='GtkComboBoxEntry', py_name='gtk.combo_box_entry_new_text')
 #                             GtkWidget*  gtk_combo_box_entry_new         (void);
 #                             GtkWidget*  gtk_combo_box_entry_new_with_model
 #                                                                         (GtkTreeModel *model,
@@ -1060,15 +1067,10 @@ class GObject:
 
                     class GtkEventBox:
                         __new__ = Function(py_name='gtk.EventBox')
-#                         GtkWidget*  gtk_event_box_new               (void);
-#                         void        gtk_event_box_set_above_child   (GtkEventBox *event_box,
-#                                                                      gboolean above_child);
-#                         gboolean    gtk_event_box_get_above_child   (GtkEventBox *event_box);
-#                         void        gtk_event_box_set_visible_window
-#                                                                     (GtkEventBox *event_box,
-#                                                                      gboolean visible_window);
-#                         gboolean    gtk_event_box_get_visible_window
-#                                                                     (GtkEventBox *event_box);
+                        set_above_child = [gboolean]
+                        get_above_child = []
+                        set_visible_window = [gboolean]
+                        get_visible_window = []
 
                     class GtkExpander:
                         __new__ = Function(py_name='gtk.Expander', opt_args=[IsString])
@@ -1146,9 +1148,7 @@ class GObject:
                                 set_arrow_tooltip = ['IsGtkTooltips', IsString, IsString]
 
                             class GtkToggleToolButton:
-#                                 GtkToolItem* gtk_toggle_tool_button_new     (void);
-#                                 GtkToolItem* gtk_toggle_tool_button_new_from_stock
-#                                                                             (const gchar *stock_id);
+                                __new__ = Function(py_name='gtk.ToggleToolButton', opt_args=[IsString])
                                 set_active = [gboolean]
                                 get_active = []
 
@@ -1229,21 +1229,82 @@ class GObject:
                         set_child_secondary = [IsGtkWidget, gboolean]
 
                         class GtkHButtonBox:
-                            __new__ = Function(py_name='gtk.HButtonBox', gap_name='GtkHButtonBox')
+                            __new__ = Function(py_name='gtk.HButtonBox')
                         class GtkVButtonBox:
-                            __new__ = Function(py_name='gtk.VButtonBox', gap_name='GtkVButtonBox')
+                            __new__ = Function(py_name='gtk.VButtonBox')
 
                     class GtkVBox:
-                        __new__ = Function(py_name='gtk.VBox', gap_name='GtkVBox', args=[gboolean, gint])
+                        __new__ = Function(py_name='gtk.VBox', args=[gboolean, gint])
 
-                        class GtkColorSelection: pass
-                            # TODO
-                        class GtkFileChooserWidget: pass
-                            # TODO
-                        class GtkFontSelection: pass
-                            # TODO
-                        class GtkGammaCurve: pass
-                            # TODO
+                        class GtkColorSelection:
+                            __new__ = Function(py_name='gtk.ColorSelection')
+#                             void        gtk_color_selection_set_update_policy
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          GtkUpdateType policy);
+#                             void        gtk_color_selection_set_has_opacity_control
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          gboolean has_opacity);
+#                             gboolean    gtk_color_selection_get_has_opacity_control
+#                                                                         (GtkColorSelection *colorsel);
+#                             void        gtk_color_selection_set_has_palette
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          gboolean has_palette);
+#                             gboolean    gtk_color_selection_get_has_palette
+#                                                                         (GtkColorSelection *colorsel);
+#                             guint16     gtk_color_selection_get_current_alpha
+#                                                                         (GtkColorSelection *colorsel);
+#                             void        gtk_color_selection_set_current_alpha
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          guint16 alpha);
+#                             void        gtk_color_selection_get_current_color
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          GdkColor *color);
+#                             void        gtk_color_selection_set_current_color
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          const GdkColor *color);
+#                             guint16     gtk_color_selection_get_previous_alpha
+#                                                                         (GtkColorSelection *colorsel);
+#                             void        gtk_color_selection_set_previous_alpha
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          guint16 alpha);
+#                             void        gtk_color_selection_get_previous_color
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          GdkColor *color);
+#                             void        gtk_color_selection_set_previous_color
+#                                                                         (GtkColorSelection *colorsel,
+#                                                                          const GdkColor *color);
+#                             gboolean    gtk_color_selection_is_adjusting
+#                                                                         (GtkColorSelection *colorsel);
+#                             gboolean    gtk_color_selection_palette_from_string
+#                                                                         (const gchar *str,
+#                                                                          GdkColor **colors,
+#                                                                          gint *n_colors);
+#                             gchar*      gtk_color_selection_palette_to_string
+#                                                                         (const GdkColor *colors,
+#                                                                          gint n_colors);
+#                             GtkColorSelectionChangePaletteFunc gtk_color_selection_set_change_palette_hook
+#                                                                         (GtkColorSelectionChangePaletteFunc func);
+#                             void        (*GtkColorSelectionChangePaletteFunc)
+#                                                                         (const GdkColor *colors,
+#                                                                          gint n_colors);
+#                             GtkColorSelectionChangePaletteWithScreenFunc gtk_color_selection_set_change_palette_with_screen_hook
+#                                                                         (GtkColorSelectionChangePaletteWithScreenFunc func);
+#                             void        (*GtkColorSelectionChangePaletteWithScreenFunc)
+#                                                                         (GdkScreen *screen,
+#                                                                          const GdkColor *colors,
+#                                                                          gint n_colors);
+#                             void        gtk_color_selection_set_color   (GtkColorSelection *colorsel,
+#                                                                          gdouble *color);
+#                             void        gtk_color_selection_get_color   (GtkColorSelection *colorsel,
+#                                                                          gdouble *color);
+                        class GtkFileChooserWidget:
+                            __new__ = Function(py_name='gtk.FileChooserWidget', args=[GtkFileChooserAction])
+                        class GtkFontSelection:
+                            __new__ = Function(py_name='gtk.FontSelection')
+                            get_font_name = []
+                            set_font_name = [IsString]
+                            get_preview_text = []
+                            set_preview_text = [IsString]
 
                     class GtkHBox:
                         __new__ = Function(py_name='gtk.HBox', gap_name='GtkHBox', args=[gboolean, gint])

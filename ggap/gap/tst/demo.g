@@ -25,8 +25,8 @@ function(no, data)
     return;
   fi;
 
-  GObjectSetProperty(data.window.info, "markup", info);
-  SetText(data.window.source, source);
+  SetProperty(data.window.info, "markup", info);
+  SetProperty(data.window.source, "text", source);
 end;
 
 
