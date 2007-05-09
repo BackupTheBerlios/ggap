@@ -1,10 +1,3 @@
-<!-- This is the XML file defining menus and toolbars of the program.
-     To add an action add <item action="YourAction"> under desired menu/toolbar,
-     where 'YourAction' is the name of action defined in 'actions' file.
-     WARNING: changing/moving around 'placeholder' items may break menu
-     items added by plugins; moving around menus is also not recommended.
-     (but adding or moving *items* is okay).
-     -->
 <ui>
 
 <object name="Editor">
@@ -106,6 +99,14 @@
       <separator/>
     </item>
 
+    <item name="GAP" label="_GAP">
+      <separator/>
+      <item action="SendFile"/>
+      <item action="SendCopy"/>
+      <item action="SendSelection"/>
+      <separator/>
+    </item>
+
     <item name="Tools" _label="_Tools">
       <separator/>
       <placeholder name="ToolsMenu"/>
@@ -149,6 +150,8 @@
   </widget> <!-- Menubar -->
 
   <widget name="Toolbar">
+    <separator/>
+    <item action="SendFile"/>
     <separator/>
     <item action="NewDoc"/>
     <separator/>
