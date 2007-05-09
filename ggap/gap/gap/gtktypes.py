@@ -1,30 +1,4 @@
-#!/usr/bin/env python
-
-import sys
-import gtk
-import gobject
-
-try:
-  import psyco
-  psyco.full()
-except ImportError:
-  pass
-
-header = """\
-#############################################################################
-##
-#W  types.%s                   ggap package                    Yevgen Muntyan
-#W
-#Y  Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
-##
-##  This program is free software; you can redistribute it and/or modify
-##  it under the terms of the GNU General Public License as published by
-##  the Free Software Foundation; either version 2 of the License, or
-##  (at your option) any later version.
-##
-##  See COPYING file that comes with this distribution.
-##
-"""
+from defs import Function, ClassInfo
 
 IsGtkWidget = 'IsGtkWidget'
 IsString = 'IsString'
@@ -36,6 +10,7 @@ guint = 'IsInt'
 gfloat = 'IsRat'
 
 GtkWindowType = IsInt
+GtkWindowPosition = IsInt
 GtkStateType = IsInt
 GtkResizeMode = IsInt
 GdkWindowTypeHint = IsInt
@@ -51,200 +26,57 @@ GtkToolbarStyle = IsInt
 GtkIconSize = IsInt
 GtkFileChooserAction = IsInt
 
+top_classes = []
+functions = []
 
-class FuncBase(object):
-    def __init__(self, args=[], opt_args=[], py_name=None, gap_name=None, other=False, is_meth=True):
-        object.__init__(self)
-        self.args = args
-        self.opt_args = opt_args
-        self.is_meth = is_meth
-        if py_name is not None:
-            self.py_name = py_name
-        if gap_name is not None:
-            self.gap_name = gap_name
-        self.other = other
-
-    def set_obj_type(self, typ):
-        if self.is_meth:
-            self.obj_type = typ
-            self.args = [typ] + self.args
-
-    def get_gap_name(self):
-        if not self.py_name:
-            raise RuntimeError(self)
-        if not hasattr(self, 'gap_name'):
-            def cap(s):
-                return s[0].title() + s[1:]
-            self.gap_name = ''.join([cap(c) for c in self.py_name.replace('.', '_').split('_')])
-        return self.gap_name
-
-def format_func(py_name, n_args, meth):
-    if meth:
-        assert n_args > 0
-        tmpl = '' \
-            'function(%(args)s)\n' \
-            '    return _GGAP_CALL_METH(self, "%(py_name)s"%(rest_args)s);\n' \
-            'end'
-        dic = {'py_name' : py_name, 'rest_args' : ''}
-        args = ['self'] + ['arg' + str(n) for n in range(1, n_args)]
-        dic['args'] = ', '.join(args)
-        if n_args > 1:
-            dic['rest_args'] = ', ' + ', '.join(args[1:])
-        return tmpl % dic
-    else:
-        tmpl = '' \
-            'function(%(args)s)\n' \
-            '    return _GGAP_CALL_FUNC("%(py_name)s"%(rest_args)s);\n' \
-            'end'
-        dic = {'py_name' : py_name, 'args' : '', 'rest_args' : ''}
-        if n_args > 0:
-            args = ['arg' + str(n) for n in range(1, n_args+1)]
-            dic['args'] = ', '.join(args)
-            dic['rest_args'] = ', ' + dic['args']
-        return tmpl % dic
-
-def format_func_opt_args(py_name, n_args, meth):
-    if meth:
-        assert n_args > 1
-        tmpl = '' \
-            'function(%(args)s)\n' \
-            '    return _GGAP_CALL_METH_OPTARG(self, "%(py_name)s"%(rest_args)s, optarg);\n' \
-            'end'
-        dic = {'py_name' : py_name, 'rest_args' : ''}
-
-        if n_args == 1:
-            dic['args'] = 'self, optarg'
-            dic['rest_args'] = ''
-        else:
-            args = ['self'] + ['arg' + str(n) for n in range(1, n_args)] + ['optarg']
-            dic['args'] = ', '.join(args)
-            dic['rest_args'] = ', ' + ', '.join(args[1:-1])
-        return tmpl % dic
-    else:
-        tmpl = '' \
-            'function(%(args)s)\n' \
-            '    return _GGAP_CALL_FUNC_OPTARG("%(py_name)s"%(rest_args)s, optarg);\n' \
-            'end'
-        dic = {'py_name' : py_name, 'args' : 'optarg', 'rest_args' : ''}
-        if n_args > 0:
-            args = ['arg' + str(n) for n in range(1, n_args+1)]
-            dic['args'] = ', '.join(args) + ', optarg'
-            dic['rest_args'] = ', ' + ', '.join(args)
-        return tmpl % dic
-
-
-class GlobalFunction(FuncBase):
-    def __str__(self):
-        return '<GlobalFunction %s for %s, %s>' % (self.py_name, self.args, self.opt_args)
-
-    def declare(self, fp):
-        print >> fp, 'DeclareGlobalFunction("%s");' % (self.get_gap_name(),)
-
-    def install(self, fp):
-        assert not self.opt_args
-        n_args = len(self.args)
-        print >> fp, \
-            'InstallGlobalFunction(%s,\n%s);' % (self.get_gap_name(),
-                                                 format_func(self.py_name, len(self.args), self.is_meth))
-
-class Operation(FuncBase):
-    def __str__(self):
-        return '<Operation %s for %s, %s>' % (self.py_name, self.args, self.opt_args)
-
-    def get_args_set(self):
-        set = []
-        for i in range(len(self.opt_args) + 1):
-            set.append(self.args + self.opt_args[:i])
-        return set
-
-    def declare(self, fp):
-        if not self.other:
-            args_set = self.get_args_set()
-            if self.opt_args:
-                args_set.append(self.args + ['IsRecord'])
-            for args in args_set:
-                args = '[' + ', '.join(args) + ']'
-                print >> fp, 'DeclareOperation("%s", %s);' % (self.get_gap_name(), args)
-
-    def install(self, fp):
-        args_set = self.get_args_set()
-        for args in args_set:
-            self._install_one(args, fp)
-        if self.opt_args:
-            self._install_opt_args(fp)
-
-    def _install_one(self, args, fp):
-        n_args = len(args)
-        arg_types = '[' + ', '.join(args) + ']'
-        if self.other:
-            install_func = 'InstallOtherMethod'
-        else:
-            install_func = 'InstallMethod'
-        print >> fp, '%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
-                                            format_func(self.py_name, n_args, self.is_meth))
-
-    def _install_opt_args(self, fp):
-        n_args = len(self.args)
-        args = self.args + ['IsRecord']
-        arg_types = '[' + ', '.join(args) + ']'
-        if self.other:
-            install_func = 'InstallOtherMethod'
-        else:
-            install_func = 'InstallMethod'
-        print >> fp, '%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
-                                            format_func_opt_args(self.py_name, n_args, self.is_meth))
-
-
-def Function(*args, **kwargs):
-    func_args = []
-    func_opt_args = []
-    py_name = None
-    gap_name = None
-    other = False
-    is_op=True
-    is_meth=True
-
-    if kwargs.has_key('py_name'):
-        py_name = kwargs['py_name']
-    if kwargs.has_key('gap_name'):
-        gap_name = kwargs['gap_name']
-    if kwargs.has_key('other'):
-        other = kwargs['other']
-    if kwargs.has_key('is_op'):
-        is_op = kwargs['is_op']
-    if kwargs.has_key('is_meth'):
-        is_meth = kwargs['is_meth']
-    if kwargs.has_key('opt_args'):
-        func_opt_args = kwargs['opt_args']
-    if kwargs.has_key('args'):
-        func_args = kwargs['args']
-
-    if args:
-        if isinstance(args[0], str):
-            func_args = list(args)
-        elif isinstance(args[0], list) or isinstance(args[0], tuple):
-            func_args = list(args[0])
-        else:
-            raise RuntimeError()
-
-    if is_op:
-        cls = Operation
-    else:
-        cls = GlobalFunction
-
-    return cls(args=func_args, opt_args=func_opt_args,
-               py_name=py_name, gap_name=gap_name,
-               other=other, is_meth=is_meth)
-
+class GtkCellEditable:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkCellEditable)
+class GtkCellLayout:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkCellLayout)
+class GtkEditable:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkEditable)
+class GtkFileChooser:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkFileChooser)
+class GtkTreeModel:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkTreeModel)
+class GtkTreeDragSource:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkTreeDragSource)
+class GtkTreeDragDest:
+    __abstract__ = True
+    # TODO
+top_classes.append(GtkTreeDragDest)
+class GtkTreeSortable:
+    __abstract__ = True
+    __implements__ = ['GtkTreeModel']
+    # TODO
+top_classes.append(GtkTreeSortable)
 
 class GObject:
+    __abstract__ = True
+
     set_property = ['IsString', 'IsObject']
     get_property = ['IsString']
 
     class GtkObject:
+        __abstract__ = True
+
         destroy = []
 
         class GtkWidget:
+            __abstract__ = True
+
             unparent = []
             show = []
             show_now = []
@@ -460,6 +292,8 @@ class GObject:
 #                                                          GtkWidget *label);
 
             class GtkContainer:
+                __abstract__ = True
+
                 add = Function([IsGtkWidget], other=True)
                 remove = Function([IsGtkWidget], other=True)
 #                 add_with_properties = [IsGtkWidget]
@@ -533,6 +367,8 @@ class GObject:
 #                                                              guint *n_properties);
 
                 class GtkBin:
+                    __abstract__ = True
+
                     get_child = []
 
                     class GtkWindow:
@@ -560,8 +396,7 @@ class GObject:
 #                         set_gravity          (GtkWindow *window,
 #                                                                      GdkGravity gravity);
 #                         GdkGravity  gtk_window_get_gravity = []
-#                         set_position         (GtkWindow *window,
-#                                                                      GtkWindowPosition position);
+                        set_position = [GtkWindowPosition]
                         set_transient_for = ['IsGtkWindow']
                         set_destroy_with_parent = [gboolean]
 #                         set_screen           (GtkWindow *window,
@@ -689,7 +524,7 @@ class GObject:
 #                                                                          const gchar *first_button_text,
 #                                                                          ...);
                             run = []
-                            response = [gint]
+                            response = [(gint, 'response')]
                             add_button = [IsString, gint]
 #                             add_buttons          (GtkDialog *dialog,
 #                                                                          const gchar *first_button_text,
@@ -863,6 +698,7 @@ class GObject:
                             set = [gfloat, gfloat, gfloat, gboolean]
 
                     class GtkButton:
+                        __new__ = Function(py_name='gtk.Button', opt_args=[IsString, IsString, gboolean])
 #                         GtkWidget*  gtk_button_new                  (void);
 #                         GtkWidget*  gtk_button_new_with_label       (const gchar *label);
 #                         GtkWidget*  gtk_button_new_with_mnemonic    (const gchar *label);
@@ -888,6 +724,7 @@ class GObject:
                         get_image = []
 
                         class GtkToggleButton:
+                            __new__ = Function(py_name='gtk.ToggleButton', opt_args=[IsString, gboolean])
 #                             GtkWidget*  gtk_toggle_button_new           (void);
 #                             GtkWidget*  gtk_toggle_button_new_with_label
 #                                                                         (const gchar *label);
@@ -902,6 +739,7 @@ class GObject:
                             set_inconsistent = [gboolean]
 
                             class GtkCheckButton:
+                                __new__ = Function(py_name='gtk.CheckButton', opt_args=[IsString, gboolean])
 #                                 GtkWidget*  gtk_check_button_new            (void);
 #                                 GtkWidget*  gtk_check_button_new_with_label (const gchar *label);
 #                                 GtkWidget*  gtk_check_button_new_with_mnemonic
@@ -928,6 +766,7 @@ class GObject:
 #                                     GSList*     gtk_radio_button_get_group      (GtkRadioButton *radio_button);
 
                         class GtkColorButton:
+#                             __new__ = Function(py_name='gtk.ColorButton', opt_args=[IsGdkColor])
 #                             GtkWidget*  gtk_color_button_new            (void);
 #                             GtkWidget*  gtk_color_button_new_with_color (const GdkColor *color);
 #                             void        gtk_color_button_set_color      (GtkColorButton *color_button,
@@ -959,6 +798,7 @@ class GObject:
                             get_title = []
 
                     class GtkItem:
+                        __abstract__ = True
                         class GtkMenuItem:
                             __new__ = Function(py_name="gtk.MenuItem", opt_args=[IsString, gboolean])
                             set_right_justified = [gboolean]
@@ -1198,6 +1038,7 @@ class GObject:
                         get_shadow_type = []
 
                 class GtkBox:
+                    __abstract__ = True
                     pack_start = [IsGtkWidget, gboolean, gboolean, guint]
                     pack_end = [IsGtkWidget, gboolean, gboolean, guint]
                     pack_start_defaults = [IsGtkWidget]
@@ -1534,6 +1375,7 @@ class GObject:
                     unset_style = []
                 class GtkTreeView: pass
             class GtkMisc:
+                __abstract__ = True
                 class GtkLabel:
                     class GtkAccelLabel: pass
                 class GtkArrow: pass
@@ -1562,6 +1404,7 @@ class GObject:
                 class GtkProgressBar: pass
         class GtkAdjustment: pass
         class GtkCellRenderer:
+            __abstract__ = True
             class GtkCellRendererText:
                 class GtkCellRendererCombo: pass
             class GtkCellRendererPixbuf: pass
@@ -1576,7 +1419,9 @@ class GObject:
     class GtkEntryCompletion: pass
     class GtkIconFactory: pass
     class GtkIconTheme: pass
-    class GtkListStore: pass
+    class GtkListStore:
+        __implements__ = ['GtkTreeSortable']
+        # TODO
     class GtkRcStyle: pass
     class GtkSettings: pass
     class GtkSizeGroup: pass
@@ -1586,23 +1431,23 @@ class GObject:
     class GtkTextMark: pass
     class GtkTextTag: pass
     class GtkTextTagTable: pass
-    class GtkTreeModelFilter: pass
-    class GtkTreeModelSort: pass
-    class GtkTreeSelection: pass
-    class GtkTreeStore: pass
+    class GtkTreeModelFilter:
+        __implements__ = ['GtkTreeModel']
+        # TODO
+    class GtkTreeModelSort:
+        __implements__ = ['GtkTreeSortable']
+        # TODO
+    class GtkTreeSelection:
+        __abstract__ = True
+        # TODO
+    class GtkTreeStore:
+        __implements__ = ['GtkTreeSortable']
+        # TODO
     class GtkUIManager: pass
     class GtkWindowGroup: pass
 
-    class GtkCellEditable: pass
-    class GtkCellLayout: pass
-    class GtkEditable: pass
-    class GtkFileChooser: pass
-    class GtkTreeModel: pass
-    class GtkTreeDragSource: pass
-    class GtkTreeDragDest: pass
-    class GtkTreeSortable: pass
-
     class MooGladeXML:
+        __py_name__ = 'moo.utils.GladeXML'
 #         MooGladeXML *moo_glade_xml_new_empty        (const char     *domain);
         __new__ = Function(py_name='moo.utils.GladeXML', gap_name='MooGladeXML',
                            args=[IsString], opt_args=[IsString])
@@ -1650,131 +1495,8 @@ class GObject:
 #         GtkWidget   *moo_glade_xml_get_root         (MooGladeXML    *xml);
 
 
-def isclass(name):
-    return name.startswith('Gtk') or name.startswith('Moo')
-
-def normalize(cls):
-    for k in dir(cls):
-        a = getattr(cls, k)
-        if k == '__new__':
-            if not isinstance(a, FuncBase):
-                args = []
-                if len(a) > 1:
-                    args = a[1]
-                setattr(cls, k, Function(args, py_name=a[0], is_meth=False))
-            else:
-                a.is_meth = False
-        elif isclass(k):
-            normalize(a)
-        else:
-            if isinstance(a, list) or isinstance(a, tuple):
-                setattr(cls, k, Function(a, py_name=k))
-            elif isinstance(a, FuncBase) and not hasattr(a, 'py_name'):
-                setattr(a, 'py_name', k)
-            a = getattr(cls, k)
-            if isinstance(a, FuncBase) and not hasattr(a, 'obj_type'):
-                a.set_obj_type('Is' + cls.__name__)
-normalize(GObject)
+top_classes.append(GObject)
 
 
-def catname(c):
-    if c is None:
-        return 'IsObject'
-    else:
-        return 'Is' + c.__name__
-
-def typename(c):
-    return c.__name__
-
-def printcats(c, pc, fp):
-    if c.__name__ not in ["GObject"]:
-        print >> fp, 'DeclareCategory("%s", %s);' % (catname(c), catname(pc))
-
-    for a in c.__dict__.keys():
-        if isclass(a):
-            printcats(c.__dict__[a], c, fp)
-
-def printops(c, fp):
-    for k in c.__dict__.keys():
-        m = c.__dict__[k]
-        if isinstance(m, FuncBase):
-            m.declare(fp)
-
-    for k in c.__dict__.keys():
-        if isclass(k):
-            printops(c.__dict__[k], fp)
-
-def printmeths(c, fp):
-    for k in c.__dict__.keys():
-        m = c.__dict__[k]
-        if isinstance(m, FuncBase):
-            m.install(fp)
-
-    for k in c.__dict__.keys():
-        if isclass(k):
-            printmeths(c.__dict__[k], fp)
-
-def printtypes(c, fp):
-    if c.__name__ not in ["GObject"]:
-        print >> fp, '_GGAP_REGISTER_TYPE("%s", %s);' % (typename(c), catname(c))
-
-    for a in c.__dict__.keys():
-        if isclass(a):
-            printtypes(c.__dict__[a], fp)
-
-def printenums(mod, prefix, fp):
-    ignoreenums = [gtk.PrivateFlags, gtk.ArgFlags, gtk.ButtonAction, gtk.CListDragPos, gtk.CellType,
-                   gtk.CListDragPos, gtk.CTreeExpanderStyle, gtk.CTreeExpansionType, gtk.CTreeLineStyle,
-                   gtk.CTreePos, gtk.DebugFlag, gtk.SubmenuDirection, gtk.SubmenuPlacement, gtk.MatchType,
-                   gtk.PreviewType, gtk.SideType, ]
-
-    vals = []
-
-    for w in dir(mod):
-        m = getattr(mod, w)
-        if (isinstance(m, gobject.GEnum) or isinstance(m, gobject.GFlags)) and \
-            not type(m) in ignoreenums:
-            vals.append([w, m])
-
-    def cmp_vals(wm1, wm2):
-        t1 = type(wm1[1])
-        t2 = type(wm2[1])
-        if t1 is t2:
-            return cmp(wm1[1], wm2[1])
-        else:
-            return cmp(t1.__name__, t2.__name__)
-    vals.sort(cmp_vals)
-
-    for wm in vals:
-        print >> fp, 'BindGlobal("%s", %s);' % (prefix + wm[0], int(wm[1]))
-
-def write_gd(fp):
-    print >> fp, header % ('gd',)
-    print >> fp, "## This file is autogenerated\n"
-    printcats(GObject, None, fp)
-    print >> fp, ''
-    printops(GObject, fp)
-    print >> fp, ''
-    print >> fp, 'DeclareGlobalFunction("_GGAP_REGISTER_WIDGETS");'
-
-def write_gi(fp):
-    print >> fp, header % ('gi',)
-    print >> fp, "## This file is autogenerated\n"
-    printenums(gtk, "GTK_", fp);
-    print >> fp, ""
-    printmeths(GObject, fp);
-    print >> fp, ''
-    print >> fp, "InstallGlobalFunction(_GGAP_REGISTER_WIDGETS,"
-    print >> fp, "function()"
-    printtypes(GObject, fp);
-    print >> fp, "end);"
-
-if __name__ == '__main__':
-    if sys.argv[1:]:
-        gd = open(sys.argv[1], "w")
-        gi = open(sys.argv[2], "w")
-    else:
-        gd = sys.stdout
-        gi = sys.stdout
-    write_gd(gd)
-    write_gi(gi)
+top_classes = [ClassInfo(c, None) for c in top_classes]
+functions = [Function(f) for f in functions]

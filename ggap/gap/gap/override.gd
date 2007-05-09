@@ -1,0 +1,1 @@
+DeclareOperation("GladeXML", [IsString, IsRecord]);

@@ -33,6 +33,7 @@ endif MOO_OS_MINGW
 
 ggap_SOURCES =				\
 	ggap-ui.h			\
+	gap-mod.h			\
 	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
@@ -75,7 +76,7 @@ EXTRA_DIST =		\
     glade/usermenu.glade\
     python/ggap.py
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c ggap-mod.h ggap-credits.h
+BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c ggap-mod.h gap-mod.h ggap-credits.h
 XML2H = $(top_srcdir)/xml2h.sh
 PY2H = $(top_srcdir)/py2h.sh
 
@@ -92,3 +93,5 @@ ggap.c: ggap.opag
 
 ggap-mod.h: $(srcdir)/python/ggap.py $(PY2H)
 	$(SHELL) $(PY2H) GGAP_PY $(srcdir)/python/ggap.py > ggap-mod.h
+gap-mod.h: $(srcdir)/python/gap.py $(PY2H)
+	$(SHELL) $(PY2H) GAP_PY $(srcdir)/python/gap.py > gap-mod.h

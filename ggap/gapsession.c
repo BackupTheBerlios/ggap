@@ -14,6 +14,7 @@
 #include "config.h"
 #include "gapsession.h"
 #include "ggap-mod.h"
+#include "gap-mod.h"
 #include "gapoutput.h"
 #include <mooutils/moopython.h>
 
@@ -78,10 +79,23 @@ init_ggap_module (void)
     been_here = TRUE;
     success = FALSE;
 
-    mod = moo_py_import_exec ("ggap", GGAP_PY);
-
-    if (!mod)
+    if (!(mod = moo_py_import_exec ("gap", GAP_PY)))
+    {
+        g_critical ("could not import module '%s'", "gap");
+        moo_PyErr_Print ();
         goto out;
+    }
+    else
+    {
+        moo_Py_DECREF (mod);
+    }
+
+    if (!(mod = moo_py_import_exec ("ggap", GGAP_PY)))
+    {
+        g_critical ("could not import module '%s'", "ggap");
+        moo_PyErr_Print ();
+        goto out;
+    }
 
     meth.ml_name = "_app_output_write";
     meth.ml_meth = output_write_meth;

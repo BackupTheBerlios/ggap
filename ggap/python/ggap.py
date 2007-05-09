@@ -1,5 +1,7 @@
 import gtk
+import gap
 import gobject
+import pango
 import sys
 import os
 import traceback
@@ -108,11 +110,12 @@ class Session:
             "__session__" : self,
             "gtk" : gtk,
             "sys" : sys,
+            "gap" : gap,
+            "pango" : pango,
+            "gobject" : gobject,
             "OBJECT" : self.get_object,
 #             "unref_objects" : self.unref_objects,
 #             "call_func" : self.call_func,
-#             "call_meth" : self.call_meth,
-#             "_process_return" : self._process_return,
         }
 
         try:

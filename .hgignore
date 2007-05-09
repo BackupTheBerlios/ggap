@@ -14,6 +14,7 @@ missing
 .*pcs
 .*kdevses
 .*\.P?o
+.*\.pyc$
 Makefile$
 .*\.(bak|backup)
 .*\.gladep

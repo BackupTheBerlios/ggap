@@ -1,6 +1,7 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip foreign nostdinc
 
-SUBDIRS = moo . ggap po
+# SUBDIRS = moo . ggap po
+SUBDIRS = . ggap po
 
 EXTRA_DIST =            \
     makewin             \

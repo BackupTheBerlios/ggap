@@ -20,6 +20,7 @@ ReadPkg("ggap", "gap/io.gd");
 ReadPkg("ggap", "gap/gobject.gd");
 ReadPkg("ggap", "gap/types.gd");
 ReadPkg("ggap", "gap/utils.gd");
+ReadPkg("ggap", "gap/override.gd");
 
 
 #E

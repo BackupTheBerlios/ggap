@@ -18,6 +18,8 @@ ggap_pkg_gap_DATA =		\
 	gap/io.gi		\
 	gap/types.gd		\
 	gap/types.gi		\
+	gap/override.gd		\
+	gap/override.gi		\
 	gap/utils.gd		\
 	gap/utils.gi
 
@@ -34,15 +36,20 @@ ggap_pkg_tst_demo_DATA =	\
 	tst/demo/entries.g	\
 	tst/demo/filechooser.g
 
+py_files =			\
+	gap/codegen.py		\
+	gap/defs.py		\
+	gap/gtktypes.py
+
 BUILT_SOURCES =			\
 	gap/types.gi		\
 	gap/types.gd
 
 gen_types:
-	$(PYTHON) $(srcdir)/gap/types.py $(srcdir)/gap/types.gd $(srcdir)/gap/types.gi
-$(srcdir)/gap/types.gd: $(srcdir)/gap/types.py
+	$(PYTHON) $(srcdir)/gap/codegen.py $(srcdir)/gap/types.gd $(srcdir)/gap/types.gi
+$(srcdir)/gap/types.gd: $(py_files)
 	$(MAKE) gen_types
-$(srcdir)/gap/types.gi: $(srcdir)/gap/types.py
+$(srcdir)/gap/types.gi: $(py_files)
 	$(MAKE) gen_types
 
 EXTRA_DIST =			\
@@ -51,4 +58,4 @@ EXTRA_DIST =			\
 	$(ggap_pkg_tst_DATA)	\
 	$(ggap_pkg_tst_glade_DATA)\
 	$(ggap_pkg_tst_demo_DATA)\
-	gap/types.py
+	$(py_files)
