@@ -10,26 +10,24 @@ class FuncBase(object):
             self.gap_name = gap_name
         self.other = other
 
-        if gap_name:
-            print gap_name
-        else:
-            print type(self)
-
         i = 1
         self.args = []
         self.opt_args = []
         for a in args:
             if isinstance(a, str):
-                self.args.append((a, 'arg' + str(i)))
+                self.args.append([a, 'arg' + str(i)])
             else:
-                self.args.append(a)
+                self.args.append(list(a))
             i += 1
         for a in opt_args:
             if isinstance(a, str):
-                self.opt_args.append((a, 'arg' + str(i)))
+                self.opt_args.append([a, 'arg' + str(i)])
             else:
-                self.opt_args.append(a)
+                self.opt_args.append(list(a))
             i += 1
+        for a in self.args + self.opt_args:
+            if a[1] in ['end']:
+                a[1] = a[1] + '_';
 
     def set_obj_type(self, typ):
         if self.is_meth:
@@ -42,7 +40,6 @@ class FuncBase(object):
         if not hasattr(self, 'gap_name'):
             def cap(s):
                 return s[0].title() + s[1:]
-            print self.py_name
             self.gap_name = ''.join([cap(c) for c in self.py_name.replace('.', '_').split('_')])
         return self.gap_name
 
@@ -214,7 +211,6 @@ def _is_class(name):
 class ClassInfo(object):
     def __init__(self, cls, parent_name):
         self.name = cls.__name__
-        print self.name
 
         self.py_name = getattr(cls, '__py_name__', None)
         if not self.py_name:

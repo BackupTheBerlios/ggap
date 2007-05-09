@@ -1384,6 +1384,43 @@ class GObject:
             class GtkDrawingArea:
                 class GtkCurve: pass
             class GtkEntry:
+                __new__ = Function(py_name='gtk.Entry', opt_args=[(gint, 'maxlen')])
+                set_text = [(IsString, 'text')]
+                append_text = [(IsString, 'text')]
+                prepend_text = [(IsString, 'text')]
+                set_position = [(gint, 'position')]
+                get_text = []
+                select_region = [(gint, 'start'), (gint, 'end')]
+                set_visibility = [(gboolean, 'visible')]
+#                 set_invisible_char    (GtkEntry *entry,
+#                                                              gunichar ch);
+                set_editable = [(gboolean, 'editable')]
+                set_max_length = [(gint, 'max_len')]
+                get_activates_default = []
+                get_has_frame = []
+                get_width_chars = []
+                set_activates_default = [(gboolean, 'activates_default')]
+                set_has_frame = [(gboolean, 'has_frame')]
+                set_width_chars = [(gint, 'n_chars')]
+                get_invisible_char = []
+                set_alignment = [(gfloat, 'xalign')]
+                get_alignment = []
+#                 PangoLayout* gtk_entry_get_layout           (GtkEntry *entry);
+#                 void        gtk_entry_get_layout_offsets    (GtkEntry *entry,
+#                                                              gint *x,
+#                                                              gint *y);
+#                 gint        gtk_entry_layout_index_to_text_index
+#                                                             (GtkEntry *entry,
+#                                                              gint layout_index);
+#                 gint        gtk_entry_text_index_to_layout_index
+#                                                             (GtkEntry *entry,
+#                                                              gint text_index);
+                get_max_length = []
+                get_visibility = []
+#                 void        gtk_entry_set_completion        (GtkEntry *entry,
+#                                                              GtkEntryCompletion *completion);
+#                 GtkEntryCompletion* gtk_entry_get_completion
+#                                                             (GtkEntry *entry);
                 class GtkSpinButton: pass
             class GtkRuler:
                 class GtkHRuler: pass
