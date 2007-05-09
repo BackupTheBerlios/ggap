@@ -34,7 +34,7 @@
     </item>
 
     <!-- menu item label -->
-    <item name="Edit" _label="_Edit">
+    <item name="Edit" _label="E_dit">
       <separator/>
       <item action="Undo"/>
       <item action="Redo"/>
