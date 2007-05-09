@@ -30,52 +30,52 @@ top_classes = []
 functions = []
 
 class GtkCellEditable:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkCellEditable)
 class GtkCellLayout:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkCellLayout)
 class GtkEditable:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkEditable)
 class GtkFileChooser:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkFileChooser)
 class GtkTreeModel:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkTreeModel)
 class GtkTreeDragSource:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkTreeDragSource)
 class GtkTreeDragDest:
-    __abstract__ = True
+    __no_constructor__ = True
     # TODO
 top_classes.append(GtkTreeDragDest)
 class GtkTreeSortable:
-    __abstract__ = True
+    __no_constructor__ = True
     __implements__ = ['GtkTreeModel']
     # TODO
 top_classes.append(GtkTreeSortable)
 
 class GObject:
-    __abstract__ = True
+    __no_constructor__ = True
 
     set_property = ['IsString', 'IsObject']
     get_property = ['IsString']
 
     class GtkObject:
-        __abstract__ = True
+        __no_constructor__ = True
 
         destroy = []
 
         class GtkWidget:
-            __abstract__ = True
+            __no_constructor__ = True
 
             unparent = []
             show = []
@@ -292,7 +292,7 @@ class GObject:
 #                                                          GtkWidget *label);
 
             class GtkContainer:
-                __abstract__ = True
+                __no_constructor__ = True
 
                 add = Function([IsGtkWidget], other=True)
                 remove = Function([IsGtkWidget], other=True)
@@ -367,7 +367,7 @@ class GObject:
 #                                                              guint *n_properties);
 
                 class GtkBin:
-                    __abstract__ = True
+                    __no_constructor__ = True
 
                     get_child = []
 
@@ -798,7 +798,7 @@ class GObject:
                             get_title = []
 
                     class GtkItem:
-                        __abstract__ = True
+                        __no_constructor__ = True
                         class GtkMenuItem:
                             __new__ = Function(py_name="gtk.MenuItem", opt_args=[IsString, gboolean])
                             set_right_justified = [gboolean]
@@ -1038,7 +1038,7 @@ class GObject:
                         get_shadow_type = []
 
                 class GtkBox:
-                    __abstract__ = True
+                    __no_constructor__ = True
                     pack_start = [IsGtkWidget, gboolean, gboolean, guint]
                     pack_end = [IsGtkWidget, gboolean, gboolean, guint]
                     pack_start_defaults = [IsGtkWidget]
@@ -1375,7 +1375,7 @@ class GObject:
                     unset_style = []
                 class GtkTreeView: pass
             class GtkMisc:
-                __abstract__ = True
+                __no_constructor__ = True
                 class GtkLabel:
                     class GtkAccelLabel: pass
                 class GtkArrow: pass
@@ -1441,7 +1441,7 @@ class GObject:
                 class GtkProgressBar: pass
         class GtkAdjustment: pass
         class GtkCellRenderer:
-            __abstract__ = True
+            __no_constructor__ = True
             class GtkCellRendererText:
                 class GtkCellRendererCombo: pass
             class GtkCellRendererPixbuf: pass
@@ -1475,7 +1475,7 @@ class GObject:
         __implements__ = ['GtkTreeSortable']
         # TODO
     class GtkTreeSelection:
-        __abstract__ = True
+        __no_constructor__ = True
         # TODO
     class GtkTreeStore:
         __implements__ = ['GtkTreeSortable']
@@ -1484,7 +1484,9 @@ class GObject:
     class GtkWindowGroup: pass
 
     class MooGladeXML:
+        __no_constructor__ = True
         __py_name__ = 'moo.utils.GladeXML'
+        __gap_name__ = 'IsGladeXML'
         get_widget = [IsString]
         get_root = []
 #         MooGladeXML *moo_glade_xml_new_empty        (const char     *domain);

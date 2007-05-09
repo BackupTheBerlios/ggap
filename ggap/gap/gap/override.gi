@@ -24,3 +24,13 @@ InstallMethod(GladeXML, [IsString],
 function(filename)
   return GladeXML(filename, rec());
 end);
+
+InstallMethod(\., [IsGladeXML, IsPosInt],
+function(xml, rnam)
+  return GetWidget(xml, NameRNam(rnam));
+end);
+
+InstallMethod(IsBound\., [IsGladeXML, IsPosInt],
+function(xml, rnam)
+  return GetWidget(xml, NameRNam(rnam)) <> GNone;
+end);

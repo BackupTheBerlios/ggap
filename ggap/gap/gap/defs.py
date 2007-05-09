@@ -10,20 +10,26 @@ class FuncBase(object):
             self.gap_name = gap_name
         self.other = other
 
+        def check_arg_name(a):
+            if a[1] in ['end']:
+                return (a[0], a[1] + '_')
+            else:
+                return a
+
         i = 1
         self.args = []
         self.opt_args = []
         for a in args:
             if isinstance(a, str):
-                self.args.append([a, 'arg' + str(i)])
+                self.args.append((a, 'arg' + str(i)))
             else:
-                self.args.append(list(a))
+                self.args.append(check_arg_name(a))
             i += 1
         for a in opt_args:
             if isinstance(a, str):
-                self.opt_args.append([a, 'arg' + str(i)])
+                self.opt_args.append((a, 'arg' + str(i)))
             else:
-                self.opt_args.append(list(a))
+                self.opt_args.append(check_arg_name(a))
             i += 1
         for a in self.args + self.opt_args:
             if a[1] in ['end']:
@@ -206,7 +212,8 @@ def _make_class_py_name(name):
         raise RuntimeError()
 
 def _is_class(name):
-    return name == 'GObject' or name.startswith('Gtk') or name.startswith('Moo')
+    return name == 'GObject' or name.startswith('Gtk') or \
+            name.startswith('Moo') or name.startswith('Glade')
 
 class ClassInfo(object):
     def __init__(self, cls, parent_name):
@@ -216,7 +223,7 @@ class ClassInfo(object):
         if not self.py_name:
             self.py_name = _make_class_py_name(self.name)
         self.gap_name = getattr(cls, '__gap_name__', 'Is' + cls.__name__)
-        self.abstract = getattr(cls, '__abstract__', not parent_name)
+        self.no_constructor = getattr(cls, '__no_constructor__', not parent_name)
         self.doc = getattr(cls, '__doc__', None)
         self.parents = []
         self.children = []
@@ -229,7 +236,7 @@ class ClassInfo(object):
         for n in getattr(cls, '__implements__', []):
             self.parents.append(classes[n])
 
-        if not hasattr(cls, '__new__') and not self.abstract:
+        if not hasattr(cls, '__new__') and not self.no_constructor:
             setattr(cls, '__new__', Function(py_name=self.py_name))
 
         for k in dir(cls):

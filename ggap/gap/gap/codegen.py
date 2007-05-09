@@ -27,26 +27,6 @@ header = """\
 ##
 """
 
-def isclass(name):
-    return name.startswith('Gtk') or name.startswith('Moo')
-
-def make_py_name(string):
-    if string.startswith('Gtk'):
-        return 'gtk.' + string[3:]
-    elif string.startswith('Moo'):
-        return 'moo.' + string[3:]
-    else:
-        raise RuntimeError(string)
-
-def catname(c):
-    if c is None:
-        return 'IsObject'
-    else:
-        return 'Is' + c.__name__
-
-def typename(c):
-    return c.__name__
-
 def printcats(cls, fp):
     if cls.name not in ["GObject"]:
         if cls.parents:
