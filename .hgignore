@@ -19,11 +19,6 @@ Makefile$
 .*\.(bak|backup)
 .*\.gladep
 .*\.(aux|log|out|dvi)
-doc/manual/.*\.py$
-doc/manual/.*\.pyc$
-doc/manual/.*\.html$
-doc/manual/.*\_html.tmpl$
-doc/manual/.*\.tex$
 ggap/.*\.example$
 \.orig$
 \.ggap\.mprj

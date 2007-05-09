@@ -5,6 +5,7 @@ import pango
 import sys
 import os
 import traceback
+import string as stringmod
 
 __session__ = None
 
@@ -24,6 +25,7 @@ DATA_SMALL_INT      = 2
 DATA_STRING         = 3
 DATA_LIST           = 4
 DATA_OBJECT         = 5
+DATA_DICT           = 6
 
 RET_OK              = 0
 RET_ERR             = 1
@@ -323,10 +325,34 @@ class Session:
                 string += self.serialize(elm)
             return string
 
+        elif isinstance(val, dict):
+            def checkletters(s):
+                for l in s:
+                    if not l in stringmod.ascii_letters + stringmod.digits + '_':
+                        return False
+                return True
+            for k in val:
+                if not isinstance(k, str) or not len(k) or \
+                   not k[0] in stringmod.ascii_letters + '_' or \
+                   not checkletters(k[1:]):
+                    raise RuntimeError("could not serialize dict '%s': bad key '%s'" % \
+                                        (val, k))
+            length = len(val)
+            if length > 2**15:
+                raise RuntimeError("list too long")
+            string = '%c%c%c' % (DATA_DICT, (length & 0xff00) >> 8, length & 0xff)
+            for k in val:
+                string += self.serialize(k)
+                string += self.serialize(val[k])
+            return string
+
         elif isinstance(val, Wrapper):
             return '%c%s%s' % (DATA_OBJECT,
                                self.serialize(val.id),
                                self.serialize(val.type_name))
+
+        elif isinstance(val, gobject.GObject):
+            return self.serialize(self.__wrap(val))
 
         else:
             raise RuntimeError("could not serialize value %s of type %s" % \

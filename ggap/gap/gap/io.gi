@@ -152,6 +152,20 @@ function()
     typename := _GGAP_READ_VALUE();
     return _GGAP_WRAP_OBJECT(id, typename);
 
+  # Dict
+  elif type = 6 then
+    len := read_two_bytes_int();
+    Info(InfoGGAP, 7, "Got dict of size ", len/2);
+    if len = 0 then
+      return rec();
+    else
+      value := rec();
+      for i in [1..len] do
+        value.(_GGAP_READ_VALUE()) := _GGAP_READ_VALUE();
+      od;
+      return value;
+    fi;
+
   # The rest are errors
   else
     Error("_GGAP_READ_VALUE: got unknown data type ", type);

@@ -1448,10 +1448,9 @@ class GObject:
 
     class MooGladeXML:
         __py_name__ = 'moo.utils.GladeXML'
+        get_widget = [IsString]
+        get_root = []
 #         MooGladeXML *moo_glade_xml_new_empty        (const char     *domain);
-        __new__ = Function(py_name='moo.utils.GladeXML', gap_name='MooGladeXML',
-                           args=[IsString], opt_args=[IsString])
-
 #         void         moo_glade_xml_map_class        (MooGladeXML    *xml,
 #                                                      const char     *class_name,
 #                                                      GType           use_type);
@@ -1490,9 +1489,6 @@ class GObject:
 #                                                      const char     *target_name,
 #                                                      GError        **error);
 #
-#         gpointer     moo_glade_xml_get_widget       (MooGladeXML    *xml,
-#                                                      const char     *id);
-#         GtkWidget   *moo_glade_xml_get_root         (MooGladeXML    *xml);
 
 
 top_classes.append(GObject)
