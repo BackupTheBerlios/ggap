@@ -2,7 +2,7 @@
 # ggap/configure.ac
 #
 
-m4_define([ggap_version], [0.7.0])
+m4_define([ggap_version], [0.7.1])
 
 AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
 AM_INIT_AUTOMAKE
