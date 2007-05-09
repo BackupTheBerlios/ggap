@@ -111,6 +111,13 @@ out:
 }
 
 
+gboolean
+gap_session_available (void)
+{
+    return moo_python_running ();
+}
+
+
 GapSession *
 gap_session_new (const char *output,
                  guint       session_id)

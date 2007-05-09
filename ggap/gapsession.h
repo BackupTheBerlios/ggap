@@ -42,6 +42,7 @@ struct _GapSessionClass {
 
 GType            gap_session_get_type       (void) G_GNUC_CONST;
 
+gboolean         gap_session_available      (void);
 GapSession      *gap_session_new            (const char *output,
                                              guint       session_id);
 

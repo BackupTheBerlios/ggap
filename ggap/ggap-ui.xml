@@ -139,6 +139,8 @@
     <!-- menu item label -->
     <item name="Help" _label="_Help">
       <separator/>
+      <item action="GapManual"/>
+      <separator/>
       <item action="SystemInfo"/>
       <item action="About"/>
       <separator/>
@@ -229,6 +231,8 @@
     </item>
 
     <item name="Help" _label="_Help">
+      <separator/>
+      <item action="GapManual"/>
       <separator/>
       <item action="SystemInfo"/>
       <item action="About"/>

@@ -41,10 +41,6 @@ ggap_SOURCES =				\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\
-	gapdoc.c			\
-	gapdoc.h			\
-	gapdocwindow.c			\
-	gapdocwindow.h			\
 	gapeditwindow.c			\
 	gapeditwindow.h			\
 	gapoutput.c			\
@@ -56,7 +52,6 @@ ggap_SOURCES =				\
 	gaptermwindow.c			\
 	gaptermwindow.h			\
 	gapprefs-glade.h		\
-	gapdoc-glade.h			\
 	ggap-credits.h
 
 nodist_ggap_SOURCES = ggap_res.res
@@ -77,11 +72,10 @@ EXTRA_DIST =		\
     ggap-ui.xml		\
     ggap.opag		\
     glade/gapprefs.glade\
-    glade/gapdoc.glade	\
     glade/usermenu.glade\
     python/ggap.py
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h gapdoc-glade.h ggap.c ggap-mod.h ggap-credits.h
+BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c ggap-mod.h ggap-credits.h
 XML2H = $(top_srcdir)/xml2h.sh
 PY2H = $(top_srcdir)/py2h.sh
 
@@ -92,9 +86,6 @@ ggap-ui.h: ggap-ui.xml $(XML2H)
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h
-
-gapdoc-glade.h: glade/gapdoc.glade $(XML2H)
-	sh $(XML2H) GAP_DOC_GLADE_UI $(srcdir)/glade/gapdoc.glade > gapdoc-glade.h
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c

@@ -18,7 +18,6 @@
 #include "gapeditwindow.h"
 #include "gap.h"
 #include "gapprefs-glade.h"
-#include "gapdocwindow.h"
 #include "gapoutput.h"
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
@@ -66,6 +65,9 @@ static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
 
 static void         gap_app_start_gap_real  (GapApp     *app,
                                              const char *workspace);
+#ifdef __WIN32__
+static void         open_gap_manual         (void);
+#endif
 
 
 G_DEFINE_TYPE(GapApp, gap_app, MOO_TYPE_APP)
@@ -163,19 +165,24 @@ gap_app_class_init (GapAppClass *klass)
                                  "closure-proxy-func", moo_app_get_instance,
                                  NULL);
 
-    moo_window_class_new_action (edit_class, "GapDoc", NULL,
+#if 0
+    moo_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapDoc", NULL,
                                  "display-name", _("GAP Documentation"),
                                  "label", _("_GAP Documentation"),
                                  "stock-id", GTK_STOCK_HELP,
                                  "closure-callback", gap_doc_window_show,
                                  NULL);
+#endif
 
-    moo_window_class_new_action (term_class, "GapDoc", NULL,
-                                 "display-name", _("GAP Documentation"),
-                                 "label", _("_GAP Documentation"),
+#ifdef __WIN32__
+    moo_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapManual", NULL,
+                                 "display-name", _("GAP Manual"),
+                                 "label", _("GAP Manual"),
                                  "stock-id", GTK_STOCK_HELP,
-                                 "closure-callback", gap_doc_window_show,
+                                 "accel", "F1",
+                                 "closure-callback", open_gap_manual,
                                  NULL);
+#endif
 
     g_type_class_unref (edit_class);
     g_type_class_unref (term_class);
@@ -432,7 +439,8 @@ make_command_line (const char *cmd_base,
     const char *init_file = NULL;
     GString *cmd;
 
-    init_pkg = moo_prefs_get_bool (APP_PREFS_GAP_INIT_PKG);
+    init_pkg = moo_prefs_get_bool (APP_PREFS_GAP_INIT_PKG) &&
+                gap_session_available ();
     save_workspace = moo_prefs_get_bool (APP_PREFS_GAP_SAVE_WORKSPACE);
 
     cmd = g_string_new (cmd_base);
@@ -574,6 +582,42 @@ gap_app_start_gap_real (GapApp     *app,
 
     g_string_free (cmd, TRUE);
 }
+
+
+#ifdef __WIN32__
+static void
+open_gap_manual (void)
+{
+    const char *cmd_base;
+    char *root_dir, *pdf;
+    GapApp *app = GAP_APP_INSTANCE;
+
+    if (app->gap_cmd_line)
+        cmd_base = app->gap_cmd_line;
+    else
+        cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
+
+    g_return_if_fail (cmd_base && cmd_base[0]);
+
+    if (!gap_parse_cmd_line (cmd_base, NULL, &root_dir))
+    {
+        g_warning ("%s: could not parse command line `%s`",
+                   G_STRLOC, cmd_base);
+        return;
+    }
+
+    pdf = g_build_filename (root_dir, "doc", "ref", "manual.pdf", NULL);
+
+    if (g_file_test (pdf, G_FILE_TEST_EXISTS))
+        moo_open_file (pdf);
+    else
+        g_warning ("%s: could not find manual file, tried `%s`",
+                   G_STRLOC, pdf);
+
+    g_free (pdf);
+    g_free (root_dir);
+}
+#endif
 
 
 void
