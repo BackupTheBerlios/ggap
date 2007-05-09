@@ -136,6 +136,7 @@ int main (int argc, char *argv[])
                         "argv", argv,
                         "short-name", "ggap",
                         "full-name", "GGAP",
+                        "version", VERSION,
                         "description", "GGAP is a front end for GAP",
                         "run-input", (gboolean) !_ggap_opt_simple,
                         "default-ui", GGAP_UI,

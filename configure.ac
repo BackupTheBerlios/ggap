@@ -11,6 +11,7 @@ AC_CONFIG_HEADERS(config.h)
 
 MOO_DEFINE_VERSIONS(ggap,[ggap_version])
 
+export MOO_BUILD_MEDIT=false
 export MOO_PACKAGE_NAME=ggap
 
 AC_PROG_CC

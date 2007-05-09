@@ -359,7 +359,7 @@ int main (int argc, char *argv[])
     gboolean new_instance;
 
 #ifdef ENABLE_NLS
-    bindtextdomain (GETTEXT_PACKAGE, _moo_get_locale_dir ());
+    bindtextdomain (GETTEXT_PACKAGE, moo_get_locale_dir ());
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
@@ -414,6 +414,7 @@ int main (int argc, char *argv[])
                         "argv", argv,
                         "short-name", "ggap",
                         "full-name", "GGAP",
+                        "version", VERSION,
                         "description", "GGAP is a front end for GAP",
                         "run-input", (gboolean) !_ggap_opt_simple,
                         "default-ui", GGAP_UI,

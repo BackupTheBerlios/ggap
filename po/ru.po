@@ -3,64 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ggap\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-04-27 21:47-0500\n"
+"POT-Creation-Date: 2007-05-08 20:23-0500\n"
 "PO-Revision-Date: 2007-04-27 21:27-0600\n"
 "Last-Translator: Yevgen Muntyan <muntyan@tamu.edu>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: ../ggap/gap/tst/glade/demo.glade.h:1
-msgid "GGAP Demo"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/demo.glade.h:2
-msgid "Info"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/demo.glade.h:3
-msgid "Open GAP File"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/demo.glade.h:4
-msgid "Source"
-msgstr ""
-
-#. menu item label
-#: ../ggap/gap/tst/glade/demo.glade.h:5 ../ggap/ggap-ui.xml.h:4
-msgid "_File"
-msgstr ""
-
-#. menu item label
-#: ../ggap/gap/tst/glade/demo.glade.h:6 ../ggap/ggap-ui.xml.h:6
-msgid "_Help"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/demo.glade.h:7
-msgid "http://ggap.sourceforge.net/"
-msgstr ""
-
-#. TRANSLATORS: Replace this string with your names, one name per line.
-#: ../ggap/gap/tst/glade/demo.glade.h:9
-msgid "translator-credits"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/file1.glade.h:1
-msgid "An entry:"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/file1.glade.h:2
-msgid "Another entry:"
-msgstr ""
-
-#: ../ggap/gap/tst/glade/file1.glade.h:3
-msgid "Dialog Demo"
-msgstr ""
 
 #. menu item label
 #: ../ggap/ggap-ui.xml.h:2
@@ -68,109 +20,115 @@ msgid "_Edit"
 msgstr ""
 
 #. menu item label
-#: ../ggap/ggap-ui.xml.h:8 ../ggap/glade/gapdoc.glade.h:4
+#: ../ggap/ggap-ui.xml.h:4
+msgid "_File"
+msgstr ""
+
+#: ../ggap/ggap-ui.xml.h:5
+msgid "_GAP"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:7
+msgid "_Help"
+msgstr ""
+
+#. menu item label
+#: ../ggap/ggap-ui.xml.h:9
 msgid "_Search"
 msgstr ""
 
 #. menu item label
-#: ../ggap/ggap-ui.xml.h:10
+#: ../ggap/ggap-ui.xml.h:11
 msgid "_Settings"
 msgstr ""
 
-#: ../ggap/ggap-ui.xml.h:11
+#: ../ggap/ggap-ui.xml.h:12
 msgid "_Tools"
 msgstr ""
 
 #. menu item label
-#: ../ggap/ggap-ui.xml.h:13
+#: ../ggap/ggap-ui.xml.h:14
 msgid "_View"
 msgstr ""
 
 #. menu item label
-#: ../ggap/ggap-ui.xml.h:15
+#: ../ggap/ggap-ui.xml.h:16
 msgid "_Window"
 msgstr ""
 
-#: ../ggap/glade/gapdoc.glade.h:1
+#: ../ggap/gapapp.c:148
+msgid "Restart"
+msgstr ""
+
+#: ../ggap/gapapp.c:149
+msgid "_Restart"
+msgstr ""
+
+#: ../ggap/gapapp.c:150
+msgid "Restart GAP"
+msgstr ""
+
+#: ../ggap/gapapp.c:158
+msgid "Interrupt"
+msgstr ""
+
+#: ../ggap/gapapp.c:159
+msgid "_Interrupt"
+msgstr ""
+
+#: ../ggap/gapapp.c:160
+msgid "Interrupt computation"
+msgstr ""
+
+#: ../ggap/gapapp.c:167 ../ggap/gapapp.c:174
 msgid "GAP Documentation"
 msgstr ""
 
-#: ../ggap/glade/gapdoc.glade.h:2
-msgid "_Contents"
+#: ../ggap/gapapp.c:168 ../ggap/gapapp.c:175
+msgid "_GAP Documentation"
 msgstr ""
 
-#: ../ggap/glade/gapdoc.glade.h:3
-msgid "_Index"
+#: ../ggap/gapeditwindow.c:52 ../ggap/gapeditwindow.c:53
+msgid "Send File"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:1
-msgid "Browse..."
+#: ../ggap/gapeditwindow.c:54
+msgid "Send file"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:2
-msgid "Clear terminal for new GAP session"
+#: ../ggap/gapeditwindow.c:60 ../ggap/gapeditwindow.c:61
+msgid "Send Selection"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:3
-msgid "Command line:"
+#: ../ggap/gapeditwindow.c:62
+msgid "Send selection"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:4
-msgid "GAP"
+#: ../ggap/gaptermwindow.c:43 ../ggap/gaptermwindow.c:44
+msgid "Switch to Editor"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:5
-msgid "GGAP"
+#: ../ggap/gaptermwindow.c:45
+msgid "Switch to editor"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:6
-msgid "Remove saved workspace"
+#: ../ggap/gaptermwindow.c:51 ../ggap/gaptermwindow.c:52
+msgid "Read File"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:7
-msgid "Save workspace for faster startup"
+#: ../ggap/gaptermwindow.c:53
+msgid "Read file"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:8
-msgid "Saved workspace"
+#: ../ggap/gaptermwindow.c:58
+msgid "Open Workspace"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:9
-msgid "Use GGAP shared package"
+#: ../ggap/gaptermwindow.c:59
+msgid "Open _Workspace"
 msgstr ""
 
-#: ../ggap/glade/gapprefs.glade.h:10
-msgid "Working directory:"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:1
-msgid "Delete item"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:2
-msgid "Label:"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:3
-msgid "Move item down"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:4
-msgid "Move item up"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:5
-msgid "New item"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:6
-msgid "Script:"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:7
-msgid "Set whether the menu item is enabled"
-msgstr ""
-
-#: ../ggap/glade/usermenu.glade.h:8
-msgid "Visible"
+#: ../ggap/gaptermwindow.c:60
+msgid "Open workspace"
 msgstr ""

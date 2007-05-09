@@ -193,7 +193,7 @@
       <separator/>
     </item>
 
-    <item name="Edit" _label="E_dit">
+    <item name="Edit" _label="_Edit">
       <separator/>
       <item action="Copy"/>
       <item action="Paste"/>
