@@ -71,6 +71,9 @@ class GObject:
 
     class GtkObject:
         __no_constructor__ = True
+        __doc__ = """
+These
+are docs"""
 
         destroy = []
 
@@ -125,11 +128,11 @@ class GObject:
             is_focus = []
             grab_focus = []
             grab_default = []
-            set_name = Function([IsString], other=True)
-            get_name = []
+            set_name = Function([IsString], gap_name='SetWidgetName')
+            get_name = Function(gap_name='GetWidgetName')
             set_state = [GtkStateType]
             set_sensitive = [gboolean]
-            set_parent = Function([IsGtkWidget], other=True)
+            set_parent = Function([IsGtkWidget])
 #             set_parent_window = ['IsGdkWindow']
             get_parent_window = []
             set_events = [gint]
@@ -294,8 +297,8 @@ class GObject:
             class GtkContainer:
                 __no_constructor__ = True
 
-                add = Function([IsGtkWidget], other=True)
-                remove = Function([IsGtkWidget], other=True)
+                add = Function([IsGtkWidget])
+                remove = Function([IsGtkWidget])
 #                 add_with_properties = [IsGtkWidget]
                 get_resize_mode = []
                 set_resize_mode = [GtkResizeMode]
@@ -647,7 +650,6 @@ class GObject:
 #                                 void        gtk_font_selection_dialog_set_preview_text
 #                                                                             (GtkFontSelectionDialog *fsd,
 #                                                                              const gchar *text);
-                            class GtkInputDialog: pass
                             class GtkMessageDialog:
 #                                 GtkWidget*  gtk_message_dialog_new          (GtkWindow *parent,
 #                                                                              GtkDialogFlags flags,
@@ -1374,13 +1376,15 @@ class GObject:
                     set_icon_size = [GtkIconSize]
                     unset_style = []
                 class GtkTreeView: pass
+                    # TODO
             class GtkMisc:
                 __no_constructor__ = True
                 class GtkLabel:
+                    # TODO
                     class GtkAccelLabel: pass
                 class GtkArrow: pass
+                    # TODO
             class GtkCalendar: pass
-            class GtkCellView: pass
             class GtkDrawingArea:
                 class GtkCurve: pass
             class GtkEntry:
@@ -1405,72 +1409,61 @@ class GObject:
                 get_invisible_char = []
                 set_alignment = [(gfloat, 'xalign')]
                 get_alignment = []
-#                 PangoLayout* gtk_entry_get_layout           (GtkEntry *entry);
-#                 void        gtk_entry_get_layout_offsets    (GtkEntry *entry,
-#                                                              gint *x,
-#                                                              gint *y);
-#                 gint        gtk_entry_layout_index_to_text_index
-#                                                             (GtkEntry *entry,
-#                                                              gint layout_index);
-#                 gint        gtk_entry_text_index_to_layout_index
-#                                                             (GtkEntry *entry,
-#                                                              gint text_index);
                 get_max_length = []
                 get_visibility = []
-#                 void        gtk_entry_set_completion        (GtkEntry *entry,
-#                                                              GtkEntryCompletion *completion);
-#                 GtkEntryCompletion* gtk_entry_get_completion
-#                                                             (GtkEntry *entry);
                 class GtkSpinButton: pass
+                    # TODO
             class GtkRuler:
+                    # TODO
                 class GtkHRuler: pass
+                    # TODO
                 class GtkVRuler: pass
+                    # TODO
             class GtkRange:
+                    # TODO
                 class GtkScale:
+                    # TODO
                     class GtkHScale: pass
+                    # TODO
                     class GtkVScale: pass
+                    # TODO
                 class GtkScrollbar:
+                    # TODO
                     class GtkHScrollbar: pass
+                    # TODO
                     class GtkVScrollbar: pass
+                    # TODO
             class GtkSeparator:
+                    # TODO
                 class GtkHSeparator: pass
+                    # TODO
                 class GtkVSeparator: pass
-            class GtkInvisible: pass
-            class GtkPreview: pass
+                    # TODO
             class GtkProgress:
+                    # TODO
                 class GtkProgressBar: pass
-        class GtkAdjustment: pass
+                    # TODO
         class GtkCellRenderer:
+                    # TODO
             __no_constructor__ = True
             class GtkCellRendererText:
+                    # TODO
                 class GtkCellRendererCombo: pass
+                    # TODO
             class GtkCellRendererPixbuf: pass
+                    # TODO
             class GtkCellRendererProgress: pass
+                    # TODO
             class GtkCellRendererToggle: pass
-    class GtkFileFilter: pass
+                    # TODO
     class GtkTooltips: pass
+                    # TODO
     class GtkTreeViewColumn: pass
-    class GtkAccelGroup: pass
-    class GtkAccelMap: pass
-    class GtkClipboard: pass
-    class GtkEntryCompletion: pass
-    class GtkIconFactory: pass
-    class GtkIconTheme: pass
+                    # TODO
     class GtkListStore:
         __implements__ = ['GtkTreeSortable']
         # TODO
-    class GtkRcStyle: pass
-    class GtkSettings: pass
-    class GtkSizeGroup: pass
-    class GtkStyle: pass
     class GtkTextBuffer: pass
-    class GtkTextChildAnchor: pass
-    class GtkTextMark: pass
-    class GtkTextTag: pass
-    class GtkTextTagTable: pass
-    class GtkTreeModelFilter:
-        __implements__ = ['GtkTreeModel']
-        # TODO
     class GtkTreeModelSort:
         __implements__ = ['GtkTreeSortable']
         # TODO
@@ -1480,54 +1473,14 @@ class GObject:
     class GtkTreeStore:
         __implements__ = ['GtkTreeSortable']
         # TODO
-    class GtkUIManager: pass
-    class GtkWindowGroup: pass
 
     class MooGladeXML:
         __no_constructor__ = True
         __py_name__ = 'moo.utils.GladeXML'
         __gap_name__ = 'IsGladeXML'
+        __new__ = 'doc_stub'
         get_widget = [IsString]
         get_root = []
-#         MooGladeXML *moo_glade_xml_new_empty        (const char     *domain);
-#         void         moo_glade_xml_map_class        (MooGladeXML    *xml,
-#                                                      const char     *class_name,
-#                                                      GType           use_type);
-#         void         moo_glade_xml_map_id           (MooGladeXML    *xml,
-#                                                      const char     *id,
-#                                                      GType           use_type);
-#         void         moo_glade_xml_map_custom       (MooGladeXML    *xml,
-#                                                      const char     *id,
-#                                                      MooGladeCreateFunc func,
-#                                                      gpointer        data);
-#         void         moo_glade_xml_set_signal_func  (MooGladeXML    *xml,
-#                                                      MooGladeSignalFunc func,
-#                                                      gpointer        data);
-#         void         moo_glade_xml_set_prop_func    (MooGladeXML    *xml,
-#                                                      MooGladePropFunc func,
-#                                                      gpointer        data);
-#
-#         void         moo_glade_xml_set_property     (MooGladeXML    *xml,
-#                                                      const char     *widget,
-#                                                      const char     *prop_name,
-#                                                      const char     *value);
-#
-#         gboolean     moo_glade_xml_parse_file       (MooGladeXML    *xml,
-#                                                      const char     *file,
-#                                                      const char     *root,
-#                                                      GError        **error);
-#         gboolean     moo_glade_xml_parse_memory     (MooGladeXML    *xml,
-#                                                      const char     *buffer,
-#                                                      int             size,
-#                                                      const char     *root,
-#                                                      GError        **error);
-#         gboolean     moo_glade_xml_fill_widget      (MooGladeXML    *xml,
-#                                                      GtkWidget      *target,
-#                                                      const char     *buffer,
-#                                                      int             size,
-#                                                      const char     *target_name,
-#                                                      GError        **error);
-#
 
 
 top_classes.append(GObject)

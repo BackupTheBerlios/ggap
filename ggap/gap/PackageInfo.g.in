@@ -161,25 +161,25 @@ Status := "other",
 ##  position of the files as in a standard GAP installation.
 ##
 # in case of several help books give a list of such records here:
-#PackageDoc := rec(
-#  # use same as in GAP
-#  BookName  := "Example",
-#  # format/extension can be one of .zoo, .tar.gz, .tar.bz2, -win.zip
-#  Archive :=
+PackageDoc := rec(
+  # use same as in GAP
+  BookName  := "ggap",
+  # format/extension can be one of .zoo, .tar.gz, .tar.bz2, -win.zip
+#   Archive :=
 #      "http://www.math.rwth-aachen.de/~Greg.Gamble/Example/exampledoc-1.5.zoo",
-#  ArchiveURLSubset := ["doc", "htm"],
-#  HTMLStart := "htm/chapters.htm",
-#  PDFFile   := "doc/manual.pdf",
-#  # the path to the .six file used by GAP's help system
-#  SixFile   := "doc/manual.six",
-#  # a longer title of the book, this together with the book name should
-#  # fit on a single text line (appears with the '?books' command in GAP)
-#  # LongTitle := "Elementary Divisors of Integer Matrices",
-#  LongTitle := "",
-#  # Should this help book be autoloaded when GAP starts up? This should
-#  # usually be 'true', otherwise say 'false'.
-#  Autoload  := true
-#),
+#   ArchiveURLSubset := ["doc", "htm"],
+#   HTMLStart := "htm/chapters.htm",
+  PDFFile   := "doc/manual.pdf",
+  # the path to the .six file used by GAP's help system
+  SixFile   := "doc/manual.six",
+  # a longer title of the book, this together with the book name should
+  # fit on a single text line (appears with the '?books' command in GAP)
+  # LongTitle := "Elementary Divisors of Integer Matrices",
+  LongTitle := "",
+  # Should this help book be autoloaded when GAP starts up? This should
+  # usually be 'true', otherwise say 'false'.
+  Autoload  := true
+),
 
   Dependencies := rec(
     GAP := ">=4.4",

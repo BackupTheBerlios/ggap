@@ -1,7 +1,8 @@
 classes = {}
 
 class FuncBase(object):
-    def __init__(self, args=[], opt_args=[], py_name=None, gap_name=None, other=False, is_meth=True):
+    def __init__(self, args=[], opt_args=[], py_name=None, gap_name=None,
+                 other=False, is_meth=True, doc=None):
         object.__init__(self)
         self.is_meth = is_meth
         if py_name is not None:
@@ -9,6 +10,7 @@ class FuncBase(object):
         if gap_name is not None:
             self.gap_name = gap_name
         self.other = other
+        self.doc = doc
 
         def check_arg_name(a):
             if a[1] in ['end']:
@@ -77,6 +79,42 @@ def format_func(func, args=None):
             dic['rest_args'] = ', ' + dic['args']
         return tmpl % dic
 
+def format_func_doc_no_opt_args(func, is_op):
+    if not func.args:
+        decl = func.get_gap_name() + '()'
+    else:
+        tmpl = '%(name)s( %(args)s )'
+        dic = {'name' : func.get_gap_name()}
+        dic['args'] = ', '.join(['<%s>' % a[1] for a in func.args])
+        decl = tmpl % dic
+    if is_op:
+        symb = 'O'
+    else:
+        symb = 'F'
+    return "#"*78 + "\n##\n#%s  %s\n##" % (symb, decl)
+
+def format_func_doc(func, is_op):
+    if not func.opt_args:
+        return format_func_doc_no_opt_args(func, is_op)
+    if func.args:
+        args = ', '.join(['<%s>' % a[1] for a in func.args])
+    else:
+        args = ''
+    opt_args = list(func.opt_args)
+    opt_args.reverse()
+    opt_args_s = ''
+    for i in range(len(opt_args)):
+        if i < len(opt_args) - 1 or args:
+            opt_args_s = ' [, <%s>%s]' % (opt_args[i][1], opt_args_s)
+        else:
+            opt_args_s = '[<%s>%s]' % (opt_args[i][1], opt_args_s)
+    decl = '%s( %s%s )' % (func.get_gap_name(), args, opt_args_s)
+    if is_op:
+        symb = 'O'
+    else:
+        symb = 'F'
+    return "#"*78 + "\n##\n#%s  %s\n##" % (symb, decl)
+
 def format_func_opt_args(func):
     n_args = len(func.args)
     if func.is_meth:
@@ -107,7 +145,6 @@ def format_func_opt_args(func):
             dic['rest_args'] = ', ' + ', '.join(args)
         return tmpl % dic
 
-
 class GlobalFunction(FuncBase):
     def __str__(self):
         return '<GlobalFunction %s for %s, %s>' % (self.py_name, self.args, self.opt_args)
@@ -121,6 +158,9 @@ class GlobalFunction(FuncBase):
         print >> fp, \
             'InstallGlobalFunction(%s,\n%s);' % (self.get_gap_name(),
                                                  format_func(self))
+
+    def get_doc(self):
+        return format_func_doc(self, False)
 
 class Operation(FuncBase):
     def __str__(self):
@@ -169,16 +209,19 @@ class Operation(FuncBase):
         print >> fp, '%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
                                            format_func_opt_args(self))
 
+    def get_doc(self):
+        return format_func_doc(self, True)
+
 
 def _get_vars(dest, src):
-    for key in ['py_name', 'gap_name', 'other', 'is_op', 'is_meth', 'args', 'opt_args']:
+    for key in ['py_name', 'gap_name', 'other', 'is_op', 'is_meth', 'args', 'opt_args', 'doc']:
         if src.has_key(key):
             dest[key] = src[key]
 
 def Function(*args, **kwargs):
     real_kwargs = {
         'py_name': None, 'gap_name': None, 'other': False, 'is_op': True,
-        'is_meth': True, 'opt_args': [], 'args': []
+        'is_meth': True, 'opt_args': [], 'args': [], 'doc': None,
     }
     _get_vars(real_kwargs, kwargs)
 
@@ -224,10 +267,13 @@ class ClassInfo(object):
             self.py_name = _make_class_py_name(self.name)
         self.gap_name = getattr(cls, '__gap_name__', 'Is' + cls.__name__)
         self.no_constructor = getattr(cls, '__no_constructor__', not parent_name)
-        self.doc = getattr(cls, '__doc__', None)
         self.parents = []
         self.children = []
         self.methods = []
+        self.meth_docs = []
+
+        self.doc = getattr(cls, '__doc__', None)
+        self._make_docs()
 
         classes[self.name] = self
 
@@ -241,7 +287,7 @@ class ClassInfo(object):
 
         for k in dir(cls):
             a = getattr(cls, k)
-            if k == '__new__':
+            if k == '__new__' and a != 'doc_stub':
                 if not isinstance(a, FuncBase):
                     args = []
                     if len(a) > 1:
@@ -253,12 +299,30 @@ class ClassInfo(object):
             if _is_class(k):
                 self.children.append(ClassInfo(a, self.name))
             elif k == '__new__' or not k.startswith('__'):
+                if a == 'doc_stub':
+                    pass
                 if isinstance(a, list) or isinstance(a, tuple):
                     setattr(cls, k, Function(a, py_name=k))
                 elif isinstance(a, FuncBase) and not hasattr(a, 'py_name'):
                     setattr(a, 'py_name', k)
+
                 a = getattr(cls, k)
                 if isinstance(a, FuncBase):
                     if a.is_meth:
                         a.args = [(self.gap_name, 'self')] + a.args
                     self.methods.append([k, getattr(cls, k)])
+
+                self.meth_docs.append([k, getattr(cls, k)])
+
+    def _make_docs(self):
+        doc = '#'*78 + "\n##\n#C  %s\n##" % (self.gap_name)
+        if self.doc:
+            first = True
+            for line in self.doc.split('\n'):
+                if line:
+                    doc += '\n##  %s' % (line,)
+                elif not first:
+                    doc += '\n##'
+                first = False
+            doc += '\n##'
+        self.doc = doc

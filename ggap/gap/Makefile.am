@@ -2,7 +2,7 @@ DIST_SUBDIRS = doc
 SUBDIRS =
 
 if GGAP_BUILD_DOCS
-SUBDIRS += . doc
+SUBDIRS += doc
 endif
 
 ggap_pkgdir = ${GGAP_GAP_DIR}/ggap
@@ -53,7 +53,8 @@ BUILT_SOURCES =			\
 	gap/types.gd
 
 gen_types:
-	$(PYTHON) $(srcdir)/gap/codegen.py $(srcdir)/gap/types.gd $(srcdir)/gap/types.gi
+	$(PYTHON) $(srcdir)/gap/codegen.py $(srcdir)/gap/types.gd \
+		  $(srcdir)/gap/types.gi
 $(srcdir)/gap/types.gd: $(py_files)
 	$(MAKE) gen_types
 $(srcdir)/gap/types.gi: $(py_files)

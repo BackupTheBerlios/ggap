@@ -29,6 +29,7 @@ dist_ggap_doc_DATA =	\
 
 EXTRA_DIST =		\
     $(msk_files)	\
+    genmsk.py		\
     buildman.config.in	\
     buildman.config	\
     buildman.pe		\
@@ -50,6 +51,9 @@ manual.pdf: .pdf-stamp
 
 manual.six: .manual-stamp
 %.tex: .manual-stamp
+
+types.msk: genmsk.py ../gap/codegen.py ../gap/defs.py ../gap/gtktypes.py
+	$(PYTHON) $(srcdir)/genmsk.py $(srcdir)/types.msk
 
 .manual-stamp: $(msk_files) $(g_files) buildman.config
 	cd $(srcdir) && \

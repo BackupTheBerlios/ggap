@@ -29,18 +29,22 @@ header = """\
 
 def printcats(cls, fp):
     if cls.name not in ["GObject"]:
+        print >> fp, cls.doc
         if cls.parents:
             print >> fp, 'DeclareCategory("%s", %s);' % (cls.gap_name,
                                                          ' and '.join([p.gap_name for p in cls.parents]))
         else:
             print >> fp, 'DeclareCategory("%s", %s);' % (cls.gap_name, 'IsObject')
+        print >> fp, ''
 
     for child in cls.children:
         printcats(child, fp)
 
 def printops(cls, fp):
     for f in cls.methods:
+        print >> fp, f[1].get_doc()
         f[1].declare(fp)
+        print >> fp, ''
 
     for child in cls.children:
         printops(child, fp)
