@@ -1,23 +1,30 @@
-InstallMethod(GladeXML, [IsString, IsRecord, IsObject],
-function(filename, callbacks, data)
-  local ret, sig;
+###############################################################################
+##
+##  GladeXML
+##
 
-  ret := _GGAP_CALL_FUNC("gap.glade_xml", filename);
+###############################################################################
+##
+#O  GladeXML( <filename>[, <callbacks>] )
+##
+InstallMethod(GladeXML, [IsString, IsRecord],
+function(filename, callbacks)
+  local ret, sig, args, data;
+
+  ret := _GGAP_CALL_FUNC("gap.GladeXML", filename);
 
   for sig in ret.signals do
-    if data <> GNone then
-      ConnectCallback(sig.widget, sig.signal, callbacks.(sig.handler), data);
+    args := [sig.widget, sig.signal];
+    data := callbacks.(sig.handler);
+    if IsFunction(data) then
+      Add(args, data);
     else
-      ConnectCallback(sig.widget, sig.signal, callbacks.(sig.handler));
+      args := Concatenation(args, data);
     fi;
+    CallFuncList(ConnectCallback, args);
   od;
 
   return ret.xml;
-end);
-
-InstallMethod(GladeXML, [IsString, IsRecord],
-function(filename, callbacks)
-  return GladeXML(filename, callbacks, GNone);
 end);
 
 InstallMethod(GladeXML, [IsString],

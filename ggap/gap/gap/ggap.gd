@@ -44,7 +44,7 @@ DeclareGlobalVariable("InfoGGAP", "ggap info class");
 
 #############################################################################
 ##
-#V  _GGAP_DATA
+##  _GGAP_DATA
 ##
 ##  This record contains various variables for ggap package.
 ##  Private, do not use it

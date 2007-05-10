@@ -15,7 +15,7 @@
 
 #############################################################################
 ##
-#V  _GGAP_DATA
+##  _GGAP_DATA
 ##
 InstallValue(_GGAP_DATA,
 rec(init := false,              # ggap package is initialized
@@ -37,7 +37,7 @@ rec(init := false,              # ggap package is initialized
 
 #############################################################################
 ##
-#V  InfoGGAP
+##  InfoGGAP
 ##
 InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
 # SetInfoLevel(InfoGGAP, 10);
@@ -45,7 +45,7 @@ InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
 
 #############################################################################
 ##
-#F  _GGAP_INIT()
+##  _GGAP_INIT()
 ##
 InstallGlobalFunction(_GGAP_INIT,
 function(out_pipe, in_pipe, session_id, pipehelper)
@@ -109,7 +109,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_PEEK_RETURN()
+##  _GGAP_PEEK_RETURN()
 ##
 ##  Retusn last return value received
 ##
@@ -125,7 +125,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_POP_RETURN()
+##  _GGAP_POP_RETURN()
 ##
 ##  Returns last return value received and removes it from the stack.
 ##
@@ -137,7 +137,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_PUSH_RETURN()
+##  _GGAP_PUSH_RETURN()
 ##
 ##  Records received return value
 ##
@@ -149,7 +149,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_GET_STAMP()
+##  _GGAP_GET_STAMP()
 ##
 InstallGlobalFunction(_GGAP_GET_STAMP,
 function()
@@ -161,7 +161,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_EXEC_FUNC()
+##  _GGAP_EXEC_FUNC()
 ##
 InstallGlobalFunction(_GGAP_EXEC_FUNC,
 function(stamp, func, args, void)

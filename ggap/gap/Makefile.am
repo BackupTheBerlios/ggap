@@ -1,3 +1,10 @@
+DIST_SUBDIRS = doc
+SUBDIRS =
+
+if GGAP_BUILD_DOCS
+SUBDIRS += . doc
+endif
+
 ggap_pkgdir = ${GGAP_GAP_DIR}/ggap
 ggap_pkg_gapdir = ${GGAP_GAP_DIR}/ggap/gap
 ggap_pkg_tstdir = ${GGAP_GAP_DIR}/ggap/tst

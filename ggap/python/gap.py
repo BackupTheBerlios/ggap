@@ -1,7 +1,7 @@
 import gtk
 import moo
 
-def glade_xml(filename, root=None):
+def GladeXML(filename, root=None):
     def signal_func(xml, widget_id, widget, signal, handler, object, siglist):
         siglist.append({'widget_id': widget_id, 'widget': widget,
                         'signal': signal, 'handler': handler, 'object': object})

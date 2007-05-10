@@ -2,7 +2,7 @@
 # ggap/configure.ac
 #
 
-m4_define([ggap_version], [0.7.2])
+m4_define([ggap_version], [0.7.3])
 
 AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
 AM_INIT_AUTOMAKE
@@ -42,6 +42,11 @@ AC_SUBST(GGAP_DATA_DIR)
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 
+AC_ARG_ENABLE(gap-doc,
+  AC_HELP_STRING(--disable-gap-doc, [do not build GAP documentation]),
+  [:],[enable_gap_doc=yes])
+AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$enable_gap_doc" = xyes)
+
 AC_CONFIG_SUBDIRS(moo)
 
 AC_CONFIG_FILES([
@@ -52,6 +57,7 @@ ggap/ggap_res.rc
 ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
+ggap/gap/doc/Makefile
 po/Makefile.in
 wininstaller/ggap.iss
 ])

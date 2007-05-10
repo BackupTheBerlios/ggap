@@ -46,7 +46,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_CHECK_INPUT()
+##  _GGAP_CHECK_INPUT()
 ##
 ##  Called when there's data available in _GGAP_DATA.in_pipe.
 ##
@@ -60,7 +60,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_READ_BYTE()
+##  _GGAP_READ_BYTE()
 ##
 ##  Reads a byte from the input pipe and converts it to the range [0..255]
 ##  if needed.
@@ -81,7 +81,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_READ_VALUE()
+##  _GGAP_READ_VALUE()
 ##
 ##  Reads a value from the input pipe.
 ##
@@ -175,7 +175,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_READ()
+##  _GGAP_READ()
 ##
 ##  Reads one chunk of data. It blocks, so it should be called
 ##  only when there's data available.
@@ -256,7 +256,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_WRITE()
+##  _GGAP_WRITE()
 ##
 ##  Writes data and terminating zero into the output pipe.
 ##
@@ -272,7 +272,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_SEND_ERROR()
+##  _GGAP_SEND_ERROR()
 ##
 InstallGlobalFunction(_GGAP_SEND_ERROR,
 function(arg)
@@ -286,7 +286,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_SEND_RETURN()
+##  _GGAP_SEND_RETURN()
 ##
 InstallGlobalFunction(_GGAP_SEND_RETURN,
 function(stamp, value)
@@ -296,7 +296,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_WRITE_FUNC()
+##  _GGAP_WRITE_FUNC()
 ##
 ##  Writes data and waits for return value.
 ##
@@ -340,7 +340,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_CALL_METH_OPTARG()
+##  _GGAP_CALL_METH_OPTARG()
 ##
 InstallGlobalFunction(_GGAP_CALL_METH_OPTARG,
 function(arg)
@@ -366,7 +366,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_CALL_METH()
+##  _GGAP_CALL_METH()
 ##
 InstallGlobalFunction(_GGAP_CALL_METH,
 function(arg)
@@ -385,7 +385,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_CALL_FUNC_OPTARG()
+##  _GGAP_CALL_FUNC_OPTARG()
 ##
 InstallGlobalFunction(_GGAP_CALL_FUNC_OPTARG,
 function(arg)
@@ -411,7 +411,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_CALL_FUNC()
+##  _GGAP_CALL_FUNC()
 ##
 InstallGlobalFunction(_GGAP_CALL_FUNC,
 function(arg)
@@ -428,7 +428,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_WRITE_RETURN()
+##  _GGAP_WRITE_RETURN()
 ##
 InstallGlobalFunction(_GGAP_WRITE_RETURN,
 function(stamp, value)
@@ -438,7 +438,7 @@ end);
 
 #############################################################################
 ##
-#M  GCallFunc()
+#O  GCallFunc()
 ##
 InstallMethod(GCallFunc, [IsString],
 function(func)
@@ -508,7 +508,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_ESCAPE_STRING(string)
+##  _GGAP_ESCAPE_STRING(string)
 ##
 InstallGlobalFunction(_GGAP_ESCAPE_STRING,
 function(string)
@@ -537,7 +537,7 @@ end);
 
 #############################################################################
 ##
-#F  _GGAP_SERIALIZE()
+##  _GGAP_SERIALIZE()
 ##
 InstallGlobalFunction(_GGAP_SERIALIZE,
 function(value)
