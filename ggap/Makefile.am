@@ -74,7 +74,8 @@ EXTRA_DIST =		\
     ggap.opag		\
     glade/gapprefs.glade\
     glade/usermenu.glade\
-    python/ggap.py
+    python/ggap.py	\
+    python/gap.py
 
 BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c ggap-mod.h gap-mod.h ggap-credits.h
 XML2H = $(top_srcdir)/xml2h.sh

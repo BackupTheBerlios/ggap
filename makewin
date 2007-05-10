@@ -12,14 +12,15 @@ build_termhelper = False
 termhelper_exe = builddir + "/termhelper.exe"
 ggap_windir = "/usr/local/win/ggap"
 bin_only = False
-
+py25 = True
+py24 = True
 
 def usage():
-    print "Usage:", sys.argv[0], "[--termhelper=<BINARY>] [build_dir] [data_dir1] [data_dir2] [...]"
+    print "Usage:", sys.argv[0], "[--termhelper=<BINARY>] [--python=(24|25|none)] [build_dir] [data_dir1] [data_dir2] [...]"
     sys.exit(2)
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["termhelper=", "bin-only"])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["termhelper=", "bin-only", "python="])
 except getopt.GetoptError:
     usage()
 
@@ -29,6 +30,17 @@ for o, a in opts:
         build_termhelper = False
     elif o == "--bin-only":
         bin_only = True
+    elif o == "--python":
+        py24 = False
+        py25 = False
+        if a == '25':
+            py25 = True
+        elif a == '24':
+            py24 = True
+        elif a == 'none':
+            pass
+        else:
+            usage()
 if args:
     ggap_builddir = os.path.abspath(args[0])
 else:
@@ -60,7 +72,7 @@ def strip_files():
     strip = 'i586-mingw32msvc-strip --strip-unneeded'
     files = ['ggap.exe', 'pipehelper.exe', 'libmoo.dll']
     do_cmd(strip + ' ' + ' '.join(['%s/bin/%s' % (ggap_windir, f) for f in files]))
-    if not bin_only:
+    if not bin_only and (py24 or py25):
         do_cmd("%s %s/lib/ggap/plugins/*/*.dll" % (strip, ggap_windir))
         do_cmd("%s %s/lib/ggap/plugins/*/*.pyd" % (strip, ggap_windir))
 
@@ -81,11 +93,18 @@ def copy_files():
 
         do_cmd("cp -r %s/usr/local/lib/ggap/plugins %s/lib/ggap/" % (installdir, ggap_windir))
 
-        do_cmd("mkdir -p %s/lib/ggap/plugins/pymoo25 %s/lib/ggap/plugins/pymoo24" % (ggap_windir, ggap_windir))
-        do_cmd("cp %s/usr/local/lib/pymoo25.dll %s/lib/ggap/plugins/pymoo25/pymoo.dll" % (installdir, ggap_windir))
-        do_cmd("cp %s/usr/local/lib/moo25.pyd %s/lib/ggap/plugins/pymoo25/moo.pyd" % (installdir, ggap_windir))
-        do_cmd("cp %s/usr/local/lib/pymoo24.dll %s/lib/ggap/plugins/pymoo24/pymoo.dll" % (installdir, ggap_windir))
-        do_cmd("cp %s/usr/local/lib/moo24.pyd %s/lib/ggap/plugins/pymoo24/moo.pyd" % (installdir, ggap_windir))
+        if py24:
+            do_cmd("mkdir -p %s/lib/ggap/plugins/pymoo24" % (ggap_windir,))
+            do_cmd("cp %s/usr/local/lib/pymoo24.dll %s/lib/ggap/plugins/pymoo24/pymoo.dll" % (installdir, ggap_windir))
+            do_cmd("cp %s/usr/local/lib/moo24.pyd %s/lib/ggap/plugins/pymoo24/moo.pyd" % (installdir, ggap_windir))
+        else:
+            do_cmd("rm -f %s/lib/ggap/plugins/pymoo24.ini" % (ggap_windir,))
+        if py25:
+            do_cmd("mkdir -p %s/lib/ggap/plugins/pymoo25" % (ggap_windir,))
+            do_cmd("cp %s/usr/local/lib/pymoo25.dll %s/lib/ggap/plugins/pymoo25/pymoo.dll" % (installdir, ggap_windir))
+            do_cmd("cp %s/usr/local/lib/moo25.pyd %s/lib/ggap/plugins/pymoo25/moo.pyd" % (installdir, ggap_windir))
+        else:
+            do_cmd("rm -f %s/lib/ggap/plugins/pymoo25.ini" % (ggap_windir,))
 
         do_cmd("cp -r %s/usr/local/share/icons %s/share/" % (installdir, ggap_windir))
         do_cmd("mkdir -p %s/share/mime" % (ggap_windir,))
