@@ -1443,6 +1443,8 @@ are docs"""
                     # TODO
                 class GtkProgressBar: pass
                     # TODO
+        class GtkAdjustment: pass
+                    # TODO
         class GtkCellRenderer:
                     # TODO
             __no_constructor__ = True

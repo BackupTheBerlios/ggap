@@ -38,19 +38,21 @@ EXTRA_DIST =		\
     manual.mst		\
     manualindex
 
-buildman.config: buildman.config.in $(top_builddir)/config.status
+buildman.config: buildman.config.in $(top_srcdir)/configure.ac
 	cd $(top_builddir) && \
 	$(SHELL) ./config.status --file=ggap/gap/doc/buildman.config && \
 	cd ggap/gap/doc && mv buildman.config $(srcdir)/
 
+if GGAP_BUILD_DOCS
 manual.pdf: .pdf-stamp
+manual.six: .manual-stamp
+%.tex: .manual-stamp
+endif
+
 .pdf-stamp: .manual-stamp
 	cd $(srcdir) && \
 	pdftex manual && pdftex manual && \
 	date > .pdf-stamp
-
-manual.six: .manual-stamp
-%.tex: .manual-stamp
 
 types.msk: genmsk.py ../gap/codegen.py ../gap/defs.py ../gap/gtktypes.py
 	$(PYTHON) $(srcdir)/genmsk.py $(srcdir)/types.msk
