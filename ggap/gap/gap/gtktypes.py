@@ -1464,6 +1464,7 @@ are docs"""
                     # TODO
     class GtkListStore:
         __implements__ = ['GtkTreeSortable']
+        __new__ = 'doc_stub'
         # TODO
     class GtkTextBuffer: pass
     class GtkTreeModelSort:
@@ -1474,6 +1475,7 @@ are docs"""
         # TODO
     class GtkTreeStore:
         __implements__ = ['GtkTreeSortable']
+        __new__ = 'doc_stub'
         # TODO
 
     class MooGladeXML:

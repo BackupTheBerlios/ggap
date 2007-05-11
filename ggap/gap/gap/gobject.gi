@@ -17,7 +17,9 @@
 ##
 ##  IsGObjectRep
 ##
-DeclareRepresentation("IsGObjectRep", IsComponentObjectRep,
+# NOTE: it may not be IsAttributeStoringRep
+DeclareRepresentation("IsGObjectRep",
+                      IsComponentObjectRep,
 ["id",        # unique object id, set in ggap
  "dead",      # set after the underlying object has been destroyed
  "callbacks", # list of connected callbacks

@@ -32,7 +32,8 @@ ggap_pkg_gap_DATA =		\
 
 ggap_pkg_tst_DATA =		\
 	tst/demo.g		\
-	tst/testglade.g
+	tst/testglade.g		\
+	tst/treemodel.g
 
 ggap_pkg_tst_glade_DATA =	\
 	tst/glade/demo.glade	\
