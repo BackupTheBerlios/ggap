@@ -225,3 +225,37 @@ function(store)
   return List(_GGAP_CALL_FUNC("gap.list_store_get_list", store),
               $GtkTreeItemP2G);
 end);
+
+
+
+###############################################################################
+##
+##  GtkTreeView
+##
+
+InstallOtherMethod(Length, [IsGtkTreeView],
+function(view) return Length(GetModel(view)); end);
+
+InstallOtherMethod(Clear, [IsGtkTreeView],
+function(view) Clear(GetModel(view)); end);
+
+InstallOtherMethod(Insert, [IsGtkTreeView, IsObject, IsObject],
+function(view, path, value) Insert(GetModel(view), path, value); end);
+
+InstallOtherMethod(Append, [IsGtkTreeView, IsObject],
+function(view, value) Append(GetModel(view), value); end);
+
+InstallOtherMethod(Remove, [IsGtkTreeView, IsObject],
+function(view, path) Remove(GetModel(view), path); end);
+
+InstallOtherMethod(SetItem, [IsGtkTreeView, IsObject, IsObject],
+function(view, path, item) SetItem(GetModel(view), path, item); end);
+
+InstallOtherMethod(GetItem, [IsGtkTreeView, IsObject],
+function(view, path) return GetItem(GetModel(view), path); end);
+
+InstallOtherMethod(SetList, [IsGtkTreeView, IsObject],
+function(view, items) SetList(GetModel(view), items); end);
+
+InstallOtherMethod(GetList, [IsGtkTreeView],
+function(view) return GetList(GetModel(view)); end);

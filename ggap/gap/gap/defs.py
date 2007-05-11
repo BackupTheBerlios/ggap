@@ -251,12 +251,15 @@ def _make_class_py_name(name):
         return 'gobject.GObject'
     elif name.startswith('Gtk'):
         return 'gtk.' + name[3:]
+    elif name.startswith('Gdk'):
+        return 'gtk.gdk.' + name[3:]
     else:
         raise RuntimeError()
 
 def _is_class(name):
     return name == 'GObject' or name.startswith('Gtk') or \
-            name.startswith('Moo') or name.startswith('Glade')
+            name.startswith('Gdk') or name.startswith('Moo') or \
+            name.startswith('Glade')
 
 class ClassInfo(object):
     def __init__(self, cls, parent_name):

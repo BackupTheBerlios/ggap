@@ -1,4 +1,5 @@
 import gtk
+import pango
 import moo
 
 def GladeXML(filename, root=None):
@@ -16,15 +17,7 @@ def GladeXML(filename, root=None):
 
 
 def list_store_remove(store, pos):
-    print pos, len(store)
     store.remove(store.get_iter((pos,)))
-
-store = gtk.ListStore(str)
-store.append(['111'])
-store.append(['111'])
-store.append(['111'])
-list_store_remove(store, len(store)-1)
-
 def list_store_insert(store, pos, item):
     store.insert(pos, item)
 def list_store_append(store, item):
@@ -33,10 +26,22 @@ def list_store_set(store, path, item):
     store[path] = item
 def list_store_get(store, path):
     return list(store[path])
-
 def list_store_set_list(store, items):
     store.clear()
     for i in items:
         store.append(i)
 def list_store_get_list(store):
     return [list(row) for row in store]
+
+
+def widget_modify_font(widget, font):
+    if font:
+        font = pango.FontDescription(font)
+    widget.modify_font(font)
+
+
+def text_view_set_text(textview, text):
+    textview.get_buffer().set_text(text)
+def text_view_get_text(textview, text):
+    buf = textview.get_buffer()
+    return buf.get_text(buf.get_start_iter(), buf.get_end_iter())

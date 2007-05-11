@@ -15,6 +15,8 @@
 #include "gapsession.h"
 #include "ggap-mod.h"
 #include "gap-mod.h"
+#include "gap-cb-mod.h"
+#include "gap-types-mod.h"
 #include "gapoutput.h"
 #include <mooutils/moopython.h>
 
@@ -65,6 +67,18 @@ output_write_meth (G_GNUC_UNUSED MooPyObject *self,
     return moo_Py_None;
 }
 
+#define import_module(name, code)                               \
+    if (!(mod = moo_py_import_exec (name, code)))               \
+    {                                                           \
+        g_critical ("could not import module '%s'", name);      \
+        moo_PyErr_Print ();                                     \
+        goto out;                                               \
+    }                                                           \
+    else                                                        \
+    {                                                           \
+        moo_Py_DECREF (mod);                                    \
+    }
+
 static gboolean
 init_ggap_module (void)
 {
@@ -79,16 +93,9 @@ init_ggap_module (void)
     been_here = TRUE;
     success = FALSE;
 
-    if (!(mod = moo_py_import_exec ("gap", GAP_PY)))
-    {
-        g_critical ("could not import module '%s'", "gap");
-        moo_PyErr_Print ();
-        goto out;
-    }
-    else
-    {
-        moo_Py_DECREF (mod);
-    }
+    import_module ("gap_types", GAP_TYPES_PY);
+    import_module ("gap_cb", GAP_CB_PY);
+    import_module ("gap", GAP_PY);
 
     if (!(mod = moo_py_import_exec ("ggap", GGAP_PY)))
     {

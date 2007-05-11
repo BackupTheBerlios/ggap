@@ -49,12 +49,20 @@ def printops(cls, fp):
     for child in cls.children:
         printops(child, fp)
 
+def printfunc(func, fp):
+    print >> fp, func.get_doc()
+    func.declare(fp)
+    print >> fp, ''
+
 def printmeths(cls, fp):
     for f in cls.methods:
         f[1].install(fp)
 
     for child in cls.children:
         printmeths(child, fp)
+
+def printfuncdef(func, fp):
+    func.install(fp)
 
 def printtypes(cls, fp):
     if cls.name not in ["GObject"]:
@@ -103,6 +111,8 @@ def write_gd(fp):
     print >> fp, ''
     for cls in gtktypes.top_classes:
         printops(cls, fp)
+    for func in gtktypes.functions:
+        printfunc(func, fp)
     print >> fp, ''
     print >> fp, 'DeclareGlobalFunction("_GGAP_REGISTER_WIDGETS");'
 
@@ -113,6 +123,8 @@ def write_gi(fp):
     print >> fp, ""
     for cls in gtktypes.top_classes:
         printmeths(cls, fp)
+    for func in gtktypes.functions:
+        printfuncdef(func, fp)
     print >> fp, ''
     print >> fp, "InstallGlobalFunction(_GGAP_REGISTER_WIDGETS,"
     print >> fp, "function()"

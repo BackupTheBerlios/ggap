@@ -55,9 +55,7 @@ EXTRA_DIST +=		\
 	$(ggap_DATA)	\
 	ggap.png	\
 	ggap.ico	\
-	gap.png		\
-	xml2h.sh	\
-	py2h.sh
+	gap.png
 
 generated =			\
 	ggap/gap/PackageInfo.g	\

@@ -1,5 +1,7 @@
 import gtk
 import gap
+import gap_cb
+import gap_types
 import gobject
 import pango
 import sys
@@ -292,6 +294,8 @@ class Session:
         self.write_output(string)
 
     def serialize(self, val):
+        val = gap_types.transform(val)
+
         if val is None:
             return '%c' % (DATA_NONE,)
 
@@ -394,9 +398,6 @@ class Session:
         else:
             raise GAPError(value)
 
-    def delete_event_callback(self, obj, handler_id, args):
-        return self._callback(obj, handler_id, [])
-
     def connect(self, obj_id, signal):
         w = self.by_id[obj_id]
         if w is None:
@@ -406,12 +407,7 @@ class Session:
         if q is None:
             raise RuntimeError("no signal %s in object %s" % (signal, obj_id,))
 
-        if q[1] == 'delete-event' and isinstance(w.obj, gtk.Widget):
-            callback = self.delete_event_callback
-        else:
-            callback = self._callback
-
-        cb = Session.Callback(w.obj, signal, callback)
+        cb = gap_cb.Callback(w.obj, signal, self._callback)
         w.callbacks[cb.id] = cb
         return [cb.id, q[4] == gobject.TYPE_NONE]
 

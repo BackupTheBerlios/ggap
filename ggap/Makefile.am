@@ -34,6 +34,7 @@ endif MOO_OS_MINGW
 ggap_SOURCES =				\
 	ggap-ui.h			\
 	gap-mod.h			\
+	gap-cb-mod.h			\
 	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
@@ -75,11 +76,22 @@ EXTRA_DIST =		\
     glade/gapprefs.glade\
     glade/usermenu.glade\
     python/ggap.py	\
+    python/gap_cb.py	\
+    python/gap_types.py	\
     python/gap.py
 
-BUILT_SOURCES = ggap-ui.h gapprefs-glade.h ggap.c ggap-mod.h gap-mod.h ggap-credits.h
-XML2H = $(top_srcdir)/xml2h.sh
-PY2H = $(top_srcdir)/py2h.sh
+BUILT_SOURCES =		\
+	ggap-ui.h	\
+	gapprefs-glade.h\
+	ggap.c		\
+	ggap-mod.h	\
+	gap-cb-mod.h	\
+	gap-types-mod.h	\
+	gap-mod.h	\
+	ggap-credits.h
+
+XML2H = $(top_srcdir)/moo/moo/mooutils/xml2h.sh
+PY2H = $(top_srcdir)/moo/moo/mooutils/py2h.sh
 
 ggap-credits.h: ../THANKS $(XML2H)
 	$(SHELL) $(XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h
@@ -96,3 +108,7 @@ ggap-mod.h: $(srcdir)/python/ggap.py $(PY2H)
 	$(SHELL) $(PY2H) GGAP_PY $(srcdir)/python/ggap.py > ggap-mod.h
 gap-mod.h: $(srcdir)/python/gap.py $(PY2H)
 	$(SHELL) $(PY2H) GAP_PY $(srcdir)/python/gap.py > gap-mod.h
+gap-cb-mod.h: $(srcdir)/python/gap_cb.py $(PY2H)
+	$(SHELL) $(PY2H) GAP_CB_PY $(srcdir)/python/gap_cb.py > gap-cb-mod.h
+gap-types-mod.h: $(srcdir)/python/gap_types.py $(PY2H)
+	$(SHELL) $(PY2H) GAP_TYPES_PY $(srcdir)/python/gap_types.py > gap-types-mod.h

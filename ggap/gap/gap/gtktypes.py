@@ -1,9 +1,21 @@
 from defs import Function, ClassInfo
 
+IsGtkTreeViewColumn = 'IsGtkTreeViewColumn'
 IsGtkWidget = 'IsGtkWidget'
+IsGtkWindow = 'IsGtkWindow'
+IsGtkTreeModel = 'IsGtkTreeModel'
+IsGtkTooltips = 'IsGtkTooltips'
+IsGtkAdjustment = 'IsGtkAdjustment'
+IsGtkTextBuffer = 'IsGtkTextBuffer'
+IsGtkToolItem = 'IsGtkToolItem'
+IsGdkScreen = 'IsGdkScreen'
+IsGdkWindow = 'IsGdkWindow'
+
+IsObject = 'IsObject'
 IsString = 'IsString'
 IsInt = 'IsInt'
 IsList = 'IsList'
+
 gboolean = 'IsBool'
 gint = 'IsInt'
 guint = 'IsInt'
@@ -25,14 +37,10 @@ GtkOrientation = IsInt
 GtkToolbarStyle = IsInt
 GtkIconSize = IsInt
 GtkFileChooserAction = IsInt
+GtkSelectionMode = IsInt
 
 top_classes = []
-functions = []
 
-class GtkCellEditable:
-    __no_constructor__ = True
-    # TODO
-top_classes.append(GtkCellEditable)
 class GtkCellLayout:
     __no_constructor__ = True
     # TODO
@@ -49,14 +57,6 @@ class GtkTreeModel:
     __no_constructor__ = True
     # TODO
 top_classes.append(GtkTreeModel)
-class GtkTreeDragSource:
-    __no_constructor__ = True
-    # TODO
-top_classes.append(GtkTreeDragSource)
-class GtkTreeDragDest:
-    __no_constructor__ = True
-    # TODO
-top_classes.append(GtkTreeDragDest)
 class GtkTreeSortable:
     __no_constructor__ = True
     __implements__ = ['GtkTreeModel']
@@ -66,65 +66,55 @@ top_classes.append(GtkTreeSortable)
 class GObject:
     __no_constructor__ = True
 
-    set_property = ['IsString', 'IsObject']
-    get_property = ['IsString']
+    set_property = [IsString, IsObject]
+    get_property = [IsString]
+
+    class GdkWindow:
+        __no_constructor__ = True
+
+    class GdkScreen:
+        __no_constructor__ = True
+
+        get_root_window = []
+        get_display = []
+        get_number = []
+        get_width = []
+        get_height = []
+        get_width_mm = []
+        get_height_mm = []
+        get_toplevel_windows = []
+        make_display_name = []
+        get_n_monitors = []
+        get_monitor_geometry = [gint]
+        get_monitor_at_point = [gint, gint]
+        get_monitor_at_window = [IsGdkWindow]
+
+    class GdkDisplay:
+        __new__ = Function(gap_name='GdkDisplay', py_name='gtk.gdk.Display', args=[IsString])
+        get_name = Function(gap_name='GetDisplayName')
+        get_n_screens = []
+        get_screen = [gint]
+        get_default_screen = []
+        beep = []
+        close = []
+        get_pointer = []
+        get_window_at_pointer = []
 
     class GtkObject:
         __no_constructor__ = True
-        __doc__ = """
-These
-are docs"""
 
         destroy = []
 
         class GtkWidget:
             __no_constructor__ = True
 
-            unparent = []
             show = []
             show_now = []
             hide = []
             show_all = []
             hide_all = []
-            map = []
-            unmap = []
-            realize = []
-            unrealize = []
-            queue_draw = []
-            queue_resize = []
-            queue_resize_no_redraw = []
-#             draw                 (GtkWidget *widget,
-#                                                          GdkRectangle *area);
-#             size_request         (GtkWidget *widget,
-#                                                          GtkRequisition *requisition);
-#             get_child_requisition
-#                                                         (GtkWidget *widget,
-#                                                          GtkRequisition *requisition);
-#             size_allocate        (GtkWidget *widget,
-#                                                          GtkAllocation *allocation);
-#             add_accelerator      (GtkWidget *widget,
-#                                                          const gchar *accel_signal,
-#                                                          GtkAccelGroup *accel_group,
-#                                                          guint accel_key,
-#                                                          GdkModifierType accel_mods,
-#                                                          GtkAccelFlags accel_flags);
-#             gboolean    gtk_widget_remove_accelerator   (GtkWidget *widget,
-#                                                          GtkAccelGroup *accel_group,
-#                                                          guint accel_key,
-#                                                          GdkModifierType accel_mods);
-#             set_accel_path       (GtkWidget *widget,
-#                                                          const gchar *accel_path,
-#                                                          GtkAccelGroup *accel_group);
-#             GList*      gtk_widget_list_accel_closures = []
-#             gboolean    gtk_widget_can_activate_accel   (GtkWidget *widget,
-#                                                          guint signal_id);
-#             gboolean    gtk_widget_event                (GtkWidget *widget,
-#                                                          GdkEvent *event);
             activate = []
             reparent = [IsGtkWidget]
-#             gboolean    gtk_widget_intersect            (GtkWidget *widget,
-#                                                          GdkRectangle *area,
-#                                                          GdkRectangle *intersection);
             is_focus = []
             grab_focus = []
             grab_default = []
@@ -132,167 +122,24 @@ are docs"""
             get_name = Function(gap_name='GetWidgetName')
             set_state = [GtkStateType]
             set_sensitive = [gboolean]
-            set_parent = Function([IsGtkWidget])
-#             set_parent_window = ['IsGdkWindow']
-            get_parent_window = []
             set_events = [gint]
             add_events = [gint]
-#             set_extension_events (GtkWidget *widget,
-#                                                          GdkExtensionMode mode);
-#             GdkExtensionMode gtk_widget_get_extension_events
             get_toplevel = []
-#             get_ancestor         (GtkWidget *widget,
-#                                                          GType widget_type);
-#             GdkColormap* gtk_widget_get_colormap = []
-#             set_colormap         (GtkWidget *widget,
-#                                                          GdkColormap *colormap);
-#             GdkVisual*  gtk_widget_get_visual = []
             get_events = []
-#             get_pointer          (GtkWidget *widget,
-#                                                          gint *x,
-#                                                          gint *y);
+            get_pointer = []
             is_ancestor = [IsGtkWidget]
-#             gboolean    gtk_widget_translate_coordinates
-#                                                         (GtkWidget *src_widget,
-#                                                          GtkWidget *dest_widget,
-#                                                          gint src_x,
-#                                                          gint src_y,
-#                                                          gint *dest_x,
-#                                                          gint *dest_y);
-#             set_style            (GtkWidget *widget,
-#                                                          GtkStyle *style);
-            #define     gtk_widget_set_rc_style         (widget)
-            ensure_style = []
-            get_style = []
-            reset_rc_styles = []
-#             push_colormap        (GdkColormap *cmap);
-#             pop_colormap         (void);
-#             set_default_colormap (GdkColormap *colormap);
-#             GtkStyle*   gtk_widget_get_default_style    (void);
-#             GdkColormap* gtk_widget_get_default_colormap
-#                                                         (void);
-#             GdkVisual*  gtk_widget_get_default_visual   (void);
-#             set_direction        (GtkWidget *widget,
-#                                                          GtkTextDirection dir);
-#             enum        GtkTextDirection;
-#             GtkTextDirection gtk_widget_get_direction = []
-#             set_default_direction
-#                                                         (GtkTextDirection dir);
-#             GtkTextDirection gtk_widget_get_default_direction
-#                                                         (void);
-#             shape_combine_mask   (GtkWidget *widget,
-#                                                          GdkBitmap *shape_mask,
-#                                                          gint offset_x,
-#                                                          gint offset_y);
-#             path                 (GtkWidget *widget,
-#                                                          guint *path_length,
-#                                                          gchar **path,
-#                                                          gchar **path_reversed);
-#             class_path           (GtkWidget *widget,
-#                                                          guint *path_length,
-#                                                          gchar **path,
-#                                                          gchar **path_reversed);
-#             gchar*      gtk_widget_get_composite_name = []
-#             modify_style         (GtkWidget *widget,
-#                                                          GtkRcStyle *style);
-#             GtkRcStyle* gtk_widget_get_modifier_style = []
 #             modify_fg = [GtkStateType, GdkColor]
 #             modify_bg = [GtkStateType, GdkColor]
 #             modify_text = [GtkStateType, GdkColor]
 #             modify_base = [GtkStateType, GdkColor]
-#             modify_font          (GtkWidget *widget,
-#                                                          PangoFontDescription *font_desc);
-#             PangoContext* gtk_widget_create_pango_context
-#             PangoContext* gtk_widget_get_pango_context = []
-#             PangoLayout* gtk_widget_create_pango_layout (GtkWidget *widget,
-#                                                          const gchar *text);
-#             GdkPixbuf*  gtk_widget_render_icon          (GtkWidget *widget,
-#                                                          const gchar *stock_id,
-#                                                          GtkIconSize size,
-#                                                          const gchar *detail);
-#             pop_composite_child  (void);
-#             push_composite_child (void);
-#             queue_clear = []
-#             queue_clear_area     (GtkWidget *widget,
-#                                                          gint x,
-#                                                          gint y,
-#                                                          gint width,
-#                                                          gint height);
-#             queue_draw_area      (GtkWidget *widget,
-#                                                          gint x,
-#                                                          gint y,
-#                                                          gint width,
-#                                                          gint height);
-#             reset_shapes = []
-#             set_app_paintable    (GtkWidget *widget,
-#                                                          gboolean app_paintable);
-#             set_double_buffered  (GtkWidget *widget,
-#                                                          gboolean double_buffered);
-#             set_redraw_on_allocate
-#                                                         (GtkWidget *widget,
-#                                                          gboolean redraw_on_allocate);
-#             set_composite_name   (GtkWidget *widget,
-#                                                          const gchar *name);
-#             gboolean    gtk_widget_set_scroll_adjustments
-#                                                         (GtkWidget *widget,
-#                                                          GtkAdjustment *hadjustment,
-#                                                          GtkAdjustment *vadjustment);
-#             gboolean    gtk_widget_mnemonic_activate    (GtkWidget *widget,
-#                                                          gboolean group_cycling);
-#             class_install_style_property
-#                                                         (GtkWidgetClass *klass,
-#                                                          GParamSpec *pspec);
-#             class_install_style_property_parser
-#                                                         (GtkWidgetClass *klass,
-#                                                          GParamSpec *pspec,
-#                                                          GtkRcPropertyParser parser);
-#             GParamSpec* gtk_widget_class_find_style_property
-#                                                         (GtkWidgetClass *klass,
-#                                                          const gchar *property_name);
-#             GParamSpec** gtk_widget_class_list_style_properties
-#                                                         (GtkWidgetClass *klass,
-#                                                          guint *n_properties);
-#             GdkRegion*  gtk_widget_region_intersect     (GtkWidget *widget,
-#                                                          GdkRegion *region);
-#             gint        gtk_widget_send_expose          (GtkWidget *widget,
-#                                                          GdkEvent *event);
-#             style_get            (GtkWidget *widget,
-#                                                          const gchar *first_property_name,
-#                                                          ...);
-#             style_get_property   (GtkWidget *widget,
-#                                                          const gchar *property_name,
-#                                                          GValue *value);
-#             style_get_valist     (GtkWidget *widget,
-#                                                          const gchar *first_property_name,
-#                                                          va_list var_args);
-#             AtkObject*  gtk_widget_get_accessible = []
-#             gboolean    gtk_widget_child_focus          (GtkWidget *widget,
-#                                                          GtkDirectionType direction);
-#             child_notify         (GtkWidget *widget,
-#                                                          const gchar *child_property);
-#             freeze_child_notify = []
-            get_child_visible = []
+            modify_font = Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[IsString])
             get_parent = []
             get_settings = []
-#             get_clipboard      (GtkWidget *widget,
-#                                                          GdkAtom selection);
+            get_clipboard = []
             get_display = []
             get_root_window = []
             get_screen = []
             has_screen = []
-            get_size_request = []
-            set_child_visible = [gboolean]
-            set_size_request = [gint, gint]
-#             thaw_child_notify = []
-#             set_no_show_all      (GtkWidget *widget,
-#                                                          gboolean no_show_all);
-#             gboolean    gtk_widget_get_no_show_all = []
-#             GList*      gtk_widget_list_mnemonic_labels = []
-#             add_mnemonic_label   (GtkWidget *widget,
-#                                                          GtkWidget *label);
-#             remove_mnemonic_label
-#                                                         (GtkWidget *widget,
-#                                                          GtkWidget *label);
 
             class GtkContainer:
                 __no_constructor__ = True
@@ -312,20 +159,6 @@ are docs"""
 #                                                              gpointer callback_data,
 #                                                              GtkDestroyNotify notify);
                 get_children = []
-#                 set_reallocate_redraws
-#                                                             (GtkContainer *container,
-#                                                              gboolean needs_redraws);
-#                 set_focus_child   (GtkContainer *container,
-#                                                              GtkWidget *child);
-#                 get_focus_vadjustment = []
-#                 set_focus_vadjustment
-#                                                             (GtkContainer *container,
-#                                                              GtkAdjustment *adjustment);
-#                 get_focus_hadjustment = []
-#                 set_focus_hadjustment
-#                                                             (GtkContainer *container,
-#                                                              GtkAdjustment *adjustment);
-                resize_children = []
 #                 child_type = []
 #                 child_get         (GtkContainer *container,
 #                                                              GtkWidget *child,
@@ -335,39 +168,16 @@ are docs"""
 #                                                              GtkWidget *child,
 #                                                              const gchar *first_prop_name,
 #                                                              ...);
-#                 child_get_property
-#                                                             (GtkContainer *container,
-#                                                              GtkWidget *child,
-#                                                              const gchar *property_name,
-#                                                              GValue *value);
-#                 child_set_property
-#                                                             (GtkContainer *container,
-#                                                              GtkWidget *child,
-#                                                              const gchar *property_name,
-#                                                              const GValue *value);
+                child_get_property = [IsGtkWidget, IsString]
+                child_set_property = [IsGtkWidget, IsString, IsObject]
 #                 forall            (GtkContainer *container,
 #                                                              GtkCallback callback,
 #                                                              gpointer callback_data);
                 get_border_width = []
                 set_border_width = [guint]
-#                 propagate_expose  (GtkContainer *container,
-#                                                              GtkWidget *child,
-#                                                              GdkEventExpose *event);
-#                 get_focus_chain   (GtkContainer *container,
-#                                                              GList **focusable_widgets);
-#                 set_focus_chain   (GtkContainer *container,
-#                                                              GList *focusable_widgets);
-#                 unset_focus_chain = []
-#                 GParamSpec* gtk_container_class_find_child_property
-#                                                             (GObjectClass *cclass,
-#                                                              const gchar *property_name);
-#                 class_install_child_property
-#                                                             (GtkContainerClass *cclass,
-#                                                              guint property_id,
-#                                                              GParamSpec *pspec);
-#                 GParamSpec** gtk_container_class_list_child_properties
-#                                                             (GObjectClass *cclass,
-#                                                              guint *n_properties);
+                get_focus_chain = []
+                set_focus_chain = [IsList]
+                unset_focus_chain = []
 
                 class GtkBin:
                     __no_constructor__ = True
@@ -376,58 +186,24 @@ are docs"""
 
                     class GtkWindow:
                         __new__ = Function(py_name='gtk.Window', opt_args=[GtkWindowType])
-
-#                         GtkWidget*  gtk_window_new                  (GtkWindowType type);
                         set_title = [IsString]
-#                         set_wmclass          (GtkWindow *window,
-#                                                                      const gchar *wmclass_name,
-#                                                                      const gchar *wmclass_class);
                         set_resizable = [gboolean]
                         get_resizable = []
-#                         add_accel_group      (GtkWindow *window,
-#                                                                      GtkAccelGroup *accel_group);
-#                         remove_accel_group   (GtkWindow *window,
-#                                                                      GtkAccelGroup *accel_group);
                         activate_focus = []
                         activate_default = []
                         set_modal = [gboolean]
                         set_default_size = [gint, gint]
-#                         set_geometry_hints   (GtkWindow *window,
-#                                                                      GtkWidget *geometry_widget,
-#                                                                      GdkGeometry *geometry,
-#                                                                      GdkWindowHints geom_mask);
-#                         set_gravity          (GtkWindow *window,
-#                                                                      GdkGravity gravity);
-#                         GdkGravity  gtk_window_get_gravity = []
                         set_position = [GtkWindowPosition]
-                        set_transient_for = ['IsGtkWindow']
+                        set_transient_for = [IsGtkWindow]
                         set_destroy_with_parent = [gboolean]
-#                         set_screen           (GtkWindow *window,
-#                                                                      GdkScreen *screen);
-                        # same as gtk_widget_get_screen?
-                        # get_screen = []
+                        set_screen = [IsGdkScreen]
                         is_active = []
                         has_toplevel_focus = []
-#                         GList*      gtk_window_list_toplevels       (void);
-#                         add_mnemonic         (GtkWindow *window,
-#                                                                      guint keyval,
-#                                                                      GtkWidget *target);
-#                         remove_mnemonic      (GtkWindow *window,
-#                                                                      guint keyval,
-#                                                                      GtkWidget *target);
-#                         mnemonic_activate    (GtkWindow *window,
-#                                                                      guint keyval,
-#                                                                      GdkModifierType modifier);
-#                         activate_key         (GtkWindow *window,
-#                                                                      GdkEventKey *event);
-#                         propagate_key_event  (GtkWindow *window,
-#                                                                      GdkEventKey *event);
                         get_focus = []
                         set_focus = [IsGtkWidget]
                         set_default = [IsGtkWidget]
                         present = []
-#                         present_with_time    (GtkWindow *window,
-#                                                                      guint32 timestamp);
+                        present_with_time = [gint]
                         iconify = []
                         deiconify = []
                         stick = []
@@ -438,27 +214,8 @@ are docs"""
                         unfullscreen = []
                         set_keep_above = [gboolean]
                         set_keep_below = [gboolean]
-#                         begin_resize_drag    (GtkWindow *window,
-#                                                                      GdkWindowEdge edge,
-#                                                                      gint button,
-#                                                                      gint root_x,
-#                                                                      gint root_y,
-#                                                                      guint32 timestamp);
-#                         begin_move_drag      (GtkWindow *window,
-#                                                                      gint button,
-#                                                                      gint root_x,
-#                                                                      gint root_y,
-#                                                                      guint32 timestamp);
                         set_decorated = [gboolean]
-#                         set_frame_dimensions (GtkWindow *window,
-#                                                                      gint left,
-#                                                                      gint top,
-#                                                                      gint right,
-#                                                                      gint bottom);
                         set_has_frame = [gboolean]
-#                         set_mnemonic_modifier
-#                                                                     (GtkWindow *window,
-#                                                                      GdkModifierType modifier);
                         set_role = [IsString]
                         set_type_hint = [GdkWindowTypeHint]
                         set_skip_taskbar_hint = [gboolean]
@@ -467,15 +224,8 @@ are docs"""
                         set_accept_focus = [gboolean]
                         set_focus_on_map = [gboolean]
                         get_decorated = []
-#                         GList*      gtk_window_get_default_icon_list
-#                                                                     (void);
                         get_default_size = []
                         get_destroy_with_parent = []
-#                         get_frame_dimensions (GtkWindow *window,
-#                                                                      gint *left,
-#                                                                      gint *top,
-#                                                                      gint *right,
-#                                                                      gint *bottom);
                         get_has_frame = []
                         get_icon = []
                         get_icon_list = []
@@ -497,35 +247,12 @@ are docs"""
                         parse_geometry = [IsString]
                         reshow_with_initial_size = []
                         resize = [gint, gint]
-#                         set_default_icon_list
-#                                                                     (GList *list);
-#                         set_default_icon     (GdkPixbuf *icon);
-#                         set_default_icon_from_file
-#                                                                     (const gchar *filename,
-#                                                                      GError **err);
-#                         set_default_icon_name
-#                                                                     (const gchar *name);
-#                         set_icon             (GtkWindow *window,
-#                                                                      GdkPixbuf *icon);
-#                         set_icon_list        (GtkWindow *window,
-#                                                                      GList *list);
-#                         set_icon_from_file   (GtkWindow *window,
-#                                                                      const gchar *filename,
-#                                                                      GError **err);
-#                         set_icon_name        (GtkWindow *window,
-#                                                                      const gchar *name);
-#                         set_auto_startup_notification
-#                                                                     (gboolean setting);
+                        set_icon_from_file = [IsString]
+                        set_icon_name = [IsString]
 
                         class GtkDialog:
                             __new__ = Function(py_name="gtk.Dialog",
-                                               opt_args=[IsString, 'IsGtkWindow', GtkDialogFlags, IsList])
-#                             GtkWidget*  gtk_dialog_new                  (void);
-#                             GtkWidget*  gtk_dialog_new_with_buttons     (const gchar *title,
-#                                                                          GtkWindow *parent,
-#                                                                          GtkDialogFlags flags,
-#                                                                          const gchar *first_button_text,
-#                                                                          ...);
+                                               opt_args=[IsString, IsGtkWindow, GtkDialogFlags, IsList])
                             run = []
                             response = [(gint, 'response')]
                             add_button = [IsString, gint]
@@ -539,85 +266,43 @@ are docs"""
                             set_response_sensitive = [gint, gboolean]
                             get_response_for_widget = [IsGtkWidget]
 
-#                             gboolean    gtk_alternative_dialog_button_order
-#                                                                         (GdkScreen *screen);
 #                             set_alternative_button_order
 #                                                                         (GtkDialog *dialog,
 #                                                                          gint first_response_id,
 #                                                                          ...);
-#                             set_alternative_button_order_from_array
-#                                                                         (GtkDialog *dialog,
-#                                                                          gint n_params,
-#                                                                          gint *new_order);
 
-                            class GtkAboutDialog: pass
-#                                 GtkWidget*  gtk_about_dialog_new            (void);
-#                                 const gchar* gtk_about_dialog_get_name      (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_name       (GtkAboutDialog *about,
+                            class GtkAboutDialog:
+                                __new__ = Function(py_name='gtk.AboutDialog')
+#                                 get_name      (GtkAboutDialog *about);
+#                                 set_name       (GtkAboutDialog *about,
 #                                                                              const gchar *name);
-#                                 const gchar* gtk_about_dialog_get_version   (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_version    (GtkAboutDialog *about,
-#                                                                              const gchar *version);
-#                                 const gchar* gtk_about_dialog_get_copyright (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_copyright  (GtkAboutDialog *about,
-#                                                                              const gchar *copyright);
-#                                 const gchar* gtk_about_dialog_get_comments  (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_comments   (GtkAboutDialog *about,
-#                                                                              const gchar *comments);
-#                                 const gchar* gtk_about_dialog_get_license   (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_license    (GtkAboutDialog *about,
-#                                                                              const gchar *license);
-#                                 gboolean    gtk_about_dialog_get_wrap_license
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_wrap_license
-#                                                                             (GtkAboutDialog *about,
-#                                                                              gboolean wrap_license);
-#                                 const gchar* gtk_about_dialog_get_website   (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_website    (GtkAboutDialog *about,
-#                                                                              const gchar *website);
-#                                 const gchar* gtk_about_dialog_get_website_label
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_website_label
-#                                                                             (GtkAboutDialog *about,
-#                                                                              const gchar *website_label);
-#                                 const gchar* const * gtk_about_dialog_get_authors
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_authors    (GtkAboutDialog *about,
-#                                                                              const gchar **authors);
-#                                 const gchar* const * gtk_about_dialog_get_artists
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_artists    (GtkAboutDialog *about,
-#                                                                              const gchar **artists);
-#                                 const gchar* const * gtk_about_dialog_get_documenters
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_documenters
-#                                                                             (GtkAboutDialog *about,
-#                                                                              const gchar **documenters);
-#                                 const gchar* gtk_about_dialog_get_translator_credits
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_translator_credits
-#                                                                             (GtkAboutDialog *about,
-#                                                                              const gchar *translator_credits);
+                                get_version = []
+                                set_version = [IsString]
+                                get_copyright = []
+                                set_copyright = [IsString]
+                                get_comments = []
+                                set_comments = [IsString]
+                                get_license = []
+                                set_license = [IsString]
+                                get_wrap_license = []
+                                set_wrap_license = [gboolean]
+                                get_website = []
+                                set_website = [IsString]
+                                get_website_label = []
+                                set_website_label = [IsString]
+                                get_authors = []
+                                set_authors = [IsList]
+                                get_artists = []
+                                set_artists = [IsList]
+                                get_documenters = []
+                                set_documenters = [IsList]
+                                get_translator_credits = []
+                                set_translator_credits = [IsString]
 #                                 GdkPixbuf*  gtk_about_dialog_get_logo       (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_logo       (GtkAboutDialog *about,
+#                                 set_logo       (GtkAboutDialog *about,
 #                                                                              GdkPixbuf *logo);
-#                                 const gchar* gtk_about_dialog_get_logo_icon_name
-#                                                                             (GtkAboutDialog *about);
-#                                 void        gtk_about_dialog_set_logo_icon_name
-#                                                                             (GtkAboutDialog *about,
-#                                                                              const gchar *icon_name);
-#                                 void        (*GtkAboutDialogActivateLinkFunc)
-#                                                                             (GtkAboutDialog *about,
-#                                                                              const gchar *link,
-#                                                                              gpointer data);
-#                                 GtkAboutDialogActivateLinkFunc gtk_about_dialog_set_email_hook
-#                                                                             (GtkAboutDialogActivateLinkFunc func,
-#                                                                              gpointer data,
-#                                                                              GDestroyNotify destroy);
-#                                 GtkAboutDialogActivateLinkFunc gtk_about_dialog_set_url_hook
-#                                                                             (GtkAboutDialogActivateLinkFunc func,
-#                                                                              gpointer data,
-#                                                                              GDestroyNotify destroy);
+                                get_logo_icon_name = []
+                                set_logo_icon_name = [IsString]
 #                                 void        gtk_show_about_dialog           (GtkWindow *parent,
 #                                                                              const gchar *first_property_name,
 #                                                                              ...);
@@ -886,7 +571,7 @@ are docs"""
 #                         set_active_iter   (GtkComboBox *combo_box,
 #                                                                      GtkTreeIter *iter);
                         get_model = []
-                        set_model = ['IsGtkTreeModel']
+                        set_model = [IsGtkTreeModel]
                         append_text = [IsString]
                         insert_text = [gint, IsString]
                         prepend_text = [IsString]
@@ -944,7 +629,7 @@ are docs"""
                         get_homogeneous = []
                         set_expand = [gboolean]
                         get_expand = []
-                        set_tooltip = ['IsGtkTooltips', IsString, IsString]
+                        set_tooltip = [IsGtkTooltips, IsString, IsString]
                         set_use_drag_window = [gboolean]
                         get_use_drag_window = []
                         set_visible_horizontal = [gboolean]
@@ -1015,7 +700,7 @@ are docs"""
 
                     class GtkScrolledWindow:
                         __new__ = Function(py_name='gtk.ScrolledWindow',
-                                           args=['IsGtkAdjustment', 'IsGtkAdjustment'])
+                                           args=[IsGtkAdjustment, IsGtkAdjustment])
                         get_hadjustment = []
                         get_vadjustment = []
                         get_hscrollbar = []
@@ -1024,18 +709,18 @@ are docs"""
                         add_with_viewport = [IsGtkWidget]
                         set_placement = [GtkCornerType]
                         set_shadow_type = [GtkShadowType]
-                        set_hadjustment = ['IsGtkAdjustment']
-                        set_vadjustment = ['IsGtkAdjustment']
+                        set_hadjustment = [IsGtkAdjustment]
+                        set_vadjustment = [IsGtkAdjustment]
                         get_placement = []
                         get_policy = []
                         get_shadow_type = []
 
                     class GtkViewport:
-                        __new__ = Function(py_name='gtk.Viewport', args=['IsGtkAdjustment', 'IsGtkAdjustment'])
+                        __new__ = Function(py_name='gtk.Viewport', args=[IsGtkAdjustment, IsGtkAdjustment])
                         get_hadjustment = []
                         get_vadjustment = []
-                        set_hadjustment = ['IsGtkAdjustment']
-                        set_vadjustment = ['IsGtkAdjustment']
+                        set_hadjustment = [IsGtkAdjustment]
+                        set_vadjustment = [IsGtkAdjustment]
                         set_shadow_type = [GtkShadowType]
                         get_shadow_type = []
 
@@ -1190,9 +875,11 @@ are docs"""
                     # TODO
                     pass
                 class GtkTextView:
-                    __new__ = Function(py_name='gtk.TextView', opt_args=['IsGtkTextBuffer'])
+                    __new__ = Function(py_name='gtk.TextView', opt_args=[IsGtkTextBuffer])
                     set_buffer = ['IsGtkTextBuffer']
                     get_buffer = []
+                    set_text = Function(py_name='gap.text_view_set_text', gap_name='SetText', args=[IsString])
+                    get_text = Function(py_name='gap.text_view_get_text', gap_name='GetText')
 #                     void        gtk_text_view_scroll_to_mark    (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark,
 #                                                                  gdouble within_margin,
@@ -1355,13 +1042,13 @@ are docs"""
 
                 class GtkToolbar:
                     __new__ = Function(py_name='gtk.Toolbar')
-                    insert = ['IsGtkToolItem', gint]
-                    get_item_index = ['IsGtkToolItem']
+                    insert = [IsGtkToolItem, gint]
+                    get_item_index = [IsGtkToolItem]
                     get_n_items = []
                     get_nth_item = [gint]
                     set_show_arrow = [gboolean]
                     get_drop_index = [gint, gint]
-                    set_drop_highlight_item = ['IsGtkToolItem', gint]
+                    set_drop_highlight_item = [IsGtkToolItem, gint]
                     set_orientation = [GtkOrientation]
                     set_tooltips = [gboolean]
                     unset_icon_size = []
@@ -1375,8 +1062,168 @@ are docs"""
                     set_style = [GtkToolbarStyle]
                     set_icon_size = [GtkIconSize]
                     unset_style = []
-                class GtkTreeView: pass
-                    # TODO
+                class GtkTreeView:
+                    __new__ = Function(py_name='gtk.TreeView', opt_args=[(IsGtkTreeModel, 'model')])
+                    get_model = []
+                    set_model = [(IsGtkTreeModel, 'model')]
+                    get_selection = []
+                    get_hadjustment = []
+                    set_hadjustment = [IsGtkAdjustment]
+                    get_vadjustment = []
+                    set_vadjustment = [IsGtkAdjustment]
+                    get_headers_visible = []
+                    set_headers_visible = [gboolean]
+                    columns_autosize = []
+                    set_headers_clickable = [gboolean]
+                    set_rules_hint = [gboolean]
+                    get_rules_hint = []
+                    append_column = [IsGtkTreeViewColumn]
+                    remove_column = [IsGtkTreeViewColumn]
+                    insert_column = [IsGtkTreeViewColumn, gint]
+#                     gint        gtk_tree_view_insert_column_with_attributes
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  gint position,
+#                                                                  const gchar *title,
+#                                                                  GtkCellRenderer *cell,
+#                                                                  ...);
+#                     gint        gtk_tree_view_insert_column_with_data_func
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  gint position,
+#                                                                  const gchar *title,
+#                                                                  GtkCellRenderer *cell,
+#                                                                  GtkTreeCellDataFunc func,
+#                                                                  gpointer data,
+#                                                                  GDestroyNotify dnotify);
+                    get_column = [gint]
+                    get_columns = []
+                    move_column_after = [IsGtkTreeViewColumn, IsGtkTreeViewColumn]
+                    set_expander_column = [IsGtkTreeViewColumn]
+                    get_expander_column = []
+#                     void        gtk_tree_view_set_column_drag_function
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GtkTreeViewColumnDropFunc func,
+#                                                                  gpointer user_data,
+#                                                                  GtkDestroyNotify destroy);
+                    scroll_to_point = [gint, gint]
+#                     void        gtk_tree_view_scroll_to_cell    (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewColumn *column,
+#                                                                  gboolean use_align,
+#                                                                  gfloat row_align,
+#                                                                  gfloat col_align);
+#                     void        gtk_tree_view_set_cursor        (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewColumn *focus_column,
+#                                                                  gboolean start_editing);
+#                     void        gtk_tree_view_set_cursor_on_cell
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewColumn *focus_column,
+#                                                                  GtkCellRenderer *focus_cell,
+#                                                                  gboolean start_editing);
+#                     void        gtk_tree_view_get_cursor        (GtkTreeView *tree_view,
+#                                                                  GtkTreePath **path,
+#                                                                  GtkTreeViewColumn **focus_column);
+#                     void        gtk_tree_view_row_activated     (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewColumn *column);
+                    expand_all = []
+                    collapse_all = []
+#                     void        gtk_tree_view_expand_to_path    (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path);
+#                     gboolean    gtk_tree_view_expand_row        (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  gboolean open_all);
+#                     gboolean    gtk_tree_view_collapse_row      (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path);
+#                     void        gtk_tree_view_map_expanded_rows (GtkTreeView *tree_view,
+#                                                                  GtkTreeViewMappingFunc func,
+#                                                                  gpointer data);
+#                     gboolean    gtk_tree_view_row_expanded      (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path);
+                    set_reorderable = [gboolean]
+                    get_reorderable = []
+#                     gboolean    gtk_tree_view_get_path_at_pos   (GtkTreeView *tree_view,
+#                                                                  gint x,
+#                                                                  gint y,
+#                                                                  GtkTreePath **path,
+#                                                                  GtkTreeViewColumn **column,
+#                                                                  gint *cell_x,
+#                                                                  gint *cell_y);
+#                     void        gtk_tree_view_get_cell_area     (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewColumn *column,
+#                                                                  GdkRectangle *rect);
+#                     void        gtk_tree_view_get_background_area
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewColumn *column,
+#                                                                  GdkRectangle *rect);
+#                     void        gtk_tree_view_get_visible_rect  (GtkTreeView *tree_view,
+#                                                                  GdkRectangle *visible_rect);
+#                     gboolean    gtk_tree_view_get_visible_range (GtkTreeView *tree_view,
+#                                                                  GtkTreePath **start_path,
+#                                                                  GtkTreePath **end_path);
+                    get_bin_window = []
+                    widget_to_tree_coords = [gint, gint]
+                    tree_to_widget_coords = [gint, gint]
+#                     void        gtk_tree_view_enable_model_drag_dest
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  const GtkTargetEntry *targets,
+#                                                                  gint n_targets,
+#                                                                  GdkDragAction actions);
+#                     void        gtk_tree_view_enable_model_drag_source
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GdkModifierType start_button_mask,
+#                                                                  const GtkTargetEntry *targets,
+#                                                                  gint n_targets,
+#                                                                  GdkDragAction actions);
+#                     void        gtk_tree_view_unset_rows_drag_source
+#                                                                 (GtkTreeView *tree_view);
+#                     void        gtk_tree_view_unset_rows_drag_dest
+#                                                                 (GtkTreeView *tree_view);
+#                     void        gtk_tree_view_set_drag_dest_row (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path,
+#                                                                  GtkTreeViewDropPosition pos);
+#                     void        gtk_tree_view_get_drag_dest_row (GtkTreeView *tree_view,
+#                                                                  GtkTreePath **path,
+#                                                                  GtkTreeViewDropPosition *pos);
+#                     gboolean    gtk_tree_view_get_dest_row_at_pos
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  gint drag_x,
+#                                                                  gint drag_y,
+#                                                                  GtkTreePath **path,
+#                                                                  GtkTreeViewDropPosition *pos);
+#                     GdkPixmap*  gtk_tree_view_create_row_drag_icon
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GtkTreePath *path);
+                    set_enable_search = [gboolean]
+                    get_enable_search = []
+                    get_search_column = []
+                    set_search_column = [gint]
+#                     GtkTreeViewSearchEqualFunc gtk_tree_view_get_search_equal_func
+#                                                                 (GtkTreeView *tree_view);
+#                     void        gtk_tree_view_set_search_equal_func
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GtkTreeViewSearchEqualFunc search_equal_func,
+#                                                                  gpointer search_user_data,
+#                                                                  GtkDestroyNotify search_destroy);
+                    get_fixed_height_mode = []
+                    set_fixed_height_mode = [gboolean]
+                    get_hover_selection = []
+                    set_hover_selection = [gboolean]
+                    get_hover_expand = []
+                    set_hover_expand = [gboolean]
+#                     gboolean    (*GtkTreeViewRowSeparatorFunc)  (GtkTreeModel *model,
+#                                                                  GtkTreeIter *iter,
+#                                                                  gpointer data);
+#                     GtkTreeViewRowSeparatorFunc gtk_tree_view_get_row_separator_func
+#                                                                 (GtkTreeView *tree_view);
+#                     void        gtk_tree_view_set_row_separator_func
+#                                                                 (GtkTreeView *tree_view,
+#                                                                  GtkTreeViewRowSeparatorFunc func,
+#                                                                  gpointer data,
+#                                                                  GtkDestroyNotify destroy);
             class GtkMisc:
                 __no_constructor__ = True
                 class GtkLabel:
@@ -1472,7 +1319,48 @@ are docs"""
         # TODO
     class GtkTreeSelection:
         __no_constructor__ = True
-        # TODO
+        set_mode = [GtkSelectionMode]
+        get_mode = []
+#         void        gtk_tree_selection_set_select_function
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreeSelectionFunc func,
+#                                                      gpointer data,
+#                                                      GtkDestroyNotify destroy);
+#         gpointer    gtk_tree_selection_get_user_data
+#                                                     (GtkTreeSelection *selection);
+        get_tree_view = []
+        get_selected = []
+#         void        gtk_tree_selection_selected_foreach
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreeSelectionForeachFunc func,
+#                                                      gpointer data);
+        get_selected_rows = []
+        count_selected_rows = []
+#         void        gtk_tree_selection_select_path  (GtkTreeSelection *selection,
+#                                                      GtkTreePath *path);
+#         void        gtk_tree_selection_unselect_path
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreePath *path);
+#         gboolean    gtk_tree_selection_path_is_selected
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreePath *path);
+#         void        gtk_tree_selection_select_iter  (GtkTreeSelection *selection,
+#                                                      GtkTreeIter *iter);
+#         void        gtk_tree_selection_unselect_iter
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreeIter *iter);
+#         gboolean    gtk_tree_selection_iter_is_selected
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreeIter *iter);
+        select_all = []
+        unselect_all = []
+#         void        gtk_tree_selection_select_range (GtkTreeSelection *selection,
+#                                                      GtkTreePath *start_path,
+#                                                      GtkTreePath *end_path);
+#         void        gtk_tree_selection_unselect_range
+#                                                     (GtkTreeSelection *selection,
+#                                                      GtkTreePath *start_path,
+#                                                      GtkTreePath *end_path);
     class GtkTreeStore:
         __implements__ = ['GtkTreeSortable']
         __new__ = 'doc_stub'
@@ -1490,5 +1378,16 @@ are docs"""
 top_classes.append(GObject)
 
 
+functions = [
+    Function(py_name='gtk.window_list_toplevels', gap_name='WindowListToplevels'),
+    Function(py_name='gtk.window_set_default_icon_from_file', gap_name='WindowSetDefaultIconFromFile', args=[IsString]),
+    Function(py_name='gtk.window_set_default_icon_name', gap_name='WindowSetDefaultIconName', args=[IsString]),
+    Function(py_name='gtk.gdk.screen_get_default', gap_name='ScreenGetDefault'),
+    Function(py_name='gtk.gdk.display_get_default', gap_name='DisplayGetDefault'),
+]
+
+
 top_classes = [ClassInfo(c, None) for c in top_classes]
 functions = [Function(f) for f in functions]
+for f in functions:
+    f.is_meth = False
