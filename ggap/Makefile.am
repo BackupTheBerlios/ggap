@@ -35,6 +35,7 @@ ggap_SOURCES =				\
 	ggap-ui.h			\
 	gap-mod.h			\
 	gap-cb-mod.h			\
+	gap-types-mod.h			\
 	ggap-mod.h			\
 	gap.c				\
 	gap.h				\

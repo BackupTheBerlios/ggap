@@ -1,9 +1,16 @@
 #############################################################################
 ##
-## demo.g
+#W  demo.g                     ggap package                    Yevgen Muntyan
+#W
+#Y  Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
 ##
-## Use the following to run it:
-## Read(Filename(DirectoriesLibrary("pkg/ggap/tst"), "demo.g"));
+##  This program is free software; you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation. See COPYING file that comes with this
+##  distribution.
+##
+##  Use the following to run this file:
+##  Read(Filename(DirectoriesLibrary("pkg/ggap/tst"), "demo.g"));
 ##
 
 _GGAPDemoLoad :=

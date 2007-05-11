@@ -1099,131 +1099,38 @@ class GObject:
                     move_column_after = [IsGtkTreeViewColumn, IsGtkTreeViewColumn]
                     set_expander_column = [IsGtkTreeViewColumn]
                     get_expander_column = []
-#                     void        gtk_tree_view_set_column_drag_function
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GtkTreeViewColumnDropFunc func,
-#                                                                  gpointer user_data,
-#                                                                  GtkDestroyNotify destroy);
                     scroll_to_point = [gint, gint]
-#                     void        gtk_tree_view_scroll_to_cell    (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewColumn *column,
-#                                                                  gboolean use_align,
-#                                                                  gfloat row_align,
-#                                                                  gfloat col_align);
-#                     void        gtk_tree_view_set_cursor        (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewColumn *focus_column,
-#                                                                  gboolean start_editing);
-#                     void        gtk_tree_view_set_cursor_on_cell
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewColumn *focus_column,
-#                                                                  GtkCellRenderer *focus_cell,
-#                                                                  gboolean start_editing);
-#                     void        gtk_tree_view_get_cursor        (GtkTreeView *tree_view,
-#                                                                  GtkTreePath **path,
-#                                                                  GtkTreeViewColumn **focus_column);
-#                     void        gtk_tree_view_row_activated     (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewColumn *column);
+                    scroll_to_cell = 'doc_stub'
+                    set_cursor = 'doc_stub'
+                    set_cursor_on_cell = 'doc_stub'
+                    get_cursor = 'doc_stub'
+                    row_activated = 'doc_stub'
                     expand_all = []
                     collapse_all = []
-#                     void        gtk_tree_view_expand_to_path    (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path);
-#                     gboolean    gtk_tree_view_expand_row        (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  gboolean open_all);
-#                     gboolean    gtk_tree_view_collapse_row      (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path);
-#                     void        gtk_tree_view_map_expanded_rows (GtkTreeView *tree_view,
-#                                                                  GtkTreeViewMappingFunc func,
-#                                                                  gpointer data);
-#                     gboolean    gtk_tree_view_row_expanded      (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path);
+                    expand_to_path = 'doc_stub'
+                    expand_row = 'doc_stub'
+                    collapse_row = 'doc_stub'
+                    row_expanded = 'doc_stub'
                     set_reorderable = [gboolean]
                     get_reorderable = []
-#                     gboolean    gtk_tree_view_get_path_at_pos   (GtkTreeView *tree_view,
-#                                                                  gint x,
-#                                                                  gint y,
-#                                                                  GtkTreePath **path,
-#                                                                  GtkTreeViewColumn **column,
-#                                                                  gint *cell_x,
-#                                                                  gint *cell_y);
-#                     void        gtk_tree_view_get_cell_area     (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewColumn *column,
-#                                                                  GdkRectangle *rect);
-#                     void        gtk_tree_view_get_background_area
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewColumn *column,
-#                                                                  GdkRectangle *rect);
-#                     void        gtk_tree_view_get_visible_rect  (GtkTreeView *tree_view,
-#                                                                  GdkRectangle *visible_rect);
-#                     gboolean    gtk_tree_view_get_visible_range (GtkTreeView *tree_view,
-#                                                                  GtkTreePath **start_path,
-#                                                                  GtkTreePath **end_path);
+                    get_path_at_pos = 'doc_stub'
+                    get_cell_area = 'doc_stub'
+                    get_background_area = 'doc_stub'
+                    get_visible_rect = []
+                    get_visible_range = 'doc_stub'
                     get_bin_window = []
                     widget_to_tree_coords = [gint, gint]
                     tree_to_widget_coords = [gint, gint]
-#                     void        gtk_tree_view_enable_model_drag_dest
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  const GtkTargetEntry *targets,
-#                                                                  gint n_targets,
-#                                                                  GdkDragAction actions);
-#                     void        gtk_tree_view_enable_model_drag_source
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GdkModifierType start_button_mask,
-#                                                                  const GtkTargetEntry *targets,
-#                                                                  gint n_targets,
-#                                                                  GdkDragAction actions);
-#                     void        gtk_tree_view_unset_rows_drag_source
-#                                                                 (GtkTreeView *tree_view);
-#                     void        gtk_tree_view_unset_rows_drag_dest
-#                                                                 (GtkTreeView *tree_view);
-#                     void        gtk_tree_view_set_drag_dest_row (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path,
-#                                                                  GtkTreeViewDropPosition pos);
-#                     void        gtk_tree_view_get_drag_dest_row (GtkTreeView *tree_view,
-#                                                                  GtkTreePath **path,
-#                                                                  GtkTreeViewDropPosition *pos);
-#                     gboolean    gtk_tree_view_get_dest_row_at_pos
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  gint drag_x,
-#                                                                  gint drag_y,
-#                                                                  GtkTreePath **path,
-#                                                                  GtkTreeViewDropPosition *pos);
-#                     GdkPixmap*  gtk_tree_view_create_row_drag_icon
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GtkTreePath *path);
                     set_enable_search = [gboolean]
                     get_enable_search = []
                     get_search_column = []
                     set_search_column = [gint]
-#                     GtkTreeViewSearchEqualFunc gtk_tree_view_get_search_equal_func
-#                                                                 (GtkTreeView *tree_view);
-#                     void        gtk_tree_view_set_search_equal_func
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GtkTreeViewSearchEqualFunc search_equal_func,
-#                                                                  gpointer search_user_data,
-#                                                                  GtkDestroyNotify search_destroy);
                     get_fixed_height_mode = []
                     set_fixed_height_mode = [gboolean]
                     get_hover_selection = []
                     set_hover_selection = [gboolean]
                     get_hover_expand = []
                     set_hover_expand = [gboolean]
-#                     gboolean    (*GtkTreeViewRowSeparatorFunc)  (GtkTreeModel *model,
-#                                                                  GtkTreeIter *iter,
-#                                                                  gpointer data);
-#                     GtkTreeViewRowSeparatorFunc gtk_tree_view_get_row_separator_func
-#                                                                 (GtkTreeView *tree_view);
-#                     void        gtk_tree_view_set_row_separator_func
-#                                                                 (GtkTreeView *tree_view,
-#                                                                  GtkTreeViewRowSeparatorFunc func,
-#                                                                  gpointer data,
-#                                                                  GtkDestroyNotify destroy);
             class GtkMisc:
                 __no_constructor__ = True
                 class GtkLabel:
