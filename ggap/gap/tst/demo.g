@@ -32,23 +32,21 @@ function(no, data)
     return;
   fi;
 
-  SetProperty(data.window.info, "markup", info);
-  SetProperty(data.window.source, "text", source);
+  SetText(data.xml.source, source);
+  SetText(data.xml.info, info);
 end;
 
 
 _GGAPDemoListSelectionChanged :=
-function(listview, data)
+function(selection, data)
   local row, demo, file, filename, source;
 
-  row := GetSelectedRow(data.window.list);
+  row := GetSelected(selection);
 
-  if row[1] <= 0 or row[1] = data.row then
-    return;
+  if row <> 0 and row <> data.row then
+    data.row := row;
+    _GGAPDemoLoad(row, data);
   fi;
-
-  data.row := row[1];
-  _GGAPDemoLoad(row[1], data);
 end;
 
 
@@ -56,7 +54,7 @@ _GGAPDemoListRowActivated :=
 function(listview, row, data)
   local demo, filename;
 
-  demo := data.demos[row[1]];
+  demo := data.demos[row];
 
   if demo[4] then
     filename := Filename(DirectoriesLibrary("pkg/ggap/tst"), demo[3]);
@@ -68,15 +66,16 @@ end;
 _GGAPDemoAbout :=
 function(menuitem, data)
   if not IsBound(data.about) then
-    data.about := GladeWindow(data.file, "aboutdialog");
-    WindowSetHideOnClose(data.about, true);
+    data.about := GtkAboutDialog();
+    ConnectCallback(data.about, "delete-event",
+                    function(w) Hide(w); return true; end);
   fi;
-  WindowPresent(data.about);
+  Present(data.about);
 end;
 
 
 GGAPDemo := function()
-  local window, file, data, names;
+  local xml, file, data, names, model;
 
   file := Filename(DirectoriesLibrary("pkg/ggap/tst/glade"), "demo.glade");
 
@@ -84,15 +83,17 @@ GGAPDemo := function()
     Error("could not find glade file");
   fi;
 
-  window := GladeWindow(file, "window", rec(info:="MooHtml"));
-  data := rec(window:=window, file:=file, row:=0);
+#   window := GladeWindow(file, "window", rec(info:="MooHtml"));
+  xml := GladeXML(file);
 
-  SetFont(window.source, "Monospace");
-  SetHighlight(window.source, "GAP");
+  data := rec(xml:=xml, file:=file, row:=0);
 
-  ConnectCallback(window.list, "selection-changed", _GGAPDemoListSelectionChanged, data);
-  ConnectCallback(window.list, "row-activated", _GGAPDemoListRowActivated, data);
-  ConnectCallback(window.about, "activate", _GGAPDemoAbout, data);
+  ModifyFont(xml.source, "Monospace");
+#   SetHighlight(xml.source, "GAP");
+
+  ConnectCallback(GetSelection(xml.list), "changed", _GGAPDemoListSelectionChanged, data);
+  ConnectCallback(xml.list, "row-activated", _GGAPDemoListRowActivated, data);
+  ConnectCallback(xml.about, "activate", _GGAPDemoAbout, data);
 
   data.demos := [
     ["This demo", # Text that appears in the list
@@ -120,10 +121,13 @@ GGAPDemo := function()
   ];
 
   names := List(data.demos, l->l[1]);
-  SetList(window.list, names);
-  SelectRow(window.list, [1]);
 
-  SetVisible(window, true);
+  model := GtkListStore(IsString);
+  SetList(model, names);
+  SetModel(xml.list, model);
+  SelectRow(xml.list, 1);
+
+  Show(xml.window);
 
   return data;
 end;

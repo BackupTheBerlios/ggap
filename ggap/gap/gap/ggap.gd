@@ -61,5 +61,18 @@ DeclareGlobalFunction("_GGAP_PUSH_RETURN");
 DeclareGlobalFunction("_GGAP_GET_STAMP");
 DeclareGlobalFunction("_GGAP_EXEC_FUNC");
 
+DeclareGlobalFunction("_GInstallMethodsOptArgs");
+
+BindGlobal("_GDeclareOperationOptArgs",
+function(name, args, opt_args)
+  local i, real_args;
+
+  for i in [0..Length(opt_args)] do
+    real_args := List(args);
+    Append(real_args, List([1..i], i -> IsObject));
+    DeclareOperation(name, real_args);
+  od;
+end);
+
 
 #E

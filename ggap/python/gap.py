@@ -28,6 +28,14 @@ def GladeXML(filename, root=None):
     return {'xml': xml, 'signals': signals}
 
 
+def Button(label_or_stock=None, use_underline=True):
+    if label_or_stock is None:
+        return gtk.Button()
+    if gtk.stock_lookup(label_or_stock):
+        return gtk.Button(stock=label_or_stock, use_underline=use_underline)
+    else:
+        return gtk.Button(label=label_or_stock, use_underline=use_underline)
+
 def list_store_remove(store, pos):
     store.remove(store.get_iter((pos,)))
 def list_store_insert(store, pos, item):
@@ -44,6 +52,14 @@ def list_store_set_list(store, items):
         store.append(i)
 def list_store_get_list(store):
     return [list(row) for row in store]
+
+
+def tree_selection_get_selected(sel):
+    ret = sel.get_selected()
+    if ret[1] is not None:
+        return (ret[0], ret[0].get_path(ret[1]))
+    else:
+        return ret
 
 
 def widget_modify_font(widget, font):

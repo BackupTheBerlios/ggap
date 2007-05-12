@@ -218,4 +218,34 @@ function(stamp, func, args, void)
 end);
 
 
+InstallGlobalFunction(_GInstallMethodsOptArgs,
+function(oper, args, opt_args, void)
+  local i, real_args, func, all_args;
+
+  all_args := Concatenation(args, opt_args);
+
+  for i in [0..Length(opt_args)-1] do
+    real_args := List(args);
+    if i <> 0 then
+      Append(real_args, List([1..i], i -> IsObject));
+    fi;
+
+    func := function(arg)
+      local j, full_args;
+      full_args := List(arg);
+      for j in [Length(arg)+1..Length(all_args)] do
+        Add(full_args, all_args[j]);
+      od;
+      if void then
+        CallFuncList(oper, full_args);
+      else
+        return CallFuncList(oper, full_args);
+      fi;
+    end;
+
+    InstallMethod(oper, real_args, func);
+  od;
+end);
+
+
 #E

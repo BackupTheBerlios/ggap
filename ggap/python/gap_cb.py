@@ -27,9 +27,54 @@ def _register(func, typ, signal):
             _transform_funcs[norm_sig] = funcs
 
 
-def _transform_delete_event(args):
-    return [args[0]]
+#############################################################################
+##
+## gtk.Widget
+##
+def _transform_delete_event(wid, event):
+    return [wid]
 _register(_transform_delete_event, gtk.Widget, 'delete_event')
+
+
+#############################################################################
+##
+## gtk.TreeView
+##
+
+def _tree_path_p2g(path):
+    if path is None:
+        return None
+    elif len(path) == 1:
+        return path[0] + 1
+    else:
+        return map(lambda i: i+1, path)
+
+def _transform_treeview_path_column(treeview, path, view_column):
+    return [treeview, _tree_path_p2g(path), view_column]
+_register(_transform_treeview_path_column, gtk.TreeView, 'row_activated')
+
+def _transform_treeview_iter_path(treeview, iter, path):
+    return [treeview, _tree_path_p2g(path)]
+_register(_transform_treeview_iter_path, gtk.TreeView, 'row_collapsed')
+_register(_transform_treeview_iter_path, gtk.TreeView, 'row_expanded')
+_register(_transform_treeview_iter_path, gtk.TreeView, 'test_collapse_row')
+_register(_transform_treeview_iter_path, gtk.TreeView, 'test_expand_row')
+
+
+#############################################################################
+##
+## gtk.TreeModel
+##
+
+def _transform_model_path_iter(model, path, iter):
+    return [model, _tree_path_p2g(path)]
+_register(_transform_model_path_iter, gtk.TreeModel, 'row_changed')
+_register(_transform_model_path_iter, gtk.TreeModel, 'row_has_child_toggled')
+_register(_transform_model_path_iter, gtk.TreeModel, 'row_inserted')
+
+def _transform_model_path(model, path):
+    return [model, _tree_path_p2g(path)]
+_register(_transform_model_path, gtk.TreeModel, 'row_deleted')
 
 
 def _get_transform_func(obj, signal):
@@ -59,7 +104,7 @@ class Callback:
 
     def __transform_args(self, args):
         if self.__transform_func:
-            return self.__transform_func(args)
+            return self.__transform_func(*args)
         else:
             return args
 

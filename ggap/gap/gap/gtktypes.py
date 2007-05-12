@@ -3,6 +3,7 @@ from defs import Function, ClassInfo, Constant
 IsGtkTreeViewColumn = 'IsGtkTreeViewColumn'
 IsGtkWidget = 'IsGtkWidget'
 IsGtkWindow = 'IsGtkWindow'
+IsGtkTextView = 'IsGtkTextView'
 IsGtkTreeModel = 'IsGtkTreeModel'
 IsGtkTooltips = 'IsGtkTooltips'
 IsGtkAdjustment = 'IsGtkAdjustment'
@@ -237,7 +238,7 @@ class GObject:
 #             modify_bg = [GtkStateType, GdkColor]
 #             modify_text = [GtkStateType, GdkColor]
 #             modify_base = [GtkStateType, GdkColor]
-            modify_font = Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[StringArg('font')])
+            modify_font = 'doc_stub'
             get_parent = []
             get_settings = []
             get_clipboard = []
@@ -973,8 +974,8 @@ class GObject:
                     __new__ = Function(opt_args=[IsGtkTextBuffer])
                     set_buffer = ['IsGtkTextBuffer']
                     get_buffer = []
-                    set_text = Function(py_name='gap.text_view_set_text', args=[ArgText])
-                    get_text = Function(py_name='gap.text_view_get_text')
+                    set_text = 'doc_stub'
+                    get_text = 'doc_stub'
 #                     void        gtk_text_view_scroll_to_mark    (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark,
 #                                                                  gdouble within_margin,
@@ -1361,6 +1362,10 @@ functions = [
     Function(py_name='gtk.gdk.pixbuf_new_from_file', gap_name='GdkPixbuf', args=[ArgFilename]),
     Function(py_name='gtk.gdk.pixbuf_new_from_file', gap_name='GdkPixbuf',
              args=[ArgFilename, ArgWidth, ArgHeight]),
+
+    Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[IsGtkWidget, StringArg('font')]),
+    Function(py_name='gap.text_view_set_text', gap_name='SetText', args=[IsGtkTextView, ArgText]),
+    Function(py_name='gap.text_view_get_text', gap_name='GetText', args=[IsGtkTextView]),
 ]
 
 

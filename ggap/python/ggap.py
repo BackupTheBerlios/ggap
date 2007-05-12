@@ -279,9 +279,12 @@ class Session:
 
     def call_func(self, stamp, func, *args, **kwargs):
         try:
+            self.__log("%03d func: %s, %s, %s" % (stamp, func, args, kwargs))
             ret = func(*args, **kwargs)
+            self.__log("%03d func done: %s" % (stamp, ret))
             self.send_result(stamp, ret)
         except Exception, e:
+            self.__log("%03d func error" % (stamp,))
             msg = self.format_error(e)
             self.print_error(e)
             self.send_error(stamp, "Error in '%s': %s" % (func, msg))
@@ -398,6 +401,7 @@ class Session:
             self.obj = None
 
     def _callback(self, obj, handler_id, args):
+        self.__log("signal: %s, %s" % (obj, args))
         w = self.by_obj[obj]
         stamp = self.get_stamp()
         string = '%c%s%s%s%s' % (CMD_CALLBACK, self.serialize(stamp),
@@ -405,6 +409,7 @@ class Session:
                                  self.serialize(args))
         self.write_output(string)
         status, value = self.get_return_value(stamp)
+        self.__log("signal done: %s" % ((status, value),))
         if status == RET_OK:
             return value
         else:
