@@ -1,4 +1,4 @@
-from defs import Function, ClassInfo
+from defs import Function, ClassInfo, Constant
 
 IsGtkTreeViewColumn = 'IsGtkTreeViewColumn'
 IsGtkWidget = 'IsGtkWidget'
@@ -64,6 +64,7 @@ GtkToolbarStyle = IsInt
 GtkIconSize = IsInt
 GtkFileChooserAction = IsInt
 GtkSelectionMode = IsInt
+GtkSortType = IsInt
 
 top_classes = []
 
@@ -163,7 +164,8 @@ top_classes.append(GtkTreeModel)
 class GtkTreeSortable:
     __no_constructor__ = True
     __implements__ = ['GtkTreeModel']
-    # TODO
+    get_sort_column_id = []
+    set_sort_column_id = [IntArg('sort_column_id'), (GtkSortType, 'order')]
 top_classes.append(GtkTreeSortable)
 
 class GObject:
@@ -1312,54 +1314,24 @@ class GObject:
         __implements__ = ['GtkTreeSortable']
         __new__ = 'doc_stub'
         # TODO
-    class GtkTextBuffer: pass
-    class GtkTreeModelSort:
-        __implements__ = ['GtkTreeSortable']
+    class GtkTextBuffer:
         # TODO
+        pass
     class GtkTreeSelection:
         __no_constructor__ = True
         set_mode = [GtkSelectionMode]
         get_mode = []
-#         void        gtk_tree_selection_set_select_function
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreeSelectionFunc func,
-#                                                      gpointer data,
-#                                                      GtkDestroyNotify destroy);
-#         gpointer    gtk_tree_selection_get_user_data
-#                                                     (GtkTreeSelection *selection);
         get_tree_view = []
-        get_selected = []
-#         void        gtk_tree_selection_selected_foreach
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreeSelectionForeachFunc func,
-#                                                      gpointer data);
-        get_selected_rows = []
+        get_selected = 'doc_stub'
+        get_selected_rows = 'doc_stub'
         count_selected_rows = []
-#         void        gtk_tree_selection_select_path  (GtkTreeSelection *selection,
-#                                                      GtkTreePath *path);
-#         void        gtk_tree_selection_unselect_path
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreePath *path);
-#         IsBool    gtk_tree_selection_path_is_selected
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreePath *path);
-#         void        gtk_tree_selection_select_iter  (GtkTreeSelection *selection,
-#                                                      GtkTreeIter *iter);
-#         void        gtk_tree_selection_unselect_iter
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreeIter *iter);
-#         IsBool    gtk_tree_selection_iter_is_selected
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreeIter *iter);
+        select_row = 'doc_stub'
+        unselect_row = 'doc_stub'
+        row_is_selected = 'doc_stub'
         select_all = []
         unselect_all = []
-#         void        gtk_tree_selection_select_range (GtkTreeSelection *selection,
-#                                                      GtkTreePath *start_path,
-#                                                      GtkTreePath *end_path);
-#         void        gtk_tree_selection_unselect_range
-#                                                     (GtkTreeSelection *selection,
-#                                                      GtkTreePath *start_path,
-#                                                      GtkTreePath *end_path);
+        select_range = 'doc_stub'
+        unselect_range = 'doc_stub'
     class GtkTreeStore:
         __implements__ = ['GtkTreeSortable']
         __new__ = 'doc_stub'
@@ -1396,3 +1368,17 @@ top_classes = [ClassInfo(c, None) for c in top_classes]
 functions = [Function(f) for f in functions]
 for f in functions:
     f.is_meth = False
+
+
+constants = [
+    ['GTK_TREE_SORTABLE_DEFAULT_SORT_COLUMN_ID', -1],
+    ['GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID', -2],
+]
+
+constants = [Constant(*c) for c in constants]
+def _add_stock():
+    import gtk
+    for name in dir(gtk):
+        if name.startswith('STOCK_'):
+            constants.append(Constant('GTK_' + name, getattr(gtk, name)))
+_add_stock()
