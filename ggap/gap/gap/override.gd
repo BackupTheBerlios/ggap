@@ -19,6 +19,13 @@ DeclareOperation("GladeXML", [IsString, IsRecord]);
 DeclareOperation("GladeXML", [IsString]);
 
 
+###############################################################################
+##
+#O  GtkButton( [ <label_or_stock> ] )
+##
+DeclareOperation("GtkButton", []);
+DeclareOperation("GtkButton", [IsString]);
+
 
 ###############################################################################
 ##

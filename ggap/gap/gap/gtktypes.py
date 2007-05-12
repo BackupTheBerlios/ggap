@@ -8,13 +8,39 @@ IsGtkTooltips = 'IsGtkTooltips'
 IsGtkAdjustment = 'IsGtkAdjustment'
 IsGtkTextBuffer = 'IsGtkTextBuffer'
 IsGtkToolItem = 'IsGtkToolItem'
+IsGtkCellRenderer = 'IsGtkCellRenderer'
+IsGtkFileFilter = 'IsGtkFileFilter'
 IsGdkScreen = 'IsGdkScreen'
 IsGdkWindow = 'IsGdkWindow'
+IsGdkPixbuf = 'IsGdkPixbuf'
 
 IsObject = 'IsObject'
 IsString = 'IsString'
 IsInt = 'IsInt'
 IsList = 'IsList'
+IsBool = 'IsBool'
+
+def StringArg(name):
+    return (IsString, name)
+ArgName = StringArg('name')
+ArgFilename = StringArg('filename')
+ArgPath = StringArg('path')
+ArgUri = StringArg('uri')
+ArgText = StringArg('text')
+
+def IntArg(name):
+    return (IsInt, name)
+ArgX = IntArg('x')
+ArgY = IntArg('y')
+ArgWidth = IntArg('width')
+ArgHeight = IntArg('height')
+ArgStart = IntArg('start')
+ArgEnd = IntArg('end')
+ArgPos = IntArg('position')
+def BoolArg(name):
+    return (IsBool, name)
+ArgSetting = BoolArg('setting')
+ArgActive = BoolArg('active')
 
 gboolean = 'IsBool'
 gint = 'IsInt'
@@ -41,17 +67,94 @@ GtkSelectionMode = IsInt
 
 top_classes = []
 
+class GdkPixbuf:
+    __no_constructor__ = True
+    __new__ = 'doc_stub'
+top_classes.append(GdkPixbuf)
 class GtkCellLayout:
     __no_constructor__ = True
-    # TODO
+    pack_start = Function(args=[IsGtkCellRenderer], opt_args=[BoolArg('expand')])
+    pack_end = Function(args=[IsGtkCellRenderer], opt_args=[BoolArg('expand')])
+    reorder = [IsGtkCellRenderer, ArgPos]
+    clear = []
+    add_attribute = [IsGtkCellRenderer, StringArg('property'), IntArg('column')]
+#     set_attributes (GtkCellLayout *cell_layout, GtkCellRenderer *cell, ...);
+    clear_attributes = [IsGtkCellRenderer]
 top_classes.append(GtkCellLayout)
 class GtkEditable:
     __no_constructor__ = True
-    # TODO
+    select_region = [ArgStart, ArgEnd]
+    get_selection_bounds = []
+    insert_text = Function(args=[ArgText], opt_args=[ArgPos])
+    delete_text = [ArgStart, ArgEnd]
+    get_chars = Function([ArgStart, ArgEnd], gap_name='GetText')
+    cut_clipboard = []
+    copy_clipboard = []
+    paste_clipboard = []
+    delete_selection = []
+    set_position = [ArgPos]
+    get_position = []
+    set_editable = [ArgSetting]
+    get_editable = []
 top_classes.append(GtkEditable)
+class GtkFileFilter:
+    set_name = Function([ArgName], gap_name='SetFilterName')
+    get_name = Function(gap_name='GetFilterName')
+    add_mime_type = [StringArg('mime_type')]
+    add_pattern = [StringArg('pattern')]
+    add_pixbuf_formats = []
+    get_needed = []
+top_classes.append(GtkFileFilter)
 class GtkFileChooser:
     __no_constructor__ = True
-    # TODO
+    set_action = [GtkFileChooserAction]
+    get_action = []
+    set_local_only = [ArgSetting]
+    get_local_only = []
+    set_select_multiple = [ArgSetting]
+    get_select_multiple = []
+    set_show_hidden = [ArgSetting]
+    get_show_hidden = []
+    set_do_overwrite_confirmation = [ArgSetting]
+    get_do_overwrite_confirmation = []
+    set_current_name = [ArgName]
+    get_filename = []
+    set_filename = [ArgFilename]
+    select_filename = [ArgFilename]
+    unselect_filename = [ArgFilename]
+    select_all = []
+    unselect_all = []
+    get_filenames = []
+    set_current_folder = [ArgPath]
+    get_current_folder = []
+    get_uri = []
+    set_uri = [ArgUri]
+    select_uri = [ArgUri]
+    unselect_uri = [ArgUri]
+    get_uris = []
+    set_current_folder_uri = [ArgUri]
+    get_current_folder_uri = []
+    set_preview_widget = [IsGtkWidget]
+    get_preview_widget = []
+    set_preview_widget_active = [ArgActive]
+    get_preview_widget_active = []
+    set_use_preview_label = [ArgSetting]
+    get_use_preview_label = []
+    get_preview_filename = []
+    get_preview_uri = []
+    set_extra_widget = [IsGtkWidget]
+    get_extra_widget = []
+    add_filter = [IsGtkFileFilter]
+    remove_filter = [IsGtkFileFilter]
+    list_filters = []
+    set_filter = [IsGtkFileFilter]
+    get_filter = []
+    add_shortcut_folder = [ArgPath]
+    remove_shortcut_folder = [ArgPath]
+    list_shortcut_folders = []
+    add_shortcut_folder_uri = [ArgUri]
+    remove_shortcut_folder_uri = [ArgUri]
+    list_shortcut_folder_uris = []
 top_classes.append(GtkFileChooser)
 class GtkTreeModel:
     __no_constructor__ = True
@@ -66,8 +169,8 @@ top_classes.append(GtkTreeSortable)
 class GObject:
     __no_constructor__ = True
 
-    set_property = [IsString, IsObject]
-    get_property = [IsString]
+    set_property = [ArgName, IsObject]
+    get_property = [ArgName]
 
     class GdkWindow:
         __no_constructor__ = True
@@ -85,15 +188,15 @@ class GObject:
         get_toplevel_windows = []
         make_display_name = []
         get_n_monitors = []
-        get_monitor_geometry = [gint]
-        get_monitor_at_point = [gint, gint]
+        get_monitor_geometry = [IsInt]
+        get_monitor_at_point = [IsInt, IsInt]
         get_monitor_at_window = [IsGdkWindow]
 
     class GdkDisplay:
-        __new__ = Function(gap_name='GdkDisplay', py_name='gtk.gdk.Display', args=[IsString])
+        __new__ = [StringArg('display_name')]
         get_name = Function(gap_name='GetDisplayName')
         get_n_screens = []
-        get_screen = [gint]
+        get_screen = [IsInt]
         get_default_screen = []
         beep = []
         close = []
@@ -114,25 +217,25 @@ class GObject:
             show_all = []
             hide_all = []
             activate = []
-            reparent = [IsGtkWidget]
+            reparent = [(IsGtkWidget, 'new_parent')]
             is_focus = []
             grab_focus = []
             grab_default = []
-            set_name = Function([IsString], gap_name='SetWidgetName')
+            set_name = Function([ArgName], gap_name='SetWidgetName')
             get_name = Function(gap_name='GetWidgetName')
             set_state = [GtkStateType]
-            set_sensitive = [gboolean]
-            set_events = [gint]
-            add_events = [gint]
+            set_sensitive = [BoolArg('sensitive')]
+            set_events = [IsInt]
+            add_events = [IsInt]
             get_toplevel = []
             get_events = []
             get_pointer = []
-            is_ancestor = [IsGtkWidget]
+            is_ancestor = [(IsGtkWidget, 'ancestor')]
 #             modify_fg = [GtkStateType, GdkColor]
 #             modify_bg = [GtkStateType, GdkColor]
 #             modify_text = [GtkStateType, GdkColor]
 #             modify_base = [GtkStateType, GdkColor]
-            modify_font = Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[IsString])
+            modify_font = Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[StringArg('font')])
             get_parent = []
             get_settings = []
             get_clipboard = []
@@ -168,8 +271,8 @@ class GObject:
 #                                                              GtkWidget *child,
 #                                                              const gchar *first_prop_name,
 #                                                              ...);
-                child_get_property = [IsGtkWidget, IsString]
-                child_set_property = [IsGtkWidget, IsString, IsObject]
+                child_get_property = [IsGtkWidget, ArgName]
+                child_set_property = [IsGtkWidget, ArgName, IsObject]
 #                 forall            (GtkContainer *container,
 #                                                              GtkCallback callback,
 #                                                              gpointer callback_data);
@@ -185,17 +288,17 @@ class GObject:
                     get_child = []
 
                     class GtkWindow:
-                        __new__ = Function(py_name='gtk.Window', opt_args=[GtkWindowType])
-                        set_title = [IsString]
-                        set_resizable = [gboolean]
+                        __new__ = Function(opt_args=[GtkWindowType])
+                        set_title = [StringArg('title')]
+                        set_resizable = [BoolArg('resizable')]
                         get_resizable = []
                         activate_focus = []
                         activate_default = []
-                        set_modal = [gboolean]
-                        set_default_size = [gint, gint]
+                        set_modal = [BoolArg('modal')]
+                        set_default_size = [IsInt, IsInt]
                         set_position = [GtkWindowPosition]
-                        set_transient_for = [IsGtkWindow]
-                        set_destroy_with_parent = [gboolean]
+                        set_transient_for = [(IsGtkWindow, 'parent')]
+                        set_destroy_with_parent = [ArgSetting]
                         set_screen = [IsGdkScreen]
                         is_active = []
                         has_toplevel_focus = []
@@ -203,7 +306,7 @@ class GObject:
                         set_focus = [IsGtkWidget]
                         set_default = [IsGtkWidget]
                         present = []
-                        present_with_time = [gint]
+                        present_with_time = [IsInt]
                         iconify = []
                         deiconify = []
                         stick = []
@@ -212,17 +315,17 @@ class GObject:
                         unmaximize = []
                         fullscreen = []
                         unfullscreen = []
-                        set_keep_above = [gboolean]
-                        set_keep_below = [gboolean]
-                        set_decorated = [gboolean]
-                        set_has_frame = [gboolean]
-                        set_role = [IsString]
+                        set_keep_above = [ArgSetting]
+                        set_keep_below = [ArgSetting]
+                        set_decorated = [ArgSetting]
+                        set_has_frame = [ArgSetting]
+                        set_role = [StringArg('role')]
                         set_type_hint = [GdkWindowTypeHint]
-                        set_skip_taskbar_hint = [gboolean]
-                        set_skip_pager_hint = [gboolean]
-                        set_urgency_hint = [gboolean]
-                        set_accept_focus = [gboolean]
-                        set_focus_on_map = [gboolean]
+                        set_skip_taskbar_hint = [ArgSetting]
+                        set_skip_pager_hint = [ArgSetting]
+                        set_urgency_hint = [ArgSetting]
+                        set_accept_focus = [ArgSetting]
+                        set_focus_on_map = [ArgSetting]
                         get_decorated = []
                         get_default_size = []
                         get_destroy_with_parent = []
@@ -243,53 +346,50 @@ class GObject:
                         get_urgency_hint = []
                         get_accept_focus = []
                         get_focus_on_map = []
-                        move = [gint, gint]
-                        parse_geometry = [IsString]
+                        move = [IsInt, IsInt]
+                        parse_geometry = [StringArg('geometry')]
                         reshow_with_initial_size = []
-                        resize = [gint, gint]
-                        set_icon_from_file = [IsString]
-                        set_icon_name = [IsString]
+                        resize = [IsInt, IsInt]
+                        set_icon_from_file = [ArgFilename]
+                        set_icon_name = [StringArg('icon_name')]
 
                         class GtkDialog:
-                            __new__ = Function(py_name="gtk.Dialog",
-                                               opt_args=[IsString, IsGtkWindow, GtkDialogFlags, IsList])
+                            __new__ = Function(opt_args=[IsString, IsGtkWindow, GtkDialogFlags, IsList])
                             run = []
-                            response = [(gint, 'response')]
-                            add_button = [IsString, gint]
+                            response = [IntArg('response')]
+                            add_button = [IsString, IntArg('response')]
 #                             add_buttons          (GtkDialog *dialog,
 #                                                                          const gchar *first_button_text,
 #                                                                          ...);
-                            add_action_widget = [IsGtkWidget, gint]
+                            add_action_widget = [IsGtkWidget, IntArg('response')]
                             get_has_separator = []
-                            set_default_response = [gint]
-                            set_has_separator = [gboolean]
-                            set_response_sensitive = [gint, gboolean]
+                            set_default_response = [IntArg('response')]
+                            set_has_separator = [ArgSetting]
+                            set_response_sensitive = [IntArg('response'), BoolArg('sensitive')]
                             get_response_for_widget = [IsGtkWidget]
 
 #                             set_alternative_button_order
 #                                                                         (GtkDialog *dialog,
-#                                                                          gint first_response_id,
+#                                                                          IsInt first_response_id,
 #                                                                          ...);
 
                             class GtkAboutDialog:
-                                __new__ = Function(py_name='gtk.AboutDialog')
-#                                 get_name      (GtkAboutDialog *about);
-#                                 set_name       (GtkAboutDialog *about,
-#                                                                              const gchar *name);
+                                get_name = Function(gap_name='GetApplicationName')
+                                set_name = Function([ArgName], gap_name='SetApplicationName')
                                 get_version = []
-                                set_version = [IsString]
+                                set_version = [StringArg('version')]
                                 get_copyright = []
-                                set_copyright = [IsString]
+                                set_copyright = [StringArg('copyright')]
                                 get_comments = []
-                                set_comments = [IsString]
+                                set_comments = [StringArg('comments')]
                                 get_license = []
-                                set_license = [IsString]
+                                set_license = [StringArg('license')]
                                 get_wrap_license = []
-                                set_wrap_license = [gboolean]
+                                set_wrap_license = [IntArg('setting')]
                                 get_website = []
-                                set_website = [IsString]
+                                set_website = [StringArg('website')]
                                 get_website_label = []
-                                set_website_label = [IsString]
+                                set_website_label = [StringArg('website_label')]
                                 get_authors = []
                                 set_authors = [IsList]
                                 get_artists = []
@@ -297,24 +397,23 @@ class GObject:
                                 get_documenters = []
                                 set_documenters = [IsList]
                                 get_translator_credits = []
-                                set_translator_credits = [IsString]
-#                                 GdkPixbuf*  gtk_about_dialog_get_logo       (GtkAboutDialog *about);
-#                                 set_logo       (GtkAboutDialog *about,
-#                                                                              GdkPixbuf *logo);
+                                set_translator_credits = [StringArg('credits')]
+                                get_logo = []
+                                set_logo = [IsGdkPixbuf]
                                 get_logo_icon_name = []
-                                set_logo_icon_name = [IsString]
+                                set_logo_icon_name = [StringArg('icon_name')]
 #                                 void        gtk_show_about_dialog           (GtkWindow *parent,
 #                                                                              const gchar *first_property_name,
 #                                                                              ...);
                             class GtkColorSelectionDialog: pass
 #                                 GtkWidget*  gtk_color_selection_dialog_new  (const gchar *title);
                             class GtkFileChooserDialog: pass
-#                                 GtkWidget*  gtk_file_chooser_dialog_new     (const gchar *title,
+#                                 dialog_new     (const gchar *title,
 #                                                                              GtkWindow *parent,
 #                                                                              GtkFileChooserAction action,
 #                                                                              const gchar *first_button_text,
 #                                                                              ...);
-#                                 GtkWidget*  gtk_file_chooser_dialog_new_with_backend
+#                                 dialog_new_with_backend
 #                                                                             (const gchar *title,
 #                                                                              GtkWindow *parent,
 #                                                                              GtkFileChooserAction action,
@@ -327,7 +426,7 @@ class GObject:
 #                                                                             (GtkFontSelectionDialog *fsd);
 #                                 gchar*      gtk_font_selection_dialog_get_font_name
 #                                                                             (GtkFontSelectionDialog *fsd);
-#                                 gboolean    gtk_font_selection_dialog_set_font_name
+#                                 IsBool    gtk_font_selection_dialog_set_font_name
 #                                                                             (GtkFontSelectionDialog *fsd,
 #                                                                              const gchar *fontname);
 #                                 const gchar* gtk_font_selection_dialog_get_preview_text
@@ -367,7 +466,7 @@ class GObject:
                         set_padding = [guint, guint, guint, guint]
                     class GtkFrame:
 #                         GtkWidget*  gtk_frame_new                   (const gchar *label);
-                        set_label = [IsString]
+                        set_label = [StringArg('label')]
                         set_label_widget = [IsGtkWidget]
                         set_label_align = [gfloat, gfloat]
                         set_shadow_type = [GtkShadowType]
@@ -381,11 +480,11 @@ class GObject:
 #                                                                          gfloat xalign,
 #                                                                          gfloat yalign,
 #                                                                          gfloat ratio,
-#                                                                          gboolean obey_child);
-                            set = [gfloat, gfloat, gfloat, gboolean]
+#                                                                          IsBool obey_child);
+                            set = [gfloat, gfloat, gfloat, IsBool]
 
                     class GtkButton:
-                        __new__ = Function(py_name='gtk.Button', opt_args=[IsString, IsString, gboolean])
+                        __new__ = 'doc_stub'
 #                         GtkWidget*  gtk_button_new                  (void);
 #                         GtkWidget*  gtk_button_new_with_label       (const gchar *label);
 #                         GtkWidget*  gtk_button_new_with_mnemonic    (const gchar *label);
@@ -398,12 +497,12 @@ class GObject:
                         set_relief = [GtkReliefStyle]
                         get_relief = []
                         get_label = []
-                        set_label = [IsString]
+                        set_label = [StringArg('label')]
                         get_use_stock = []
-                        set_use_stock = [gboolean]
+                        set_use_stock = [ArgSetting]
                         get_use_underline = []
-                        set_use_underline = [gboolean]
-                        set_focus_on_click = [gboolean]
+                        set_use_underline = [ArgSetting]
+                        set_focus_on_click = [ArgSetting]
                         get_focus_on_click = []
                         set_alignment = [gfloat, gfloat]
                         get_alignment = []
@@ -411,22 +510,22 @@ class GObject:
                         get_image = []
 
                         class GtkToggleButton:
-                            __new__ = Function(py_name='gtk.ToggleButton', opt_args=[IsString, gboolean])
+                            __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
 #                             GtkWidget*  gtk_toggle_button_new           (void);
 #                             GtkWidget*  gtk_toggle_button_new_with_label
 #                                                                         (const gchar *label);
 #                             GtkWidget*  gtk_toggle_button_new_with_mnemonic
 #                                                                         (const gchar *label);
-                            set_mode = [gboolean]
+                            set_mode = [BoolArg('draw_indicator')]
                             get_mode = []
                             toggled = []
                             get_active = []
-                            set_active = [gboolean]
+                            set_active = [ArgActive]
                             get_inconsistent = []
-                            set_inconsistent = [gboolean]
+                            set_inconsistent = [ArgSetting]
 
                             class GtkCheckButton:
-                                __new__ = Function(py_name='gtk.CheckButton', opt_args=[IsString, gboolean])
+                                __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
 #                                 GtkWidget*  gtk_check_button_new            (void);
 #                                 GtkWidget*  gtk_check_button_new_with_label (const gchar *label);
 #                                 GtkWidget*  gtk_check_button_new_with_mnemonic
@@ -453,7 +552,7 @@ class GObject:
 #                                     GSList*     gtk_radio_button_get_group      (GtkRadioButton *radio_button);
 
                         class GtkColorButton:
-#                             __new__ = Function(py_name='gtk.ColorButton', opt_args=[IsGdkColor])
+#                             __new__ = Function(opt_args=[IsGdkColor])
 #                             GtkWidget*  gtk_color_button_new            (void);
 #                             GtkWidget*  gtk_color_button_new_with_color (const GdkColor *color);
 #                             void        gtk_color_button_set_color      (GtkColorButton *color_button,
@@ -464,31 +563,31 @@ class GObject:
 #                                                                          guint16 alpha);
 #                             guint16     gtk_color_button_get_alpha      (GtkColorButton *color_button);
 #                             void        gtk_color_button_set_use_alpha  (GtkColorButton *color_button,
-#                                                                          gboolean use_alpha);
-#                             gboolean    gtk_color_button_get_use_alpha  (GtkColorButton *color_button);
-                            set_title = [IsString]
+#                                                                          IsBool use_alpha);
+#                             IsBool    gtk_color_button_get_use_alpha  (GtkColorButton *color_button);
+                            set_title = [StringArg('title')]
                             get_title = []
 
                         class GtkFontButton:
-                            __new__ = Function(py_name="gtk.FontButton", opt_args=[IsString])
-                            set_font_name = [IsString]
+                            __new__ = Function(opt_args=[StringArg('font')])
+                            set_font_name = [StringArg('font')]
                             get_font_name = []
-                            set_show_style = [gboolean]
+                            set_show_style = [ArgSetting]
                             get_show_style = []
-                            set_show_size = [gboolean]
+                            set_show_size = [ArgSetting]
                             get_show_size = []
-                            set_use_font = [gboolean]
+                            set_use_font = [ArgSetting]
                             get_use_font = []
-                            set_use_size = [gboolean]
+                            set_use_size = [ArgSetting]
                             get_use_size = []
-                            set_title = [IsString]
+                            set_title = [StringArg('window_title')]
                             get_title = []
 
                     class GtkItem:
                         __no_constructor__ = True
                         class GtkMenuItem:
-                            __new__ = Function(py_name="gtk.MenuItem", opt_args=[IsString, gboolean])
-                            set_right_justified = [gboolean]
+                            __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
+                            set_right_justified = [ArgSetting]
                             set_submenu = [IsGtkWidget]
                             set_accel_path = [IsString]
                             remove_submenu = []
@@ -502,20 +601,20 @@ class GObject:
 
 #                             toggle_size_request
 #                                                                         (GtkMenuItem *menu_item,
-#                                                                          gint *requisition);
+#                                                                          IsInt *requisition);
 #                             toggle_size_allocate
 #                                                                         (GtkMenuItem *menu_item,
-#                                                                          gint allocation);
+#                                                                          IsInt allocation);
 
                             class GtkCheckMenuItem:
-                                __new__ = Function(py_name="gtk.CheckMenuItem", opt_args=[IsString, gboolean])
+                                __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
                                 get_active = []
-                                set_active = [gboolean]
-                                set_show_toggle = [gboolean]
+                                set_active = [ArgActive]
+                                set_show_toggle = [ArgSetting]
                                 toggled = []
                                 get_inconsistent = []
-                                set_inconsistent = [gboolean]
-                                set_draw_as_radio = [gboolean]
+                                set_inconsistent = [ArgSetting]
+                                set_draw_as_radio = [ArgSetting]
                                 get_draw_as_radio = []
 
                                 class GtkRadioMenuItem: pass
@@ -555,67 +654,65 @@ class GObject:
                             class GtkTearoffMenuItem: pass
 #                                 GtkWidget*  gtk_tearoff_menu_item_new       (void);
                     class GtkComboBox:
-                        __new__ = Function(gap_name='GtkComboBox', py_name='gtk.combo_box_new_text')
+                        __new__ = Function(py_name='gtk.combo_box_new_text')
 #                         __new__ = Function(py_name='gtk.ComboBox', opt_args=['IsGtkTreeModel'])
 #                         GtkWidget*  gtk_combo_box_new_text          (void);
                         get_wrap_width = []
-                        set_wrap_width = [gint]
+                        set_wrap_width = [IsInt]
                         get_row_span_column = []
-                        set_row_span_column = [gint]
+                        set_row_span_column = [IsInt]
                         get_column_span_column = []
-                        set_column_span_column = [gint]
+                        set_column_span_column = [IsInt]
                         get_active = []
-                        set_active = [gint]
-#                         gboolean    gtk_combo_box_get_active_iter   (GtkComboBox *combo_box,
+                        set_active = [IsInt]
+#                         IsBool    gtk_combo_box_get_active_iter   (GtkComboBox *combo_box,
 #                                                                      GtkTreeIter *iter);
 #                         set_active_iter   (GtkComboBox *combo_box,
 #                                                                      GtkTreeIter *iter);
                         get_model = []
                         set_model = [IsGtkTreeModel]
-                        append_text = [IsString]
-                        insert_text = [gint, IsString]
-                        prepend_text = [IsString]
-                        remove_text = [gint]
+                        append_text = [ArgText]
+                        insert_text = [IsInt, ArgText]
+                        prepend_text = [ArgText]
+                        remove_text = [IsInt]
                         get_active_text = []
                         popup = []
                         popdown = []
-                        set_focus_on_click = [gboolean]
+                        set_focus_on_click = [ArgSetting]
                         get_focus_on_click = []
 
                         class GtkComboBoxEntry:
-                            __new__ = Function(gap_name='GtkComboBoxEntry', py_name='gtk.combo_box_entry_new_text')
+                            __new__ = Function(py_name='gtk.combo_box_entry_new_text')
 #                             GtkWidget*  gtk_combo_box_entry_new         (void);
 #                             GtkWidget*  gtk_combo_box_entry_new_with_model
 #                                                                         (GtkTreeModel *model,
-#                                                                          gint text_column);
+#                                                                          IsInt text_column);
 #                             GtkWidget*  gtk_combo_box_entry_new_text    (void);
-                            set_text_column = [gint]
+                            set_text_column = [IsInt]
                             get_text_column = []
 
                     class GtkEventBox:
-                        __new__ = Function(py_name='gtk.EventBox')
-                        set_above_child = [gboolean]
+                        set_above_child = [ArgSetting]
                         get_above_child = []
-                        set_visible_window = [gboolean]
+                        set_visible_window = [ArgSetting]
                         get_visible_window = []
 
                     class GtkExpander:
-                        __new__ = Function(py_name='gtk.Expander', opt_args=[IsString])
-                        set_expanded = [gboolean]
+                        __new__ = Function(opt_args=[StringArg('label')])
+                        set_expanded = [BoolArg('expanded')]
                         get_expanded = []
-                        set_spacing = [gint]
+                        set_spacing = [IsInt]
                         get_spacing = []
-                        set_label = [IsString]
+                        set_label = [StringArg('label')]
                         get_label = []
-                        set_use_underline = [gboolean]
+                        set_use_underline = [ArgSetting]
                         get_use_underline = []
-                        set_use_markup = [gboolean]
+                        set_use_markup = [ArgSetting]
                         get_use_markup = []
                         set_label_widget = [IsGtkWidget]
                         get_label_widget = []
 
                     class GtkHandleBox:
-                        __new__ = Function(py_name='gtk.HandleBox')
                         set_shadow_type = [GtkShadowType]
                         set_handle_position = [GtkPositionType]
                         set_snap_edge = [GtkPositionType]
@@ -624,19 +721,18 @@ class GObject:
                         get_snap_edge = []
 
                     class GtkToolItem:
-                        __new__ = Function(py_name="gtk.ToolItem")
-                        set_homogeneous = [gboolean]
+                        set_homogeneous = [ArgSetting]
                         get_homogeneous = []
-                        set_expand = [gboolean]
+                        set_expand = [ArgSetting]
                         get_expand = []
-                        set_tooltip = [IsGtkTooltips, IsString, IsString]
-                        set_use_drag_window = [gboolean]
+                        set_tooltip = [IsGtkTooltips, ArgText, IsString]
+                        set_use_drag_window = [ArgSetting]
                         get_use_drag_window = []
-                        set_visible_horizontal = [gboolean]
+                        set_visible_horizontal = [ArgSetting]
                         get_visible_horizontal = []
-                        set_visible_vertical = [gboolean]
+                        set_visible_vertical = [ArgSetting]
                         get_visible_vertical = []
-                        set_is_important = [gboolean]
+                        set_is_important = [ArgSetting]
                         get_is_important = []
                         get_icon_size = []
                         get_orientation = []
@@ -648,17 +744,17 @@ class GObject:
                         rebuild_menu = []
 
                         class GtkToolButton:
-                            __new__ = Function(py_name='gtk.ToolButton', opt_args=[IsGtkWidget, IsString])
+                            __new__ = Function(opt_args=[IsGtkWidget, IsString])
 #                             GtkToolItem* gtk_tool_button_new            (GtkWidget *icon_widget,
 #                                                                          const gchar *label);
 #                             GtkToolItem* gtk_tool_button_new_from_stock (const gchar *stock_id);
-                            set_label = [IsString]
+                            set_label = [StringArg('label')]
                             get_label = []
-                            set_use_underline = [gboolean]
+                            set_use_underline = [ArgSetting]
                             get_use_underline = []
-                            set_stock_id = [IsString]
+                            set_stock_id = [StringArg('stock_id')]
                             get_stock_id = []
-                            set_icon_name = [IsString]
+                            set_icon_name = [StringArg('icon_name')]
                             get_icon_name = []
                             set_icon_widget = [IsGtkWidget]
                             get_icon_widget = []
@@ -672,11 +768,11 @@ class GObject:
 #                                                                             (const gchar *stock_id);
                                 set_menu = [IsGtkWidget]
                                 get_menu = []
-                                set_arrow_tooltip = ['IsGtkTooltips', IsString, IsString]
+                                set_arrow_tooltip = ['IsGtkTooltips', ArgText, IsString]
 
                             class GtkToggleToolButton:
-                                __new__ = Function(py_name='gtk.ToggleToolButton', opt_args=[IsString])
-                                set_active = [gboolean]
+                                __new__ = Function(opt_args=[StringArg('label')])
+                                set_active = [ArgActive]
                                 get_active = []
 
                                 class GtkRadioToolButton: pass
@@ -694,13 +790,11 @@ class GObject:
 #                                                                                  GSList *group);
 
                         class GtkSeparatorToolItem:
-                            __new__ = Function(py_name='gtk.SeparatorToolItem')
-                            set_draw = [gboolean]
+                            set_draw = [ArgSetting]
                             get_draw = []
 
                     class GtkScrolledWindow:
-                        __new__ = Function(py_name='gtk.ScrolledWindow',
-                                           args=[IsGtkAdjustment, IsGtkAdjustment])
+                        __new__ = Function(opt_arg=[(IsGtkAdjustment, 'hadj'), (IsGtkAdjustment, 'vadj')])
                         get_hadjustment = []
                         get_vadjustment = []
                         get_hscrollbar = []
@@ -716,7 +810,7 @@ class GObject:
                         get_shadow_type = []
 
                     class GtkViewport:
-                        __new__ = Function(py_name='gtk.Viewport', args=[IsGtkAdjustment, IsGtkAdjustment])
+                        __new__ = Function(opt_arg=[(IsGtkAdjustment, 'hadj'), (IsGtkAdjustment, 'vadj')])
                         get_hadjustment = []
                         get_vadjustment = []
                         set_hadjustment = [IsGtkAdjustment]
@@ -726,25 +820,25 @@ class GObject:
 
                 class GtkBox:
                     __no_constructor__ = True
-                    pack_start = [IsGtkWidget, gboolean, gboolean, guint]
-                    pack_end = [IsGtkWidget, gboolean, gboolean, guint]
+                    pack_start = [IsGtkWidget, IsBool, IsBool, guint]
+                    pack_end = [IsGtkWidget, IsBool, IsBool, guint]
                     pack_start_defaults = [IsGtkWidget]
                     pack_end_defaults = [IsGtkWidget]
                     get_homogeneous = []
-                    set_homogeneous = [gboolean]
+                    set_homogeneous = [ArgSetting]
                     get_spacing = []
-                    set_spacing = [gint]
-                    reorder_child = [IsGtkWidget, gint]
+                    set_spacing = [IsInt]
+                    reorder_child = [IsGtkWidget, IsInt]
 #                     query_child_packing (GtkBox *box,
 #                                                                  GtkWidget *child,
-#                                                                  gboolean *expand,
-#                                                                  gboolean *fill,
+#                                                                  IsBool *expand,
+#                                                                  IsBool *fill,
 #                                                                  guint *padding,
 #                                                                  GtkPackType *pack_type);
 #                     set_child_packing       (GtkBox *box,
 #                                                                  GtkWidget *child,
-#                                                                  gboolean expand,
-#                                                                  gboolean fill,
+#                                                                  IsBool expand,
+#                                                                  IsBool fill,
 #                                                                  guint padding,
 #                                                                  GtkPackType pack_type);
 
@@ -754,30 +848,30 @@ class GObject:
                         get_child_ipadding = []
                         get_child_secondary = [IsGtkWidget]
                         set_layout = [GtkButtonBoxStyle]
-                        set_child_secondary = [IsGtkWidget, gboolean]
+                        set_child_secondary = [IsGtkWidget, IsBool]
 
                         class GtkHButtonBox:
-                            __new__ = Function(py_name='gtk.HButtonBox')
+                            pass
                         class GtkVButtonBox:
-                            __new__ = Function(py_name='gtk.VButtonBox')
+                            pass
 
                     class GtkVBox:
-                        __new__ = Function(py_name='gtk.VBox', args=[gboolean, gint])
+                        __new__ = Function(opt_agrs=[BoolArg('homogeneous'), IntArg('spasing')])
 
                         class GtkColorSelection:
-                            __new__ = Function(py_name='gtk.ColorSelection')
+                            pass
 #                             void        gtk_color_selection_set_update_policy
 #                                                                         (GtkColorSelection *colorsel,
 #                                                                          GtkUpdateType policy);
 #                             void        gtk_color_selection_set_has_opacity_control
 #                                                                         (GtkColorSelection *colorsel,
-#                                                                          gboolean has_opacity);
-#                             gboolean    gtk_color_selection_get_has_opacity_control
+#                                                                          IsBool has_opacity);
+#                             IsBool    gtk_color_selection_get_has_opacity_control
 #                                                                         (GtkColorSelection *colorsel);
 #                             void        gtk_color_selection_set_has_palette
 #                                                                         (GtkColorSelection *colorsel,
-#                                                                          gboolean has_palette);
-#                             gboolean    gtk_color_selection_get_has_palette
+#                                                                          IsBool has_palette);
+#                             IsBool    gtk_color_selection_get_has_palette
 #                                                                         (GtkColorSelection *colorsel);
 #                             guint16     gtk_color_selection_get_current_alpha
 #                                                                         (GtkColorSelection *colorsel);
@@ -801,41 +895,40 @@ class GObject:
 #                             void        gtk_color_selection_set_previous_color
 #                                                                         (GtkColorSelection *colorsel,
 #                                                                          const GdkColor *color);
-#                             gboolean    gtk_color_selection_is_adjusting
+#                             IsBool    gtk_color_selection_is_adjusting
 #                                                                         (GtkColorSelection *colorsel);
-#                             gboolean    gtk_color_selection_palette_from_string
+#                             IsBool    gtk_color_selection_palette_from_string
 #                                                                         (const gchar *str,
 #                                                                          GdkColor **colors,
-#                                                                          gint *n_colors);
+#                                                                          IsInt *n_colors);
 #                             gchar*      gtk_color_selection_palette_to_string
 #                                                                         (const GdkColor *colors,
-#                                                                          gint n_colors);
+#                                                                          IsInt n_colors);
 #                             GtkColorSelectionChangePaletteFunc gtk_color_selection_set_change_palette_hook
 #                                                                         (GtkColorSelectionChangePaletteFunc func);
 #                             void        (*GtkColorSelectionChangePaletteFunc)
 #                                                                         (const GdkColor *colors,
-#                                                                          gint n_colors);
+#                                                                          IsInt n_colors);
 #                             GtkColorSelectionChangePaletteWithScreenFunc gtk_color_selection_set_change_palette_with_screen_hook
 #                                                                         (GtkColorSelectionChangePaletteWithScreenFunc func);
 #                             void        (*GtkColorSelectionChangePaletteWithScreenFunc)
 #                                                                         (GdkScreen *screen,
 #                                                                          const GdkColor *colors,
-#                                                                          gint n_colors);
+#                                                                          IsInt n_colors);
 #                             void        gtk_color_selection_set_color   (GtkColorSelection *colorsel,
 #                                                                          gdouble *color);
 #                             void        gtk_color_selection_get_color   (GtkColorSelection *colorsel,
 #                                                                          gdouble *color);
                         class GtkFileChooserWidget:
-                            __new__ = Function(py_name='gtk.FileChooserWidget', args=[GtkFileChooserAction])
+                            __new__ = [GtkFileChooserAction]
                         class GtkFontSelection:
-                            __new__ = Function(py_name='gtk.FontSelection')
                             get_font_name = []
-                            set_font_name = [IsString]
+                            set_font_name = [StringArg('font')]
                             get_preview_text = []
-                            set_preview_text = [IsString]
+                            set_preview_text = [ArgText]
 
                     class GtkHBox:
-                        __new__ = Function(py_name='gtk.HBox', gap_name='GtkHBox', args=[gboolean, gint])
+                        __new__ = Function(opt_agrs=[BoolArg('homogeneous'), IntArg('spasing')])
 
                         class GtkFileChooserButton: pass
                             # TODO
@@ -875,30 +968,30 @@ class GObject:
                     # TODO
                     pass
                 class GtkTextView:
-                    __new__ = Function(py_name='gtk.TextView', opt_args=[IsGtkTextBuffer])
+                    __new__ = Function(opt_args=[IsGtkTextBuffer])
                     set_buffer = ['IsGtkTextBuffer']
                     get_buffer = []
-                    set_text = Function(py_name='gap.text_view_set_text', gap_name='SetText', args=[IsString])
-                    get_text = Function(py_name='gap.text_view_get_text', gap_name='GetText')
+                    set_text = Function(py_name='gap.text_view_set_text', args=[ArgText])
+                    get_text = Function(py_name='gap.text_view_get_text')
 #                     void        gtk_text_view_scroll_to_mark    (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark,
 #                                                                  gdouble within_margin,
-#                                                                  gboolean use_align,
+#                                                                  IsBool use_align,
 #                                                                  gdouble xalign,
 #                                                                  gdouble yalign);
-#                     gboolean    gtk_text_view_scroll_to_iter    (GtkTextView *text_view,
+#                     IsBool    gtk_text_view_scroll_to_iter    (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter,
 #                                                                  gdouble within_margin,
-#                                                                  gboolean use_align,
+#                                                                  IsBool use_align,
 #                                                                  gdouble xalign,
 #                                                                  gdouble yalign);
 #                     void        gtk_text_view_scroll_mark_onscreen
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark);
-#                     gboolean    gtk_text_view_move_mark_onscreen
+#                     IsBool    gtk_text_view_move_mark_onscreen
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark);
-#                     gboolean    gtk_text_view_place_cursor_onscreen
+#                     IsBool    gtk_text_view_place_cursor_onscreen
 #                                                                 (GtkTextView *text_view);
 #                     void        gtk_text_view_get_visible_rect  (GtkTextView *text_view,
 #                                                                  GdkRectangle *visible_rect);
@@ -907,37 +1000,37 @@ class GObject:
 #                                                                  GdkRectangle *location);
 #                     void        gtk_text_view_get_line_at_y     (GtkTextView *text_view,
 #                                                                  GtkTextIter *target_iter,
-#                                                                  gint y,
-#                                                                  gint *line_top);
+#                                                                  IsInt y,
+#                                                                  IsInt *line_top);
 #                     void        gtk_text_view_get_line_yrange   (GtkTextView *text_view,
 #                                                                  const GtkTextIter *iter,
-#                                                                  gint *y,
-#                                                                  gint *height);
+#                                                                  IsInt *y,
+#                                                                  IsInt *height);
 #                     void        gtk_text_view_get_iter_at_location
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter,
-#                                                                  gint x,
-#                                                                  gint y);
+#                                                                  IsInt x,
+#                                                                  IsInt y);
 #                     void        gtk_text_view_get_iter_at_position
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter,
-#                                                                  gint *trailing,
-#                                                                  gint x,
-#                                                                  gint y);
+#                                                                  IsInt *trailing,
+#                                                                  IsInt x,
+#                                                                  IsInt y);
 #                     void        gtk_text_view_buffer_to_window_coords
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextWindowType win,
-#                                                                  gint buffer_x,
-#                                                                  gint buffer_y,
-#                                                                  gint *window_x,
-#                                                                  gint *window_y);
+#                                                                  IsInt buffer_x,
+#                                                                  IsInt buffer_y,
+#                                                                  IsInt *window_x,
+#                                                                  IsInt *window_y);
 #                     void        gtk_text_view_window_to_buffer_coords
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextWindowType win,
-#                                                                  gint window_x,
-#                                                                  gint window_y,
-#                                                                  gint *buffer_x,
-#                                                                  gint *buffer_y);
+#                                                                  IsInt window_x,
+#                                                                  IsInt window_y,
+#                                                                  IsInt *buffer_x,
+#                                                                  IsInt *buffer_y);
 #                     GdkWindow*  gtk_text_view_get_window        (GtkTextView *text_view,
 #                                                                  GtkTextWindowType win);
 #                     GtkTextWindowType gtk_text_view_get_window_type
@@ -946,28 +1039,28 @@ class GObject:
 #                     void        gtk_text_view_set_border_window_size
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextWindowType type,
-#                                                                  gint size);
-#                     gint        gtk_text_view_get_border_window_size
+#                                                                  IsInt size);
+#                     IsInt        gtk_text_view_get_border_window_size
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextWindowType type);
-#                     gboolean    gtk_text_view_forward_display_line
+#                     IsBool    gtk_text_view_forward_display_line
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter);
-#                     gboolean    gtk_text_view_backward_display_line
+#                     IsBool    gtk_text_view_backward_display_line
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter);
-#                     gboolean    gtk_text_view_forward_display_line_end
+#                     IsBool    gtk_text_view_forward_display_line_end
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter);
-#                     gboolean    gtk_text_view_backward_display_line_start
+#                     IsBool    gtk_text_view_backward_display_line_start
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter);
-#                     gboolean    gtk_text_view_starts_display_line
+#                     IsBool    gtk_text_view_starts_display_line
 #                                                                 (GtkTextView *text_view,
 #                                                                  const GtkTextIter *iter);
-#                     gboolean    gtk_text_view_move_visually     (GtkTextView *text_view,
+#                     IsBool    gtk_text_view_move_visually     (GtkTextView *text_view,
 #                                                                  GtkTextIter *iter,
-#                                                                  gint count);
+#                                                                  IsInt count);
 #                     void        gtk_text_view_add_child_at_anchor
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkWidget *child,
@@ -977,85 +1070,84 @@ class GObject:
 #                                                                 (void);
 #                     GList*      gtk_text_child_anchor_get_widgets
 #                                                                 (GtkTextChildAnchor *anchor);
-#                     gboolean    gtk_text_child_anchor_get_deleted
+#                     IsBool    gtk_text_child_anchor_get_deleted
 #                                                                 (GtkTextChildAnchor *anchor);
 #                     void        gtk_text_view_add_child_in_window
 #                                                                 (GtkTextView *text_view,
 #                                                                  GtkWidget *child,
 #                                                                  GtkTextWindowType which_window,
-#                                                                  gint xpos,
-#                                                                  gint ypos);
+#                                                                  IsInt xpos,
+#                                                                  IsInt ypos);
 #                     void        gtk_text_view_move_child        (GtkTextView *text_view,
 #                                                                  GtkWidget *child,
-#                                                                  gint xpos,
-#                                                                  gint ypos);
+#                                                                  IsInt xpos,
+#                                                                  IsInt ypos);
 #                     void        gtk_text_view_set_wrap_mode     (GtkTextView *text_view,
 #                                                                  GtkWrapMode wrap_mode);
 #                     GtkWrapMode gtk_text_view_get_wrap_mode     (GtkTextView *text_view);
 #                     void        gtk_text_view_set_editable      (GtkTextView *text_view,
-#                                                                  gboolean setting);
-#                     gboolean    gtk_text_view_get_editable      (GtkTextView *text_view);
+#                                                                  IsBool setting);
+#                     IsBool    gtk_text_view_get_editable      (GtkTextView *text_view);
 #                     void        gtk_text_view_set_cursor_visible
 #                                                                 (GtkTextView *text_view,
-#                                                                  gboolean setting);
-#                     gboolean    gtk_text_view_get_cursor_visible
+#                                                                  IsBool setting);
+#                     IsBool    gtk_text_view_get_cursor_visible
 #                                                                 (GtkTextView *text_view);
 #                     void        gtk_text_view_set_overwrite     (GtkTextView *text_view,
-#                                                                  gboolean overwrite);
-#                     gboolean    gtk_text_view_get_overwrite     (GtkTextView *text_view);
+#                                                                  IsBool overwrite);
+#                     IsBool    gtk_text_view_get_overwrite     (GtkTextView *text_view);
 #                     void        gtk_text_view_set_pixels_above_lines
 #                                                                 (GtkTextView *text_view,
-#                                                                  gint pixels_above_lines);
-#                     gint        gtk_text_view_get_pixels_above_lines
+#                                                                  IsInt pixels_above_lines);
+#                     IsInt        gtk_text_view_get_pixels_above_lines
 #                                                                 (GtkTextView *text_view);
 #                     void        gtk_text_view_set_pixels_below_lines
 #                                                                 (GtkTextView *text_view,
-#                                                                  gint pixels_below_lines);
-#                     gint        gtk_text_view_get_pixels_below_lines
+#                                                                  IsInt pixels_below_lines);
+#                     IsInt        gtk_text_view_get_pixels_below_lines
 #                                                                 (GtkTextView *text_view);
 #                     void        gtk_text_view_set_pixels_inside_wrap
 #                                                                 (GtkTextView *text_view,
-#                                                                  gint pixels_inside_wrap);
-#                     gint        gtk_text_view_get_pixels_inside_wrap
+#                                                                  IsInt pixels_inside_wrap);
+#                     IsInt        gtk_text_view_get_pixels_inside_wrap
 #                                                                 (GtkTextView *text_view);
 #                     void        gtk_text_view_set_justification (GtkTextView *text_view,
 #                                                                  GtkJustification justification);
 #                     GtkJustification gtk_text_view_get_justification
 #                                                                 (GtkTextView *text_view);
 #                     void        gtk_text_view_set_left_margin   (GtkTextView *text_view,
-#                                                                  gint left_margin);
-#                     gint        gtk_text_view_get_left_margin   (GtkTextView *text_view);
+#                                                                  IsInt left_margin);
+#                     IsInt        gtk_text_view_get_left_margin   (GtkTextView *text_view);
 #                     void        gtk_text_view_set_right_margin  (GtkTextView *text_view,
-#                                                                  gint right_margin);
-#                     gint        gtk_text_view_get_right_margin  (GtkTextView *text_view);
+#                                                                  IsInt right_margin);
+#                     IsInt        gtk_text_view_get_right_margin  (GtkTextView *text_view);
 #                     void        gtk_text_view_set_indent        (GtkTextView *text_view,
-#                                                                  gint indent);
-#                     gint        gtk_text_view_get_indent        (GtkTextView *text_view);
+#                                                                  IsInt indent);
+#                     IsInt        gtk_text_view_get_indent        (GtkTextView *text_view);
 #                     void        gtk_text_view_set_tabs          (GtkTextView *text_view,
 #                                                                  PangoTabArray *tabs);
 #                     PangoTabArray* gtk_text_view_get_tabs       (GtkTextView *text_view);
 #                     void        gtk_text_view_set_accepts_tab   (GtkTextView *text_view,
-#                                                                  gboolean accepts_tab);
-#                     gboolean    gtk_text_view_get_accepts_tab   (GtkTextView *text_view);
+#                                                                  IsBool accepts_tab);
+#                     IsBool    gtk_text_view_get_accepts_tab   (GtkTextView *text_view);
 #                     GtkTextAttributes* gtk_text_view_get_default_attributes
 #                                                                 (GtkTextView *text_view);
 
                 class GtkToolbar:
-                    __new__ = Function(py_name='gtk.Toolbar')
-                    insert = [IsGtkToolItem, gint]
+                    insert = [IsGtkToolItem, IsInt]
                     get_item_index = [IsGtkToolItem]
                     get_n_items = []
-                    get_nth_item = [gint]
-                    set_show_arrow = [gboolean]
-                    get_drop_index = [gint, gint]
-                    set_drop_highlight_item = [IsGtkToolItem, gint]
+                    get_nth_item = [IsInt]
+                    set_show_arrow = [ArgSetting]
+                    get_drop_index = [IsInt, IsInt]
+                    set_drop_highlight_item = [IsGtkToolItem, IsInt]
                     set_orientation = [GtkOrientation]
-                    set_tooltips = [gboolean]
+                    set_tooltips = [ArgSetting]
                     unset_icon_size = []
                     get_show_arrow = []
                     get_orientation = []
                     # get_style matches GtkWidget method
-                    get_style = Function(py_name='get_style', gap_name='GetToolbarStyle')
+                    get_style = Function(gap_name='GetToolbarStyle')
                     get_icon_size = []
                     get_tooltips = []
                     get_relief_style = []
@@ -1063,7 +1155,7 @@ class GObject:
                     set_icon_size = [GtkIconSize]
                     unset_style = []
                 class GtkTreeView:
-                    __new__ = Function(py_name='gtk.TreeView', opt_args=[(IsGtkTreeModel, 'model')])
+                    __new__ = Function(opt_args=[(IsGtkTreeModel, 'model')])
                     get_model = []
                     set_model = [(IsGtkTreeModel, 'model')]
                     get_selection = []
@@ -1072,34 +1164,34 @@ class GObject:
                     get_vadjustment = []
                     set_vadjustment = [IsGtkAdjustment]
                     get_headers_visible = []
-                    set_headers_visible = [gboolean]
+                    set_headers_visible = [ArgSetting]
                     columns_autosize = []
-                    set_headers_clickable = [gboolean]
-                    set_rules_hint = [gboolean]
+                    set_headers_clickable = [ArgSetting]
+                    set_rules_hint = [ArgSetting]
                     get_rules_hint = []
                     append_column = [IsGtkTreeViewColumn]
                     remove_column = [IsGtkTreeViewColumn]
-                    insert_column = [IsGtkTreeViewColumn, gint]
-#                     gint        gtk_tree_view_insert_column_with_attributes
+                    insert_column = [IsGtkTreeViewColumn, IsInt]
+#                     IsInt        gtk_tree_view_insert_column_with_attributes
 #                                                                 (GtkTreeView *tree_view,
-#                                                                  gint position,
+#                                                                  IsInt position,
 #                                                                  const gchar *title,
 #                                                                  GtkCellRenderer *cell,
 #                                                                  ...);
-#                     gint        gtk_tree_view_insert_column_with_data_func
+#                     IsInt        gtk_tree_view_insert_column_with_data_func
 #                                                                 (GtkTreeView *tree_view,
-#                                                                  gint position,
+#                                                                  IsInt position,
 #                                                                  const gchar *title,
 #                                                                  GtkCellRenderer *cell,
 #                                                                  GtkTreeCellDataFunc func,
 #                                                                  gpointer data,
 #                                                                  GDestroyNotify dnotify);
-                    get_column = [gint]
+                    get_column = [IsInt]
                     get_columns = []
-                    move_column_after = [IsGtkTreeViewColumn, IsGtkTreeViewColumn]
+                    move_column_after = [(IsGtkTreeViewColumn, 'column'), (IsGtkTreeViewColumn, 'base_column')]
                     set_expander_column = [IsGtkTreeViewColumn]
                     get_expander_column = []
-                    scroll_to_point = [gint, gint]
+                    scroll_to_point = [IsInt, IsInt]
                     scroll_to_cell = 'doc_stub'
                     set_cursor = 'doc_stub'
                     set_cursor_on_cell = 'doc_stub'
@@ -1111,7 +1203,7 @@ class GObject:
                     expand_row = 'doc_stub'
                     collapse_row = 'doc_stub'
                     row_expanded = 'doc_stub'
-                    set_reorderable = [gboolean]
+                    set_reorderable = [ArgSetting]
                     get_reorderable = []
                     get_path_at_pos = 'doc_stub'
                     get_cell_area = 'doc_stub'
@@ -1119,18 +1211,18 @@ class GObject:
                     get_visible_rect = []
                     get_visible_range = 'doc_stub'
                     get_bin_window = []
-                    widget_to_tree_coords = [gint, gint]
-                    tree_to_widget_coords = [gint, gint]
-                    set_enable_search = [gboolean]
+                    widget_to_tree_coords = [IsInt, IsInt]
+                    tree_to_widget_coords = [IsInt, IsInt]
+                    set_enable_search = [ArgSetting]
                     get_enable_search = []
                     get_search_column = []
-                    set_search_column = [gint]
+                    set_search_column = [IsInt]
                     get_fixed_height_mode = []
-                    set_fixed_height_mode = [gboolean]
+                    set_fixed_height_mode = [ArgSetting]
                     get_hover_selection = []
-                    set_hover_selection = [gboolean]
+                    set_hover_selection = [ArgSetting]
                     get_hover_expand = []
-                    set_hover_expand = [gboolean]
+                    set_hover_expand = [ArgSetting]
             class GtkMisc:
                 __no_constructor__ = True
                 class GtkLabel:
@@ -1142,24 +1234,24 @@ class GObject:
             class GtkDrawingArea:
                 class GtkCurve: pass
             class GtkEntry:
-                __new__ = Function(py_name='gtk.Entry', opt_args=[(gint, 'maxlen')])
-                set_text = [(IsString, 'text')]
-                append_text = [(IsString, 'text')]
-                prepend_text = [(IsString, 'text')]
-                set_position = [(gint, 'position')]
+                __new__ = Function(opt_args=[IntArg('maxlen')])
+                set_text = [ArgText]
+                append_text = [ArgText]
+                prepend_text = [ArgText]
+                set_position = [ArgPos]
                 get_text = []
-                select_region = [(gint, 'start'), (gint, 'end')]
-                set_visibility = [(gboolean, 'visible')]
+                select_region = [ArgStart, ArgEnd]
+                set_visibility = [BoolArg('visible')]
 #                 set_invisible_char    (GtkEntry *entry,
 #                                                              gunichar ch);
-                set_editable = [(gboolean, 'editable')]
-                set_max_length = [(gint, 'max_len')]
+                set_editable = [BoolArg('editable')]
+                set_max_length = [IntArg('max_len')]
                 get_activates_default = []
                 get_has_frame = []
                 get_width_chars = []
-                set_activates_default = [(gboolean, 'activates_default')]
-                set_has_frame = [(gboolean, 'has_frame')]
-                set_width_chars = [(gint, 'n_chars')]
+                set_activates_default = [BoolArg('activates_default')]
+                set_has_frame = [BoolArg('has_frame')]
+                set_width_chars = [IntArg('n_chars')]
                 get_invisible_char = []
                 set_alignment = [(gfloat, 'xalign')]
                 get_alignment = []
@@ -1248,7 +1340,7 @@ class GObject:
 #         void        gtk_tree_selection_unselect_path
 #                                                     (GtkTreeSelection *selection,
 #                                                      GtkTreePath *path);
-#         gboolean    gtk_tree_selection_path_is_selected
+#         IsBool    gtk_tree_selection_path_is_selected
 #                                                     (GtkTreeSelection *selection,
 #                                                      GtkTreePath *path);
 #         void        gtk_tree_selection_select_iter  (GtkTreeSelection *selection,
@@ -1256,7 +1348,7 @@ class GObject:
 #         void        gtk_tree_selection_unselect_iter
 #                                                     (GtkTreeSelection *selection,
 #                                                      GtkTreeIter *iter);
-#         gboolean    gtk_tree_selection_iter_is_selected
+#         IsBool    gtk_tree_selection_iter_is_selected
 #                                                     (GtkTreeSelection *selection,
 #                                                      GtkTreeIter *iter);
         select_all = []
@@ -1278,7 +1370,8 @@ class GObject:
         __py_name__ = 'moo.utils.GladeXML'
         __gap_name__ = 'IsGladeXML'
         __new__ = 'doc_stub'
-        get_widget = [IsString]
+        __arg_name__ = 'xml'
+        get_widget = [ArgName]
         get_root = []
 
 
@@ -1287,10 +1380,15 @@ top_classes.append(GObject)
 
 functions = [
     Function(py_name='gtk.window_list_toplevels', gap_name='WindowListToplevels'),
-    Function(py_name='gtk.window_set_default_icon_from_file', gap_name='WindowSetDefaultIconFromFile', args=[IsString]),
-    Function(py_name='gtk.window_set_default_icon_name', gap_name='WindowSetDefaultIconName', args=[IsString]),
+    Function(py_name='gtk.window_set_default_icon_from_file', gap_name='WindowSetDefaultIconFromFile',
+             args=[ArgFilename]),
+    Function(py_name='gtk.window_set_default_icon_name', gap_name='WindowSetDefaultIconName',
+             args=[StringArg('icon_name')]),
     Function(py_name='gtk.gdk.screen_get_default', gap_name='ScreenGetDefault'),
     Function(py_name='gtk.gdk.display_get_default', gap_name='DisplayGetDefault'),
+    Function(py_name='gtk.gdk.pixbuf_new_from_file', gap_name='GdkPixbuf', args=[ArgFilename]),
+    Function(py_name='gtk.gdk.pixbuf_new_from_file', gap_name='GdkPixbuf',
+             args=[ArgFilename, ArgWidth, ArgHeight]),
 ]
 
 

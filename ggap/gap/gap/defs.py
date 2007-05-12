@@ -1,5 +1,54 @@
 classes = {}
 
+def get_gap_name_from_py_name(py_name):
+    if not py_name:
+        raise RuntimeError()
+    def cap(s):
+        return s[0].title() + s[1:]
+    try:
+        return ''.join([cap(c) for c in py_name.replace('.', '_').split('_')])
+    except:
+        print py_name
+        raise
+
+def _cap_to_small(name):
+    s = ''
+    for l in name:
+        if l.istitle() and s:
+            s += '_'
+        s += l.lower()
+    return s
+
+def _make_arg_name(typ, i=0, self_=False):
+    names = {
+        'IsGtkCellRenderer': 'cell',
+        'IsGtkFileFilter': 'filter',
+        'IsGtkAspectFrame': 'frame',
+        'IsGtkCheckMenuItem': 'menu_item',
+        'IsGtkImageMenuItem': 'menu_item',
+        'IsGtkSeparatorToolItem': 'tool_item',
+        'IsGtkToolButton': 'button',
+        'IsGtkToggleToolButton': 'button',
+        'IsGtkMenuToolButton': 'button',
+    }
+
+    arg = names.get(typ)
+    if arg:
+        return arg
+
+    typ = typ[2:]
+    if typ == 'GObject':
+        return 'object'
+    elif typ.startswith('Gtk') or typ.startswith('Gdk'):
+        return _cap_to_small(typ[3:])
+
+    if self_:
+        return 'self'
+    elif i:
+        return 'arg' + str(i)
+    else:
+        return 'arg'
+
 class FuncBase(object):
     def __init__(self, args=[], opt_args=[], py_name=None, gap_name=None,
                  other=False, is_meth=True, doc=None):
@@ -23,13 +72,13 @@ class FuncBase(object):
         self.opt_args = []
         for a in args:
             if isinstance(a, str):
-                self.args.append((a, 'arg' + str(i)))
+                self.args.append((a, _make_arg_name(a, i)))
             else:
                 self.args.append(check_arg_name(a))
             i += 1
         for a in opt_args:
             if isinstance(a, str):
-                self.opt_args.append((a, 'arg' + str(i)))
+                self.opt_args.append((a, _make_arg_name(a, i)))
             else:
                 self.opt_args.append(check_arg_name(a))
             i += 1
@@ -59,9 +108,9 @@ def format_func(func, args=None):
         assert n_args > 0
         tmpl = '' \
             'function(%(args)s)\n' \
-            '    return _GGAP_CALL_METH(self, "%(py_name)s"%(rest_args)s);\n' \
+            '    return _GGAP_CALL_METH(%(self)s, "%(py_name)s"%(rest_args)s);\n' \
             'end'
-        dic = {'py_name' : func.py_name, 'rest_args' : ''}
+        dic = {'self': args[0][1], 'py_name' : func.py_name, 'rest_args' : ''}
         args = [a[1] for a in args]
         dic['args'] = ', '.join(args)
         if n_args > 1:
@@ -121,9 +170,9 @@ def format_func_opt_args(func):
         assert n_args > 1
         tmpl = '' \
             'function(%(args)s)\n' \
-            '    return _GGAP_CALL_METH_OPTARG(self, "%(py_name)s"%(rest_args)s, optarg);\n' \
+            '    return _GGAP_CALL_METH_OPTARG(%(self)s, "%(py_name)s"%(rest_args)s, optarg);\n' \
             'end'
-        dic = {'py_name' : func.py_name, 'rest_args' : ''}
+        dic = {'self': func.args[0][1], 'py_name' : func.py_name, 'rest_args' : ''}
 
         if n_args == 1:
             dic['args'] = 'self, optarg'
@@ -269,11 +318,15 @@ class ClassInfo(object):
         if not self.py_name:
             self.py_name = _make_class_py_name(self.name)
         self.gap_name = getattr(cls, '__gap_name__', 'Is' + cls.__name__)
-        self.no_constructor = getattr(cls, '__no_constructor__', not parent_name)
+        self.no_constructor = getattr(cls, '__no_constructor__', False)
         self.parents = []
         self.children = []
         self.methods = []
         self.meth_docs = []
+
+        self.arg_name = getattr(cls, '__arg_name__', None)
+        if not self.arg_name:
+            self.arg_name = _make_arg_name(self.gap_name, self_=True)
 
         self.doc = getattr(cls, '__doc__', None)
         self._make_docs()
@@ -296,23 +349,33 @@ class ClassInfo(object):
                     if len(a) > 1:
                         args = a[1]
                     setattr(cls, k, Function(args, py_name=a[0], is_meth=False))
-                else:
-                    a.is_meth = False
 
             if _is_class(k):
                 self.children.append(ClassInfo(a, self.name))
             elif k == '__new__' or not k.startswith('__'):
                 if a == 'doc_stub':
                     pass
-                if isinstance(a, list) or isinstance(a, tuple):
-                    setattr(cls, k, Function(a, py_name=k))
-                elif isinstance(a, FuncBase) and not hasattr(a, 'py_name'):
-                    setattr(a, 'py_name', k)
+                elif isinstance(a, list) or isinstance(a, tuple):
+                    setattr(cls, k, Function(a))
+                elif isinstance(a, dict):
+                    setattr(cls, k, Function(**a))
 
                 a = getattr(cls, k)
                 if isinstance(a, FuncBase):
+                    if k == '__new__':
+                        a.is_meth = False
                     if a.is_meth:
-                        a.args = [(self.gap_name, 'self')] + a.args
+                        a.args = [(self.gap_name, self.arg_name)] + a.args
+                    if not hasattr(a, 'py_name'):
+                        if k != '__new__':
+                            setattr(a, 'py_name', k)
+                        else:
+                            setattr(a, 'py_name', self.py_name)
+                    if not hasattr(a, 'gap_name'):
+                        if k != '__new__':
+                            setattr(a, 'gap_name', get_gap_name_from_py_name(k))
+                        else:
+                            setattr(a, 'gap_name', cls.__name__)
                     self.methods.append([k, getattr(cls, k)])
 
                 self.meth_docs.append([k, getattr(cls, k)])
