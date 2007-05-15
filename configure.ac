@@ -43,8 +43,8 @@ GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 
 AC_ARG_ENABLE(gap-doc,
-  AC_HELP_STRING(--disable-gap-doc, [do not build GAP documentation]),
-  [:],[enable_gap_doc=yes])
+  AC_HELP_STRING(--enable-gap-doc, [build GAP documentation (if sources were modified)]),
+  [:],[enable_gap_doc=no])
 AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$enable_gap_doc" = xyes)
 
 AC_CONFIG_SUBDIRS(moo)
