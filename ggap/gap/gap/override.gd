@@ -85,8 +85,7 @@ DeclareOperation("GetList", [IsGtkListStore]);
 
 ###############################################################################
 ##
-#O  ScrollToCell( <treeview>, <path>, <column=None>,
-##                <use_align=FALSE>, <row_align=0.0>, <col_align=0.0> )
+#O  ScrollToCell( <treeview>, <path>, <column=None>, <use_align=FALSE>, <row_align=0.0>, <col_align=0.0> )
 ##
 _GDeclareOperationOptArgs("ScrollToCell", [IsGtkTreeView, IsObject],
                           [IsGtkTreeViewColumn, IsBool, IsRat, IsRat]);
@@ -100,8 +99,7 @@ _GDeclareOperationOptArgs("SetCursor", [IsGtkTreeView, IsObject],
 
 ###############################################################################
 ##
-#O  SetCursorOnCell( <treeview>, <path>, <focus_column=None>, <focus_cell=None>,
-##                   <start_editing=False> )
+#O  SetCursorOnCell( <treeview>, <path>, <focus_column=None>, <focus_cell=None>, <start_editing=False> )
 ##
 _GDeclareOperationOptArgs("SetCursorOnCell", [IsGtkTreeView, IsObject],
                           [IsGtkTreeViewColumn, IsGtkCellRenderer, IsBool]);

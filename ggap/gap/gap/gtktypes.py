@@ -66,6 +66,7 @@ GtkIconSize = IsInt
 GtkFileChooserAction = IsInt
 GtkSelectionMode = IsInt
 GtkSortType = IsInt
+GtkTreeViewColumnSizing = IsInt
 
 top_classes = []
 
@@ -657,6 +658,7 @@ class GObject:
                             class GtkTearoffMenuItem: pass
 #                                 GtkWidget*  gtk_tearoff_menu_item_new       (void);
                     class GtkComboBox:
+                        __implements__ = ['GtkCellLayout']
                         __new__ = Function(py_name='gtk.combo_box_new_text')
 #                         __new__ = Function(py_name='gtk.ComboBox', opt_args=['IsGtkTreeModel'])
 #                         GtkWidget*  gtk_combo_box_new_text          (void);
@@ -1309,8 +1311,75 @@ class GObject:
                     # TODO
     class GtkTooltips: pass
                     # TODO
-    class GtkTreeViewColumn: pass
-                    # TODO
+
+    class GtkTreeViewColumn:
+        __implements__ = ['GtkCellLayout']
+        __new__ = Function(opt_args=[StringArg('title'), IsGtkCellRenderer])
+#         GtkTreeViewColumn* gtk_tree_view_column_new_with_attributes
+#                                                     (const gchar *title,
+#                                                      GtkCellRenderer *cell,
+#                                                      ...);
+        get_cell_renderers = []
+#         set_attributes
+#                                                     (GtkTreeViewColumn *tree_column,
+#                                                      GtkCellRenderer *cell_renderer,
+#                                                      ...);
+        set_spacing = [IntArg('spasing')]
+        get_spacing = []
+        set_visible = [BoolArg('visible')]
+        get_visible = []
+        set_resizable = [BoolArg('resizable')]
+        get_resizable = []
+        set_sizing = [IntArg('mode')]
+        get_sizing = []
+        get_width = []
+        get_fixed_width = []
+        set_fixed_width = [IntArg('width')]
+        set_min_width = [IntArg('min_width')]
+        get_min_width = []
+        set_max_width = [IntArg('max_width')]
+        get_max_width = []
+        clicked = []
+        set_title = [StringArg('title')]
+        get_title = []
+        set_expand = [BoolArg('setting')]
+        get_expand = []
+        set_clickable = [BoolArg('setting')]
+        get_clickable = []
+        set_widget = [IsGtkWidget]
+        get_widget = []
+        set_alignment = [gfloat]
+        get_alignment = []
+        set_reorderable = [BoolArg('setting')]
+        get_reorderable = []
+        set_sort_column_id = [IntArg('id')]
+        get_sort_column_id = []
+        set_sort_indicator = [BoolArg('show')]
+        get_sort_indicator = []
+        set_sort_order = [IntArg('order')]
+        get_sort_order = []
+#         cell_set_cell_data
+#                                                     (GtkTreeViewColumn *tree_column,
+#                                                      GtkTreeModel *tree_model,
+#                                                      GtkTreeIter *iter,
+#                                                      gboolean is_expander,
+#                                                      gboolean is_expanded);
+#         cell_get_size
+#                                                     (GtkTreeViewColumn *tree_column,
+#                                                      GdkRectangle *cell_area,
+#                                                      gint *x_offset,
+#                                                      gint *y_offset,
+#                                                      gint *width,
+#                                                      gint *height);
+#         cell_get_position
+#                                                     (GtkTreeViewColumn *tree_column,
+#                                                      GtkCellRenderer *cell_renderer,
+#                                                      gint *start_pos,
+#                                                      gint *width);
+        cell_is_visible = []
+        focus_cell = [IsGtkCellRenderer]
+        queue_resize = []
+
     class GtkListStore:
         __implements__ = ['GtkTreeSortable']
         __new__ = 'doc_stub'

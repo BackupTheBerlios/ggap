@@ -34,7 +34,11 @@ def printmsk(cls, fp):
                     return s[0].title() + s[1:]
                 print >> fp, '\\Declaration{%s}' % ''.join([cap(c) for c in f[0].replace('.', '_').split('_')])
         else:
-            print >> fp, '\\Declaration{%s}' % f[1].get_gap_name()
+            if f[1].name_unique:
+                print >> fp, '\\Declaration{%s}' % (f[1].get_gap_name(),)
+            else:
+                gd = f[1].gd_file or 'types'
+                print >> fp, '\\Declaration{%s}[%s]@{%s}' % (f[1].get_gap_name(), gd, cls.gap_name)
 
     print >> fp, ''
 

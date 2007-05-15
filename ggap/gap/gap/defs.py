@@ -51,7 +51,7 @@ def _make_arg_name(typ, i=0, self_=False):
 
 class FuncBase(object):
     def __init__(self, args=[], opt_args=[], py_name=None, gap_name=None,
-                 other=False, is_meth=True, doc=None):
+                 other=False, is_meth=True, doc=None, gd_file=None, name_unique=True):
         object.__init__(self)
         self.is_meth = is_meth
         if py_name is not None:
@@ -60,6 +60,8 @@ class FuncBase(object):
             self.gap_name = gap_name
         self.other = other
         self.doc = doc
+        self.gd_file = gd_file
+        self.name_unique = name_unique
 
         def check_arg_name(a):
             if a[1] in ['end']:
@@ -199,14 +201,12 @@ class GlobalFunction(FuncBase):
         return '<GlobalFunction %s for %s, %s>' % (self.py_name, self.args, self.opt_args)
 
     def declare(self, fp):
-        print >> fp, 'DeclareGlobalFunction("%s");' % (self.get_gap_name(),)
+        fp.write_gd('DeclareGlobalFunction("%s");' % (self.get_gap_name(),), name=self.gd_file)
 
     def install(self, fp):
         assert not self.opt_args
         n_args = len(self.args)
-        print >> fp, \
-            'InstallGlobalFunction(%s,\n%s);' % (self.get_gap_name(),
-                                                 format_func(self))
+        fp.write_gi('InstallGlobalFunction(%s,\n%s);' % (self.get_gap_name(), format_func(self)))
 
     def get_doc(self):
         return format_func_doc(self, False)
@@ -224,18 +224,18 @@ class Operation(FuncBase):
     def declare(self, fp):
         if not self.other:
             args_set = self.get_args_set()
-            if self.opt_args:
-                args_set.append(self.args + [('IsRecord', 'optarg')])
+#             if self.opt_args:
+#                 args_set.append(self.args + [('IsRecord', 'optarg')])
             for args in args_set:
                 args = '[' + ', '.join([a[0] for a in args]) + ']'
-                print >> fp, 'DeclareOperation("%s", %s);' % (self.get_gap_name(), args)
+                fp.write_gd('DeclareOperation("%s", %s);' % (self.get_gap_name(), args), name=self.gd_file)
 
     def install(self, fp):
         args_set = self.get_args_set()
         for args in args_set:
             self._install_one(args, fp)
-        if self.opt_args:
-            self._install_opt_args(fp)
+#         if self.opt_args:
+#             self._install_opt_args(fp)
 
     def _install_one(self, args, fp):
         n_args = len(args)
@@ -244,8 +244,8 @@ class Operation(FuncBase):
             install_func = 'InstallOtherMethod'
         else:
             install_func = 'InstallMethod'
-        print >> fp, '%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
-                                           format_func(self, args))
+        fp.write_gi('%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
+                                          format_func(self, args)))
 
     def _install_opt_args(self, fp):
         n_args = len(self.args)
@@ -255,8 +255,8 @@ class Operation(FuncBase):
             install_func = 'InstallOtherMethod'
         else:
             install_func = 'InstallMethod'
-        print >> fp, '%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
-                                           format_func_opt_args(self))
+        fp.write_gi('%s(%s, %s,\n%s);' % (install_func, self.get_gap_name(), arg_types,
+                                          format_func_opt_args(self)))
 
     def get_doc(self):
         return format_func_doc(self, True)
@@ -333,6 +333,12 @@ class ClassInfo(object):
 
         classes[self.name] = self
 
+        self.gd_file = getattr(cls, '__gd_file__', None)
+        if not self.gd_file and parent_name:
+            p = classes[parent_name]
+            if p.gd_file:
+                self.gd_file = p.gd_file
+
         if parent_name:
             self.parents.append(classes[parent_name])
         for n in getattr(cls, '__implements__', []):
@@ -376,12 +382,14 @@ class ClassInfo(object):
                             setattr(a, 'gap_name', get_gap_name_from_py_name(k))
                         else:
                             setattr(a, 'gap_name', cls.__name__)
+                    if self.gd_file and not getattr(a, 'gd_file'):
+                        a.gd_file = self.gd_file
                     self.methods.append([k, getattr(cls, k)])
 
                 self.meth_docs.append([k, getattr(cls, k)])
 
     def _make_docs(self):
-        doc = '#'*78 + "\n##\n#C  %s\n##" % (self.gap_name)
+        doc = '#'*78 + "\n##\n#C  %s( <obj> )\n##" % (self.gap_name)
         if self.doc:
             first = True
             for line in self.doc.split('\n'):
@@ -399,7 +407,7 @@ class Constant(object):
         self.name = name
         self.val = val
     def install(self, fp):
-        print >> fp, 'BindGlobal("%s", %s);' % (self.name, self.format_val())
+        fp.write_gi('BindGlobal("%s", %s);' % (self.name, self.format_val()))
     def format_val(self):
         if isinstance(self.val, int) or isinstance(self.val, long):
             return str(self.val)

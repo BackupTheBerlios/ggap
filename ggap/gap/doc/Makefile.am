@@ -73,7 +73,6 @@ types.msk: genmsk.py ../gap/codegen.py ../gap/defs.py ../gap/gtktypes.py
 	date > .htm-stamp
 
 CLEANFILES =			\
-    $(tex_files)		\
     $(srcdir)/.pdf-stamp	\
     $(srcdir)/.manual-stamp	\
     $(srcdir)/.htm-stamp	\
@@ -85,8 +84,11 @@ CLEANFILES =			\
     $(srcdir)/manual.ind	\
     $(srcdir)/manual.lab	\
     $(srcdir)/manual.log	\
-    $(srcdir)/manual.pdf	\
-    $(srcdir)/manual.six	\
     $(srcdir)/manual.toc	\
     $(srcdir)/notfound		\
     texput.log
+
+DISTCLEANFILES =		\
+    $(tex_files)		\
+    $(srcdir)/manual.pdf	\
+    $(srcdir)/manual.six

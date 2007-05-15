@@ -51,7 +51,7 @@ end;
 
 
 _GGAPDemoListRowActivated :=
-function(listview, row, data)
+function(listview, row, column, data)
   local demo, filename;
 
   demo := data.demos[row];
@@ -74,7 +74,7 @@ end;
 
 
 GGAPDemo := function()
-  local xml, file, data, names, model;
+  local xml, file, data, names, model, column, cell;
 
   file := Filename(DirectoriesLibrary("pkg/ggap/tst/glade"), "demo.glade");
 
@@ -123,6 +123,12 @@ GGAPDemo := function()
 
   model := GtkListStore(IsString);
   SetList(model, names);
+
+  column := GtkTreeViewColumn();
+  cell := GtkCellRendererText();
+  PackStart(column, cell);
+  AddAttribute(column, cell, "text", 0);
+  AppendColumn(xml.list, column);
   SetModel(xml.list, model);
   SelectRow(xml.list, 1);
 

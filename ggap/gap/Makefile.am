@@ -1,9 +1,4 @@
-DIST_SUBDIRS = doc
-SUBDIRS =
-
-if GGAP_BUILD_DOCS
-SUBDIRS += doc
-endif
+SUBDIRS = doc
 
 ggap_pkgdir = ${GGAP_GAP_DIR}/ggap
 ggap_pkg_gapdir = ${GGAP_GAP_DIR}/ggap/gap
@@ -23,12 +18,12 @@ ggap_pkg_gap_DATA =		\
 	gap/gobject.gi		\
 	gap/io.gd		\
 	gap/io.gi		\
-	gap/types.gd		\
-	gap/types.gi		\
 	gap/override.gd		\
 	gap/override.gi		\
 	gap/utils.gd		\
-	gap/utils.gi
+	gap/utils.gi		\
+	gap/types.gd		\
+	gap/types.gi
 
 ggap_pkg_tst_DATA =		\
 	tst/demo.g		\
@@ -53,13 +48,11 @@ BUILT_SOURCES =			\
 	gap/types.gi		\
 	gap/types.gd
 
-gen_types:
-	$(PYTHON) $(srcdir)/gap/codegen.py $(srcdir)/gap/types.gd \
-		  $(srcdir)/gap/types.gi
-$(srcdir)/gap/types.gd: $(py_files)
-	$(MAKE) gen_types
-$(srcdir)/gap/types.gi: $(py_files)
-	$(MAKE) gen_types
+generate: ; $(PYTHON) $(srcdir)/gap/codegen.py $(srcdir)/gap
+$(srcdir)/gap/types.gd: $(py_files) ; $(MAKE) generate
+$(srcdir)/gap/types.gi: $(py_files) ; $(MAKE) generate
+
+CLEANFILES =
 
 EXTRA_DIST =			\
 	$(ggap_pkg_DATA)	\
