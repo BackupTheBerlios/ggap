@@ -257,7 +257,8 @@ function(oper, args, opt_args, void)
       fi;
     end;
 
-    InstallMethod(oper, real_args, func);
+    # To make buildman.pe happy do not call it directly
+    CallFuncList(InstallMethod, [oper, real_args, func]);
   od;
 end);
 

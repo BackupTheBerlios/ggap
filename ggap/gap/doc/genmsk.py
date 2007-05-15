@@ -14,7 +14,7 @@ def make_section_name(gap_name):
     if gap_name.startswith('Glade') or gap_name in \
             ['GObject', 'GtkObject']:
         pass
-    elif gap_name.startswith('Gtk'):
+    elif gap_name.startswith('Gtk') or gap_name.startswith('Gdk'):
         gap_name = gap_name[3:]
     else:
         print >> sys.stderr, "oops ", gap_name
