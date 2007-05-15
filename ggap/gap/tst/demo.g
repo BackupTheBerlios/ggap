@@ -67,8 +67,7 @@ _GGAPDemoAbout :=
 function(menuitem, data)
   if not IsBound(data.about) then
     data.about := GtkAboutDialog();
-    ConnectCallback(data.about, "delete-event",
-                    function(w) Hide(w); return true; end);
+    ConnectCallback(data.about, "delete-event", HideOnDelete);
   fi;
   Present(data.about);
 end;

@@ -32,7 +32,7 @@ def _register(func, typ, signal):
 ## gtk.Widget
 ##
 def _transform_delete_event(wid, event):
-    return [wid]
+    return wid, []
 _register(_transform_delete_event, gtk.Widget, 'delete_event')
 
 
@@ -50,11 +50,11 @@ def _tree_path_p2g(path):
         return map(lambda i: i+1, path)
 
 def _transform_treeview_path_column(treeview, path, view_column):
-    return [treeview, _tree_path_p2g(path), view_column]
+    return treeview, [_tree_path_p2g(path), view_column]
 _register(_transform_treeview_path_column, gtk.TreeView, 'row_activated')
 
 def _transform_treeview_iter_path(treeview, iter, path):
-    return [treeview, _tree_path_p2g(path)]
+    return treeview, [_tree_path_p2g(path)]
 _register(_transform_treeview_iter_path, gtk.TreeView, 'row_collapsed')
 _register(_transform_treeview_iter_path, gtk.TreeView, 'row_expanded')
 _register(_transform_treeview_iter_path, gtk.TreeView, 'test_collapse_row')
@@ -67,13 +67,13 @@ _register(_transform_treeview_iter_path, gtk.TreeView, 'test_expand_row')
 ##
 
 def _transform_model_path_iter(model, path, iter):
-    return [model, _tree_path_p2g(path)]
+    return model, [_tree_path_p2g(path)]
 _register(_transform_model_path_iter, gtk.TreeModel, 'row_changed')
 _register(_transform_model_path_iter, gtk.TreeModel, 'row_has_child_toggled')
 _register(_transform_model_path_iter, gtk.TreeModel, 'row_inserted')
 
 def _transform_model_path(model, path):
-    return [model, _tree_path_p2g(path)]
+    return model, [_tree_path_p2g(path)]
 _register(_transform_model_path, gtk.TreeModel, 'row_deleted')
 
 
@@ -95,18 +95,18 @@ class Callback:
 
     def callback(self, obj, *args):
         func = args[-1]
-        args = self.__transform_args(args[:-1])
+        obj, args = self.__transform_args(obj, args[:-1])
         return func(obj, self.id, args)
 
     def disconnect(self):
         self.obj.disconnect(self.id)
         self.obj = None
 
-    def __transform_args(self, args):
+    def __transform_args(self, obj, args):
         if self.__transform_func:
-            return self.__transform_func(*args)
+            return self.__transform_func(obj, *args)
         else:
-            return args
+            return obj, args
 
 if __name__ == '__main__':
     for f in _transform_funcs:

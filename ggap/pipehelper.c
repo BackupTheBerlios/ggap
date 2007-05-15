@@ -68,7 +68,7 @@ writelog (const char *format,
     fclose (file);
 }
 #else
-static void
+ATTR_PRINTF static void
 writelog (UNUSED const char *format,
           ...)
 {
@@ -77,11 +77,18 @@ writelog (UNUSED const char *format,
 
 int main (int argc, char *argv[])
 {
-    HANDLE file;
+    HANDLE file, h_stdout;
 
     if (argc != 2)
     {
         writelog ("usage: %s <file>", argv[0]);
+        exit (1);
+    }
+
+    h_stdout = GetStdHandle (STD_OUTPUT_HANDLE);
+    if (h_stdout == INVALID_HANDLE_VALUE || h_stdout == NULL)
+    {
+        writelog ("could not get stdout handle");
         exit (1);
     }
 
@@ -104,7 +111,7 @@ int main (int argc, char *argv[])
     while (1)
     {
         unsigned char buf[PIPEHELPER_BUFSIZE];
-        DWORD bytes_read;
+        DWORD bytes_read, bytes_written;
         unsigned len;
 
         if (!ReadFile (file, buf, PIPEHELPER_BUFSIZE, &bytes_read, NULL))
@@ -124,8 +131,12 @@ int main (int argc, char *argv[])
 
         if (len)
         {
-            fwrite (buf + 1, 1, len, stdout);
-            fflush (stdout);
+            if (!WriteFile (h_stdout, buf + 1, len, &bytes_written, NULL) ||
+                bytes_written != len)
+            {
+                writelog ("wrote only %d bytes of %d", (int) bytes_written, (int) len);
+                exit (1);
+            }
         }
     }
 

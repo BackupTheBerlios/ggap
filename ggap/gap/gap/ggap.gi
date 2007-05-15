@@ -30,6 +30,9 @@ rec(init := false,              # ggap package is initialized
     exec_stack := [],
 
     types := [],
+
+    log_input := [],
+    log_output := [],
 ));
 
 
@@ -151,9 +154,17 @@ end);
 ##
 InstallGlobalFunction(_GGAP_GET_STAMP,
 function()
-  # XXX overflow, session id
+  local stamp;
+
   _GGAP_DATA.stamp := _GGAP_DATA.stamp + 1;
-  return _GGAP_DATA.stamp;
+  stamp := _GGAP_DATA.stamp * 256 + _GGAP_DATA.session_id;
+
+  if stamp >= 10^8 then
+    _GGAP_DATA.stamp := 1;
+    stamp := _GGAP_DATA.stamp * 256 + _GGAP_DATA.session_id;
+  fi;
+
+  return stamp;
 end);
 
 
@@ -179,13 +190,13 @@ function(stamp, func, args, void)
     return;
   fi;
 
-  Info(InfoGGAP, 3, "Going to execute ", func, " for stamp ", stamp);
+  Info(InfoGGAP, 3, "Going to execute ", func, " for stamp ", Int(stamp/256));
 
   SavedOnBreak := OnBreak;
   OnBreak := function()
     local exec_stack, st;
     # If this is called, it means an error occurred.
-    Info(InfoGGAP, 3, "Error during executing ", func, " for stamp ", stamp);
+    Info(InfoGGAP, 3, "Error during executing ", func, " for stamp ", Int(stamp/256));
 
     # Unwind exec_stack
     exec_stack := Reversed(_GGAP_DATA.exec_stack);
@@ -199,11 +210,14 @@ function(stamp, func, args, void)
 
   Add(_GGAP_DATA.exec_stack, stamp);
   if not void then
+    Info(InfoGGAP, 3, "Calling function for stamp ", Int(stamp/256));
     retval := CallFuncList(func, args);
   else
+    Info(InfoGGAP, 3, "Calling void function for stamp ", Int(stamp/256));
     CallFuncList(func, args);
     retval := GNone;
   fi;
+  Info(InfoGGAP, 3, "Done calling function for stamp ", Int(stamp/256));
 
   # If we got to here, an error still may have occurred,
   # but the stack is empty in that case.
@@ -211,7 +225,7 @@ function(stamp, func, args, void)
       _GGAP_DATA.exec_stack[Length(_GGAP_DATA.exec_stack)] = stamp
   then
     # We are good, return value
-    Info(InfoGGAP, 3, "Successfully executed ", func, " for stamp ", stamp);
+    Info(InfoGGAP, 3, "Successfully executed ", func, " for stamp ", Int(stamp/256));
     Remove(_GGAP_DATA.exec_stack);
     _GGAP_SEND_RETURN(stamp, retval);
   fi;

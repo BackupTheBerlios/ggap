@@ -73,6 +73,8 @@ function()
     b := b + 256;
   fi;
 
+  Add(_GGAP_DATA.log_input, b);
+
   return b;
 end);
 
@@ -103,8 +105,9 @@ function()
 
   # Boolean
   elif type = 1 then
-    Info(InfoGGAP, 7, "Got bool");
-    return _GGAP_READ_BYTE() <> 0;
+    value := _GGAP_READ_BYTE() <> 0;
+    Info(InfoGGAP, 7, "Got bool", value);
+    return value;
 
   # Two-bytes int
   elif type = 2 then
@@ -265,6 +268,7 @@ function(arg)
   Info(InfoGGAP, 6, "_GGAP_WRITE: ", s);
   WriteAll(_GGAP_DATA.out_pipe, s);
   WriteByte(_GGAP_DATA.out_pipe, 0);
+  Add(_GGAP_DATA.log_output, s);
 end);
 
 
@@ -303,7 +307,7 @@ function(func, args, kwargs)
   local stamp, entry, string, a, i;
 
   stamp := _GGAP_GET_STAMP();
-  Info(InfoGGAP, 6, "_GGAP_WRITE_FUNC ", stamp, ": ", func, "(", args, ", ", kwargs, ")");
+  Info(InfoGGAP, 6, "_GGAP_WRITE_FUNC ", Int(stamp/256), ": ", func, "(", args, ", ", kwargs, ")");
 
   string := Concatenation(["gf", String(stamp, 8), "[", func, ",["]);
   for a in args do

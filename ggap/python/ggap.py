@@ -23,8 +23,6 @@ import string as stringmod
 
 __session__ = None
 
-STAMP_LEN           = 8
-
 CMD_NOTHING         = 0
 CMD_RETURN          = 1
 CMD_ERROR           = 2
@@ -98,7 +96,7 @@ class FuncStack:
             return
         e = self.entries.pop()
         self.retvals[stamp] = [status, value]
-        if gtk.main_level <= 1:
+        if gtk.main_level() <= 1:
             print >> sys.stderr, "got return value outside main loop!" % (stamp,)
             return
         gtk.main_quit()
@@ -119,6 +117,10 @@ class Session:
         self.log = log
         self.stack = FuncStack()
         self.last_stamp = 0
+        self.session_id = session_id
+
+        self.log_input = []
+        self.log_output = []
 
         self.locals = {
             "__name__" : "__ggap__",
@@ -141,6 +143,7 @@ class Session:
             pass
 
     def write_output(self, string):
+        self.log_output.append(string)
         _app_output_write(string)
 
     def print_error(self, error=None):
@@ -155,9 +158,20 @@ class Session:
         else:
             return "".join(traceback.format_exception(*sys.exc_info()))
 
-    def get_stamp(self):
+    def new_stamp(self):
         self.last_stamp += 1
-        return self.last_stamp
+        stamp = (self.last_stamp << 8) + self.session_id
+        if stamp >= 10**8:
+            self.last_stamp = 1
+            stamp = (self.last_stamp << 8) + self.session_id
+        return stamp
+    def get_stamp(self, string):
+        val = int(string[:8])
+        if val & 255 != self.session_id:
+            self.__log('got data for session %d, ignoring' % (val & 255,))
+            return 0, None
+        else:
+            return val, string[8:]
 
     def __log(self, what):
         if self.log is not None:
@@ -226,14 +240,18 @@ class Session:
         return w.obj
 
     def execute(self, string):
+        self.log_input.append(string)
         try:
             cmd = string[0]
             string = string[1:]
 
             if cmd == 'f':
-                stamp = int(string[:STAMP_LEN])
+                stamp, string = self.get_stamp(string)
+                if not stamp:
+                    return
+
                 try:
-                    func_and_args = eval(string[STAMP_LEN:], self.locals)
+                    func_and_args = eval(string, self.locals)
                     func = func_and_args[0]
                     args = func_and_args[1]
                     kwargs = {}
@@ -247,18 +265,24 @@ class Session:
                     self.call_func(stamp, func, *args, **kwargs)
 
             elif cmd == 'r':
-                stamp = int(string[:STAMP_LEN])
+                stamp, string = self.get_stamp(string)
+                if not stamp:
+                    return
+
                 try:
-                    value = eval(string[STAMP_LEN:], self.locals)
+                    value = eval(string, self.locals)
                 except Exception, e:
                     print >> sys.stderr, e
                     value = None
                 self.stack.do_return(stamp, RET_OK, value)
 
             elif cmd == 'e':
-                stamp = int(string[:STAMP_LEN])
+                stamp, string = self.get_stamp(string)
+                if not stamp:
+                    return
+
                 try:
-                    msg = eval(string[STAMP_LEN:], self.locals)
+                    msg = eval(string, self.locals)
                 except Exception, e:
                     print >> sys.stderr, e
                     msg = ""
@@ -279,18 +303,18 @@ class Session:
 
     def call_func(self, stamp, func, *args, **kwargs):
         try:
-            self.__log("%03d func: %s, %s, %s" % (stamp, func, args, kwargs))
+            self.__log("%03d func: %s, %s, %s" % (stamp >> 8, func, args, kwargs))
             ret = func(*args, **kwargs)
-            self.__log("%03d func done: %s" % (stamp, ret))
+            self.__log("%03d func done: %s" % (stamp >> 8, ret))
             self.send_result(stamp, ret)
         except Exception, e:
-            self.__log("%03d func error" % (stamp,))
+            self.__log("%03d func error" % (stamp >> 8,))
             msg = self.format_error(e)
             self.print_error(e)
             self.send_error(stamp, "Error in '%s': %s" % (func, msg))
 
     def send_result(self, stamp, val):
-        self.__log("%03d retval: %s" % (stamp, val))
+        self.__log("%03d retval: %s" % (stamp >> 8, val))
         if val is None:
             self.send_return(stamp, None)
         elif isinstance(val, gobject.GObject):
@@ -300,7 +324,7 @@ class Session:
             self.send_return(stamp, val)
 
     def send_error(self, stamp, msg):
-        self.__log("%03d error: %s" % (stamp, msg))
+        self.__log("%03d error: %s" % (stamp >> 8, msg))
         string = '%c%s%s' % (CMD_ERROR, self.serialize(stamp), self.serialize(str(msg)))
         self.write_output(string)
 
@@ -320,7 +344,7 @@ class Session:
         elif val is False:
             return '%c\0' % (DATA_BOOL,)
 
-        elif isinstance(val, int):
+        elif isinstance(val, int) or isinstance(val, long):
             if val <= -2**16 or val >= 2**16:
                 raise RuntimeError("integer too big")
             string = '%c%c' % (DATA_SMALL_INT, val < 0)
@@ -379,37 +403,21 @@ class Session:
 
     def get_return_value(self, stamp):
         self.stack.push(stamp)
-        self.__log("waiting for return for stamp %s" % (stamp,))
+        self.__log("waiting for return for stamp %s" % (stamp >> 8,))
         gtk.main()
-        self.__log("got return for stamp %s" % (stamp,))
+        self.__log("got return for stamp %s" % (stamp >> 8,))
         return self.stack.pop(stamp)
 
-
-    class Callback:
-        def __init__(self, obj, signal, func):
-            id = obj.connect(signal, self.callback, func)
-            self.obj = obj
-            self.id = id
-
-        def callback(self, obj, *args):
-            func = args[-1]
-            args = args[:-1]
-            return func(obj, self.id, args)
-
-        def disconnect(self):
-            self.obj.disconnect(self.id)
-            self.obj = None
-
     def _callback(self, obj, handler_id, args):
-        self.__log("signal: %s, %s" % (obj, args))
         w = self.by_obj[obj]
-        stamp = self.get_stamp()
+        stamp = self.new_stamp()
+        self.__log("%03d signal: %s, %s" % (stamp >> 8, obj, args))
         string = '%c%s%s%s%s' % (CMD_CALLBACK, self.serialize(stamp),
                                  self.serialize(w.id), self.serialize(handler_id),
                                  self.serialize(args))
         self.write_output(string)
         status, value = self.get_return_value(stamp)
-        self.__log("signal done: %s" % ((status, value),))
+        self.__log("%03d signal done: %s" % (stamp >> 8, (status, value),))
         if status == RET_OK:
             return value
         else:
@@ -444,7 +452,7 @@ class Session:
             raise e
 
     def call_gap(self, func, args=[], void=True):
-        stamp = self.get_stamp()
+        stamp = self.new_stamp()
         string = '%c%s%s%s%s' % (CMD_CALLFUNC, self.serialize(stamp),
                                  self.serialize(func), self.serialize(args),
                                  self.serialize(void))
@@ -456,13 +464,16 @@ class Session:
             raise GAPError(value)
 
 if __name__ == '__main__':
+    def _app_output_write(string):
+        pass
+    locals()['_app_output_write'] = _app_output_write
     s = Session(log=sys.stderr)
-    s.execute('f%08d[gtk.Window]' % (1,))
-    s.execute('f%08d[OBJECT(1).show]' % (2,))
-    s.execute('f%08d[__session__.connect, 1, "destroy"]' % (4,))
-    s.execute('f%08d[OBJECT(1).destroy]' % (3,))
-    s.execute('u[1]')
+    s.execute('f%08d[gtk.Window,[]]' % (1,))
+    s.execute('f%08d[OBJECT(1).show,[]]' % (2,))
+#     s.execute('f%08d[__session__.connect, [1, "destroy"]]' % (4,))
+#     s.execute('f%08d[OBJECT(1).destroy,[]]' % (3,))
+#     s.execute('r%08dNone' % (1))
 #     s.execute('call_meth(2, get_object(1), "show")')
 #     s.execute('call_meth(3, get_object(1), "destroy")')
     s.shutdown()
-#     gtk.main()
+    gtk.main()

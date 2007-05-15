@@ -13,6 +13,17 @@
 
 ###############################################################################
 ##
+#O  HideOnDelete( <window> )
+##
+InstallMethod(HideOnDelete, [IsGtkWidget],
+function(w)
+  Hide(w);
+  return true;
+end);
+
+
+###############################################################################
+##
 ##  GladeXML
 ##
 
@@ -430,7 +441,7 @@ function(selection)
   local ret;
   ret := _GGAP_CALL_FUNC("gap.tree_selection_get_selected", selection);
   if ret[2] = GNone then
-    return GNone;
+    return 0;
   else
     return $GtkTreePosP2G(ret[2]);
   fi;

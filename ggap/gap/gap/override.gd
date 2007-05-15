@@ -13,6 +13,13 @@
 
 ###############################################################################
 ##
+#O  HideOnDelete( <window> )
+##
+DeclareOperation("HideOnDelete", [IsGtkWidget]);
+
+
+###############################################################################
+##
 #O  GladeXML( <filename>[, <callbacks>] )
 ##
 DeclareOperation("GladeXML", [IsString, IsRecord]);

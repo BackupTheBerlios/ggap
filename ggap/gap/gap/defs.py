@@ -401,7 +401,7 @@ class Constant(object):
     def install(self, fp):
         print >> fp, 'BindGlobal("%s", %s);' % (self.name, self.format_val())
     def format_val(self):
-        if isinstance(self.val, int):
+        if isinstance(self.val, int) or isinstance(self.val, long):
             return str(self.val)
         elif isinstance(self.val, str):
             return '"' + self.val + '"'
