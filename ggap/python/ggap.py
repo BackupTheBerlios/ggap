@@ -39,6 +39,7 @@ DATA_STRING         = 3
 DATA_LIST           = 4
 DATA_OBJECT         = 5
 DATA_DICT           = 6
+DATA_BIG_INT        = 7
 
 RET_OK              = 0
 RET_ERR             = 1
@@ -140,6 +141,8 @@ class Session:
         except ImportError:
             pass
 
+        self.gc_timeout_id = gobject.timeout_add(60000, self.gc_timeout)
+
     def write_output(self, string):
         if self.debug:
             self.log_output.append(string)
@@ -180,6 +183,7 @@ class Session:
         global __session__
         __session__ = None
 
+        gobject.source_remove(self.gc_timeout_id)
         self.stack.shutdown()
         del self.stack
         ids = self.by_id.keys()
@@ -336,6 +340,9 @@ class Session:
         string = '%c%s%s' % (CMD_RETURN, self.serialize(stamp), self.serialize(value))
         self.write_output(string)
 
+    def gc_timeout(self):
+        self.send_gc(True)
+        return True
     def send_gc(self, call_gasman=False):
         string = '%c%s' % (CMD_GC, self.serialize(call_gasman))
         self.write_output(string)
@@ -354,12 +361,17 @@ class Session:
 
         elif isinstance(val, int) or isinstance(val, long):
             if val <= -2**16 or val >= 2**16:
-                raise RuntimeError("integer too big")
-            string = '%c%c' % (DATA_SMALL_INT, val < 0)
-            if val < 0:
-                val = -val
-            string += '%c%c' % ((val & 0xff00) >> 8, val & 0xff)
-            return string
+                s = str(val)
+                length = len(s)
+                if length > 2**16:
+                    raise RuntimeError('integer %d is too big')
+                return '%c%c%c%s' % (DATA_BIG_INT, (length & 0xff00) >> 8, length & 0xff, s)
+            else:
+                string = '%c%c' % (DATA_SMALL_INT, val < 0)
+                if val < 0:
+                    val = -val
+                string += '%c%c' % ((val & 0xff00) >> 8, val & 0xff)
+                return string
 
         elif isinstance(val, str):
             length = len(val)

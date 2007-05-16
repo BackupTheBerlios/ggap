@@ -130,6 +130,18 @@ function()
     Info(InfoGGAP, 7, "Got int ", value);
     return value;
 
+  # Long integer
+  elif type = 7 then
+    len := read_two_bytes_int();
+    Info(InfoGGAP, 7, "Got int of length ", len);
+    value := "";
+    for i in [1..len] do
+      ADD_LIST(value, CHAR_INT(_GGAP_READ_BYTE()));
+    od;
+    value := Int(value);
+    Info(InfoGGAP, 7, "Got int ", value);
+    return value;
+
   # String
   elif type = 3 then
     len := read_two_bytes_int();
