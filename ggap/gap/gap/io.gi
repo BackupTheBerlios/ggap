@@ -99,28 +99,39 @@ end);
 InstallGlobalFunction(_GGAP_READ_VALUE,
 function()
   local type, sign, value, len, i, id, typename,
-        read_two_bytes_int;
+        read_two_bytes_int, read_string;
 
   type := _GGAP_READ_BYTE();
 
+  # reads two-byte integer
   read_two_bytes_int := function()
     return 256 * _GGAP_READ_BYTE() + _GGAP_READ_BYTE();
   end;
 
-  # Must be kept in sync with ggap.py
+  # reads <len> bytes as a string
+  read_string := function(len)
+    local value;
+    value := "";
+    for i in [1..len] do
+      ADD_LIST(value, CHAR_INT(_GGAP_READ_BYTE()));
+    od;
+    return value;
+  end;
+
+  # MUST BE KEPT IN SYNC WITH ggap.py
 
   # python None
   if type = 0 then
     Info(InfoGGAP, 7, "Got None");
     return GNone;
 
-  # Boolean
+  # Boolean: single byte, 0 is false
   elif type = 1 then
     value := _GGAP_READ_BYTE() <> 0;
     Info(InfoGGAP, 7, "Got bool", value);
     return value;
 
-  # Two-bytes int
+  # Two-byte int: first byte sign, then two-byte value
   elif type = 2 then
     sign := _GGAP_READ_BYTE() <> 0;
     value := read_two_bytes_int();
@@ -130,31 +141,19 @@ function()
     Info(InfoGGAP, 7, "Got int ", value);
     return value;
 
-  # Long integer
+  # Long integer: two-byte length, then the value in decimal notation
   elif type = 7 then
     len := read_two_bytes_int();
     Info(InfoGGAP, 7, "Got int of length ", len);
-    value := "";
-    for i in [1..len] do
-      ADD_LIST(value, CHAR_INT(_GGAP_READ_BYTE()));
-    od;
-    value := Int(value);
+    value := Int(read_string(len));
     Info(InfoGGAP, 7, "Got int ", value);
     return value;
 
-  # String
+  # String: two-byte length, then the string
   elif type = 3 then
     len := read_two_bytes_int();
     Info(InfoGGAP, 7, "Got string of length ", len);
-    if len = 0 then
-      return "";
-    else
-      value := "";
-      for i in [1..len] do
-        ADD_LIST(value, CHAR_INT(_GGAP_READ_BYTE()));
-      od;
-      return value;
-    fi;
+    return read_string(len);
 
   # List
   elif type = 4 then
