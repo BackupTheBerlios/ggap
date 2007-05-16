@@ -19,4 +19,10 @@ DeclareOperation("GOpen", [IsString]);
 DeclareOperation("GOpen", [IsString, IsInt]);
 
 
+DeclareGlobalFunction("_GDict");
+DeclareGlobalFunction("_GDictInsert");
+DeclareGlobalFunction("_GDictRemove");
+DeclareGlobalFunction("_GDictLookup");
+
+
 #E

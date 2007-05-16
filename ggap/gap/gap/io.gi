@@ -231,17 +231,7 @@ function()
 
   # Collect garbage
   elif type = 4 then
-    dead := _GGAP_GC();
-    if not IsEmpty(dead) then
-      # XXX
-      string := "gu[";
-      for id in dead do
-        APPEND_LIST_INTR(string, String(id));
-        APPEND_LIST_INTR(string, ",");
-      od;
-      APPEND_LIST_INTR(string, "]");
-      _GGAP_WRITE(string);
-    fi;
+    _GGAP_GC(_GGAP_READ_VALUE());
 
   # Callback
   elif type = 5 then

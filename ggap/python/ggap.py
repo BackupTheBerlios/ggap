@@ -10,6 +10,7 @@
 ##  distribution.
 ##
 
+import moo
 import gtk
 import gap
 import gap_cb
@@ -127,14 +128,10 @@ class Session:
             "__name__" : "__ggap__",
             "__doc__" : None,
             "__session__" : self,
-            "gtk" : gtk,
-            "sys" : sys,
-            "gap" : gap,
-            "pango" : pango,
-            "gobject" : gobject,
             "OBJECT" : self.get_object,
-#             "unref_objects" : self.unref_objects,
-#             "call_func" : self.call_func,
+            "GET_TYPE_INFO" : self.get_type_info,
+            "UNREF_OBJECTS" : self.unref_objects,
+            "gtk": gtk, "sys": sys, "gap": gap, "pango": pango, "gobject": gobject, "os": os,
         }
 
         try:
@@ -228,18 +225,26 @@ class Session:
                 del self.by_id[id]
                 w.disconnect()
 
-    def unref_objects(self, objects):
-        for obj_id in objects:
-            try:
-                self.__unref(obj_id)
-            except Exception, e:
-                print >> sys.stderr, e
-
     def get_object(self, obj_id):
         w = self.__get_wrapper(obj_id)
         if w is None:
             raise RuntimeError("No object with id %s" % (obj_id,))
         return w.obj
+    def get_type_info(self, typename):
+        typ = gobject.type_from_name(typename)
+        parent = gobject.type_parent(typ)
+        return {'parent': parent.name}
+
+    def unref_objects(self, session_id, ids):
+        if session_id != self.session_id:
+            self.__log("asked to unref objects for session %s, ignoring" % (session_id,))
+            return
+        self.__log("removing objects %s" % (ids,))
+        for obj_id in ids:
+            try:
+                self.__unref(obj_id)
+            except Exception, e:
+                print >> sys.stderr, e
 
     def execute(self, string):
         if self.debug:
@@ -291,10 +296,6 @@ class Session:
                     msg = ""
                 self.stack.do_return(stamp, RET_ERR, msg)
 
-            elif cmd == 'u':
-                objects = eval(string, self.locals)
-                self.unref_objects(objects)
-
             elif cmd == 'c':
                 exec string in self.locals
 
@@ -333,6 +334,10 @@ class Session:
 
     def send_return(self, stamp, value):
         string = '%c%s%s' % (CMD_RETURN, self.serialize(stamp), self.serialize(value))
+        self.write_output(string)
+
+    def send_gc(self, call_gasman=False):
+        string = '%c%s' % (CMD_GC, self.serialize(call_gasman))
         self.write_output(string)
 
     def serialize(self, val):

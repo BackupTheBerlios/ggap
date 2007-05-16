@@ -29,7 +29,7 @@ rec(init := false,              # ggap package is initialized
     call_stack := [],
     exec_stack := [],
 
-    types := [],
+    types := _GDict(),
 
     debug := false,
     log_input := [],
@@ -57,7 +57,7 @@ function(out_pipe, in_pipe, session_id, pipehelper)
     _GGAP_DATA.init := false;
     _GGAP_DATA.session_id := 0;
     _GGAP_DATA.stamp := 0;
-    _GGAP_DATA.objects := [];
+    _GGAP_DATA.objects := _GDict();
     _GGAP_DATA.do_check_input := true;
     _GGAP_DATA.main_level := 0;
     _GGAP_DATA.call_stack := [];

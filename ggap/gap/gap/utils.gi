@@ -27,4 +27,45 @@ function(file, line)
 end);
 
 
+InstallGlobalFunction(_GDict,
+function()
+  return [];
+end);
+
+InstallGlobalFunction(_GDictInsert,
+function(dict, key, value)
+  local pos;
+  pos := PositionSorted(dict, [key]);
+  if pos > Length(dict) or dict[pos][1] <> key then
+    Add(dict, [key, value], pos);
+  else
+    dict[pos] := [key, value];
+  fi;
+  return pos;
+end);
+
+InstallGlobalFunction(_GDictRemove,
+function(dict, key)
+  local pos, elm;
+  pos := PositionSorted(dict, [key]);
+  if pos > Length(dict) or dict[pos][1] <> key then
+    Error("_GDictRemove: key ", key, " is not in the dict");
+  else
+    elm := Remove(dict, pos);
+  fi;
+  return elm[2];
+end);
+
+InstallGlobalFunction(_GDictLookup,
+function(dict, key)
+  local pos, elm;
+  pos := PositionSorted(dict, [key]);
+  if pos > Length(dict) or dict[pos][1] <> key then
+    return fail;
+  else
+    return dict[pos][2];
+  fi;
+end);
+
+
 #E

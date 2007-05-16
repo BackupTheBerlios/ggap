@@ -22,7 +22,21 @@ DeclareRepresentation("IsGObjectRep",
  "dead",      # set after the underlying object has been destroyed
  "callbacks", # list of connected callbacks
  "type",      # type name
+ "data",      # a dictionary with arbitrary content, for when GAP-local data
+              # needs to be stored with the object
 ]);
+
+
+##  \= is needed for things like Position; no two different objects are equal
+##  to each other
+InstallMethod(\=, [IsGObject and IsGObjectRep, IsGObject and IsGObjectRep],
+ReturnFalse);
+##  \< is needed for sorting; objects are compared by their id which is
+##  guaranteed to be unique
+InstallMethod(\<, [IsGObject and IsGObjectRep, IsGObject and IsGObjectRep],
+function(obj1, obj2)
+  return obj1!.id < obj2!.id;
+end);
 
 
 #############################################################################
@@ -77,7 +91,8 @@ end);
 ##
 InstallGlobalFunction(_GGAP_REGISTER_TYPE,
 function(name, category)
-  Add(_GGAP_DATA.types, [name, NewType(GObjectFamily, category and IsGObjectRep)]);
+  _GDictInsert(_GGAP_DATA.types, name,
+               NewType(GObjectFamily, category and IsGObjectRep));
 end);
 
 
@@ -102,15 +117,17 @@ end);
 ##
 InstallGlobalFunction(_GGAP_GET_TYPE_BY_NAME,
 function(name)
-  local t;
+  local t, tinfo, pname;
 
-  t := First(_GGAP_DATA.types, elm -> (elm[1] = name));
+  t := _GDictLookup(_GGAP_DATA.types, name);
 
   if t = fail then
-    t := _GGAP_DATA.types[1];
+    tinfo := _GGAP_CALL_FUNC("GET_TYPE_INFO", name);
+    t := _GGAP_GET_TYPE_BY_NAME(tinfo.parent);
+    _GDictInsert(_GGAP_DATA.types, name, t);
   fi;
 
-  return t[2];
+  return t;
 end);
 
 
@@ -130,16 +147,13 @@ end);
 ##
 InstallGlobalFunction(_GGAP_LOOKUP_OBJECT,
 function(id)
-  local obj, o, i;
-
-  for i in [1..Length(_GGAP_DATA.objects)] do
-    o := _GGAP_DATA.objects[i];
-    if o[1] = id then
-      return ElmWPObj(o[2], 1);
-    fi;
-  od;
-
-  return fail;
+  local wref;
+  wref := _GDictLookup(_GGAP_DATA.objects, id);
+  if wref <> fail then
+    return ElmWPObj(wref, 1);
+  else
+    return fail;
+  fi;
 end);
 
 
@@ -149,26 +163,28 @@ end);
 ##
 InstallGlobalFunction(_GGAP_WRAP_OBJECT,
 function(id, typename)
-  local obj, o, i;
+  local obj, wref;
 
-  for i in [1..Length(_GGAP_DATA.objects)] do
-    o := _GGAP_DATA.objects[i];
-    if o[1] = id then
-      obj := ElmWPObj(o[2], 1);
-      if obj <> fail then
-        return obj;
-      else
-        # dead object resurrected
-        Remove(_GGAP_DATA.objects, i);
-        break;
-      fi;
+  wref := _GDictLookup(_GGAP_DATA.objects, id);
+
+  if wref <> fail then
+    obj := ElmWPObj(wref, 1);
+    if obj <> fail then
+      return obj;
+    else
+      # dead object resurrected
+      _GDictRemove(_GGAP_DATA.objects, id);
     fi;
-  od;
+  fi;
 
   Info(InfoGGAP, 4, "_GGAP_WRAP_OBJECT: creating object ", id, " of type ", typename);
   obj := Objectify(_GGAP_GET_TYPE_BY_NAME(typename),
-                   rec(id := id, type := typename, dead := false, callbacks := []));
-  Add(_GGAP_DATA.objects, [id, WeakPointerObj([obj])]);
+                   rec(id := id,
+                       type := typename,
+                       dead := false,
+                       callbacks := [],
+                       data := rec()));
+  _GDictInsert(_GGAP_DATA.objects, id, WeakPointerObj([obj]));
 
   return obj;
 end);
@@ -179,26 +195,37 @@ end);
 ##  _GGAP_GC()
 ##
 InstallGlobalFunction(_GGAP_GC,
-function()
-  local dead, i, o;
+function(arg)
+  local dead, i, o, call_gasman;
+
+  call_gasman := false;
+  if not IsEmpty(arg) then
+    call_gasman := arg[1];
+  fi;
+
+  if call_gasman then
+    GASMAN("collect");
+  fi;
 
   dead := [];
 
   for i in [1..Length(_GGAP_DATA.objects)] do
     o := _GGAP_DATA.objects[i];
     if ElmWPObj(o[2], 1) = fail then
-      Add(dead, o);
-      Unbind(_GGAP_DATA.objects[i]);
+      Add(dead, o[1]);
     fi;
   od;
 
-  if IsEmpty(dead) then
-    return [];
+  if not IsEmpty(dead) then
+    for o in dead do
+      _GDictRemove(_GGAP_DATA.objects, o);
+    od;
+
+    Info(InfoGGAP, 5, "_GGAP_GC: ", Length(dead), " dead objects");
+    _GGAP_CALL_FUNC("UNREF_OBJECTS", _GGAP_DATA.session_id, dead);
   fi;
 
-  _GGAP_DATA.objects := Set(_GGAP_DATA.objects);
-  Info(InfoGGAP, 5, "_GGAP_GC: ", Length(dead), " dead objects");
-  return List(dead, o -> o[1]);
+  return dead;
 end);
 
 

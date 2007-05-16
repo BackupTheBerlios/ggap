@@ -11,11 +11,11 @@
 ##
 
 
+ReadPkg("ggap", "gap/utils.gi");
 ReadPkg("ggap", "gap/ggap.gi");
 ReadPkg("ggap", "gap/io.gi");
 ReadPkg("ggap", "gap/gobject.gi");
 ReadPkg("ggap", "gap/types.gi");
-ReadPkg("ggap", "gap/utils.gi");
 ReadPkg("ggap", "gap/override.gi");
 
 
