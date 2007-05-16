@@ -11,10 +11,24 @@
 ##
 
 import gtk
+import gobject
 import pango
 import moo
 
-def GladeXML(filename, root=None):
+def _get_type_by_name(name):
+    try:
+        return gobject.type_from_name(name)
+    except:
+        pass
+    try:
+        t = eval(name)
+        if isinstance(t, type) and issubclass(t, gobject.GObject):
+            return t
+    except:
+        pass
+    raise RuntimeError("unknown class '%s'" % (name,))
+
+def GladeXML(filename, root=None, types={}):
     def signal_func(xml, widget_id, widget, signal, handler, object, siglist):
         siglist.append({'widget_id': widget_id, 'widget': widget,
                         'signal': signal, 'handler': handler, 'object': object})
@@ -22,8 +36,10 @@ def GladeXML(filename, root=None):
 
     signals = []
     xml = moo.utils.GladeXML()
+    for id in types:
+        xml.map_id(id, _get_type_by_name(types[id]))
     xml.set_signal_func(signal_func, signals)
-    xml.parse_file(filename, root)
+    xml.parse_file(filename, root or None)
 
     return {'xml': xml, 'signals': signals}
 

@@ -31,6 +31,7 @@ rec(init := false,              # ggap package is initialized
 
     types := [],
 
+    debug := false,
     log_input := [],
     log_output := [],
 ));
@@ -61,6 +62,8 @@ function(out_pipe, in_pipe, session_id, pipehelper)
     _GGAP_DATA.main_level := 0;
     _GGAP_DATA.call_stack := [];
     _GGAP_DATA.exec_stack := [];
+    _GGAP_DATA.log_input := [];
+    _GGAP_DATA.log_output := [];
   end;
 
   if _GGAP_DATA.init then
@@ -76,7 +79,7 @@ function(out_pipe, in_pipe, session_id, pipehelper)
   if not IsString(in_pipe) then
     Error("in_pipe argument is not a string: ", in_pipe);
   fi;
-  if not IsInt(session_id) or session_id < 0 or session_id > 9999 then
+  if not IsInt(session_id) or session_id < 0 or session_id > 255 then
     Error("invalid session id ", session_id);
   fi;
 

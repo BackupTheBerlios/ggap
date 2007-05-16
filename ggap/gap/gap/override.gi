@@ -13,7 +13,7 @@
 
 ###############################################################################
 ##
-#O  HideOnDelete( <window> )
+##  HideOnDelete( <window> )
 ##
 InstallMethod(HideOnDelete, [IsGtkWidget],
 function(w)
@@ -29,13 +29,13 @@ end);
 
 ###############################################################################
 ##
-##  GladeXML( <filename>, <callbacks> )
+##  GladeXML( <filename>, <root>, <callbacks>, <types> )
 ##
-InstallMethod(GladeXML, [IsString, IsRecord],
-function(filename, callbacks)
+InstallOtherMethod(GladeXML, [IsString, IsString, IsRecord, IsRecord],
+function(filename, root, callbacks, types)
   local ret, sig, args, data;
 
-  ret := _GGAP_CALL_FUNC("gap.GladeXML", filename);
+  ret := _GGAP_CALL_FUNC("gap.GladeXML", filename, root, types);
 
   for sig in ret.signals do
     args := [sig.widget, sig.signal];
@@ -51,13 +51,29 @@ function(filename, callbacks)
   return ret.xml;
 end);
 
-###############################################################################
-##
-##  GladeXML( <filename>, <callbacks> )
-##
+InstallOtherMethod(GladeXML, [IsString, IsString, IsRecord],
+function(filename, root, callbacks)
+  return GladeXML(filename, root, callbacks, rec());
+end);
+
+InstallOtherMethod(GladeXML, [IsString, IsString],
+function(filename, root)
+  return GladeXML(filename, root, rec(), rec());
+end);
+
+InstallOtherMethod(GladeXML, [IsString, IsRecord, IsRecord],
+function(filename, callbacks, types)
+  return GladeXML(filename, "", callbacks, types);
+end);
+
+InstallOtherMethod(GladeXML, [IsString, IsRecord],
+function(filename, callbacks)
+  return GladeXML(filename, "", callbacks, rec());
+end);
+
 InstallMethod(GladeXML, [IsString],
 function(filename)
-  return GladeXML(filename, rec());
+  return GladeXML(filename, "", rec(), rec());
 end);
 
 ###############################################################################

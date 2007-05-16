@@ -955,7 +955,10 @@ class GObject:
                     pass
                 class GtkLayout:
                     # TODO
-                    pass
+                    class FooCanvas:
+                        __gap_name__ = 'IsCanvas'
+                        # TODO
+                        pass
                 class GtkMenuShell:
                     class GtkMenuBar:
                         # TODO
@@ -978,6 +981,7 @@ class GObject:
                     get_buffer = []
                     set_text = 'doc_stub'
                     get_text = 'doc_stub'
+                    set_markup = 'doc_stub'
 #                     void        gtk_text_view_scroll_to_mark    (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark,
 #                                                                  gdouble within_margin,
@@ -1309,6 +1313,41 @@ class GObject:
                     # TODO
             class GtkCellRendererToggle: pass
                     # TODO
+        class FooCanvasItem:
+            __gap_name__ = 'IsCanvasItem'
+            __no_constructor__ = True
+                # TODO
+            class FooCanvasGroup:
+                __new__ = 'doc_stub'
+                __gap_name__ = 'IsCanvasGroup'
+                # TODO
+            class FooCanvasLine:
+                __new__ = 'doc_stub'
+                __gap_name__ = 'IsCanvasLine'
+                # TODO
+            class FooCanvasRE:
+                __gap_name__ = 'IsCanvasRE'
+                __no_constructor__ = True
+                class FooCanvasRect:
+                    __new__ = 'doc_stub'
+                    __gap_name__ = 'IsCanvasRect'
+                    # TODO
+                class FooCanvasEllipse:
+                    __new__ = 'doc_stub'
+                    __gap_name__ = 'IsCanvasEllipse'
+                    # TODO
+            class FooCanvasPolygon:
+                __new__ = 'doc_stub'
+                __gap_name__ = 'IsCanvasPolygon'
+                # TODO
+            class FooCanvasPixbuf:
+                __new__ = 'doc_stub'
+                __gap_name__ = 'IsCanvasPixbuf'
+                # TODO
+            class FooCanvasWidget:
+                __new__ = 'doc_stub'
+                __gap_name__ = 'IsCanvasWidget'
+                # TODO
     class GtkTooltips: pass
                     # TODO
 
@@ -1435,6 +1474,7 @@ functions = [
     Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[IsGtkWidget, StringArg('font')]),
     Function(py_name='gap.text_view_set_text', gap_name='SetText', args=[IsGtkTextView, ArgText]),
     Function(py_name='gap.text_view_get_text', gap_name='GetText', args=[IsGtkTextView]),
+    Function(py_name='moo.app.text_view_set_markup', gap_name='SetMarkup', args=[IsGtkTextView, StringArg('markup')]),
 ]
 
 

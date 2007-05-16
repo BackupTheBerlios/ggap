@@ -13,11 +13,20 @@
 
 #############################################################################
 ##
-#F  GMain()
+##  GMainLoop()
 ##
-InstallGlobalFunction(GMain,
-function()
-  local level_here;
+InstallGlobalFunction(GMainLoop,
+function(arg)
+  local level_here, window;
+
+  if not IsEmpty(arg) then
+    window := arg[1];
+    if not IsGtkWindow(window) then
+      Error("GMainLoop argument must be a window");
+    fi;
+    ConnectCallback(window, "destroy", function(w) GMainLoopQuit(); end);
+    Show(window);
+  fi;
 
   level_here := _GGAP_DATA.main_level + 1;
   _GGAP_DATA.main_level := level_here;
@@ -30,12 +39,12 @@ end);
 
 #############################################################################
 ##
-#F  GMainQuit()
+#F  GMainLoopQuit()
 ##
-InstallGlobalFunction(GMainQuit,
+InstallGlobalFunction(GMainLoopQuit,
 function()
   if _GGAP_DATA.main_level <= 0 then
-    Error("GMainQuit: no main loop running");
+    Error("GMainLoopQuit: no main loop running");
   else
     _GGAP_DATA.main_level := _GGAP_DATA.main_level - 1;
   fi;
@@ -73,7 +82,9 @@ function()
     b := b + 256;
   fi;
 
-  Add(_GGAP_DATA.log_input, b);
+  if _GGAP_DATA.debug then
+    Add(_GGAP_DATA.log_input, b);
+  fi;
 
   return b;
 end);
@@ -268,7 +279,9 @@ function(arg)
   Info(InfoGGAP, 6, "_GGAP_WRITE: ", s);
   WriteAll(_GGAP_DATA.out_pipe, s);
   WriteByte(_GGAP_DATA.out_pipe, 0);
-  Add(_GGAP_DATA.log_output, s);
+  if _GGAP_DATA.debug then
+    Add(_GGAP_DATA.log_output, s);
+  fi;
 end);
 
 
@@ -440,7 +453,7 @@ end);
 
 #############################################################################
 ##
-#O  GCallFunc()
+##  GCallFunc()
 ##
 InstallMethod(GCallFunc, [IsString],
 function(func)
@@ -483,20 +496,21 @@ end);
 
 #############################################################################
 ##
-#F  GEval()
+##  GEval()
 ##
 InstallGlobalFunction(GEval,
-function(code)
-  if not IsString(code) then
-    Error("GEval: argument must be a string");
+function(arg)
+  local string;
+  if IsEmpty(arg) then
+    return GNone;
   fi;
-  return GCallFunc("eval", [code]);
+  return GCallFunc("eval", [Concatenation(List(arg, a -> String(a)))]);
 end);
 
 
 #############################################################################
 ##
-#F  GExec()
+##  GExec()
 ##
 InstallGlobalFunction(GExec,
 function(arg)

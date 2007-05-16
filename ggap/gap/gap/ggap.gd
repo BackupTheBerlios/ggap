@@ -13,23 +13,32 @@
 
 #############################################################################
 ##
-#F  GMain
-#F  GMainQuit
+#F  GMainLoop( [<window>] )
+#F  GMainLoopQuit()
 ##
-DeclareGlobalFunction("GMain");
-DeclareGlobalFunction("GMainQuit");
+DeclareGlobalFunction("GMainLoop");
+DeclareGlobalFunction("GMainLoopQuit");
 
 
 #############################################################################
 ##
-#O  GCallFunc
-#F  GEval
-#F  GExec
+#O  GCallFunc( <func_name>[, <args>[, <kwargs>]] )
+#O  GCallFunc( <object>, <func_name>[, <args>[, <kwargs>]] )
 ##
 DeclareOperation("GCallFunc", [IsString]);
 DeclareOperation("GCallFunc", [IsString, IsList]);
 DeclareOperation("GCallFunc", [IsString, IsList, IsRecord]);
+
+#############################################################################
+##
+#F  GEval( <code> )
+##
 DeclareGlobalFunction("GEval");
+
+#############################################################################
+##
+#F  GExec( <code> )
+##
 DeclareGlobalFunction("GExec");
 
 

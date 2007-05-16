@@ -119,6 +119,7 @@ class Session:
         self.last_stamp = 0
         self.session_id = session_id
 
+        self.debug = False
         self.log_input = []
         self.log_output = []
 
@@ -143,7 +144,8 @@ class Session:
             pass
 
     def write_output(self, string):
-        self.log_output.append(string)
+        if self.debug:
+            self.log_output.append(string)
         _app_output_write(string)
 
     def print_error(self, error=None):
@@ -174,7 +176,7 @@ class Session:
             return val, string[8:]
 
     def __log(self, what):
-        if self.log is not None:
+        if self.log is not None and self.debug:
             print >> self.log, what
 
     def shutdown(self):
@@ -240,7 +242,8 @@ class Session:
         return w.obj
 
     def execute(self, string):
-        self.log_input.append(string)
+        if self.debug:
+            self.log_input.append(string)
         try:
             cmd = string[0]
             string = string[1:]

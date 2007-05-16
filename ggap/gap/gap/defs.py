@@ -39,7 +39,8 @@ def _make_arg_name(typ, i=0, self_=False):
     typ = typ[2:]
     if typ == 'GObject':
         return 'object'
-    elif typ.startswith('Gtk') or typ.startswith('Gdk'):
+    elif typ.startswith('Gtk') or typ.startswith('Gdk') or \
+         typ.startswith('Foo') or typ.startswith('Moo'):
         return _cap_to_small(typ[3:])
 
     if self_:
@@ -302,13 +303,15 @@ def _make_class_py_name(name):
         return 'gtk.' + name[3:]
     elif name.startswith('Gdk'):
         return 'gtk.gdk.' + name[3:]
+    elif name.startswith('Foo'):
+        return 'moo.canvas.' + name[3:]
     else:
         raise RuntimeError()
 
 def _is_class(name):
     return name == 'GObject' or name.startswith('Gtk') or \
             name.startswith('Gdk') or name.startswith('Moo') or \
-            name.startswith('Glade')
+            name.startswith('Foo') or name.startswith('Glade')
 
 class ClassInfo(object):
     def __init__(self, cls, parent_name):
@@ -381,7 +384,7 @@ class ClassInfo(object):
                         if k != '__new__':
                             setattr(a, 'gap_name', get_gap_name_from_py_name(k))
                         else:
-                            setattr(a, 'gap_name', cls.__name__)
+                            setattr(a, 'gap_name', self.gap_name[2:])
                     if self.gd_file and not getattr(a, 'gd_file'):
                         a.gd_file = self.gd_file
                     self.methods.append([k, getattr(cls, k)])

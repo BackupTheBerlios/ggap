@@ -33,7 +33,7 @@ function(no, data)
   fi;
 
   SetText(data.xml.source, source);
-  SetText(data.xml.info, info);
+  SetMarkup(data.xml.info, info);
 end;
 
 
@@ -82,8 +82,7 @@ GGAPDemo := function()
     Error("could not find glade file");
   fi;
 
-#   window := GladeWindow(file, "window", rec(info:="MooHtml"));
-  xml := GladeXML(file);
+  xml := GladeXML(file, "window", rec(info:="MooHtml"));
 
   data := rec(xml:=xml, file:=file, row:=0);
 
@@ -132,7 +131,7 @@ GGAPDemo := function()
   SetModel(xml.list, model);
   SelectRow(xml.list, 1);
 
-  Show(xml.window);
+  GMainLoop(xml.window);
 
   return data;
 end;

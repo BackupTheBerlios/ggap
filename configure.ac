@@ -47,6 +47,7 @@ AC_ARG_ENABLE(gap-doc,
   [:],[enable_gap_doc=no])
 AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$enable_gap_doc" = xyes)
 
+export MOO_BUILD_CANVAS=yes
 AC_CONFIG_SUBDIRS(moo)
 
 AC_CONFIG_FILES([

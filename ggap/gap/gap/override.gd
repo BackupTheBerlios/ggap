@@ -20,9 +20,8 @@ DeclareOperation("HideOnDelete", [IsGtkWidget]);
 
 ###############################################################################
 ##
-#O  GladeXML( <filename>[, <callbacks>] )
+#O  GladeXML( <filename> [, <root>] [, <callbacks>[, <types>]] )
 ##
-DeclareOperation("GladeXML", [IsString, IsRecord]);
 DeclareOperation("GladeXML", [IsString]);
 
 
