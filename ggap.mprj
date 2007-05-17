@@ -30,7 +30,6 @@
    </configure>
   </optimized>
  </configurations>
- <file_selector_dir>/home/muntyan/projects/ggap/ggap/libfoocanvas/</file_selector_dir>
  <run>
   <args>--new-app</args>
   <exe>ggap/ggap</exe>
