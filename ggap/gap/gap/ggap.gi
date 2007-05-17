@@ -20,8 +20,10 @@ rec(init := false,              # ggap package is initialized
     session_id := 0,            # GAP session id in ggap
     stamp := 0,                 # timestamp used in GAP-ggap communication
 
-    # List of lists of form [obj_id, WeakPointerObj([obj])]
-    objects := [],
+    # obj_id -> WeakPointerObj([obj])
+    objects := _GDict(),
+    # obj -> list of callback ids
+    callbacks := _GDict(),
 
     do_check_input := true,
     main_level := 0,

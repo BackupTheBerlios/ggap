@@ -238,6 +238,9 @@ function()
     obj := _GGAP_LOOKUP_OBJECT(id);
     if obj <> fail then
       obj!.dead := true;
+      if _GDictLookup(_GGAP_DATA.callbacks, obj) <> fail then
+        _GDictRemove(_GGAP_DATA.callbacks, obj);
+      fi;
     fi;
 
   # Collect garbage

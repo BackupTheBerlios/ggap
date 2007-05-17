@@ -13,7 +13,7 @@
 ##  Read(Filename(DirectoriesLibrary("pkg/ggap/tst"), "demo.g"));
 ##
 
-_GGAPDemoLoad :=
+GGAPDemoLoad :=
 function(no, data)
   local file, filename, source, info;
 
@@ -37,7 +37,7 @@ function(no, data)
 end;
 
 
-_GGAPDemoListSelectionChanged :=
+GGAPDemoListSelectionChanged :=
 function(selection, data)
   local row, demo, file, filename, source;
 
@@ -45,12 +45,12 @@ function(selection, data)
 
   if row <> 0 and row <> data.row then
     data.row := row;
-    _GGAPDemoLoad(row, data);
+    GGAPDemoLoad(row, data);
   fi;
 end;
 
 
-_GGAPDemoListRowActivated :=
+GGAPDemoListRowActivated :=
 function(listview, row, column, data)
   local demo, filename;
 
@@ -63,7 +63,7 @@ function(listview, row, column, data)
 end;
 
 
-_GGAPDemoAbout :=
+GGAPDemoAbout :=
 function(menuitem, data)
   if not IsBound(data.about) then
     data.about := GtkAboutDialog();
@@ -89,9 +89,9 @@ GGAPDemo := function()
   ModifyFont(xml.source, "Monospace");
   SetLangById(xml.source, "GAP");
 
-  ConnectCallback(GetSelection(xml.list), "changed", _GGAPDemoListSelectionChanged, data);
-  ConnectCallback(xml.list, "row-activated", _GGAPDemoListRowActivated, data);
-  ConnectCallback(xml.about, "activate", _GGAPDemoAbout, data);
+  ConnectCallback(GetSelection(xml.list), "changed", GGAPDemoListSelectionChanged, data);
+  ConnectCallback(xml.list, "row-activated", GGAPDemoListRowActivated, data);
+  ConnectCallback(xml.about, "activate", GGAPDemoAbout, data);
 
   data.demos := [
     ["This demo", # Text that appears in the list

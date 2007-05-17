@@ -236,7 +236,7 @@ end);
 ##
 InstallGlobalFunction(_GGAP_CONNECT,
 function(obj, signal, func, data)
-  local result;
+  local result, callbacks;
 
   result := _GGAP_CALL_FUNC("__session__.connect", obj!.id, signal);
 
@@ -246,18 +246,32 @@ function(obj, signal, func, data)
 
   Add(obj!.callbacks, [result[1], result[2], func, data]);
 
+  callbacks := _GDictLookup(_GGAP_DATA.callbacks, obj);
+  if callbacks = fail then
+    _GDictInsert(_GGAP_DATA.callbacks, obj, [result[1]]);
+  else
+    Add(callbacks, result[1]);
+  fi;
+
   return result[1];
 end);
 
 
 InstallGlobalFunction(_GGAP_DISCONNECT,
 function(obj, handler_id)
-  local cb, i;
+  local cb, i, callbacks;
 
   for i in [1..Length(obj!.callbacks)] do
     cb := obj!.callbacks[i];
     if cb[1] = handler_id then
       Remove(obj!.callbacks, i);
+
+      callbacks := _GDictLookup(_GGAP_DATA.callbacks, obj);
+      Remove(callbacks, Position(callbacks, handler_id));
+      if IsEmpty(callbacks) then
+        _GDictRemove(_GGAP_DATA.callbacks, obj);
+      fi;
+
       return _GGAP_CALL_FUNC("__session__.disconnect", obj!.id, handler_id);
     fi;
   od;
@@ -276,6 +290,7 @@ function(stamp, id, handler_id, args)
 
   if obj = fail then
     _GGAP_SEND_ERROR(stamp, "No object with id ", id);
+    return;
   fi;
 
   for cb in obj!.callbacks do
