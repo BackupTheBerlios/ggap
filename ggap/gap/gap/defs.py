@@ -1,3 +1,16 @@
+class Arg(object):
+    def __init__(self, type=None, name=None, transform=None):
+        object.__init__(self)
+        self.name = name
+        self.type = type
+        self.transform = transform
+
+    def format_transform(self):
+        if self.transform:
+            return '%s := %s;' % (self.name, self.transform % {'arg': self.name})
+        else:
+            return None
+
 classes = {}
 
 def get_gap_name_from_py_name(py_name):
@@ -30,6 +43,7 @@ def _make_arg_name(typ, i=0, self_=False):
         'IsGtkToolButton': 'button',
         'IsGtkToggleToolButton': 'button',
         'IsGtkMenuToolButton': 'button',
+        'IsGtkTreeSelection': 'selection',
     }
 
     arg = names.get(typ)
@@ -52,7 +66,8 @@ def _make_arg_name(typ, i=0, self_=False):
 
 class FuncBase(object):
     def __init__(self, args=[], opt_args=[], py_name=None, gap_name=None,
-                 other=False, is_meth=True, doc=None, gd_file=None, name_unique=True):
+                 other=False, is_meth=True, doc=None, gd_file=None, name_unique=True,
+                 ret_transform=None):
         object.__init__(self)
         self.is_meth = is_meth
         if py_name is not None:
@@ -64,35 +79,36 @@ class FuncBase(object):
         self.gd_file = gd_file
         self.name_unique = name_unique
 
-        def check_arg_name(a):
-            if a[1] in ['end']:
-                return (a[0], a[1] + '_')
+        if not ret_transform:
+            ret_transform = '%(retval)s'
+        self.ret_transform = ret_transform
+
+        def check_arg_name(name):
+            if name in ['end']:
+                return name + '_'
             else:
-                return a
+                return name
+
+        def make_arg(a, i):
+            if not isinstance(a, Arg):
+                if isinstance(a, str):
+                    a = Arg(type=a)
+                else:
+                    a = Arg(type=a[0], name=a[1])
+            if not a.name:
+                a.name = _make_arg_name(a.type, i)
+            a.name = check_arg_name(a.name)
+            return a
 
         i = 1
         self.args = []
         self.opt_args = []
         for a in args:
-            if isinstance(a, str):
-                self.args.append((a, _make_arg_name(a, i)))
-            else:
-                self.args.append(check_arg_name(a))
+            self.args.append(make_arg(a, i))
             i += 1
         for a in opt_args:
-            if isinstance(a, str):
-                self.opt_args.append((a, _make_arg_name(a, i)))
-            else:
-                self.opt_args.append(check_arg_name(a))
+            self.opt_args.append(make_arg(a, i))
             i += 1
-        for a in self.args + self.opt_args:
-            if a[1] in ['end']:
-                a[1] = a[1] + '_';
-
-    def set_obj_type(self, typ):
-        if self.is_meth:
-            self.obj_type = typ
-            self.args = [(typ, self)] + self.args
 
     def get_gap_name(self):
         if not self.py_name:
@@ -103,6 +119,17 @@ class FuncBase(object):
             self.gap_name = ''.join([cap(c) for c in self.py_name.replace('.', '_').split('_')])
         return self.gap_name
 
+def format_transform(args, indent=2):
+    s = ''
+    for a in args:
+        t = a.format_transform()
+        if t:
+            s += ' '*indent + t + '\n'
+    return s
+
+def format_ret_transform(func, name='retval'):
+    return func.ret_transform % {'retval': name}
+
 def format_func(func, args=None):
     if args is None:
         args = func.args
@@ -111,10 +138,15 @@ def format_func(func, args=None):
         assert n_args > 0
         tmpl = '' \
             'function(%(args)s)\n' \
-            '    return _GGAP_CALL_METH(%(self)s, "%(py_name)s"%(rest_args)s);\n' \
+            '  local retval;\n' \
+            '%(transform)s' \
+            '  retval := _GGAP_CALL_METH(%(self)s, "%(py_name)s"%(rest_args)s);\n' \
+            '  return %(ret_transform)s;\n' \
             'end'
-        dic = {'self': args[0][1], 'py_name' : func.py_name, 'rest_args' : ''}
-        args = [a[1] for a in args]
+        dic = {'self': args[0].name, 'py_name' : func.py_name, 'rest_args' : '',
+               'transform': format_transform(args),
+               'ret_transform': format_ret_transform(func)}
+        args = [a.name for a in args]
         dic['args'] = ', '.join(args)
         if n_args > 1:
             dic['rest_args'] = ', ' + ', '.join(args[1:])
@@ -122,11 +154,16 @@ def format_func(func, args=None):
     else:
         tmpl = '' \
             'function(%(args)s)\n' \
-            '    return _GGAP_CALL_FUNC("%(py_name)s"%(rest_args)s);\n' \
+            '  local retval;\n' \
+            '%(transform)s' \
+            '  retval := _GGAP_CALL_FUNC("%(py_name)s"%(rest_args)s);\n' \
+            '  return %(ret_transform)s;\n' \
             'end'
-        dic = {'py_name' : func.py_name, 'args' : '', 'rest_args' : ''}
+        dic = {'py_name' : func.py_name, 'args' : '', 'rest_args' : '',
+               'transform': format_transform(args),
+               'ret_transform': format_ret_transform(func)}
         if n_args > 0:
-            args = [a[1] for a in args]
+            args = [a.name for a in args]
             dic['args'] = ', '.join(args)
             dic['rest_args'] = ', ' + dic['args']
         return tmpl % dic
@@ -137,7 +174,7 @@ def format_func_doc_no_opt_args(func, is_op):
     else:
         tmpl = '%(name)s( %(args)s )'
         dic = {'name' : func.get_gap_name()}
-        dic['args'] = ', '.join(['<%s>' % a[1] for a in func.args])
+        dic['args'] = ', '.join(['<%s>' % a.name for a in func.args])
         decl = tmpl % dic
     if is_op:
         symb = 'O'
@@ -149,7 +186,7 @@ def format_func_doc(func, is_op):
     if not func.opt_args:
         return format_func_doc_no_opt_args(func, is_op)
     if func.args:
-        args = ', '.join(['<%s>' % a[1] for a in func.args])
+        args = ', '.join(['<%s>' % a.name for a in func.args])
     else:
         args = ''
     opt_args = list(func.opt_args)
@@ -157,9 +194,9 @@ def format_func_doc(func, is_op):
     opt_args_s = ''
     for i in range(len(opt_args)):
         if i < len(opt_args) - 1 or args:
-            opt_args_s = ' [, <%s>%s]' % (opt_args[i][1], opt_args_s)
+            opt_args_s = ' [, <%s>%s]' % (opt_args[i].name, opt_args_s)
         else:
-            opt_args_s = '[<%s>%s]' % (opt_args[i][1], opt_args_s)
+            opt_args_s = '[<%s>%s]' % (opt_args[i].name, opt_args_s)
     decl = '%s( %s%s )' % (func.get_gap_name(), args, opt_args_s)
     if is_op:
         symb = 'O'
@@ -173,26 +210,36 @@ def format_func_opt_args(func):
         assert n_args > 1
         tmpl = '' \
             'function(%(args)s)\n' \
-            '    return _GGAP_CALL_METH_OPTARG(%(self)s, "%(py_name)s"%(rest_args)s, optarg);\n' \
+            '  local retval;\n' \
+            '%(transform)s' \
+            '  retval := _GGAP_CALL_METH_OPTARG(%(self)s, "%(py_name)s"%(rest_args)s, optarg);\n' \
+            '  return %(ret_transform)s;\n' \
             'end'
-        dic = {'self': func.args[0][1], 'py_name' : func.py_name, 'rest_args' : ''}
+        dic = {'self': func.args[0].name, 'py_name' : func.py_name, 'rest_args' : '',
+               'transform': format_transform(func.args),
+               'ret_transform': format_ret_transform(func)}
 
         if n_args == 1:
             dic['args'] = 'self, optarg'
             dic['rest_args'] = ''
         else:
-            args = [a[1] for a in func.args] + ['optarg']
+            args = [a.name for a in func.args] + ['optarg']
             dic['args'] = ', '.join(args)
             dic['rest_args'] = ', ' + ', '.join(args[1:-1])
         return tmpl % dic
     else:
         tmpl = '' \
             'function(%(args)s)\n' \
-            '    return _GGAP_CALL_FUNC_OPTARG("%(py_name)s"%(rest_args)s, optarg);\n' \
+            '  local retval;\n' \
+            '%(transform)s' \
+            '  retval := _GGAP_CALL_FUNC_OPTARG("%(py_name)s"%(rest_args)s, optarg);\n' \
+            '  return %(ret_transform)s;\n' \
             'end'
-        dic = {'py_name' : func.py_name, 'args' : 'optarg', 'rest_args' : ''}
+        dic = {'py_name' : func.py_name, 'args' : 'optarg', 'rest_args' : '',
+               'transform': format_transform(func.args),
+               'ret_transform': format_ret_transform(func)}
         if n_args > 0:
-            args = [a[1] for a in func.args]
+            args = [a.name for a in func.args]
             dic['args'] = ', '.join(args) + ', optarg'
             dic['rest_args'] = ', ' + ', '.join(args)
         return tmpl % dic
@@ -228,7 +275,7 @@ class Operation(FuncBase):
 #             if self.opt_args:
 #                 args_set.append(self.args + [('IsRecord', 'optarg')])
             for args in args_set:
-                args = '[' + ', '.join([a[0] for a in args]) + ']'
+                args = '[' + ', '.join([a.type for a in args]) + ']'
                 fp.write_gd('DeclareOperation("%s", %s);' % (self.get_gap_name(), args), name=self.gd_file)
 
     def install(self, fp):
@@ -240,7 +287,7 @@ class Operation(FuncBase):
 
     def _install_one(self, args, fp):
         n_args = len(args)
-        arg_types = '[' + ', '.join([a[0] for a in args]) + ']'
+        arg_types = '[' + ', '.join([a.type for a in args]) + ']'
         if self.other:
             install_func = 'InstallOtherMethod'
         else:
@@ -251,7 +298,7 @@ class Operation(FuncBase):
     def _install_opt_args(self, fp):
         n_args = len(self.args)
         args = self.args + [('IsRecord', 'optarg')]
-        arg_types = '[' + ', '.join([a[0] for a in args]) + ']'
+        arg_types = '[' + ', '.join([a.type for a in args]) + ']'
         if self.other:
             install_func = 'InstallOtherMethod'
         else:
@@ -264,7 +311,7 @@ class Operation(FuncBase):
 
 
 def _get_vars(dest, src):
-    for key in ['py_name', 'gap_name', 'other', 'is_op', 'is_meth', 'args', 'opt_args', 'doc']:
+    for key in ['py_name', 'gap_name', 'other', 'is_op', 'is_meth', 'args', 'opt_args', 'doc', 'ret_transform']:
         if src.has_key(key):
             dest[key] = src[key]
 
@@ -272,11 +319,13 @@ def Function(*args, **kwargs):
     real_kwargs = {
         'py_name': None, 'gap_name': None, 'other': False, 'is_op': True,
         'is_meth': True, 'opt_args': [], 'args': [], 'doc': None,
+        'ret_transform': None
     }
     _get_vars(real_kwargs, kwargs)
 
     if args:
-        if isinstance(args[0], str) or isinstance(args[0], tuple):
+        if isinstance(args[0], str) or isinstance(args[0], tuple) or \
+           isinstance(args[0], Arg):
             real_kwargs['args'] = list(args)
         elif isinstance(args[0], list):
             real_kwargs['args'] = list(args[0])
@@ -374,7 +423,7 @@ class ClassInfo(object):
                     if k == '__new__':
                         a.is_meth = False
                     if a.is_meth:
-                        a.args = [(self.gap_name, self.arg_name)] + a.args
+                        a.args = [Arg(type=self.gap_name, name=self.arg_name)] + a.args
                     if not hasattr(a, 'py_name'):
                         if k != '__new__':
                             setattr(a, 'py_name', k)

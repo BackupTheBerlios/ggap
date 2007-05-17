@@ -294,7 +294,7 @@ InstallGlobalFunction(_GGAP_SEND_ERROR,
 function(arg)
   local s, msg;
   s := Concatenation("ge", String(arg[1], 8));
-  msg := Concatenation(arg{[2..Length(arg)]});
+  msg := Concatenation(List(arg{[2..Length(arg)]}, a -> String(a)));
   APPEND_LIST_INTR(s, _GGAP_SERIALIZE(msg));
   _GGAP_WRITE(s);
 end);

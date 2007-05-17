@@ -163,6 +163,31 @@ function(store)
   return _GGAP_CALL_FUNC("len", store);
 end);
 
+InstallGlobalFunction(GTK_TREE_PATH_G2P,
+function(p)
+  if IsInt(p) then
+    p := [p];
+  fi;
+  return List(p, i->i-1);
+end);
+
+InstallGlobalFunction(GTK_TREE_PATH_P2G,
+function(p)
+  if p = GNone then
+    return 0;
+  elif IsList(p) then
+    if Length(p) = 1 then
+      return p[1] + 1;
+    else
+      return List(p, i->i+1);
+    fi;
+  else
+    return p + 1;
+  fi;
+end);
+
+InstallGlobalFunction(GTK_TREE_INDEX_G2P, i -> i-1);
+
 BindGlobal("$GtkTreePathG2P", p -> List(p, i->i-1));
 BindGlobal("$GtkTreePathP2G", p -> List(p, i->i+1));
 BindGlobal("$GtkTreeIndexG2P", i -> i-1);
@@ -339,84 +364,6 @@ function(view) return GetList(GetModel(view)); end);
 
 ###############################################################################
 ##
-##  ScrollToCell( <treeview>, <path>, <column=None>,
-##                <use_align=FALSE>, <row_align=0.0>, <col_align=0.0> )
-##
-_GInstallMethodsOptArgs(ScrollToCell, [IsGtkTreeView, IsObject], [GNone, false, 0, 0], true);
-
-InstallMethod(ScrollToCell, [IsGtkTreeView, IsObject, IsGtkTreeViewColumn, IsBool, IsRat, IsRat],
-function(tree_view, path, column, use_align, row_align, col_align)
-  _GGAP_CALL_METH(tree_view, "scroll_to_cell", $GtkTreePathG2P(path),
-                  column, use_align, row_align, col_align);
-end);
-
-InstallMethod(ScrollToCell, [IsGtkTreeView, IsObject, IsGNone, IsBool, IsRat, IsRat],
-function(tree_view, path, column, use_align, row_align, col_align)
-  _GGAP_CALL_METH(tree_view, "scroll_to_cell", $GtkTreePathG2P(path),
-                  column, use_align, row_align, col_align);
-end);
-
-
-###############################################################################
-##
-##  SetCursor( <treeview>, <path>, <focus_column=None>, <start_editing=False> )
-##
-_GInstallMethodsOptArgs(SetCursor, [IsGtkTreeView, IsObject], [GNone, false], true);
-
-InstallMethod(SetCursor, [IsGtkTreeView, IsObject, IsGtkTreeViewColumn, IsBool],
-function(tree_view, path, focus_column, start_editing)
-  _GGAP_CALL_METH(tree_view, "set_cursor", $GtkTreePathG2P(path), focus_column, start_editing);
-end);
-
-InstallMethod(SetCursor, [IsGtkTreeView, IsObject, IsGNone, IsBool],
-function(tree_view, path, focus_column, start_editing)
-  _GGAP_CALL_METH(tree_view, "set_cursor", $GtkTreePathG2P(path), focus_column, start_editing);
-end);
-
-
-###############################################################################
-##
-##  SetCursorOnCell( <treeview>, <path>, <focus_column=None>, <focus_cell=None>,
-##                   <start_editing=False> )
-##
-_GInstallMethodsOptArgs(SetCursorOnCell, [IsGtkTreeView, IsObject],
-                        [GNone, GNone, false], true);
-
-InstallMethod(SetCursorOnCell, [IsGtkTreeView, IsObject, IsGtkTreeViewColumn, IsGtkCellRenderer, IsBool],
-function(tree_view, path, focus_column, focus_cell, start_editing)
-  _GGAP_CALL_METH(tree_view, "set_cursor", $GtkTreePathG2P(path), focus_column, focus_cell, start_editing);
-end);
-
-InstallMethod(SetCursorOnCell, [IsGtkTreeView, IsObject, IsGtkTreeViewColumn, IsGNone, IsBool],
-function(tree_view, path, focus_column, focus_cell, start_editing)
-  _GGAP_CALL_METH(tree_view, "set_cursor", $GtkTreePathG2P(path), focus_column, focus_cell, start_editing);
-end);
-
-InstallMethod(SetCursorOnCell, [IsGtkTreeView, IsObject, IsGNone, IsGtkCellRenderer, IsBool],
-function(tree_view, path, focus_column, focus_cell, start_editing)
-  _GGAP_CALL_METH(tree_view, "set_cursor", $GtkTreePathG2P(path), focus_column, focus_cell, start_editing);
-end);
-
-InstallMethod(SetCursorOnCell, [IsGtkTreeView, IsObject, IsGNone, IsGNone, IsBool],
-function(tree_view, path, focus_column, focus_cell, start_editing)
-  _GGAP_CALL_METH(tree_view, "set_cursor", $GtkTreePathG2P(path), focus_column, focus_cell, start_editing);
-end);
-
-
-###############################################################################
-##
-##  GetCursor( <treeview> )
-##
-InstallMethod(GetCursor, [IsGtkTreeView],
-function(tree_view)
-  local ret;
-  ret := _GGAP_CALL_METH(tree_view, "get_cursor");
-  return [$GtkTreePosP2G(ret[1]), ret[2]];
-end);
-
-
-###############################################################################
-##
 ##  GetSelected( <tree_view> )
 ##  GetSelectedRows( <tree_view> )
 ##  SelectRow( <tree_view>, <path> )
@@ -441,52 +388,3 @@ function(tree_view, path) return RowIsSelected(GetSelection(tree_view), path); e
 
 InstallMethod(SelectRange, [IsGtkTreeView, IsObject, IsObject],
 function(tree_view, start, end_) SelectRange(GetSelection(tree_view), start, end_); end);
-
-
-###############################################################################
-##
-##  GetSelected( <tree_selection> )
-##  GetSelectedRows( <tree_selection> )
-##  SelectRow( <tree_selection>, <path> )
-##  UnselectRow( <tree_selection>, <path> )
-##  RowIsSelected( <tree_selection>, <path> )
-##  SelectRange( <tree_selection>, <start>, <end> )
-##
-InstallMethod(GetSelected, [IsGtkTreeSelection],
-function(selection)
-  local ret;
-  ret := _GGAP_CALL_FUNC("gap.tree_selection_get_selected", selection);
-  if ret[2] = GNone then
-    return 0;
-  else
-    return $GtkTreePosP2G(ret[2]);
-  fi;
-end);
-
-InstallMethod(GetSelectedRows, [IsGtkTreeSelection],
-function(selection)
-  local ret;
-  ret := _GGAP_CALL_METH(selection, "get_selected_rows");
-  return List(ret[2], $GtkTreePosP2G);
-end);
-
-InstallMethod(SelectRow, [IsGtkTreeSelection, IsObject],
-function(selection, path)
-  _GGAP_CALL_METH(selection, "select_path", $GtkTreePosG2P(path));
-end);
-
-InstallMethod(UnselectRow, [IsGtkTreeSelection, IsObject],
-function(selection, path)
-  _GGAP_CALL_METH(selection, "unselect_path", $GtkTreePosG2P(path));
-end);
-
-InstallMethod(RowIsSelected, [IsGtkTreeSelection, IsObject],
-function(selection, path)
-  return _GGAP_CALL_METH(selection, "path_is_selected", $GtkTreePosG2P(path));
-end);
-
-InstallMethod(SelectRange, [IsGtkTreeSelection, IsObject, IsObject],
-function(selection, start, end_)
-  _GGAP_CALL_METH(selection, "select_range",
-                  $GtkTreePosG2P(start), $GtkTreePosG2P(end_));
-end);

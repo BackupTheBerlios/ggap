@@ -82,12 +82,12 @@ GGAPDemo := function()
     Error("could not find glade file");
   fi;
 
-  xml := GladeXML(file, "window", rec(info:="MooHtml"));
+  xml := GladeXML(file, "window", rec(), rec(source:="MooTextView"));
 
   data := rec(xml:=xml, file:=file, row:=0);
 
   ModifyFont(xml.source, "Monospace");
-#   SetHighlight(xml.source, "GAP");
+  SetLangById(xml.source, "GAP");
 
   ConnectCallback(GetSelection(xml.list), "changed", _GGAPDemoListSelectionChanged, data);
   ConnectCallback(xml.list, "row-activated", _GGAPDemoListRowActivated, data);

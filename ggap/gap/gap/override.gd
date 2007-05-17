@@ -81,34 +81,6 @@ DeclareOperation("SetList", [IsGtkListStore, IsList]);
 DeclareOperation("GetList", [IsGtkListStore]);
 
 
-
-###############################################################################
-##
-#O  ScrollToCell( <treeview>, <path>, <column=None>, <use_align=FALSE>, <row_align=0.0>, <col_align=0.0> )
-##
-_GDeclareOperationOptArgs("ScrollToCell", [IsGtkTreeView, IsObject],
-                          [IsGtkTreeViewColumn, IsBool, IsRat, IsRat]);
-
-###############################################################################
-##
-#O  SetCursor( <treeview>, <path>, <focus_column=None>, <start_editing=False> )
-##
-_GDeclareOperationOptArgs("SetCursor", [IsGtkTreeView, IsObject],
-                          [IsGtkTreeViewColumn, IsBool]);
-
-###############################################################################
-##
-#O  SetCursorOnCell( <treeview>, <path>, <focus_column=None>, <focus_cell=None>, <start_editing=False> )
-##
-_GDeclareOperationOptArgs("SetCursorOnCell", [IsGtkTreeView, IsObject],
-                          [IsGtkTreeViewColumn, IsGtkCellRenderer, IsBool]);
-
-###############################################################################
-##
-#O  GetCursor( <treeview> )
-##
-DeclareOperation("GetCursor", [IsGtkTreeView]);
-
 ###############################################################################
 ##
 #O  GetSelected( <tree_view> )
@@ -126,18 +98,6 @@ DeclareOperation("RowIsSelected", [IsGtkTreeView, IsObject]);
 DeclareOperation("SelectRange", [IsGtkTreeView, IsObject, IsObject]);
 
 
-###############################################################################
-##
-#O  GetSelected( <tree_selection> )
-#O  GetSelectedRows( <tree_selection> )
-#O  SelectRow( <tree_selection>, <path> )
-#O  UnselectRow( <tree_selection>, <path> )
-#O  RowIsSelected( <tree_selection>, <path> )
-#O  SelectRange( <tree_selection>, <start>, <end> )
-##
-DeclareOperation("GetSelected", [IsGtkTreeSelection]);
-DeclareOperation("GetSelectedRows", [IsGtkTreeSelection]);
-DeclareOperation("SelectRow", [IsGtkTreeSelection, IsObject]);
-DeclareOperation("UnselectRow", [IsGtkTreeSelection, IsObject]);
-DeclareOperation("RowIsSelected", [IsGtkTreeSelection, IsObject]);
-DeclareOperation("SelectRange", [IsGtkTreeSelection, IsObject, IsObject]);
+DeclareGlobalFunction("GTK_TREE_PATH_G2P");
+DeclareGlobalFunction("GTK_TREE_PATH_P2G");
+DeclareGlobalFunction("GTK_TREE_INDEX_G2P");

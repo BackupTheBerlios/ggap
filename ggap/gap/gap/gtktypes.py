@@ -1,4 +1,4 @@
-from defs import Function, ClassInfo, Constant
+from defs import Arg, Function, ClassInfo, Constant
 
 IsGtkTreeViewColumn = 'IsGtkTreeViewColumn'
 IsGtkWidget = 'IsGtkWidget'
@@ -11,6 +11,7 @@ IsGtkTextBuffer = 'IsGtkTextBuffer'
 IsGtkToolItem = 'IsGtkToolItem'
 IsGtkCellRenderer = 'IsGtkCellRenderer'
 IsGtkFileFilter = 'IsGtkFileFilter'
+IsGtkTreeSelection = 'IsGtkTreeSelection'
 IsGdkScreen = 'IsGdkScreen'
 IsGdkWindow = 'IsGdkWindow'
 IsGdkPixbuf = 'IsGdkPixbuf'
@@ -18,6 +19,7 @@ IsGdkPixbuf = 'IsGdkPixbuf'
 IsObject = 'IsObject'
 IsString = 'IsString'
 IsInt = 'IsInt'
+IsRat = 'IsRat'
 IsList = 'IsList'
 IsBool = 'IsBool'
 
@@ -43,10 +45,24 @@ def BoolArg(name):
 ArgSetting = BoolArg('setting')
 ArgActive = BoolArg('active')
 
+def FloatArg(name=None):
+    if name:
+        return (IsRat, name)
+    else:
+        return IsRat
+
+class TreePathArg(Arg):
+    def __init__(self, name='path'):
+        Arg.__init__(self, type='IsObject', name=name,
+                     transform='GTK_TREE_PATH_G2P(%(arg)s)')
+class TreeIndArg(Arg):
+    def __init__(self, name='index'):
+        Arg.__init__(self, type='IsInt', name=name,
+                     transform='GTK_TREE_INDEX_G2P(%(arg)s)')
+
 gboolean = 'IsBool'
 gint = 'IsInt'
 guint = 'IsInt'
-gfloat = 'IsRat'
 
 GtkWindowType = IsInt
 GtkWindowPosition = IsInt
@@ -67,6 +83,7 @@ GtkFileChooserAction = IsInt
 GtkSelectionMode = IsInt
 GtkSortType = IsInt
 GtkTreeViewColumnSizing = IsInt
+GtkPackType = IsInt
 
 top_classes = []
 
@@ -239,7 +256,7 @@ class GObject:
 #             modify_bg = [GtkStateType, GdkColor]
 #             modify_text = [GtkStateType, GdkColor]
 #             modify_base = [GtkStateType, GdkColor]
-            modify_font = 'doc_stub'
+            modify_font = Function(py_name='gap.widget_modify_font', is_meth=False, args=[IsGtkWidget, StringArg('font')])
             get_parent = []
             get_settings = []
             get_clipboard = []
@@ -465,14 +482,14 @@ class GObject:
 #                                                                      gfloat yalign,
 #                                                                      gfloat xscale,
 #                                                                      gfloat yscale);
-                        set = [gfloat, gfloat, gfloat, gfloat]
+                        set = [FloatArg('xalign'), FloatArg('yalign'), FloatArg('xscale'), FloatArg('yscale')]
                         get_padding = []
-                        set_padding = [guint, guint, guint, guint]
+                        set_padding = [IntArg('top'), IntArg('bottom'), IntArg('left'), IntArg('right')]
                     class GtkFrame:
 #                         GtkWidget*  gtk_frame_new                   (const gchar *label);
                         set_label = [StringArg('label')]
                         set_label_widget = [IsGtkWidget]
-                        set_label_align = [gfloat, gfloat]
+                        set_label_align = [FloatArg('xalign'), FloatArg('yalign')]
                         set_shadow_type = [GtkShadowType]
                         get_label = []
                         get_label_align = []
@@ -485,7 +502,7 @@ class GObject:
 #                                                                          gfloat yalign,
 #                                                                          gfloat ratio,
 #                                                                          IsBool obey_child);
-                            set = [gfloat, gfloat, gfloat, IsBool]
+                            set = [FloatArg('xalign'), FloatArg('yalign'), FloatArg('ratio'), IsBool]
 
                     class GtkButton:
                         __new__ = 'doc_stub'
@@ -508,7 +525,7 @@ class GObject:
                         set_use_underline = [ArgSetting]
                         set_focus_on_click = [ArgSetting]
                         get_focus_on_click = []
-                        set_alignment = [gfloat, gfloat]
+                        set_alignment = [FloatArg('xalign'), FloatArg('yalign')]
                         get_alignment = []
                         set_image = [IsGtkWidget]
                         get_image = []
@@ -834,18 +851,8 @@ class GObject:
                     get_spacing = []
                     set_spacing = [IsInt]
                     reorder_child = [IsGtkWidget, IsInt]
-#                     query_child_packing (GtkBox *box,
-#                                                                  GtkWidget *child,
-#                                                                  IsBool *expand,
-#                                                                  IsBool *fill,
-#                                                                  guint *padding,
-#                                                                  GtkPackType *pack_type);
-#                     set_child_packing       (GtkBox *box,
-#                                                                  GtkWidget *child,
-#                                                                  IsBool expand,
-#                                                                  IsBool fill,
-#                                                                  guint padding,
-#                                                                  GtkPackType pack_type);
+                    query_child_packing = [(IsGtkWidget, 'child')]
+                    set_child_packing = [(IsGtkWidget, 'child'), BoolArg('expand'), BoolArg('fill'), IntArg('padding'), GtkPackType]
 
                     class GtkButtonBox:
                         get_layout = []
@@ -979,9 +986,10 @@ class GObject:
                     __new__ = Function(opt_args=[IsGtkTextBuffer])
                     set_buffer = ['IsGtkTextBuffer']
                     get_buffer = []
-                    set_text = 'doc_stub'
-                    get_text = 'doc_stub'
-                    set_markup = 'doc_stub'
+                    set_text = Function(py_name='gap.text_view_set_text', args=[IsGtkTextView, ArgText], is_meth=False)
+                    get_text = Function(py_name='gap.text_view_get_text', args=[IsGtkTextView], is_meth=False)
+                    set_markup = Function(py_name='moo.app.text_view_set_markup',
+                                          args=[IsGtkTextView, StringArg('markup')], is_meth=False)
 #                     void        gtk_text_view_scroll_to_mark    (GtkTextView *text_view,
 #                                                                  GtkTextMark *mark,
 #                                                                  gdouble within_margin,
@@ -1141,6 +1149,15 @@ class GObject:
 #                     IsBool    gtk_text_view_get_accepts_tab   (GtkTextView *text_view);
 #                     GtkTextAttributes* gtk_text_view_get_default_attributes
 #                                                                 (GtkTextView *text_view);
+                    class MooTextView:
+                        __py_name__ = 'moo.edit.TextView'
+                        can_redo = []
+                        can_undo = []
+                        redo = []
+                        undo = []
+                        begin_not_undoable_action = []
+                        end_not_undoable_action = []
+                        set_lang_by_id = [IsString]
 
                 class GtkToolbar:
                     insert = [IsGtkToolItem, IsInt]
@@ -1201,22 +1218,25 @@ class GObject:
                     set_expander_column = [IsGtkTreeViewColumn]
                     get_expander_column = []
                     scroll_to_point = [IsInt, IsInt]
-                    scroll_to_cell = 'doc_stub'
-                    set_cursor = 'doc_stub'
-                    set_cursor_on_cell = 'doc_stub'
-                    get_cursor = 'doc_stub'
-                    row_activated = 'doc_stub'
+
+                    scroll_to_cell = Function(args=[TreePathArg()], opt_args=[IsGtkTreeViewColumn, BoolArg('use_align'),
+                                                                              FloatArg('row_align'), FloatArg('col_align')])
+
+                    set_cursor = Function(args=[TreePathArg()], opt_args=[(IsGtkTreeViewColumn, 'focus_column'), BoolArg('start_editing')])
+                    set_cursor_on_cell = Function(args=[TreePathArg()], opt_args=[(IsGtkTreeViewColumn, 'focus_column'), (IsGtkCellRenderer, 'focus_cell'), BoolArg('start_editing')])
+                    get_cursor = Function(ret_transform='[GTK_TREE_PATH_P2G(%(retval)s[1]), %(retval)s[2]]')
+                    row_activated = [TreePathArg(), IsGtkTreeViewColumn]
                     expand_all = []
                     collapse_all = []
-                    expand_to_path = 'doc_stub'
-                    expand_row = 'doc_stub'
-                    collapse_row = 'doc_stub'
-                    row_expanded = 'doc_stub'
+                    expand_to_path = [TreePathArg()]
+                    expand_row = [TreePathArg(), BoolArg('open_all')]
+                    collapse_row = [TreePathArg()]
+                    row_expanded = [TreePathArg()]
                     set_reorderable = [ArgSetting]
                     get_reorderable = []
                     get_path_at_pos = 'doc_stub'
-                    get_cell_area = 'doc_stub'
-                    get_background_area = 'doc_stub'
+                    get_cell_area = [TreePathArg(), IsGtkTreeViewColumn]
+                    get_background_area = [TreePathArg(), IsGtkTreeViewColumn]
                     get_visible_rect = []
                     get_visible_range = 'doc_stub'
                     get_bin_window = []
@@ -1262,7 +1282,7 @@ class GObject:
                 set_has_frame = [BoolArg('has_frame')]
                 set_width_chars = [IntArg('n_chars')]
                 get_invisible_char = []
-                set_alignment = [(gfloat, 'xalign')]
+                set_alignment = [FloatArg('xalign')]
                 get_alignment = []
                 get_max_length = []
                 get_visibility = []
@@ -1387,7 +1407,7 @@ class GObject:
         get_clickable = []
         set_widget = [IsGtkWidget]
         get_widget = []
-        set_alignment = [gfloat]
+        set_alignment = [FloatArg('align')]
         get_alignment = []
         set_reorderable = [BoolArg('setting')]
         get_reorderable = []
@@ -1431,16 +1451,20 @@ class GObject:
         set_mode = [GtkSelectionMode]
         get_mode = []
         get_tree_view = []
-        get_selected = 'doc_stub'
-        get_selected_rows = 'doc_stub'
+        get_selected = Function(args=[IsGtkTreeSelection], is_meth=False,
+                                py_name='gap.tree_selection_get_selected',
+                                ret_transform='GTK_TREE_PATH_P2G(%(retval)s[2])')
+        get_selected_rows = Function(args=[IsGtkTreeSelection], is_meth=False,
+                                     py_name='gap.tree_selection_get_selected_rows',
+                                     ret_transform='List(%(retval)s[2], GTK_TREE_PATH_P2G)')
         count_selected_rows = []
-        select_row = 'doc_stub'
-        unselect_row = 'doc_stub'
-        row_is_selected = 'doc_stub'
+        select_row = Function(args=[TreePathArg()], py_name='select_path')
+        unselect_row = Function(args=[TreePathArg()], py_name='unselect_path')
+        row_is_selected = Function(args=[TreePathArg()], py_name='path_is_selected')
         select_all = []
         unselect_all = []
-        select_range = 'doc_stub'
-        unselect_range = 'doc_stub'
+        select_range = Function(args=[TreePathArg('start'), TreePathArg('end')])
+        unselect_range = Function(args=[TreePathArg('start'), TreePathArg('end')])
     class GtkTreeStore:
         __implements__ = ['GtkTreeSortable']
         __new__ = 'doc_stub'
@@ -1470,11 +1494,6 @@ functions = [
     Function(py_name='gtk.gdk.pixbuf_new_from_file', gap_name='GdkPixbuf', args=[ArgFilename]),
     Function(py_name='gtk.gdk.pixbuf_new_from_file', gap_name='GdkPixbuf',
              args=[ArgFilename, ArgWidth, ArgHeight]),
-
-    Function(py_name='gap.widget_modify_font', gap_name='ModifyFont', args=[IsGtkWidget, StringArg('font')]),
-    Function(py_name='gap.text_view_set_text', gap_name='SetText', args=[IsGtkTextView, ArgText]),
-    Function(py_name='gap.text_view_get_text', gap_name='GetText', args=[IsGtkTextView]),
-    Function(py_name='moo.app.text_view_set_markup', gap_name='SetMarkup', args=[IsGtkTextView, StringArg('markup')]),
 ]
 
 
