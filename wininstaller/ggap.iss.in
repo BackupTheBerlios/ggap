@@ -32,7 +32,9 @@ Filename: {app}\bin\ggap.exe; Description: {cm:LaunchProgram,GGAP}; Flags: nowai
 
 [UninstallDelete]
 Name: {app}\bin\Lib\*.pyc; Type: files
-Name: {app}\bin\Lib\*\*.pyc; Type: files
-Name: {app}\bin\Lib\site-packages\*\*.pyc; Type: files
+Name: {app}\bin\Lib\encodings\*.pyc; Type: files
+Name: {app}\bin\Lib\site-packages\cairo\*.pyc; Type: files
 Name: {app}\lib\ggap\plugins\lib\*.pyc; Type: files
-Name: {app}\lib\ggap\plugins\lib\*\*.pyc; Type: files
+Name: {app}\bin\Lib\site-packages\gobject\*.pyc; Type: files
+Name: {app}\bin\Lib\site-packages\gtk\*.pyc; Type: files
+Name: {app}\lib\ggap\plugins\lib\medit\*.pyc; Type: files

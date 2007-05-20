@@ -1,7 +1,7 @@
 /*
  *   gap.c
  *
- *   Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ gap_escape_filename (const char *filename)
 
 #define INIT_PKG                                        \
 "if IsBoundGlobal(\"_GGAP_INIT\") then\n"               \
-"  _GGAP_INIT(\"%s\", \"%s\", %d, \"%s\");\n"           \
+"  _GGAP_INIT(\"%s\", \"%s\", %d, \"%s\", %s);\n"       \
 "fi;\n"
 
 #define SAVE_WORKSPACE                                  \
@@ -44,7 +44,8 @@ gap_escape_filename (const char *filename)
 const char *
 gap_init_file (const char *workspace,
                gboolean    init_pkg,
-               guint       session_id)
+               guint       session_id,
+               gboolean    fancy)
 {
     GString *contents;
     MooApp *app;
@@ -103,7 +104,8 @@ gap_init_file (const char *workspace,
         out_escaped = gap_escape_filename (out_name ? out_name : "");
 
         g_string_append_printf (contents, INIT_PKG, in_escaped,
-                                out_escaped, session_id, ph_escaped);
+                                out_escaped, session_id, ph_escaped,
+                                fancy ? "true" : "false");
 
         g_free (appdir);
         g_free (ph);

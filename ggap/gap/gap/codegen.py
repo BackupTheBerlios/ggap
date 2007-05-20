@@ -103,8 +103,14 @@ def printenums(mod, prefix, fp):
             return cmp(t1.__name__, t2.__name__)
     vals.sort(cmp_vals)
 
+    def add_prefix(prefix, name):
+        if name.startswith('_'):
+            return prefix + name
+        else:
+            return prefix + '_' + name
+
     for wm in vals:
-        fp.write_gi('BindGlobal("%s", %s);' % (prefix + wm[0], int(wm[1])))
+        fp.write_gi('BindGlobal("%s", %s);' % (add_prefix(prefix, wm[0]), int(wm[1])))
 
 def printconstants(fp):
     for c in gtktypes.constants:
@@ -122,7 +128,8 @@ def write_gd(fp):
     fp.write_gd('DeclareGlobalFunction("_GGAP_REGISTER_WIDGETS");')
 
 def write_gi(fp):
-    printenums(gtk, "GTK_", fp)
+    printenums(gtk, "GTK", fp)
+    printenums(gtk.gdk, "GDK", fp)
     printconstants(fp)
     fp.write_gi('')
     for cls in gtktypes.top_classes:

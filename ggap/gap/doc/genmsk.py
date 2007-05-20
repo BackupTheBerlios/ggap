@@ -11,8 +11,8 @@ except ImportError:
 
 def make_section_name(gap_name):
     gap_name = gap_name[2:]
-    if gap_name.startswith('Glade') or gap_name in \
-            ['GObject', 'GtkObject']:
+    if gap_name.startswith('Glade') or gap_name.startswith('Canvas') or \
+        gap_name in ['GObject', 'GtkObject', 'MooTextView']:
         pass
     elif gap_name.startswith('Gtk') or gap_name.startswith('Gdk'):
         gap_name = gap_name[3:]

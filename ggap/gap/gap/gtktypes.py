@@ -59,6 +59,10 @@ class TreeIndArg(Arg):
     def __init__(self, name='index'):
         Arg.__init__(self, type='IsInt', name=name,
                      transform='GTK_TREE_INDEX_G2P(%(arg)s)')
+class ListIndexArg(Arg):
+    def __init__(self, name='index'):
+        Arg.__init__(self, type='IsInt', name=name,
+                     transform='%(arg)s - 1')
 
 gboolean = 'IsBool'
 gint = 'IsInt'
@@ -685,8 +689,8 @@ class GObject:
                         set_row_span_column = [IsInt]
                         get_column_span_column = []
                         set_column_span_column = [IsInt]
-                        get_active = []
-                        set_active = [IsInt]
+                        get_active = Function(ret_transform='%(retval)s + 1')
+                        set_active = [ListIndexArg('active')]
 #                         IsBool    gtk_combo_box_get_active_iter   (GtkComboBox *combo_box,
 #                                                                      GtkTreeIter *iter);
 #                         set_active_iter   (GtkComboBox *combo_box,
@@ -694,9 +698,9 @@ class GObject:
                         get_model = []
                         set_model = [IsGtkTreeModel]
                         append_text = [ArgText]
-                        insert_text = [IsInt, ArgText]
+                        insert_text = [ListIndexArg(), ArgText]
                         prepend_text = [ArgText]
-                        remove_text = [IsInt]
+                        remove_text = [ListIndexArg()]
                         get_active_text = []
                         popup = []
                         popdown = []

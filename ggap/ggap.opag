@@ -26,7 +26,7 @@
 #include <locale.h>
 
 
-#define DEFAULT_NEW_INSTANCE 0
+#define DEFAULT_NEW_INSTANCE FALSE
 
 
 int _ggap_parse_options (const char *const program_name,
@@ -42,7 +42,7 @@ g  gap-cmd      "=COMMAND GAP command line"                     reqarg
 e  editor       "Do not start GAP automatically"
 E  pure-editor  "Do not enable any GAP stuff"
 n  new-app      "Run new instance of application"
-   simple       "Simple mode"
+   fancy        "Fancy mode"
 l  log          "[=FILE] Show debug output or write it to FILE" optarg
    version      "Display version information and exit"          return
 h  help         "Display this help text and exit"               return
@@ -60,7 +60,7 @@ static void usage (void)
     g_print ("%s", STR_HELP_EDITOR);
     g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
-    g_print ("%s", STR_HELP_SIMPLE);
+    g_print ("%s", STR_HELP_FANCY);
     g_print ("%s", STR_HELP_LOG);
     g_print ("%s", STR_HELP_VERSION);
     g_print ("%s", STR_HELP_HELP);
@@ -123,11 +123,7 @@ int main (int argc, char *argv[])
     if (_ggap_opt_new_app)
         new_instance = TRUE;
     else
-#if DEFAULT_NEW_INSTANCE
-        new_instance = TRUE;
-#else
-        new_instance = FALSE;
-#endif
+        new_instance = DEFAULT_NEW_INSTANCE;
 
     GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
     files = moo_filenames_from_locale (argv + opt_remain);
@@ -138,14 +134,14 @@ int main (int argc, char *argv[])
                         "full-name", "GGAP",
                         "version", VERSION,
                         "description", "GGAP is a front end for GAP",
-                        "run-input", (gboolean) !_ggap_opt_simple,
+                        "run-input", TRUE,
                         "default-ui", GGAP_UI,
                         "logo", "ggap",
                         "credits", THANKS,
 
                         "gap-cmd-line", _ggap_arg_gap_cmd,
                         "editor-mode", (gboolean) _ggap_opt_editor,
-                        "simple", (gboolean) _ggap_opt_simple,
+                        "fancy", (gboolean) _ggap_opt_fancy,
 
                         NULL);
 

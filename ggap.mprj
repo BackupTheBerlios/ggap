@@ -2,6 +2,12 @@
 <medit-project version="1.0" type="C" name="ggap">
  <active>debug</active>
  <configurations>
+  <cygwin>
+   <build_dir>build/cygwin</build_dir>
+   <configure>
+    <args>--run-configure-manually</args>
+   </configure>
+  </cygwin>
   <debug>
    <build_dir>build/debug</build_dir>
    <configure>
@@ -11,13 +17,16 @@
     </vars>
    </configure>
   </debug>
+  <gtk-2.6>
+   <build_dir>/home/muntyan/projects/gtk-2.6/ggap</build_dir>
+   <configure>
+    <args>--run-configure-manually</args>
+   </configure>
+  </gtk-2.6>
   <mingw>
    <build_dir>build/mingw</build_dir>
    <configure>
-    <args>--enable-all-gcc-warnings</args>
-    <vars>
-     <var name="CFLAGS">-g -O2</var>
-    </vars>
+    <args>--run-configure-manually</args>
    </configure>
   </mingw>
   <optimized>
@@ -30,6 +39,7 @@
    </configure>
   </optimized>
  </configurations>
+ <file_selector_dir>/home/muntyan/projects/ggap/</file_selector_dir>
  <run>
   <args>--new-app</args>
   <exe>ggap/ggap</exe>

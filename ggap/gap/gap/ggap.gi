@@ -52,11 +52,12 @@ InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
 ##  _GGAP_INIT()
 ##
 InstallGlobalFunction(_GGAP_INIT,
-function(out_pipe, in_pipe, session_id, pipehelper)
-  local reset_data;
+function(out_pipe, in_pipe, session_id, pipehelper, fancy)
+  local reset_data, init_fancy;
 
   reset_data := function()
     _GGAP_DATA.init := false;
+    _GGAP_DATA.fancy := false;
     _GGAP_DATA.session_id := 0;
     _GGAP_DATA.stamp := 0;
     _GGAP_DATA.objects := _GDict();
@@ -66,6 +67,28 @@ function(out_pipe, in_pipe, session_id, pipehelper)
     _GGAP_DATA.exec_stack := [];
     _GGAP_DATA.log_input := [];
     _GGAP_DATA.log_output := [];
+  end;
+
+  init_fancy := function(fancy)
+    _GGAP_DATA.fancy := fancy;
+    Info(InfoGGAP, 3, "# fancy: ", fancy, "\n");
+
+    if IsBoundGlobal("PrintPromptHook") then
+      if IsReadOnlyGlobal("PrintPromptHook") then
+        MakeReadWriteGlobal("PrintPromptHook");
+      fi;
+      UnbindGlobal("PrintPromptHook");
+    fi;
+
+    if fancy then
+      BindGlobal("PrintPromptHook",
+      function()
+        local prompt;
+        prompt := CPROMPT();
+        Info(InfoGGAP, 8, "# prompt: ", prompt, "\n");
+        Print("ggap-prompt-", prompt, "\c");
+      end);
+    fi;
   end;
 
   if _GGAP_DATA.init then
@@ -96,16 +119,25 @@ function(out_pipe, in_pipe, session_id, pipehelper)
     else
       _GGAP_DATA.in_pipe := InputTextFile(in_pipe);
     fi;
+    if _GGAP_DATA.in_pipe = fail then
+      Error("could not create input pipe");
+    fi;
     _GGAP_DATA.in_pipe_fd := FileDescriptorOfStream(_GGAP_DATA.in_pipe);
     InstallCharReadHookFunc(_GGAP_DATA.in_pipe, "r", _GGAP_CHECK_INPUT);
   else
     _GGAP_DATA.in_pipe := fail;
   fi;
+
   if out_pipe <> "" then
     _GGAP_DATA.out_pipe := OutputTextFile(out_pipe, true);
+    if _GGAP_DATA.out_pipe = fail then
+      Error("could not create output pipe");
+    fi;
   else
     _GGAP_DATA.out_pipe := fail;
   fi;
+
+  init_fancy(fancy);
 
   _GGAP_INIT_TYPES();
 

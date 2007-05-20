@@ -17,6 +17,7 @@
 #include "gaptermwindow.h"
 #include "gapeditwindow.h"
 #include "gap.h"
+#include "gapwswindow.h"
 #include "gapprefs-glade.h"
 #include "gapoutput.h"
 #include <mooutils/moostock.h>
@@ -24,18 +25,10 @@
 #include <mooutils/mooutils-misc.h>
 #include <mooutils/mooutils-fs.h>
 #include <mooterm/mooterm-prefs.h>
+#include <mooterm/mootermpt.h>
 #include <mooedit/mooeditprefs.h>
 #include <mooedit/mooplugin.h>
 #include <string.h>
-
-
-#define APP_PREFS_GAP_COMMAND           GGAP_PREFS_PREFIX "/command"
-#define APP_PREFS_GAP_INIT_PKG          GGAP_PREFS_PREFIX "/init_pkg"
-#define APP_PREFS_GAP_WORKING_DIR       GGAP_PREFS_PREFIX "/working_dir"
-#define APP_PREFS_GAP_SAVE_WORKSPACE    GGAP_PREFS_PREFIX "/save_workspace"
-#define APP_PREFS_GAP_CLEAR_TERMINAL    GGAP_PREFS_PREFIX "/clear_terminal"
-
-#define WORKSPACE_FILE "workspace"
 
 
 gboolean GAP_APP_EDITOR_MODE;
@@ -59,12 +52,10 @@ static void         gap_app_exec_cmd        (MooApp     *app,
                                              const char *data,
                                              guint       len);
 static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
-// static void         gap_app_cmd_setup       (MooApp     *app,
-//                                              MooCommand *cmd,
-//                                              GtkWindow  *window);
 
-static void         gap_app_start_gap_real  (GapApp     *app,
-                                             const char *workspace);
+static void         new_editor_action       (MooApp     *app);
+static void         open_in_editor_action   (GapTermWindow *term_window);
+
 #ifdef __WIN32__
 static void         open_gap_manual         (void);
 #endif
@@ -76,7 +67,7 @@ enum {
     PROP_0,
     PROP_GAP_CMD_LINE,
     PROP_EDITOR_MODE,
-    PROP_SIMPLE
+    PROP_FANCY
 };
 
 static void
@@ -92,7 +83,6 @@ gap_app_class_init (GapAppClass *klass)
     app_class->try_quit = gap_app_try_quit;
     app_class->prefs_dialog = gap_app_prefs_dialog;
     app_class->exec_cmd = gap_app_exec_cmd;
-//     app_class->cmd_setup = gap_app_cmd_setup;
 
     gobject_class->set_property = gap_app_set_property;
     gobject_class->get_property = gap_app_get_property;
@@ -114,10 +104,10 @@ gap_app_class_init (GapAppClass *klass)
                                              G_PARAM_WRITABLE));
 
     g_object_class_install_property (gobject_class,
-                                     PROP_SIMPLE,
-                                     g_param_spec_boolean ("simple",
-                                             "simple",
-                                             "simple",
+                                     PROP_FANCY,
+                                     g_param_spec_boolean ("fancy",
+                                             "fancy",
+                                             "fancy",
                                              FALSE,
                                              G_PARAM_WRITABLE));
 
@@ -125,7 +115,7 @@ gap_app_class_init (GapAppClass *klass)
         return;
 
     edit_class = g_type_class_ref (GAP_TYPE_EDIT_WINDOW);
-    term_class = g_type_class_ref (GAP_TYPE_TERM_WINDOW);
+    term_class = g_type_class_ref (GAP_TYPE_WINDOW);
 
 //     moo_window_class_new_action (edit_class, "ExecuteSelection", NULL,
 //                                  "display-name", "Execute Selection",
@@ -135,16 +125,6 @@ gap_app_class_init (GapAppClass *klass)
 //                                  "accel", "<shift><alt>Return",
 //                                  "closure-callback", execute_selection,
 //                                  NULL);
-
-    moo_window_class_new_action (term_class, "Quit", NULL,
-                                 "display-name", GTK_STOCK_QUIT,
-                                 "label", GTK_STOCK_QUIT,
-                                 "tooltip", GTK_STOCK_QUIT,
-                                 "stock-id", GTK_STOCK_QUIT,
-                                 "accel", "<ctrl>Q",
-                                 "closure-callback", moo_app_quit,
-                                 "closure-proxy-func", moo_app_get_instance,
-                                 NULL);
 
     moo_window_class_new_action (term_class, "Restart", NULL,
                                  "display-name", _("Restart"),
@@ -184,6 +164,25 @@ gap_app_class_init (GapAppClass *klass)
                                  NULL);
 #endif
 
+    moo_window_class_new_action (term_class, "NewEditor", NULL,
+                                 "display-name", "New Editor",
+                                 "label", "_New Editor",
+                                 "tooltip", "New Editor",
+                                 "stock-id", GTK_STOCK_EDIT,
+                                 "accel", "<Alt>E",
+                                 "closure-callback", new_editor_action,
+                                 "closure-proxy-func", moo_app_get_instance,
+                                 NULL);
+
+    moo_window_class_new_action (term_class, "OpenInEditor", NULL,
+                                 "display-name", "Open In Editor",
+                                 "label", "_Open In Editor",
+                                 "tooltip", "Open In Editor",
+                                 "stock-id", GTK_STOCK_OPEN,
+                                 "accel", "<Alt>O",
+                                 "closure-callback", open_in_editor_action,
+                                 NULL);
+
     g_type_class_unref (edit_class);
     g_type_class_unref (term_class);
 }
@@ -222,8 +221,8 @@ gap_app_set_property (GObject    *object,
             app->editor_mode = g_value_get_boolean (value);
             break;
 
-        case PROP_SIMPLE:
-            app->simple = g_value_get_boolean (value);
+        case PROP_FANCY:
+            app->fancy = g_value_get_boolean (value);
             break;
 
         default:
@@ -239,21 +238,21 @@ gap_app_init (G_GNUC_UNUSED GapApp *app)
         return;
 
 #ifdef __WIN32__
-    moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, "c:\\gap4r4\\bin\\gapw95.exe -l c:\\gap4r4");
+    moo_prefs_new_key_string (GGAP_PREFS_GAP_COMMAND, "c:\\gap4r4\\bin\\gapw95.exe -l c:\\gap4r4");
 #else
-    moo_prefs_new_key_string (APP_PREFS_GAP_COMMAND, "gap");
+    moo_prefs_new_key_string (GGAP_PREFS_GAP_COMMAND, "gap");
 #endif
-    moo_prefs_new_key_bool (APP_PREFS_GAP_INIT_PKG, TRUE); /* XXX */
-    moo_prefs_new_key_string (APP_PREFS_GAP_WORKING_DIR, NULL);
-    moo_prefs_new_key_bool (APP_PREFS_GAP_SAVE_WORKSPACE, TRUE);
-    moo_prefs_new_key_bool (APP_PREFS_GAP_CLEAR_TERMINAL, TRUE);
+    moo_prefs_new_key_bool (GGAP_PREFS_GAP_INIT_PKG, TRUE); /* XXX */
+    moo_prefs_new_key_string (GGAP_PREFS_GAP_WORKING_DIR, NULL);
+    moo_prefs_new_key_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE, TRUE);
+    moo_prefs_new_key_bool (GGAP_PREFS_GAP_CLEAR_TERMINAL, TRUE);
 }
 
 
 static void
 editor_windows_closed (GapApp *app)
 {
-    if (!app->term_window)
+    if (!app->gap_window)
         moo_app_quit (MOO_APP (app));
 }
 
@@ -269,6 +268,14 @@ gap_app_init_real (MooApp *app)
     if (!MOO_APP_CLASS(gap_app_parent_class)->init (app))
         return FALSE;
 
+#if defined(__WIN32__)
+    {
+        char *dir = moo_win32_get_app_dir ();
+        moo_term_set_helper_directory (dir);
+        g_free (dir);
+    }
+#endif /* __WIN32__ */
+
     editor = moo_app_get_editor (app);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
     g_object_set (editor, "allow-empty-window", TRUE, NULL);
@@ -280,31 +287,10 @@ gap_app_init_real (MooApp *app)
 
 
 static gboolean
-term_window_close (GapApp         *app,
-                   G_GNUC_UNUSED GdkEventAny *event,
-                   MooTermWindow  *window)
+gap_window_close (GapApp *app)
 {
     g_return_val_if_fail (GAP_IS_APP (app), FALSE);
-    g_return_val_if_fail (MOO_IS_TERM_WINDOW (window), FALSE);
-
-    if (app->term_window != window)
-        return FALSE;
-
     return !moo_app_quit (MOO_APP (app));
-}
-
-
-static void
-gap_died (GapApp *app)
-{
-    if (app->session)
-    {
-        gap_session_shutdown (app->session);
-        g_object_unref (app->session);
-        app->session = NULL;
-    }
-
-    gap_app_output_restart ();
 }
 
 
@@ -313,23 +299,28 @@ gap_app_ensure_terminal (GapApp *app)
 {
     g_return_if_fail (GAP_IS_APP (app));
 
-    if (!app->term)
+    if (!app->terminal)
     {
-        app->term_window = g_object_new (GAP_TYPE_TERM_WINDOW, "ui-xml",
-                                         moo_app_get_ui_xml (MOO_APP (app)),
-                                         NULL);
-        gtk_widget_show (GTK_WIDGET (app->term_window));
-        app->term = moo_term_window_get_term (app->term_window);
-        g_signal_connect_swapped (app->term, "child-died",
-                                  G_CALLBACK (gap_died), app);
-        g_signal_connect_swapped (app->term_window, "delete-event",
-                                  G_CALLBACK (term_window_close), app);
+        GType win_type;
+
+        if (app->fancy)
+            win_type = GAP_TYPE_WS_WINDOW;
+        else
+            win_type = GAP_TYPE_TERM_WINDOW;
+
+        app->gap_window = g_object_new (win_type, "ui-xml",
+                                        moo_app_get_ui_xml (MOO_APP (app)),
+                                        NULL);
+        gtk_widget_show (GTK_WIDGET (app->gap_window));
+        app->terminal = gap_window_get_terminal (app->gap_window);
+        g_signal_connect_swapped (app->gap_window, "close",
+                                  G_CALLBACK (gap_window_close), app);
     }
 }
 
 
 static int
-gap_app_run (MooApp     *mapp)
+gap_app_run (MooApp *mapp)
 {
     GapApp *app;
     MooEditor *editor;
@@ -358,14 +349,24 @@ static void
 gap_app_quit (MooApp *app)
 {
     gap_app_output_shutdown ();
+
+    if (GAP_APP (app)->gap_window)
+        moo_window_close (MOO_WINDOW (GAP_APP (app)->gap_window));
+
     MOO_APP_CLASS(gap_app_parent_class)->quit (app);
 }
 
 
 static gboolean
-gap_app_try_quit (MooApp     *app)
+gap_app_try_quit (MooApp *app)
 {
-    return MOO_APP_CLASS(gap_app_parent_class)->try_quit (app);
+    if (MOO_APP_CLASS(gap_app_parent_class)->try_quit (app))
+        return TRUE;
+
+    if (GAP_APP(app)->gap_window && !moo_window_close (MOO_WINDOW (GAP_APP(app)->gap_window)))
+        return TRUE;
+
+    return FALSE;
 }
 
 
@@ -375,10 +376,13 @@ gap_app_exec_cmd (MooApp     *app,
                   const char *data,
                   guint       len)
 {
+    GapApp *gapp = GAP_APP (app);
+
     switch (cmd)
     {
         case 'g':
-            gap_session_execute (GAP_APP(app)->session, data, len);
+            if (gapp->terminal)
+                gap_session_execute (gap_view_get_session (gapp->terminal), data, len);
             break;
         default:
             MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
@@ -389,10 +393,10 @@ gap_app_exec_cmd (MooApp     *app,
 void
 gap_app_send_intr (GapApp *app)
 {
-    g_return_if_fail (GAP_IS_APP (app) && MOO_IS_TERM (app->term));
+    g_return_if_fail (GAP_IS_APP (app) && GAP_IS_VIEW (app->terminal));
 
-    if (moo_term_child_alive (app->term))
-        moo_term_ctrl_c (app->term);
+    if (gap_view_child_alive (app->terminal))
+        gap_view_send_intr (app->terminal);
 }
 
 
@@ -413,174 +417,17 @@ gap_app_open_workspace (GapApp     *app,
     g_return_if_fail (file != NULL);
 
     gap_app_ensure_terminal (app);
-    g_return_if_fail (MOO_IS_TERM (app->term));
+    g_return_if_fail (GAP_IS_VIEW (app->terminal));
 
-    gap_app_stop_gap (app);
-    g_usleep (100000);
-    gap_app_start_gap_real (app, file);
+    gap_view_stop_gap (app->terminal);
+    gap_view_start_gap (app->terminal, app->gap_cmd_line, file);
 }
 
 
-static char *
-saved_workspace_filename (void)
+char *
+gap_saved_workspace_filename (void)
 {
-    return moo_get_user_data_file (WORKSPACE_FILE);
-}
-
-
-static GString *
-make_command_line (const char *cmd_base,
-                   const char *custom_wsp,
-                   guint       session_id)
-{
-    gboolean init_pkg, save_workspace;
-    gboolean wsp_already_saved = FALSE;
-    char *wsp_file = NULL;
-    const char *init_file = NULL;
-    GString *cmd;
-
-    init_pkg = moo_prefs_get_bool (APP_PREFS_GAP_INIT_PKG) &&
-                gap_session_available ();
-    save_workspace = moo_prefs_get_bool (APP_PREFS_GAP_SAVE_WORKSPACE);
-
-    cmd = g_string_new (cmd_base);
-
-    if (!custom_wsp && save_workspace)
-    {
-        wsp_file = saved_workspace_filename ();
-
-        g_return_val_if_fail (wsp_file != NULL, cmd);
-
-        wsp_already_saved = g_file_test (wsp_file, G_FILE_TEST_EXISTS);
-
-        if (!wsp_already_saved)
-        {
-            char *gzipped = g_strdup_printf ("%s.gz", wsp_file);
-            wsp_already_saved = g_file_test (gzipped, G_FILE_TEST_EXISTS);
-            g_free (gzipped);
-        }
-    }
-
-    if (custom_wsp)
-    {
-        g_string_append_printf (cmd, " -L \"%s\"", custom_wsp);
-    }
-    else if (save_workspace)
-    {
-        if (wsp_already_saved)
-            g_string_append_printf (cmd, " -L \"%s\"", wsp_file);
-
-        if (!wsp_already_saved && !moo_make_user_data_dir (NULL))
-            g_critical ("%s: could not create user data dir", G_STRLOC);
-
-        if (!wsp_already_saved || init_pkg)
-            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file,
-                                       init_pkg, session_id);
-    }
-
-    if (init_pkg && !init_file)
-        init_file = gap_init_file (NULL, TRUE, session_id);
-
-    if (init_pkg)
-    {
-        char **dirs;
-        guint i, n_dirs = 0;
-
-        dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
-
-        for (i = 0; i < n_dirs; ++i)
-            g_string_append_printf (cmd, " -l \"%s\";", dirs[i]);
-
-        g_strfreev (dirs);
-    }
-
-    if (init_file)
-        g_string_append_printf (cmd, " \"%s\"", init_file);
-
-    g_free (wsp_file);
-    return cmd;
-}
-
-
-static void
-gap_app_start_gap_real (GapApp     *app,
-                        const char *workspace)
-{
-    static guint session_id;
-    const char *cmd_base;
-    GString *cmd;
-    gboolean result;
-
-    g_return_if_fail (GAP_IS_APP (app));
-
-    gap_app_ensure_terminal (app);
-    g_return_if_fail (!moo_term_child_alive (app->term));
-
-    if (app->gap_cmd_line)
-        cmd_base = app->gap_cmd_line;
-    else
-        cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
-
-    g_return_if_fail (cmd_base && cmd_base[0]);
-
-#ifdef __WIN32__
-    {
-        static char *saved_bin_dir;
-        static const char *saved_path;
-        char *bin_dir;
-
-        if (gap_parse_cmd_line (cmd_base, &bin_dir, NULL))
-        {
-            if (!saved_bin_dir || strcmp (saved_bin_dir, bin_dir))
-            {
-                char *path;
-
-                if (!saved_path)
-                    saved_path = g_getenv ("PATH");
-
-                if (saved_path)
-                    path = g_strdup_printf ("%s;%s", bin_dir, saved_path);
-                else
-                    path = g_strdup (bin_dir);
-
-                g_setenv ("PATH", path, TRUE);
-                g_free (path);
-
-                saved_bin_dir = bin_dir;
-                bin_dir = NULL;
-            }
-
-            g_free (bin_dir);
-        }
-        else
-        {
-            g_warning ("%s: could not parse command line `%s`",
-                       G_STRLOC, cmd_base);
-        }
-    }
-#endif
-
-    if (session_id++ > 9999)
-        session_id = 1;
-
-    cmd = make_command_line (cmd_base, workspace, session_id);
-
-    g_message ("starting GAP: %s", cmd->str);
-
-    if (moo_prefs_get_bool (APP_PREFS_GAP_CLEAR_TERMINAL))
-        moo_term_reset (app->term);
-
-    result = moo_term_fork_command_line (app->term, cmd->str,
-                                         moo_prefs_get_filename (APP_PREFS_GAP_WORKING_DIR),
-                                         NULL, NULL);
-
-    if (!result)
-        g_critical ("%s: could not start gap", G_STRLOC);
-
-    g_assert (app->session == NULL);
-    app->session = gap_session_new (gap_app_output_get_name (), session_id);
-
-    g_string_free (cmd, TRUE);
+    return moo_get_user_data_file (GGAP_WORKSPACE_FILE);
 }
 
 
@@ -595,7 +442,7 @@ open_gap_manual (void)
     if (app->gap_cmd_line)
         cmd_base = app->gap_cmd_line;
     else
-        cmd_base = moo_prefs_get_string (APP_PREFS_GAP_COMMAND);
+        cmd_base = moo_prefs_get_string (GGAP_PREFS_GAP_COMMAND);
 
     g_return_if_fail (cmd_base && cmd_base[0]);
 
@@ -620,24 +467,45 @@ open_gap_manual (void)
 #endif
 
 
-void
-gap_app_start_gap (GapApp *app)
+static void
+new_editor_action (MooApp *app)
 {
-    gap_app_start_gap_real (app, NULL);
+    MooEditWindow *window;
+
+    g_return_if_fail (GAP_IS_APP (app));
+
+    window = moo_editor_new_window (moo_app_get_editor (app));
+    gtk_window_present (GTK_WINDOW (window));
+}
+
+static void
+open_in_editor_action (GapTermWindow *terminal)
+{
+    MooApp *app = moo_app_get_instance ();
+    g_return_if_fail (app != NULL);
+    moo_editor_open (moo_app_get_editor (app), NULL,
+                     GTK_WIDGET (terminal), NULL);
 }
 
 
 void
-gap_app_stop_gap (GapApp     *app)
+gap_app_start_gap (GapApp *app)
 {
-    g_return_if_fail (GAP_IS_APP (app) && MOO_IS_TERM (app->term));
+    g_return_if_fail (GAP_IS_APP (app));
 
-    if (moo_term_child_alive (app->term))
-    {
-        gap_app_feed_gap (app, "\n\4\4\4");
-        g_usleep (100000);
-        moo_term_kill_child (app->term);
-    }
+    gap_app_ensure_terminal (app);
+    g_return_if_fail (!gap_view_child_alive (app->terminal));
+
+    gap_view_start_gap (app->terminal, app->gap_cmd_line, NULL);
+}
+
+
+void
+gap_app_stop_gap (GapApp *app)
+{
+    g_return_if_fail (GAP_IS_APP (app));
+    g_return_if_fail (GAP_IS_VIEW (app->terminal));
+    gap_view_stop_gap (app->terminal);
 }
 
 
@@ -645,14 +513,16 @@ void
 gap_app_feed_gap (GapApp     *app,
                   const char *text)
 {
-    g_return_if_fail (GAP_IS_APP (app) && text != NULL);
+    g_return_if_fail (GAP_IS_APP (app));
+    g_return_if_fail (text != NULL);
+
     gap_app_ensure_terminal (app);
 
-    if (!moo_term_child_alive (app->term))
+    if (!gap_view_child_alive (app->terminal))
         gap_app_start_gap (app);
 
-    g_return_if_fail (moo_term_child_alive (app->term));
-    moo_term_feed_child (app->term, text, -1);
+    g_return_if_fail (gap_view_child_alive (app->terminal));
+    gap_view_feed_gap (app->terminal, text);
 }
 
 
@@ -661,7 +531,7 @@ remove_saved_workspace (void)
 {
     char *wsp, *gzipped;
 
-    wsp = saved_workspace_filename ();
+    wsp = gap_saved_workspace_filename ();
     g_return_if_fail (wsp != NULL);
     gzipped = g_strdup_printf ("%s.gz", wsp);
 
@@ -677,7 +547,7 @@ remove_saved_workspace (void)
 static void
 prefs_page_apply (void)
 {
-    if (!moo_prefs_get_bool (APP_PREFS_GAP_SAVE_WORKSPACE))
+    if (!moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE))
         remove_saved_workspace ();
 }
 
@@ -722,15 +592,3 @@ gap_app_prefs_dialog (MooApp     *app)
 
     return GTK_WIDGET (dialog);
 }
-
-
-// static void
-// gap_app_cmd_setup (MooApp     *app,
-//                    MooCommand *cmd,
-//                    GtkWindow  *window)
-// {
-//     MOO_APP_CLASS(gap_app_parent_class)->cmd_setup (app, cmd, window);
-//
-//     if (!GAP_APP_EDITOR_MODE)
-//         gap_app_setup_command (cmd, window);
-// }

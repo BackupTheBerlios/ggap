@@ -14,8 +14,7 @@
 #ifndef __GAP_TERM_WINDOW_H__
 #define __GAP_TERM_WINDOW_H__
 
-#include <mooterm/mootermwindow.h>
-#include "gapterm.h"
+#include "gapwindow.h"
 
 G_BEGIN_DECLS
 
@@ -29,21 +28,23 @@ G_BEGIN_DECLS
 
 
 typedef struct _GapTermWindow        GapTermWindow;
+typedef struct _GapTermWindowPrivate GapTermWindowPrivate;
 typedef struct _GapTermWindowClass   GapTermWindowClass;
 
 
 struct _GapTermWindow
 {
-    MooTermWindow base;
+    GapWindow base;
+    GapTermWindowPrivate *priv;
 };
 
 struct _GapTermWindowClass
 {
-    MooTermWindowClass base_class;
+    GapWindowClass  base_class;
 };
 
 
-GType            gap_term_window_get_type       (void) G_GNUC_CONST;
+GType   gap_term_window_get_type    (void) G_GNUC_CONST;
 
 
 G_END_DECLS

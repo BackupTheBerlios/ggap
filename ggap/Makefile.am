@@ -11,8 +11,6 @@ if MOO_OS_MINGW
 bin_PROGRAMS += pipehelper
 endif
 
-pipehelper_SOURCES = pipehelper.c pipehelper.h
-
 AM_CFLAGS =				\
     -I$(top_builddir)			\
     -I$(top_builddir)/ggap		\
@@ -44,8 +42,18 @@ ggap_SOURCES =				\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\
+	gapview.c			\
+	gapview.h			\
 	gapeditwindow.c			\
 	gapeditwindow.h			\
+	gapwindow.c			\
+	gapwindow.h			\
+	gapworksheet.c			\
+	gapworksheet.h			\
+	mooworksheet.c			\
+	mooworksheet.h			\
+	gapwswindow.c			\
+	gapwswindow.h			\
 	gapoutput.c			\
 	gapoutput.h			\
 	gapsession.c			\
@@ -58,20 +66,28 @@ ggap_SOURCES =				\
 	ggap-credits.h
 
 nodist_ggap_SOURCES = ggap_res.res
-CLEANFILES = ggap_res.res
+nodist_pipehelper_SOURCES = pipehelper_res.res
+CLEANFILES = ggap_res.res pipehelper_res.res
 
 if MOO_OS_MINGW
 ggap_res.res: ggap_res.rc
 	$(WINDRES) -i ggap_res.rc --input-format=rc -o ggap_res.res -O coff
+pipehelper_res.res: pipehelper_res.rc
+	$(WINDRES) -i pipehelper_res.rc --input-format=rc -o pipehelper_res.res -O coff
 ggap_SOURCES += ggap_res.res
 ggap_LDADD += ggap_res.res
+pipehelper_SOURCES = pipehelper.c pipehelper.h pipehelper_res.res
+pipehelper_LDADD = pipehelper_res.res
 else ! MOO_OS_MINGW
-ggap_res.res: ggap_res.rc
-	touch ggap_res.res
+ggap_res.res:
+	echo dummy > ggap_res.res
+pipehelper_res.res:
+	echo dummy > pipehelper_res.res
 endif ! MOO_OS_MINGW
 
 EXTRA_DIST =		\
     ggap_res.rc.in	\
+    pipehelper_res.rc.in\
     ggap-ui.xml		\
     ggap.opag		\
     glade/gapprefs.glade\
@@ -95,9 +111,11 @@ XML2H = $(top_srcdir)/moo/moo/mooutils/xml2h.sh
 PY2H = $(top_srcdir)/moo/moo/mooutils/py2h.sh
 
 ggap-credits.h: ../THANKS $(XML2H)
-	$(SHELL) $(XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h
+	$(SHELL) $(XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h.tmp && \
+	mv ggap-credits.h.tmp ggap-credits.h
 ggap-ui.h: ggap-ui.xml $(XML2H)
-	sh $(XML2H) GGAP_UI $(srcdir)/ggap-ui.xml > ggap-ui.h
+	sh $(XML2H) GGAP_UI $(srcdir)/ggap-ui.xml > ggap-ui.h.tmp && \
+	mv ggap-ui.h.tmp ggap-ui.h
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h

@@ -14,7 +14,12 @@
 #include "ggap-i18n.h"
 #include "gapapp.h"
 #include "gap.h"
+#include "gaptermwindow.h"
+#include "gapterm.h"
 #include "mooutils/moofiledialog.h"
+#include "mooutils/moocompat.h"
+#include "mooutils/mooutils-misc.h"
+#include "mooterm/mooterm-prefs.h"
 #include "mooapp/mooapp.h"
 #include <gtk/gtk.h>
 #include <string.h>
@@ -23,43 +28,70 @@
 #include <stdlib.h>
 
 
-static void     switch_to_editor            (void);
-static void     gap_read_file               (GapTermWindow      *window);
-static void     gap_open_workspace          (GapTermWindow      *window);
+struct _GapTermWindowPrivate {
+    guint   prefs_notify_id;
+    guint   apply_prefs_idle;
+};
+
+
+static void     gap_term_window_finalize    (GObject        *object);
+static GObject *gap_term_window_constructor (GType           type,
+                                             guint           n_props,
+                                             GObjectConstructParam *props);
+static void     gap_term_window_destroy     (GtkObject      *object);
+
+static void     copy_clipboard              (MooTerm        *term);
+static void     paste_clipboard             (MooTerm        *term);
+
+static void     prefs_notify                (const char     *key,
+                                             const GValue   *newval,
+                                             GapTermWindow  *window);
 
 
 /* GAP_TYPE_TERM_WINDOW */
-G_DEFINE_TYPE (GapTermWindow, gap_term_window, MOO_TYPE_TERM_WINDOW)
+G_DEFINE_TYPE (GapTermWindow, gap_term_window, GAP_TYPE_WINDOW)
 
 
 static void
 gap_term_window_class_init (GapTermWindowClass *klass)
 {
+    GObjectClass *object_class = G_OBJECT_CLASS (klass);
+    GtkObjectClass *gtkobject_class = GTK_OBJECT_CLASS (klass);
     MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
 
     moo_window_class_set_id (window_class, "Terminal", "Terminal");
 
-    moo_window_class_new_action (window_class, "SwitchToEditor", NULL,
-                                 "display-name", _("Switch to Editor"),
-                                 "label", _("Switch to Editor"),
-                                 "tooltip", _("Switch to editor"),
-                                 "stock-id", GTK_STOCK_EDIT,
-                                 "closure-callback", switch_to_editor,
+    object_class->constructor = gap_term_window_constructor;
+    object_class->finalize = gap_term_window_finalize;
+    gtkobject_class->destroy = gap_term_window_destroy;
+
+    moo_window_class_new_action (window_class, "Copy", NULL,
+                                 "display-name", GTK_STOCK_COPY,
+                                 "label", GTK_STOCK_COPY,
+                                 "tooltip", GTK_STOCK_COPY,
+                                 "stock-id", GTK_STOCK_COPY,
+                                 "accel", "<alt>C",
+                                 "closure-callback", copy_clipboard,
+                                 "closure-proxy-func", gap_window_get_terminal,
                                  NULL);
 
-    moo_window_class_new_action (window_class, "GAPRead", NULL,
-                                 "display-name", _("Read File"),
-                                 "label", _("Read File"),
-                                 "tooltip", _("Read file"),
-                                 "stock-id", GTK_STOCK_OPEN,
-                                 "closure-callback", gap_read_file,
+    moo_window_class_new_action (window_class, "Paste", NULL,
+                                 "display-name", GTK_STOCK_PASTE,
+                                 "label", GTK_STOCK_PASTE,
+                                 "tooltip", GTK_STOCK_PASTE,
+                                 "stock-id", GTK_STOCK_PASTE,
+                                 "accel", "<alt>V",
+                                 "closure-callback", paste_clipboard,
+                                 "closure-proxy-func", gap_window_get_terminal,
                                  NULL);
-    moo_window_class_new_action (window_class, "GAPOpenWorkspace", NULL,
-                                 "display-name", _("Open Workspace"),
-                                 "label", _("Open _Workspace"),
-                                 "tooltip", _("Open workspace"),
-                                 "stock-id", GTK_STOCK_OPEN,
-                                 "closure-callback", gap_open_workspace,
+
+    moo_window_class_new_action (window_class, "SelectAll", NULL,
+                                 "display-name", GTK_STOCK_SELECT_ALL,
+                                 "label", GTK_STOCK_SELECT_ALL,
+                                 "tooltip", GTK_STOCK_SELECT_ALL,
+                                 "accel", "<alt>A",
+                                 "closure-callback", moo_term_select_all,
+                                 "closure-proxy-func", gap_window_get_terminal,
                                  NULL);
 }
 
@@ -67,54 +99,89 @@ gap_term_window_class_init (GapTermWindowClass *klass)
 static void
 gap_term_window_init (GapTermWindow *window)
 {
-    moo_term_window_set_term_type (MOO_TERM_WINDOW (window), GAP_TYPE_TERM);
+    GAP_WINDOW(window)->view_type = GAP_TYPE_TERM;
+    window->priv = g_new0 (GapTermWindowPrivate, 1);
     moo_window_set_global_accels (MOO_WINDOW (window), TRUE);
 }
 
 
-static void
-switch_to_editor (void)
+static GObject *
+gap_term_window_constructor (GType type,
+                             guint n_props,
+                             GObjectConstructParam *props)
 {
-    MooApp *app = moo_app_get_instance ();
-    MooEditor *editor = moo_app_get_editor (app);
-    moo_editor_present (editor, 0);
+    GObject *object;
+    GapTermWindow *window;
+
+    object = G_OBJECT_CLASS(gap_term_window_parent_class)->constructor (type, n_props, props);
+    window = GAP_TERM_WINDOW (object);
+
+    moo_term_apply_settings (MOO_TERM (GAP_WINDOW (window)->terminal));
+
+    window->priv->prefs_notify_id = moo_prefs_notify_connect (MOO_TERM_PREFS_PREFIX,
+                                                              MOO_PREFS_MATCH_PREFIX,
+                                                              (MooPrefsNotify) prefs_notify,
+                                                              window, NULL);
+
+    return object;
 }
 
 
 static void
-gap_read_file (GapTermWindow *window)
+gap_term_window_destroy (GtkObject *object)
 {
-    const char *file;
-    char *string;
+    GapTermWindow *window = GAP_TERM_WINDOW (object);
 
-    file = moo_file_dialogp (GTK_WIDGET (window),
-                             MOO_FILE_DIALOG_OPEN,
-                             "Read File",
-                             GGAP_PREFS_PREFIX "/read_file",
-                             NULL);
+    if (window->priv->prefs_notify_id)
+        moo_prefs_notify_disconnect (window->priv->prefs_notify_id);
+    if (window->priv->apply_prefs_idle)
+        g_source_remove (window->priv->apply_prefs_idle);
 
-    if (!file)
-        return;
+    window->priv->prefs_notify_id = 0;
+    window->priv->apply_prefs_idle = 0;
 
-    string = gap_read_file_string (file);
-    gap_app_feed_gap (GAP_APP_INSTANCE, string);
-    g_free (string);
+    GTK_OBJECT_CLASS (gap_term_window_parent_class)->destroy (object);
 }
 
 
 static void
-gap_open_workspace (GapTermWindow *window)
+gap_term_window_finalize (GObject *object)
 {
-    const char *file;
+    GapTermWindow *window = GAP_TERM_WINDOW (object);
+    g_free (window->priv);
+    G_OBJECT_CLASS (gap_term_window_parent_class)->finalize (object);
+}
 
-    file = moo_file_dialogp (GTK_WIDGET (window),
-                             MOO_FILE_DIALOG_OPEN,
-                             "Choose Saved Workspace File",
-                             GGAP_PREFS_PREFIX "/open_workspace",
-                             NULL);
 
-    if (!file)
-        return;
+static gboolean
+apply_prefs (GapTermWindow *window)
+{
+    window->priv->apply_prefs_idle = 0;
+    moo_term_apply_settings (MOO_TERM (GAP_WINDOW(window)->terminal));
+    return FALSE;
+}
 
-    gap_app_open_workspace (GAP_APP_INSTANCE, file);
+static void
+prefs_notify (G_GNUC_UNUSED const char *key,
+              G_GNUC_UNUSED const GValue *newval,
+              GapTermWindow  *window)
+{
+    g_return_if_fail (GAP_IS_TERM_WINDOW (window));
+    if (!window->priv->apply_prefs_idle)
+        window->priv->apply_prefs_idle =
+                moo_idle_add ((GSourceFunc) apply_prefs, window);
+}
+
+
+static void
+copy_clipboard (MooTerm *term)
+{
+    moo_term_copy_clipboard (term, GDK_SELECTION_CLIPBOARD);
+}
+
+
+static void
+paste_clipboard (MooTerm *term)
+{
+    moo_term_paste_clipboard (term, GDK_SELECTION_CLIPBOARD);
 }

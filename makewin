@@ -6,14 +6,17 @@ import getopt
 
 dir = os.getcwd()
 builddir = "/home/muntyan/projects/ggap/build"
-cygwin_builddir = builddir + "/cygwin"
-termhelper_exe = cygwin_builddir + "/ggap/termhelper.exe"
-build_termhelper = False
-termhelper_exe = builddir + "/termhelper.exe"
+
+cygwin_builddir = builddir + "/cygwin/moo/moo/mooterm"
+build_termhelper = True
+termhelper_exe = cygwin_builddir + "/termhelper.exe"
+# build_termhelper = False
+# termhelper_exe = builddir + "/termhelper.exe"
+
 ggap_windir = "/usr/local/win/ggap"
 bin_only = False
 py25 = True
-py24 = True
+py24 = False
 
 def usage():
     print "Usage:", sys.argv[0], "[--termhelper=<BINARY>] [--python=(24|25|none)] [build_dir] [data_dir1] [data_dir2] [...]"
@@ -76,6 +79,15 @@ def strip_files():
         do_cmd("%s %s/lib/ggap/plugins/*/*.dll" % (strip, ggap_windir))
         do_cmd("%s %s/lib/ggap/plugins/*/*.pyd" % (strip, ggap_windir))
 
+def copy_mime():
+    do_cmd("mkdir -p %s/mime/packages" % (installdir,))
+    do_cmd("cp %s/usr/local/share/mime/packages/moo.xml %s/mime/packages" % (installdir, installdir))
+    do_cmd("cp /usr/share/mime/packages/freedesktop.org.xml %s/mime/packages" % (installdir,))
+    do_cmd("update-mime-database %s/mime" % (installdir,))
+    do_cmd("mkdir -p %s/share/mime/" % (ggap_windir,))
+    do_cmd("cp %s/mime/mime.cache %s/share/mime/" % (installdir, ggap_windir))
+    do_cmd("rm -fr %s/mime/" % (installdir,))
+
 def copy_files():
     for d in data_dirs:
         do_cmd("cp -r %s/* %s/" % (d, ggap_windir))
@@ -108,7 +120,7 @@ def copy_files():
 
         do_cmd("cp -r %s/usr/local/share/icons %s/share/" % (installdir, ggap_windir))
         do_cmd("mkdir -p %s/share/mime" % (ggap_windir,))
-        do_cmd("cp -r %s/usr/local/share/mime/mime.cache %s/share/mime" % (installdir, ggap_windir))
+        copy_mime()
 
     strip_files()
 

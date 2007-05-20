@@ -55,6 +55,7 @@ Makefile
 config.py
 ggap/Makefile
 ggap/ggap_res.rc
+ggap/pipehelper_res.rc
 ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
