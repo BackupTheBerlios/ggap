@@ -33,6 +33,7 @@ ggap_SOURCES =				\
 	ggap-ui.h			\
 	gap-mod.h			\
 	gap-cb-mod.h			\
+	gap-canvas-mod.h		\
 	gap-types-mod.h			\
 	ggap-mod.h			\
 	gap.c				\
@@ -65,6 +66,7 @@ ggap_SOURCES =				\
 	gapprefs-glade.h		\
 	ggap-credits.h
 
+
 nodist_ggap_SOURCES = ggap_res.res
 nodist_pipehelper_SOURCES = pipehelper_res.res
 CLEANFILES = ggap_res.res pipehelper_res.res
@@ -93,6 +95,7 @@ EXTRA_DIST =		\
     glade/gapprefs.glade\
     glade/usermenu.glade\
     python/ggap.py	\
+    python/gap_canvas.py\
     python/gap_cb.py	\
     python/gap_types.py	\
     python/gap.py
@@ -102,6 +105,7 @@ BUILT_SOURCES =		\
 	gapprefs-glade.h\
 	ggap.c		\
 	ggap-mod.h	\
+	gap-canvas-mod.h\
 	gap-cb-mod.h	\
 	gap-types-mod.h	\
 	gap-mod.h	\
@@ -129,5 +133,7 @@ gap-mod.h: $(srcdir)/python/gap.py $(PY2H)
 	$(SHELL) $(PY2H) GAP_PY $(srcdir)/python/gap.py > gap-mod.h
 gap-cb-mod.h: $(srcdir)/python/gap_cb.py $(PY2H)
 	$(SHELL) $(PY2H) GAP_CB_PY $(srcdir)/python/gap_cb.py > gap-cb-mod.h
+gap-canvas-mod.h: $(srcdir)/python/gap_canvas.py $(PY2H)
+	$(SHELL) $(PY2H) GAP_CANVAS_PY $(srcdir)/python/gap_canvas.py > gap-canvas-mod.h
 gap-types-mod.h: $(srcdir)/python/gap_types.py $(PY2H)
 	$(SHELL) $(PY2H) GAP_TYPES_PY $(srcdir)/python/gap_types.py > gap-types-mod.h
