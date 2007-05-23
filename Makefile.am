@@ -54,7 +54,9 @@ EXTRA_DIST +=		\
 	$(ggap_DATA)	\
 	ggap.png	\
 	ggap.ico	\
-	gap.png
+	gap.png		\
+	ggap-script-tmpl\
+	ggap.sh
 
 generated =			\
 	ggap/gap/PackageInfo.g	\
@@ -64,8 +66,8 @@ generated =			\
 all-am: $(generated)
 
 bin-dist: all
-	rm -fr _ggap_bin_inst _ggap_bin
-	$(MAKE) install DESTDIR=`pwd`/_ggap_bin_inst && \
-	mv _ggap_bin_inst/$(prefix) _ggap_bin && \
-	cp $(srcdir)/ggap.sh _ggap_bin/ && \
-	rm -fr _ggap_bin_inst
+	rm -fr ggap-bin-inst ggap-bin
+	$(MAKE) install DESTDIR=`pwd`/ggap-bin-inst && \
+	mv ggap-bin-inst/$(prefix) ggap-bin && \
+	cp $(srcdir)/ggap-script-tmpl ggap-bin/ggap.sh && \
+	rm -fr ggap-bin-inst

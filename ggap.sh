@@ -1,12 +1,10 @@
 #!/bin/sh
 
-ggap_dir=`dirname $0`
-ggap_dir=`cd $ggap_dir && pwd`
+if test ! -e ggap-bin/ggap.sh; then
+  if test ! -e Makefile; then
+    ./configure || exit 1
+  fi
+  make bin-dist || exit 1
+fi
 
-export MOO_DATA_DIRS=$ggap_dir/share/ggap
-export MOO_LIB_DIRS=$ggap_dir/lib/ggap
-export MOO_LOCALE_DIR=$ggap_dir/share/locale
-
-export LD_LIBRARY_PATH=$ggap_dir/lib:$LD_LIBRARY_PATH
-
-exec $ggap_dir/bin/ggap $*
+exec ggap-bin/ggap.sh $*
