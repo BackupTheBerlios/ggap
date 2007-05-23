@@ -101,3 +101,25 @@ DeclareOperation("SelectRange", [IsGtkTreeView, IsObject, IsObject]);
 DeclareGlobalFunction("GTK_TREE_PATH_G2P");
 DeclareGlobalFunction("GTK_TREE_PATH_P2G");
 DeclareGlobalFunction("GTK_TREE_INDEX_G2P");
+
+
+###############################################################################
+##
+#O  FooCanvasGroup
+#O  FooCanvasLine
+#O  FooCanvasRect
+#O  FooCanvasEllipse
+#O  FooCanvasWidget
+#O  FooCanvasPixbuf
+##
+Perform([
+  ["FooCanvasGroup", "foocanvas.Group"],
+  ["FooCanvasLine", "foocanvas.Line"],
+  ["FooCanvasRect", "foocanvas.Rect"],
+  ["FooCanvasEllipse", "foocanvas.Ellipse"],
+  ["FooCanvasWidget", "foocanvas.Widget"],
+  ["FooCanvasPixbuf", "foocanvas.Pixbuf"],
+], function(cls)
+  DeclareOperation(cls[1], [IsFooCanvasGroup, IsRecord]);
+  DeclareOperation(cls[1], [IsFooCanvas, IsRecord]);
+end);

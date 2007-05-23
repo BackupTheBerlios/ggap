@@ -388,3 +388,28 @@ function(tree_view, path) return RowIsSelected(GetSelection(tree_view), path); e
 
 InstallMethod(SelectRange, [IsGtkTreeView, IsObject, IsObject],
 function(tree_view, start, end_) SelectRange(GetSelection(tree_view), start, end_); end);
+
+
+###############################################################################
+##
+##  Canvas items
+##
+Perform([
+  ["FooCanvasGroup", "foocanvas.Group"],
+  ["FooCanvasLine", "foocanvas.Line"],
+  ["FooCanvasRect", "foocanvas.Rect"],
+  ["FooCanvasEllipse", "foocanvas.Ellipse"],
+  ["FooCanvasWidget", "foocanvas.Widget"],
+  ["FooCanvasPixbuf", "foocanvas.Pixbuf"],
+], function(cls)
+  local cat, op;
+  op := ValueGlobal(cls[1]);
+  InstallMethod(op, [IsFooCanvasGroup, IsRecord],
+    function(parent, params)
+      return _GGAP_CALL_FUNC_OPTARG(cls[2], parent, params);
+    end);
+  InstallMethod(op, [IsFooCanvas, IsRecord],
+    function(canvas, params)
+      return _GGAP_CALL_FUNC_OPTARG(cls[2], GetRoot(canvas), params);
+    end);
+end);
