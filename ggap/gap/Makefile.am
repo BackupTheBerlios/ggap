@@ -16,6 +16,8 @@ ggap_pkg_gap_DATA =		\
 	gap/ggap.gi		\
 	gap/gobject.gd		\
 	gap/gobject.gi		\
+	gap/graph.gd		\
+	gap/graph.gi		\
 	gap/io.gd		\
 	gap/io.gi		\
 	gap/override.gd		\
