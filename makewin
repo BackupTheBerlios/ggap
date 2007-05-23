@@ -58,6 +58,7 @@ installdir = "%s/%s-inst" % (dir, config)
 
 issdir = "Z:%s/wininstaller" % (ggap_builddir,)
 iss = issdir + "/ggap.iss"
+installer = None
 
 
 class Error(Exception):
@@ -145,7 +146,8 @@ def build():
     copy_files()
     make_termhelper()
     do_cmd("wine /usr/local/win/InnoSetup5/ISCC.exe " + iss)
-    installer = "ggapsetup-" + get_version() + config.replace("mingw", "") + ".exe"
+    global installer
+    installer = "ggapsetup-" + get_version() + ".exe"
     do_cmd("mv %s/wininstaller/Output/setup.exe %s/%s" % (ggap_builddir, dir, installer))
 
 def clean():
@@ -160,3 +162,4 @@ except Error, e:
 
 clean()
 print "*** Success ***"
+print "*** Output file is: %s ***" % (installer,)
