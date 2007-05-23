@@ -168,6 +168,7 @@ gap_view_start_gap_real (GapView    *view,
     GString *cmd;
     gboolean result;
     gboolean fancy = FALSE;
+    GapSession *session;
 
     g_return_if_fail (GAP_IS_VIEW (view));
     g_return_if_fail (!gap_view_child_alive (view));
@@ -230,9 +231,8 @@ gap_view_start_gap_real (GapView    *view,
     if (!result)
         g_critical ("%s: could not start gap", G_STRLOC);
 
-    g_object_set_data_full (G_OBJECT (view), "gap-session",
-                            gap_session_new (gap_app_output_get_name (), session_id),
-                            g_object_unref);
+    if ((session = gap_session_new (gap_app_output_get_name (), session_id, view)))
+        g_object_set_data_full (G_OBJECT (view), "gap-session", session, g_object_unref);
 
     g_free (flags);
     g_string_free (cmd, TRUE);
@@ -313,4 +313,15 @@ gap_view_send_intr (GapView *view)
 
     if (gap_view_child_alive (view))
         GAP_VIEW_GET_IFACE (view)->send_intr (view);
+}
+
+
+void
+gap_view_display_graph (GapView *view,
+                        GObject *obj)
+{
+    g_return_if_fail (GAP_IS_VIEW (view));
+    g_return_if_fail (G_IS_OBJECT (obj));
+    g_return_if_fail (GAP_VIEW_GET_IFACE (view)->display_graph != NULL);
+    GAP_VIEW_GET_IFACE (view)->display_graph (view, obj);
 }

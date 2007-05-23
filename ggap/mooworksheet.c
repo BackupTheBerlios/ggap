@@ -22,20 +22,24 @@
 #define DEFAULT_PS1         ">>> "
 #define DEFAULT_PS2         "... "
 
-static gunichar INPUT_START_MARK;
-static gunichar INPUT_CONT_MARK;
-static gunichar OUTPUT_MARK;
-
 // #define INPUT_START_MARK_S  "\363\260\200\200"
 // #define INPUT_CONT_MARK_S   "\363\260\200\201"
 // #define OUTPUT_MARK_S       "\363\260\200\202"
 // #define BLOCK_MARK_LEN      4
 
+#define INPUT_START_MARK 0x2060
+#define INPUT_CONT_MARK  0xFEFF
+#define OUTPUT_MARK      0x200B
 #define INPUT_START_MARK_S  "\342\201\240"
 #define INPUT_CONT_MARK_S   "\357\273\277"
 #define OUTPUT_MARK_S       "\342\200\213"
 #define BLOCK_MARK_LEN      3
 
+// 0x200C, 0x200D
+
+// U+202F NARROW NO-BREAK SPACE
+// UTF-16: 0x202F
+// C octal escaped UTF-8: \342\200\257
 
 struct _MooWorksheetPrivate {
     GtkTextBuffer *buffer;
@@ -48,6 +52,7 @@ struct _MooWorksheetPrivate {
     GtkTextTag *input_tag;
     GtkTextTag *out_tag;
     GtkTextTag *err_tag;
+    GtkTextTag *center_tag;
     GSList *history;
 };
 
@@ -121,10 +126,6 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
     GtkObjectClass *gtk_object_class = GTK_OBJECT_CLASS (klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 //     GtkTextViewClass *textview_class = GTK_TEXT_VIEW_CLASS (klass);
-
-    INPUT_START_MARK = g_utf8_get_char (INPUT_START_MARK_S);
-    INPUT_CONT_MARK = g_utf8_get_char (INPUT_CONT_MARK_S);
-    OUTPUT_MARK = g_utf8_get_char (OUTPUT_MARK_S);
 
     gobject_class->constructor = moo_worksheet_constructor;
     gobject_class->set_property = moo_worksheet_set_property;
@@ -236,6 +237,11 @@ moo_worksheet_constructor (GType           type,
                                     "moo-worksheet-error",
                                     "editable", FALSE,
                                     "foreground", "red",
+                                    NULL);
+    ws->priv->center_tag =
+        gtk_text_buffer_create_tag (buffer,
+                                    "moo-worksheet-centered",
+                                    "justification", GTK_JUSTIFY_CENTER,
                                     NULL);
 
     gtk_text_buffer_get_start_iter (buffer, &iter);
@@ -570,6 +576,14 @@ commit_input (MooWorksheet      *ws,
     g_free (text);
 }
 
+
+void
+moo_worksheet_continue_input (MooWorksheet *ws)
+{
+    new_input_line (ws, NULL);
+}
+
+
 static gboolean
 moo_worksheet_key_press (GtkWidget   *widget,
                          GdkEventKey *event)
@@ -744,4 +758,34 @@ moo_worksheet_write_error (MooWorksheet *ws,
                            const char   *text)
 {
     moo_worksheet_write_output_real (ws, text, ws->priv->err_tag);
+}
+
+
+void
+moo_worksheet_insert_widget (MooWorksheet *ws,
+                             GtkWidget    *widget)
+{
+    GtkTextIter iter, iter2;
+    GtkTextChildAnchor *anchor;
+
+    g_return_if_fail (MOO_IS_WORKSHEET (ws));
+    g_return_if_fail (GTK_IS_WIDGET (widget));
+
+    get_output_iter (ws, &iter);
+
+    gtk_text_buffer_insert (ws->priv->buffer, &iter, OUTPUT_MARK_S "\n", -1);
+    gtk_text_iter_backward_char (&iter);
+
+    anchor = gtk_text_buffer_create_child_anchor (ws->priv->buffer, &iter);
+    gtk_widget_set_size_request (widget, 200, 200);
+    gtk_text_view_add_child_at_anchor (GTK_TEXT_VIEW (ws), widget, anchor);
+
+    iter2 = iter;
+    gtk_text_iter_backward_char (&iter);
+    gtk_text_iter_forward_line (&iter2);
+    gtk_text_buffer_apply_tag (ws->priv->buffer, ws->priv->out_tag, &iter, &iter2);
+    gtk_text_buffer_apply_tag (ws->priv->buffer, ws->priv->center_tag, &iter, &iter2);
+
+    gtk_text_buffer_place_cursor (ws->priv->buffer, &iter2);
+    scroll_insert_onscreen (ws);
 }

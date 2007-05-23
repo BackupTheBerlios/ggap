@@ -110,6 +110,14 @@ gap_worksheet_view_get_gap_flags (G_GNUC_UNUSED GapView *view,
 }
 
 static void
+gap_worksheet_view_display_graph (GapView *view,
+                                  GObject *obj)
+{
+    g_return_if_fail (GTK_IS_WIDGET (obj));
+    moo_worksheet_insert_widget (MOO_WORKSHEET (view), GTK_WIDGET (obj));
+}
+
+static void
 gap_worksheet_view_init (GapViewIface *iface)
 {
     iface->start_gap = gap_worksheet_view_start_gap;
@@ -118,6 +126,7 @@ gap_worksheet_view_init (GapViewIface *iface)
     iface->child_alive = gap_worksheet_view_child_alive;
     iface->send_intr = gap_worksheet_view_send_intr;
     iface->get_gap_flags = gap_worksheet_view_get_gap_flags;
+    iface->display_graph = gap_worksheet_view_display_graph;
 }
 
 
@@ -245,9 +254,21 @@ io_func (const char *buf,
     }
     else if (line_is_prompt (ws->priv->line))
     {
-        moo_worksheet_set_ps1 (mws, ws->priv->line->str + strlen ("ggap-prompt-"));
+        const char *prompt;
+        gboolean continue_input;
+
+        prompt = ws->priv->line->str + strlen ("ggap-prompt-");
+        continue_input = !strcmp (prompt, "> ");
+
+        if (!continue_input)
+            moo_worksheet_set_ps1 (mws, prompt);
+
         g_string_truncate (ws->priv->line, 0);
-        moo_worksheet_start_input (mws);
+
+        if (continue_input)
+            moo_worksheet_continue_input (mws);
+        else
+            moo_worksheet_start_input (mws);
     }
 }
 

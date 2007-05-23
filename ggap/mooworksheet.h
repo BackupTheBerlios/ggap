@@ -59,11 +59,14 @@ char       *moo_worksheet_get_ps2           (MooWorksheet   *sheet);
 
 void        moo_worksheet_reset             (MooWorksheet   *sheet);
 void        moo_worksheet_start_input       (MooWorksheet   *sheet);
+void        moo_worksheet_continue_input    (MooWorksheet   *sheet);
 gboolean    moo_worksheet_accepting_input   (MooWorksheet   *sheet);
 void        moo_worksheet_write_output      (MooWorksheet   *sheet,
                                              const char     *text);
 void        moo_worksheet_write_error       (MooWorksheet   *sheet,
                                              const char     *text);
+void        moo_worksheet_insert_widget     (MooWorksheet   *sheet,
+                                             GtkWidget      *widget);
 
 
 G_END_DECLS
