@@ -53,7 +53,7 @@ InstallValue(InfoGGAP, NewInfoClass("InfoGGAP"));
 ##
 InstallGlobalFunction(_GGAP_INIT,
 function(out_pipe, in_pipe, session_id, pipehelper, fancy)
-  local reset_data, init_fancy;
+  local reset_data, init_fancy, create_input_pipe, create_output_pipe;
 
   reset_data := function()
     _GGAP_DATA.init := false;
@@ -70,24 +70,70 @@ function(out_pipe, in_pipe, session_id, pipehelper, fancy)
   end;
 
   init_fancy := function(fancy)
+    local bind_global;
+
     _GGAP_DATA.fancy := fancy;
     Info(InfoGGAP, 3, "# fancy: ", fancy, "\n");
 
-    if IsBoundGlobal("PrintPromptHook") then
-      if IsReadOnlyGlobal("PrintPromptHook") then
-        MakeReadWriteGlobal("PrintPromptHook");
+    bind_global := function(name, value)
+      if IsBoundGlobal(name) then
+        if IsReadOnlyGlobal(name) then
+          MakeReadWriteGlobal(name);
+        fi;
+        UnbindGlobal(name);
       fi;
-      UnbindGlobal("PrintPromptHook");
-    fi;
+      BindGlobal(name, value);
+    end;
 
     if fancy then
-      BindGlobal("PrintPromptHook",
+      bind_global("PrintPromptHook",
       function()
         local prompt;
         prompt := CPROMPT();
         Info(InfoGGAP, 8, "# prompt: ", prompt, "\n");
         Print("ggap-prompt-", prompt, "\c");
       end);
+
+      bind_global("ColorPrompt", function(setting)
+        if setting = true then
+          Print("# ColorPrompt() ignored\n");
+        fi;
+      end);
+    fi;
+  end;
+
+  create_input_pipe := function(pipehelper, in_pipe)
+    if ARCH_IS_WINDOWS() then
+      _GGAP_DATA.in_pipe := InputOutputLocalProcess(DirectoryCurrent(), pipehelper, [in_pipe]);
+    else
+      _GGAP_DATA.in_pipe := InputTextFile(in_pipe);
+    fi;
+    if _GGAP_DATA.in_pipe = fail then
+      Print("WARNING: could not create input pipe. ",
+            "Please report this to muntyan@tamu.edu and send the following output.\n");
+      Print(LastSystemError(), "\n");
+    fi;
+    _GGAP_DATA.in_pipe_fd := FileDescriptorOfStream(_GGAP_DATA.in_pipe);
+    InstallCharReadHookFunc(_GGAP_DATA.in_pipe, "r", _GGAP_CHECK_INPUT);
+  end;
+
+  create_output_pipe := function(out_pipe)
+    local count, errors;
+
+    errors := [];
+    for count in [1..5] do
+      _GGAP_DATA.out_pipe := OutputTextFile(out_pipe, true);
+      if _GGAP_DATA.out_pipe = fail then
+        Add(errors, LastSystemError());
+      else
+        break;
+      fi;
+    od;
+
+    if _GGAP_DATA.out_pipe = fail then
+      Print("WARNING: could not create output pipe. ",
+            "Please report this to muntyan@tamu.edu and send the following output.\n");
+      Print(errors, "\n");
     fi;
   end;
 
@@ -95,7 +141,7 @@ function(out_pipe, in_pipe, session_id, pipehelper, fancy)
     Info(InfoGGAP, 3, "GGAP package initialized, assuming loaded workspace");
     reset_data();
   else
-    Info(InfoGGAP, 3, "initializing GGAP package");
+    Info(InfoGGAP, 3, "Initializing GGAP package");
   fi;
 
   if not IsString(out_pipe) then
@@ -114,25 +160,13 @@ function(out_pipe, in_pipe, session_id, pipehelper, fancy)
   Info(InfoGGAP, 3, "GGAP session id ", session_id);
 
   if in_pipe <> "" then
-    if ARCH_IS_WINDOWS() then
-      _GGAP_DATA.in_pipe := InputOutputLocalProcess(DirectoryCurrent(), pipehelper, [in_pipe]);
-    else
-      _GGAP_DATA.in_pipe := InputTextFile(in_pipe);
-    fi;
-    if _GGAP_DATA.in_pipe = fail then
-      Error("could not create input pipe");
-    fi;
-    _GGAP_DATA.in_pipe_fd := FileDescriptorOfStream(_GGAP_DATA.in_pipe);
-    InstallCharReadHookFunc(_GGAP_DATA.in_pipe, "r", _GGAP_CHECK_INPUT);
+    create_input_pipe(pipehelper, in_pipe);
   else
     _GGAP_DATA.in_pipe := fail;
   fi;
 
   if out_pipe <> "" then
-    _GGAP_DATA.out_pipe := OutputTextFile(out_pipe, true);
-    if _GGAP_DATA.out_pipe = fail then
-      Error("could not create output pipe");
-    fi;
+    create_output_pipe(out_pipe);
   else
     _GGAP_DATA.out_pipe := fail;
   fi;
