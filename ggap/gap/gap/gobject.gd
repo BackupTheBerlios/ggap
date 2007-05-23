@@ -20,6 +20,10 @@
 DeclareCategory("IsGObject", IsObject);
 
 
+DeclareOperation("SetProperty", [IsGObject, IsString, IsObject]);
+DeclareOperation("SetProperty", [IsGObject, IsRecord]);
+
+
 #############################################################################
 ##
 #C  IsGNone

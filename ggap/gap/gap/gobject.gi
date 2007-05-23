@@ -85,6 +85,22 @@ function(obj)
 end);
 
 
+InstallMethod(SetProperty, [IsGObject, IsString, IsObject],
+function(obj, prop, value)
+  _GGAP_CALL_FUNC("SET_PROPERTY", obj, prop, value);
+end);
+
+InstallMethod(SetProperty, [IsGObject, IsRecord],
+function(obj, props)
+  _GGAP_CALL_FUNC("SET_PROPERTY", obj, props, GNone);
+end);
+
+InstallMethod(GetProperty, [IsGObject, IsString],
+function(obj, prop)
+  return _GGAP_CALL_FUNC("GET_PROPERTY", obj, prop);
+end);
+
+
 ###############################################################################
 ##
 ##  _GGAP_REGISTER_TYPE(name, category)

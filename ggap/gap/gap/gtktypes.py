@@ -30,6 +30,8 @@ ArgFilename = StringArg('filename')
 ArgPath = StringArg('path')
 ArgUri = StringArg('uri')
 ArgText = StringArg('text')
+ArgLabel = StringArg('label')
+ArgTitle = StringArg('title')
 
 def IntArg(name):
     return (IsInt, name)
@@ -194,7 +196,7 @@ top_classes.append(GtkTreeSortable)
 class GObject:
     __no_constructor__ = True
 
-    set_property = [ArgName, IsObject]
+    set_property = 'doc_stub'
     get_property = [ArgName]
 
     class GdkWindow:
@@ -250,8 +252,6 @@ class GObject:
             get_name = Function(gap_name='GetWidgetName')
             set_state = [GtkStateType]
             set_sensitive = [BoolArg('sensitive')]
-            set_events = [IsInt]
-            add_events = [IsInt]
             get_toplevel = []
             get_events = []
             get_pointer = []
@@ -268,6 +268,11 @@ class GObject:
             get_root_window = []
             get_screen = []
             has_screen = []
+            activate = []
+            set_events = [IntArg('events')]
+            add_events = [IntArg('events')]
+            set_scroll_adjustments = [(IsGtkAdjustment, 'hadjustment'), (IsGtkAdjustment, 'vadjustment')]
+            set_size_request = [IntArg('width'), IntArg('height')]
 
             class GtkContainer:
                 __no_constructor__ = True
@@ -314,7 +319,7 @@ class GObject:
 
                     class GtkWindow:
                         __new__ = Function(opt_args=[GtkWindowType])
-                        set_title = [StringArg('title')]
+                        set_title = [ArgTitle]
                         set_resizable = [BoolArg('resizable')]
                         get_resizable = []
                         activate_focus = []
@@ -482,16 +487,14 @@ class GObject:
 #                                                                              ...);
                     class GtkPlug: pass
                     class GtkAlignment:
-#                         GtkWidget*  gtk_alignment_new               (gfloat xalign,
-#                                                                      gfloat yalign,
-#                                                                      gfloat xscale,
-#                                                                      gfloat yscale);
-                        set = [FloatArg('xalign'), FloatArg('yalign'), FloatArg('xscale'), FloatArg('yscale')]
+                        __new__ = Function(opt_args=[FloatArg('xalign'), FloatArg('yalign'), FloatArg('xscale'), FloatArg('yscale')])
+                        set = Function(args=[FloatArg('xalign'), FloatArg('yalign'), FloatArg('xscale'), FloatArg('yscale')],
+                                       gap_name='SetValues')
                         get_padding = []
                         set_padding = [IntArg('top'), IntArg('bottom'), IntArg('left'), IntArg('right')]
                     class GtkFrame:
 #                         GtkWidget*  gtk_frame_new                   (const gchar *label);
-                        set_label = [StringArg('label')]
+                        set_label = [ArgLabel]
                         set_label_widget = [IsGtkWidget]
                         set_label_align = [FloatArg('xalign'), FloatArg('yalign')]
                         set_shadow_type = [GtkShadowType]
@@ -506,7 +509,8 @@ class GObject:
 #                                                                          gfloat yalign,
 #                                                                          gfloat ratio,
 #                                                                          IsBool obey_child);
-                            set = [FloatArg('xalign'), FloatArg('yalign'), FloatArg('ratio'), IsBool]
+                            set = Function(args=[FloatArg('xalign'), FloatArg('yalign'), FloatArg('ratio'), IsBool],
+                                           gap_name='SetValues')
 
                     class GtkButton:
                         __new__ = 'doc_stub'
@@ -522,7 +526,7 @@ class GObject:
                         set_relief = [GtkReliefStyle]
                         get_relief = []
                         get_label = []
-                        set_label = [StringArg('label')]
+                        set_label = [ArgLabel]
                         get_use_stock = []
                         set_use_stock = [ArgSetting]
                         get_use_underline = []
@@ -535,7 +539,7 @@ class GObject:
                         get_image = []
 
                         class GtkToggleButton:
-                            __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
+                            __new__ = Function(opt_args=[ArgLabel, BoolArg('use_underline')])
 #                             GtkWidget*  gtk_toggle_button_new           (void);
 #                             GtkWidget*  gtk_toggle_button_new_with_label
 #                                                                         (const gchar *label);
@@ -550,7 +554,7 @@ class GObject:
                             set_inconsistent = [ArgSetting]
 
                             class GtkCheckButton:
-                                __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
+                                __new__ = Function(opt_args=[ArgLabel, BoolArg('use_underline')])
 #                                 GtkWidget*  gtk_check_button_new            (void);
 #                                 GtkWidget*  gtk_check_button_new_with_label (const gchar *label);
 #                                 GtkWidget*  gtk_check_button_new_with_mnemonic
@@ -590,7 +594,7 @@ class GObject:
 #                             void        gtk_color_button_set_use_alpha  (GtkColorButton *color_button,
 #                                                                          IsBool use_alpha);
 #                             IsBool    gtk_color_button_get_use_alpha  (GtkColorButton *color_button);
-                            set_title = [StringArg('title')]
+                            set_title = [ArgTitle]
                             get_title = []
 
                         class GtkFontButton:
@@ -611,7 +615,7 @@ class GObject:
                     class GtkItem:
                         __no_constructor__ = True
                         class GtkMenuItem:
-                            __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
+                            __new__ = Function(opt_args=[ArgLabel, BoolArg('use_underline')])
                             set_right_justified = [ArgSetting]
                             set_submenu = [IsGtkWidget]
                             set_accel_path = [IsString]
@@ -632,7 +636,7 @@ class GObject:
 #                                                                          IsInt allocation);
 
                             class GtkCheckMenuItem:
-                                __new__ = Function(opt_args=[StringArg('label'), BoolArg('use_underline')])
+                                __new__ = Function(opt_args=[ArgLabel, BoolArg('use_underline')])
                                 get_active = []
                                 set_active = [ArgActive]
                                 set_show_toggle = [ArgSetting]
@@ -724,12 +728,12 @@ class GObject:
                         get_visible_window = []
 
                     class GtkExpander:
-                        __new__ = Function(opt_args=[StringArg('label')])
+                        __new__ = Function(opt_args=[ArgLabel])
                         set_expanded = [BoolArg('expanded')]
                         get_expanded = []
                         set_spacing = [IsInt]
                         get_spacing = []
-                        set_label = [StringArg('label')]
+                        set_label = [ArgLabel]
                         get_label = []
                         set_use_underline = [ArgSetting]
                         get_use_underline = []
@@ -774,7 +778,7 @@ class GObject:
 #                             GtkToolItem* gtk_tool_button_new            (GtkWidget *icon_widget,
 #                                                                          const gchar *label);
 #                             GtkToolItem* gtk_tool_button_new_from_stock (const gchar *stock_id);
-                            set_label = [StringArg('label')]
+                            set_label = [ArgLabel]
                             get_label = []
                             set_use_underline = [ArgSetting]
                             get_use_underline = []
@@ -797,7 +801,7 @@ class GObject:
                                 set_arrow_tooltip = ['IsGtkTooltips', ArgText, IsString]
 
                             class GtkToggleToolButton:
-                                __new__ = Function(opt_args=[StringArg('label')])
+                                __new__ = Function(opt_args=[ArgLabel])
                                 set_active = [ArgActive]
                                 get_active = []
 
@@ -967,9 +971,19 @@ class GObject:
                 class GtkLayout:
                     # TODO
                     class FooCanvas:
-                        __gap_name__ = 'IsCanvas'
-                        # TODO
-                        pass
+                        root = Function(gap_name='GetRoot')
+                        set_scroll_region = [FloatArg('x1'), FloatArg('y1'), FloatArg('x2'), FloatArg('y2')]
+                        get_scroll_region = []
+                        set_pixels_per_unit = [FloatArg('n')]
+                        set_center_scroll_region = [BoolArg('center_scroll_region')]
+                        scroll_to = [IntArg('cx'), IntArg('cy')]
+                        get_scroll_offsets = []
+                        update_now = []
+                        get_item_at = [FloatArg('x'), FloatArg('y')]
+                        w2c_rect = [FloatArg('x1'), FloatArg('y1'), FloatArg('x2'), FloatArg('y2')]
+                        w2c = [FloatArg('wx'), FloatArg('wy')]
+                        c2w = [IntArg('cx'), IntArg('cy')]
+#                         set_stipple_origin = [('IsGdkGC', 'gc')]
                 class GtkMenuShell:
                     class GtkMenuBar:
                         # TODO
@@ -1259,7 +1273,77 @@ class GObject:
             class GtkMisc:
                 __no_constructor__ = True
                 class GtkLabel:
-                    # TODO
+                    __new__ = Function(opt_args=[ArgText])
+#                     GtkWidget*  gtk_label_new                   (const gchar *str);
+#                     void        gtk_label_set_text              (GtkLabel *label,
+#                                                                  const gchar *str);
+#                     void        gtk_label_set_attributes        (GtkLabel *label,
+#                                                                  PangoAttrList *attrs);
+#                     void        gtk_label_set_markup            (GtkLabel *label,
+#                                                                  const gchar *str);
+#                     void        gtk_label_set_markup_with_mnemonic
+#                                                                 (GtkLabel *label,
+#                                                                  const gchar *str);
+#                     void        gtk_label_set_pattern           (GtkLabel *label,
+#                                                                  const gchar *pattern);
+#                     void        gtk_label_set_justify           (GtkLabel *label,
+#                                                                  GtkJustification jtype);
+#                     void        gtk_label_set_ellipsize         (GtkLabel *label,
+#                                                                  PangoEllipsizeMode mode);
+#                     void        gtk_label_set_width_chars       (GtkLabel *label,
+#                                                                  gint n_chars);
+#                     void        gtk_label_set_max_width_chars   (GtkLabel *label,
+#                                                                  gint n_chars);
+#                     void        gtk_label_get                   (GtkLabel *label,
+#                                                                  gchar **str);
+#                     guint       gtk_label_parse_uline           (GtkLabel *label,
+#                                                                  const gchar *string);
+#                     void        gtk_label_set_line_wrap         (GtkLabel *label,
+#                                                                  gboolean wrap);
+#                     #define     gtk_label_set
+#                     void        gtk_label_get_layout_offsets    (GtkLabel *label,
+#                                                                  gint *x,
+#                                                                  gint *y);
+#                     guint       gtk_label_get_mnemonic_keyval   (GtkLabel *label);
+#                     gboolean    gtk_label_get_selectable        (GtkLabel *label);
+#                     const gchar* gtk_label_get_text             (GtkLabel *label);
+#                     GtkWidget*  gtk_label_new_with_mnemonic     (const gchar *str);
+#                     void        gtk_label_select_region         (GtkLabel *label,
+#                                                                  gint start_offset,
+#                                                                  gint end_offset);
+#                     void        gtk_label_set_mnemonic_widget   (GtkLabel *label,
+#                                                                  GtkWidget *widget);
+#                     void        gtk_label_set_selectable        (GtkLabel *label,
+#                                                                  gboolean setting);
+#                     void        gtk_label_set_text_with_mnemonic
+#                                                                 (GtkLabel *label,
+#                                                                  const gchar *str);
+#                     PangoAttrList* gtk_label_get_attributes     (GtkLabel *label);
+#                     GtkJustification gtk_label_get_justify      (GtkLabel *label);
+#                     PangoEllipsizeMode gtk_label_get_ellipsize  (GtkLabel *label);
+#                     gint        gtk_label_get_width_chars       (GtkLabel *label);
+#                     gint        gtk_label_get_max_width_chars   (GtkLabel *label);
+#                     const gchar* gtk_label_get_label            (GtkLabel *label);
+#                     PangoLayout* gtk_label_get_layout           (GtkLabel *label);
+#                     gboolean    gtk_label_get_line_wrap         (GtkLabel *label);
+#                     GtkWidget*  gtk_label_get_mnemonic_widget   (GtkLabel *label);
+#                     gboolean    gtk_label_get_selection_bounds  (GtkLabel *label,
+#                                                                  gint *start,
+#                                                                  gint *end);
+#                     gboolean    gtk_label_get_use_markup        (GtkLabel *label);
+#                     gboolean    gtk_label_get_use_underline     (GtkLabel *label);
+#                     gboolean    gtk_label_get_single_line_mode  (GtkLabel *label);
+#                     gdouble     gtk_label_get_angle             (GtkLabel *label);
+#                     void        gtk_label_set_label             (GtkLabel *label,
+#                                                                  const gchar *str);
+#                     void        gtk_label_set_use_markup        (GtkLabel *label,
+#                                                                  gboolean setting);
+#                     void        gtk_label_set_use_underline     (GtkLabel *label,
+#                                                                  gboolean setting);
+#                     void        gtk_label_set_single_line_mode  (GtkLabel *label,
+#                                                                  gboolean single_line_mode);
+#                     void        gtk_label_set_angle             (GtkLabel *label,
+#                                                                  gdouble angle);
                     class GtkAccelLabel: pass
                 class GtkArrow: pass
                     # TODO
@@ -1338,46 +1422,46 @@ class GObject:
             class GtkCellRendererToggle: pass
                     # TODO
         class FooCanvasItem:
-            __gap_name__ = 'IsCanvasItem'
             __no_constructor__ = True
-                # TODO
+            move = [FloatArg('dx'), FloatArg('dy')]
+            raise_ = Function(gap_name='Raise', args=[IntArg('positions')])
+            lower = [IntArg('positions')]
+            raise_to_top = []
+            lower_to_bottom = []
+            send_behind = [('IsFooCanvasItem', 'behind_item')]
+            show = []
+            hide = []
+            grab = 'doc_stub'
+            ungrab = [IntArg('etime')]
+            w2i = [FloatArg('x'), FloatArg('y')]
+            i2w = [FloatArg('x'), FloatArg('y')]
+            reparent = [('IsFooCanvasGroup', 'new_group')]
+            grab_focus = []
+            get_bounds = []
+            request_update = []
+            request_redraw = []
             class FooCanvasGroup:
                 __new__ = 'doc_stub'
-                __gap_name__ = 'IsCanvasGroup'
-                # TODO
             class FooCanvasLine:
                 __new__ = 'doc_stub'
-                __gap_name__ = 'IsCanvasLine'
-                # TODO
             class FooCanvasRE:
-                __gap_name__ = 'IsCanvasRE'
                 __no_constructor__ = True
                 class FooCanvasRect:
                     __new__ = 'doc_stub'
-                    __gap_name__ = 'IsCanvasRect'
-                    # TODO
                 class FooCanvasEllipse:
                     __new__ = 'doc_stub'
-                    __gap_name__ = 'IsCanvasEllipse'
-                    # TODO
             class FooCanvasPolygon:
                 __new__ = 'doc_stub'
-                __gap_name__ = 'IsCanvasPolygon'
-                # TODO
             class FooCanvasPixbuf:
                 __new__ = 'doc_stub'
-                __gap_name__ = 'IsCanvasPixbuf'
-                # TODO
             class FooCanvasWidget:
                 __new__ = 'doc_stub'
-                __gap_name__ = 'IsCanvasWidget'
-                # TODO
     class GtkTooltips: pass
                     # TODO
 
     class GtkTreeViewColumn:
         __implements__ = ['GtkCellLayout']
-        __new__ = Function(opt_args=[StringArg('title'), IsGtkCellRenderer])
+        __new__ = Function(opt_args=[ArgTitle, IsGtkCellRenderer])
 #         GtkTreeViewColumn* gtk_tree_view_column_new_with_attributes
 #                                                     (const gchar *title,
 #                                                      GtkCellRenderer *cell,
@@ -1403,7 +1487,7 @@ class GObject:
         set_max_width = [IntArg('max_width')]
         get_max_width = []
         clicked = []
-        set_title = [StringArg('title')]
+        set_title = [ArgTitle]
         get_title = []
         set_expand = [BoolArg('setting')]
         get_expand = []

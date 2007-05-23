@@ -15,6 +15,8 @@ import gtk
 import gap
 import gap_cb
 import gap_types
+import gap_canvas
+import foocanvas
 import gobject
 import pango
 import sys
@@ -40,6 +42,7 @@ DATA_LIST           = 4
 DATA_OBJECT         = 5
 DATA_DICT           = 6
 DATA_BIG_INT        = 7
+DATA_RAT            = 8
 
 RET_OK              = 0
 RET_ERR             = 1
@@ -119,7 +122,7 @@ class Session:
         self.log = log
         self.stack = FuncStack()
         self.last_stamp = 0
-        self.session_id = session_id
+        self.id = session_id
 
         self.debug = False
         self.log_input = []
@@ -132,14 +135,16 @@ class Session:
             "OBJECT" : self.get_object,
             "GET_TYPE_INFO" : self.get_type_info,
             "UNREF_OBJECTS" : self.unref_objects,
-            "gtk": gtk, "sys": sys, "gap": gap, "pango": pango, "gobject": gobject, "os": os,
+            "DISPLAY_GRAPH" : self.display_graph,
+            "SET_PROPERTY" : gap_types.set_property,
+            "GET_PROPERTY" : gap_types.get_property,
         }
 
-        try:
-            import moo
-            self.locals['moo'] = moo
-        except ImportError:
-            pass
+        for m in ['gtk', 'sys', 'gap', 'pango', 'gobject', 'os', 'foocanvas', 'moo']:
+            try:
+                self.locals[m] = __import__(m)
+            except ImportError:
+                pass
 
         self.gc_timeout_id = gobject.timeout_add(60000, self.gc_timeout)
 
@@ -147,6 +152,9 @@ class Session:
         if self.debug:
             self.log_output.append(string)
         _app_output_write(string)
+
+    def display_graph(self, obj):
+        _display_graph(self.id, obj)
 
     def print_error(self, error=None):
         s = self.format_error(error)
@@ -162,14 +170,14 @@ class Session:
 
     def new_stamp(self):
         self.last_stamp += 1
-        stamp = (self.last_stamp << 8) + self.session_id
+        stamp = (self.last_stamp << 8) + self.id
         if stamp >= 10**8:
             self.last_stamp = 1
-            stamp = (self.last_stamp << 8) + self.session_id
+            stamp = (self.last_stamp << 8) + self.id
         return stamp
     def get_stamp(self, string):
         val = int(string[:8])
-        if val & 255 != self.session_id:
+        if val & 255 != self.id:
             self.__log('got data for session %d, ignoring' % (val & 255,))
             return 0, None
         else:
@@ -240,7 +248,7 @@ class Session:
         return {'parent': parent.name}
 
     def unref_objects(self, session_id, ids):
-        if session_id != self.session_id:
+        if session_id != self.id:
             self.__log("asked to unref objects for session %s, ignoring" % (session_id,))
             return
         self.__log("removing objects %s" % (ids,))
@@ -372,6 +380,10 @@ class Session:
                     val = -val
                 string += '%c%c' % ((val & 0xff00) >> 8, val & 0xff)
                 return string
+
+        elif isinstance(val, float):
+            numer, denom = gap_types.split_float(val)
+            return '%c' % (DATA_RAT,) + self.serialize(numer) + self.serialize(denom)
 
         elif isinstance(val, str):
             length = len(val)

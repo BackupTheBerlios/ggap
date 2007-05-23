@@ -128,7 +128,7 @@ function()
   # Boolean: single byte, 0 is false
   elif type = 1 then
     value := _GGAP_READ_BYTE() <> 0;
-    Info(InfoGGAP, 7, "Got bool", value);
+    Info(InfoGGAP, 7, "Got ", value);
     return value;
 
   # Two-byte int: first byte sign, then two-byte value
@@ -144,9 +144,14 @@ function()
   # Long integer: two-byte length, then the value in decimal notation
   elif type = 7 then
     len := read_two_bytes_int();
-    Info(InfoGGAP, 7, "Got int of length ", len);
     value := Int(read_string(len));
-    Info(InfoGGAP, 7, "Got int ", value);
+    Info(InfoGGAP, 7, "Got int of length ", len, ": ", value);
+    return value;
+
+  # Rational: two integers
+  elif type = 8 then
+    value := _GGAP_READ_VALUE()/_GGAP_READ_VALUE();
+    Info(InfoGGAP, 7, "Got rational ", value);
     return value;
 
   # String: two-byte length, then the string
@@ -573,8 +578,11 @@ function(value)
   elif IsGNone(value) then
     return "None";
 
-  elif IsRat(value) then
+  elif IsInt(value) then
     return String(value);
+
+  elif IsRat(value) then
+    return Concatenation(String(NumeratorRat(value)), "./", String(DenominatorRat(value)));
 
   elif IsString(value) then
     return Concatenation("'", _GGAP_ESCAPE_STRING(value), "'");
