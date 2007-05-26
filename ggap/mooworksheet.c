@@ -19,8 +19,8 @@
 #include <string.h>
 
 
-#define DEFAULT_PS1         ">>> "
-#define DEFAULT_PS2         "... "
+enum {PS1, PS2};
+static const char *default_prompt[2] = {">>> ", "... "};
 
 // #define INPUT_START_MARK_S  "\363\260\200\200"
 // #define INPUT_CONT_MARK_S   "\363\260\200\201"
@@ -44,8 +44,7 @@
 struct _MooWorksheetPrivate {
     GtkTextBuffer *buffer;
     GtkTextMark *out_mark;
-    char *ps1;
-    char *ps2;
+    char *prompt[2];
     gboolean in_input;
     gboolean allow_multiline;
     GtkTextTag *ps_tag;
@@ -106,8 +105,6 @@ G_DEFINE_TYPE (MooWorksheet, moo_worksheet, MOO_TYPE_TEXT_VIEW)
 
 enum {
     PROP_0,
-    PROP_PS1,
-    PROP_PS2,
     PROP_ACCEPTING_INPUT,
     PROP_ALLOW_MULTILINE
 };
@@ -138,22 +135,6 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
 //     textview_class->insert_at_cursor = moo_worksheet_insert_at_cursor;
 //     textview_class->delete_from_cursor = moo_worksheet_delete_from_cursor;
 //     textview_class->backspace = moo_worksheet_backspace;
-
-    g_object_class_install_property (gobject_class,
-                                     PROP_PS1,
-                                     g_param_spec_string ("ps1",
-                                                          "ps1",
-                                                          "ps1",
-                                                          DEFAULT_PS1,
-                                                          G_PARAM_READWRITE));
-
-    g_object_class_install_property (gobject_class,
-                                     PROP_PS2,
-                                     g_param_spec_string ("ps2",
-                                                          "ps2",
-                                                          "ps2",
-                                                          DEFAULT_PS2,
-                                                          G_PARAM_READWRITE));
 
     g_object_class_install_property (gobject_class,
                                      PROP_ACCEPTING_INPUT,
@@ -189,12 +170,12 @@ moo_worksheet_init (MooWorksheet *ws)
     ws->priv = g_new0 (MooWorksheetPrivate, 1);
     ws->priv->history = NULL;
     ws->priv->in_input = FALSE;
-    ws->priv->ps1 = NULL;
-    ws->priv->ps2 = NULL;
+    ws->priv->prompt[PS1] = NULL;
+    ws->priv->prompt[PS2] = NULL;
     ws->priv->allow_multiline = TRUE;
 
-    moo_worksheet_set_ps1 (ws, DEFAULT_PS1);
-    moo_worksheet_set_ps2 (ws, DEFAULT_PS2);
+    moo_worksheet_set_ps1 (ws, default_prompt[PS1]);
+    moo_worksheet_set_ps2 (ws, default_prompt[PS2]);
 
     moo_text_view_set_font_from_string (MOO_TEXT_VIEW (ws), "Monospace");
     gtk_text_view_set_editable (GTK_TEXT_VIEW (ws), FALSE);
@@ -221,10 +202,12 @@ moo_worksheet_constructor (GType           type,
         gtk_text_buffer_create_tag (buffer,
                                     "moo-worksheet-prompt",
                                     "editable", FALSE,
+                                    "foreground", "darkred",
                                     NULL);
     ws->priv->input_tag =
         gtk_text_buffer_create_tag (buffer,
                                     "moo-worksheet-input",
+                                    "foreground", "darkgreen",
                                     NULL);
     ws->priv->out_tag =
         gtk_text_buffer_create_tag (buffer,
@@ -245,9 +228,9 @@ moo_worksheet_constructor (GType           type,
                                     NULL);
 
     gtk_text_buffer_get_start_iter (buffer, &iter);
-    ws->priv->out_mark =  gtk_text_buffer_create_mark (buffer,
-                                                       "moo-worksheet-output",
-                                                       &iter, FALSE);
+    ws->priv->out_mark = gtk_text_buffer_create_mark (buffer,
+                                                      "moo-worksheet-output",
+                                                      &iter, FALSE);
 
     return object;
 }
@@ -262,8 +245,8 @@ moo_worksheet_destroy (GtkObject *object)
     {
         g_slist_foreach (ws->priv->history, (GFunc) g_free, NULL);
         g_slist_free (ws->priv->history);
-        g_free (ws->priv->ps1);
-        g_free (ws->priv->ps2);
+        g_free (ws->priv->prompt[PS1]);
+        g_free (ws->priv->prompt[PS2]);
         g_free (ws->priv);
         ws->priv = NULL;
     }
@@ -282,13 +265,6 @@ moo_worksheet_set_property (GObject      *object,
 
     switch (prop_id)
     {
-        case PROP_PS1:
-            moo_worksheet_set_ps1 (ws, g_value_get_string (value));
-            break;
-        case PROP_PS2:
-            moo_worksheet_set_ps2 (ws, g_value_get_string (value));
-            break;
-
         case PROP_ALLOW_MULTILINE:
             ws->priv->allow_multiline = g_value_get_boolean (value);
             g_object_notify (object, "allow-multiline");
@@ -311,13 +287,6 @@ moo_worksheet_get_property (GObject    *object,
 
     switch (prop_id)
     {
-        case PROP_PS1:
-            g_value_take_string (value, moo_worksheet_get_ps1 (ws));
-            break;
-        case PROP_PS2:
-            g_value_take_string (value, moo_worksheet_get_ps2 (ws));
-            break;
-
         case PROP_ACCEPTING_INPUT:
             g_value_set_boolean (value, ws->priv->in_input);
             break;
@@ -333,52 +302,57 @@ moo_worksheet_get_property (GObject    *object,
 }
 
 
-void
-moo_worksheet_set_ps1 (MooWorksheet *ws,
-                       const char   *prompt)
+static void
+moo_worksheet_set_ps (MooWorksheet *ws,
+                      const char   *prompt,
+                      int           index)
 {
     char *tmp;
 
     g_return_if_fail (MOO_IS_WORKSHEET (ws));
+    g_return_if_fail (index < 2);
 
-    tmp = ws->priv->ps1;
-    ws->priv->ps1 = g_strdup_printf (INPUT_START_MARK_S "%s" INPUT_START_MARK_S,
-                                     prompt ? prompt : "");
+    tmp = ws->priv->prompt[index];
+    ws->priv->prompt[index] =
+        g_strdup_printf (INPUT_START_MARK_S "%s" INPUT_START_MARK_S,
+                         prompt ? prompt : "");
     g_free (tmp);
+}
 
-    g_object_notify (G_OBJECT (ws), "ps1");
+static char *
+moo_worksheet_get_ps (MooWorksheet *ws,
+                      int           index)
+{
+    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
+    g_return_val_if_fail (index < 2, NULL);
+    return g_strndup (ws->priv->prompt[index] + BLOCK_MARK_LEN,
+                      strlen (ws->priv->prompt[index]) - 2*BLOCK_MARK_LEN);
+}
+
+void
+moo_worksheet_set_ps1 (MooWorksheet *ws,
+                       const char   *prompt)
+{
+    moo_worksheet_set_ps (ws, prompt, PS1);
 }
 
 char *
 moo_worksheet_get_ps1 (MooWorksheet *ws)
 {
-    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
-    return g_strndup (ws->priv->ps1 + BLOCK_MARK_LEN,
-                      strlen (ws->priv->ps1) - 2*BLOCK_MARK_LEN);
+    return moo_worksheet_get_ps (ws, PS1);
 }
 
 void
 moo_worksheet_set_ps2 (MooWorksheet *ws,
                        const char   *prompt)
 {
-    char *tmp;
-
-    g_return_if_fail (MOO_IS_WORKSHEET (ws));
-
-    tmp = ws->priv->ps2;
-    ws->priv->ps2 = g_strdup_printf (INPUT_CONT_MARK_S "%s" INPUT_CONT_MARK_S,
-                                     prompt ? prompt : "");
-    g_free (tmp);
-
-    g_object_notify (G_OBJECT (ws), "ps2");
+    moo_worksheet_set_ps (ws, prompt, PS2);
 }
 
 char *
 moo_worksheet_get_ps2 (MooWorksheet *ws)
 {
-    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
-    return g_strndup (ws->priv->ps2 + BLOCK_MARK_LEN,
-                      strlen (ws->priv->ps2) - 2*BLOCK_MARK_LEN);
+    return moo_worksheet_get_ps (ws, PS2);
 }
 
 
@@ -433,7 +407,7 @@ moo_worksheet_start_input (MooWorksheet *ws)
         }
 
         gtk_text_buffer_insert_with_tags (ws->priv->buffer, &iter,
-                                          ws->priv->ps1, -1,
+                                          ws->priv->prompt[PS1], -1,
                                           ws->priv->ps_tag, NULL);
     }
     else
@@ -495,7 +469,7 @@ new_input_line (MooWorksheet      *ws,
 
     gtk_text_buffer_insert (ws->priv->buffer, &iter, "\n", -1);
     gtk_text_buffer_insert_with_tags (ws->priv->buffer, &iter,
-                                      ws->priv->ps2, -1,
+                                      ws->priv->prompt[PS2], -1,
                                       ws->priv->ps_tag, NULL);
     gtk_text_buffer_place_cursor (ws->priv->buffer, &iter);
 

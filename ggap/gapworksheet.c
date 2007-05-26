@@ -162,6 +162,7 @@ gap_worksheet_process_input (MooWorksheet *mws,
                              const char   *input)
 {
     GapWorksheet *ws = GAP_WORKSHEET (mws);
+    gap_parse (input);
     moo_term_pt_write (ws->priv->pt, input, -1);
     moo_term_pt_write (ws->priv->pt, "\n", -1);
 }

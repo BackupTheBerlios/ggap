@@ -2,6 +2,7 @@ SUBDIRS = gap .
 
 EXTRA_PROGRAMS = ggap pipehelper
 bin_PROGRAMS =
+noinst_PROGRAMS = testparser
 
 if !MOO_OS_CYGWIN
 bin_PROGRAMS += ggap
@@ -21,13 +22,21 @@ AM_CFLAGS =				\
     $(GTK_CFLAGS)			\
     -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"
 
-ggap_LDADD = $(top_builddir)/moo/moo/libmoo.la
+testparser_LDADD = $(top_builddir)/moo/moo/libmoo.la $(READLINE_LIBS)
 
+ggap_LDADD = $(top_builddir)/moo/moo/libmoo.la
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
 if MOO_OS_MINGW
 ggap_LDFLAGS += -mwindows
 endif MOO_OS_MINGW
+
+testparser_SOURCES =			\
+	testparser.c			\
+	gapparser.c			\
+	gapparser.h			\
+	gapparser-yacc.c		\
+	gapparser-yacc.h
 
 ggap_SOURCES =				\
 	ggap-ui.h			\
@@ -43,6 +52,11 @@ ggap_SOURCES =				\
 	ggap.c				\
 	gapapp.c			\
 	gapapp.h			\
+	gapparser.c			\
+	gapparser.h			\
+	gapparser-priv.h		\
+	gapparser-yacc.c		\
+	gapparser-yacc.h		\
 	gapview.c			\
 	gapview.h			\
 	gapeditwindow.c			\
@@ -66,6 +80,10 @@ ggap_SOURCES =				\
 	gapprefs-glade.h		\
 	ggap-credits.h
 
+gapparser-yacc.h: gapparser-yacc.c
+	touch $(srcdir)/gapparser-yacc.h
+gapparser-yacc.c: gapparser-yacc.y
+	bison -v -o $(srcdir)/gapparser-yacc.c -d $(srcdir)/gapparser-yacc.y
 
 nodist_ggap_SOURCES = ggap_res.res
 nodist_pipehelper_SOURCES = pipehelper_res.res
@@ -92,6 +110,7 @@ EXTRA_DIST =		\
     pipehelper_res.rc.in\
     ggap-ui.xml		\
     ggap.opag		\
+    gapparser-yacc.y	\
     glade/gapprefs.glade\
     glade/usermenu.glade\
     python/ggap.py	\
@@ -101,6 +120,8 @@ EXTRA_DIST =		\
     python/gap.py
 
 BUILT_SOURCES =		\
+	gapparser-yacc.c\
+	gapparser-yacc.h\
 	ggap-ui.h	\
 	gapprefs-glade.h\
 	ggap.c		\

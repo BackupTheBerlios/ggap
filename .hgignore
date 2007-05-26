@@ -37,6 +37,7 @@ ggap/.*\.example$
 ^ggap/gap/doc/types\.tex$
 ^ggap/gap/gap/types\.gd$
 ^ggap/gap/gap/types\.gi$
+^ggap/gapparser-yacc\.[ch]$
 ^intltool-extract\.in$
 ^intltool-merge.in$
 ^intltool-update\.in$
