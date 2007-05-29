@@ -23,11 +23,6 @@ typedef struct {
     guint line_ptr;
 } GapLex;
 
-typedef struct {
-    char *message;
-    YYLTYPE location;
-} GapParseError;
-
 struct _GapParser {
     GapLex *lex;
     GapParseResult result;
@@ -37,10 +32,6 @@ struct _GapParser {
 };
 
 
-static GapParser       *gap_parser_new          (void);
-static void             gap_parser_free         (GapParser      *parser);
-static GapParseResult   gap_parser_parse        (GapParser      *parser,
-                                                 const char     *string);
 static void             gap_parser_cleanup      (GapParser      *parser);
 
 static GapLex          *gap_lex_new             (const char     *string);
@@ -70,13 +61,13 @@ gap_parse (const char *string)
 }
 
 
-static GapParser *
+GapParser *
 gap_parser_new (void)
 {
     return g_new0 (GapParser, 1);
 }
 
-static void
+void
 gap_parser_free (GapParser *parser)
 {
     if (parser)
@@ -86,16 +77,27 @@ gap_parser_free (GapParser *parser)
     }
 }
 
-static GapParseResult
+GapParseResult
 gap_parser_parse (GapParser  *parser,
                   const char *string)
 {
+    g_return_val_if_fail (parser != NULL, GAP_PARSE_ERROR);
+    g_return_val_if_fail (string != NULL, GAP_PARSE_ERROR);
+
     gap_parser_cleanup (parser);
     parser->lex = gap_lex_new (string);
 
     _gap_parser_yyparse (parser);
+    parser->errors = g_slist_reverse (parser->errors);
 
     return parser->result;
+}
+
+GSList *
+gap_parser_get_errors (GapParser *parser)
+{
+    g_return_val_if_fail (parser != NULL, NULL);
+    return parser->errors;
 }
 
 static void
@@ -137,7 +139,9 @@ gap_parse_error_new (const char *message,
 
     error = g_new0 (GapParseError, 1);
     error->message = g_strdup (message);
-    error->location = *location;
+    error->line = location->first_line;
+    error->first_column = location->first_column;
+    error->last_column = location->last_column;
 
     return error;
 }

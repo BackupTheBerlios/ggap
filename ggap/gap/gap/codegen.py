@@ -80,11 +80,14 @@ def printenums(mod, prefix, fp):
                    gtk.CTreePos, gtk.DebugFlag, gtk.SubmenuDirection, gtk.SubmenuPlacement, gtk.MatchType,
                    gtk.PreviewType, gtk.SideType, gtk.PathPriorityType, gtk.AccelFlags, gtk.CellRendererState,
                    gtk.CurveType, gtk.DeleteType, gtk.DestDefaults, gtk.IMPreeditStyle, gtk.IMStatusStyle,
-                   gtk.IconLookupFlags, gtk.IconThemeError, gtk.IconViewDropPosition, gtk.ImageType,
+                   gtk.IconLookupFlags, gtk.IconThemeError, gtk.ImageType,
                    gtk.MenuDirectionType, gtk.MovementStep, gtk.NotebookTab, gtk.ObjectFlags, gtk.PathType,
                    gtk.RcFlags, gtk.RcTokenType, gtk.ResizeMode, gtk.StateType, gtk.TargetFlags, gtk.TextDirection,
                    gtk.TextWindowType, gtk.ToolbarChildType, gtk.ToolbarSpaceStyle, gtk.TreeModelFlags,
                    gtk.TreeViewDropPosition, gtk.UIManagerItemType, gtk.Visibility, gtk.WidgetHelpType]
+
+    if gtk.gtk_version >= (2,8,0):
+        ignoreenums.append(gtk.IconViewDropPosition)
 
     vals = []
 

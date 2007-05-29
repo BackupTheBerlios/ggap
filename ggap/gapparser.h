@@ -20,6 +20,7 @@ G_BEGIN_DECLS
 
 
 typedef struct _GapParser GapParser;
+typedef struct _GapParseError GapParseError;
 
 typedef enum {
     GAP_PARSE_OK,
@@ -27,10 +28,21 @@ typedef enum {
     GAP_PARSE_INCOMPLETE
 } GapParseResult;
 
+struct _GapParseError {
+    int line;
+    int first_column;
+    int last_column;
+    char *message;
+};
+
 
 GapParseResult  gap_parse               (const char *string);
 
-// int             _gap_parser_yyparse     (GapParser  *parser);
+GapParser      *gap_parser_new          (void);
+void            gap_parser_free         (GapParser  *parser);
+GapParseResult  gap_parser_parse        (GapParser  *parser,
+                                         const char *string);
+GSList         *gap_parser_get_errors   (GapParser  *parser);
 
 
 G_END_DECLS

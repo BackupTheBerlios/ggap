@@ -14,6 +14,7 @@
 #include "ggap-i18n.h"
 #include "gapworksheet.h"
 #include "gapapp.h"
+#include "gapparser.h"
 #include "gap.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
@@ -114,7 +115,7 @@ gap_worksheet_view_display_graph (GapView *view,
                                   GObject *obj)
 {
     g_return_if_fail (GTK_IS_WIDGET (obj));
-    moo_worksheet_insert_widget (MOO_WORKSHEET (view), GTK_WIDGET (obj));
+//     moo_worksheet_insert_widget (MOO_WORKSHEET (view), GTK_WIDGET (obj));
 }
 
 static void
@@ -136,7 +137,9 @@ gap_worksheet_init (GapWorksheet *ws)
     ws->priv = g_new0 (GapWorksheetPrivate, 1);
     ws->priv->line = g_string_new (NULL);
     ws->priv->pt = NULL;
-    g_object_set (ws, "allow-multiline", FALSE, NULL);
+    g_object_set (ws, "allow-multiline", TRUE, NULL);
+    moo_worksheet_set_ps1 (MOO_WORKSHEET (ws), "gap> ");
+    moo_worksheet_set_ps2 (MOO_WORKSHEET (ws), "> ");
 }
 
 
@@ -158,13 +161,93 @@ gap_worksheet_destroy (GtkObject *object)
 
 
 static void
+write_input (GapWorksheet *ws,
+             const char   *input)
+{
+    char **lines;
+    guint n_lines;
+
+    lines = moo_strnsplit_lines (input, -1, &n_lines);
+
+    if (n_lines > 1)
+    {
+        char *string = g_strjoinv (" ", lines);
+        moo_term_pt_write (ws->priv->pt, string, -1);
+        g_free (string);
+    }
+    else
+    {
+        moo_term_pt_write (ws->priv->pt, input, -1);
+    }
+
+    moo_term_pt_write (ws->priv->pt, "\n", -1);
+
+    g_strfreev (lines);
+}
+
+static void
+write_errors (MooWorksheet *mws,
+              GapParser    *parser)
+{
+    int line = -1, column = -1;
+    GSList *list;
+
+    list = gap_parser_get_errors (parser);
+
+    if (!list)
+    {
+        line = 0;
+        column = 0;
+        moo_worksheet_write_error (mws, "Syntax error");
+    }
+    else while (list)
+    {
+        GapParseError *error;
+
+        error = list->data;
+        list = list->next;
+
+        moo_worksheet_write_error (mws, "Line %d, chars %d:%d: %s\n",
+                                   error->line + 1,
+                                   error->first_column + 1,
+                                   error->last_column + 1,
+                                   error->message);
+
+        if (line < 0)
+        {
+            line = error->line;
+            column = error->first_column;
+        }
+    }
+
+    moo_worksheet_resume_input (mws, line, column);
+}
+
+static void
 gap_worksheet_process_input (MooWorksheet *mws,
                              const char   *input)
 {
     GapWorksheet *ws = GAP_WORKSHEET (mws);
-    gap_parse (input);
-    moo_term_pt_write (ws->priv->pt, input, -1);
-    moo_term_pt_write (ws->priv->pt, "\n", -1);
+    GapParser *parser;
+
+    parser = gap_parser_new ();
+
+    switch (gap_parser_parse (parser, input))
+    {
+        case GAP_PARSE_OK:
+            write_input (ws, input);
+            break;
+
+        case GAP_PARSE_INCOMPLETE:
+            moo_worksheet_continue_input (mws);
+            break;
+
+        case GAP_PARSE_ERROR:
+            write_errors (mws, parser);
+            break;
+    }
+
+    gap_parser_free (parser);
 }
 
 
@@ -241,7 +324,7 @@ io_func (const char *buf,
 
         for (i = 0; i + 1 < n_lines; ++i)
         {
-            moo_worksheet_write_output (mws, lines[i]);
+            moo_worksheet_write_output (mws, "%s", lines[i]);
             moo_worksheet_write_output (mws, "\n");
         }
     }
@@ -251,7 +334,7 @@ io_func (const char *buf,
     if (!line_starts_prompt (ws->priv->line))
     {
         g_string_truncate (ws->priv->line, 0);
-        moo_worksheet_write_output (mws, lines[n_lines-1]);
+        moo_worksheet_write_output (mws, "%s", lines[n_lines-1]);
     }
     else if (line_is_prompt (ws->priv->line))
     {

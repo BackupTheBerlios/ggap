@@ -172,7 +172,7 @@ Permutation:    '(' perm_elms ')'
         |       Permutation '(' perm_elms ')'
 ;
 perm_elms:      /* empty */
-        |       Expression ',' expr_list
+        |       Expression ',' non_empty_expr_list
 ;
 
 List:           '[' Expression TOK_TWO_DOTS Expression ']'

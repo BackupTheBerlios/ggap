@@ -41,8 +41,7 @@ struct _MooWorksheet
 struct _MooWorksheetClass
 {
     MooTextViewClass base_class;
-    gboolean (*input_complete) (MooWorksheet *sheet,
-                                const char   *input);
+
     void     (*process_input)  (MooWorksheet *sheet,
                                 const char   *input);
 };
@@ -60,11 +59,17 @@ char       *moo_worksheet_get_ps2           (MooWorksheet   *sheet);
 void        moo_worksheet_reset             (MooWorksheet   *sheet);
 void        moo_worksheet_start_input       (MooWorksheet   *sheet);
 void        moo_worksheet_continue_input    (MooWorksheet   *sheet);
+void        moo_worksheet_resume_input      (MooWorksheet   *sheet,
+                                             int             line,
+                                             int             column);
 gboolean    moo_worksheet_accepting_input   (MooWorksheet   *sheet);
+
 void        moo_worksheet_write_output      (MooWorksheet   *sheet,
-                                             const char     *text);
+                                             const char     *format,
+                                             ...);
 void        moo_worksheet_write_error       (MooWorksheet   *sheet,
-                                             const char     *text);
+                                             const char     *format,
+                                             ...);
 void        moo_worksheet_insert_widget     (MooWorksheet   *sheet,
                                              GtkWidget      *widget);
 
