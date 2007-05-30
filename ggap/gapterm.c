@@ -15,11 +15,11 @@
 #include "gapview.h"
 #include "gapapp.h"
 #include "gapeditwindow.h"
-#include "mooutils/eggregex.h"
 #include "mooterm/mooterm-text.h"
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <glib/gregex.h>
 #include <gdk/gdkkeysyms.h>
 
 #define ERROR_TAG "gap-syntax-error"
@@ -27,7 +27,7 @@
 struct _GapTermPrivate {
     guint analyze_idle_id;
     MooTermTag *error_tag;
-    EggRegex *error_regex;
+    GRegex *error_regex;
     int last_line_checked;
 };
 
@@ -138,8 +138,8 @@ gap_term_init (GapTerm *term)
     term->priv = g_new0 (GapTermPrivate, 1);
     term->priv->last_line_checked = -1;
 
-    term->priv->error_regex = egg_regex_new ("Syntax error: (.*) in (.*) line (\\d+)",
-                                             EGG_REGEX_ANCHORED, 0, NULL);
+    term->priv->error_regex = g_regex_new ("Syntax error: (.*) in (.*) line (\\d+)",
+                                           G_REGEX_ANCHORED, 0, NULL);
     g_return_if_fail (term->priv->error_regex != NULL);
 }
 
@@ -176,7 +176,7 @@ gap_term_destroy (GtkObject *object)
         if (term->priv->analyze_idle_id)
             g_source_remove (term->priv->analyze_idle_id);
         term->priv->analyze_idle_id = 0;
-        egg_regex_free (term->priv->error_regex);
+        g_regex_unref (term->priv->error_regex);
         g_free (term->priv);
         term->priv = NULL;
     }
@@ -233,6 +233,7 @@ do_analyze (GapTerm *term)
         guint width;
         int j, k;
         GString *message;
+        GMatchInfo *match_info = NULL;
 
         line = moo_term_get_line (moo_term, i);
         g_return_val_if_fail (line != NULL, FALSE);
@@ -288,16 +289,14 @@ do_analyze (GapTerm *term)
         g_string_append (message, text);
         g_free (text);
 
-        egg_regex_clear (term->priv->error_regex);
-
-        if (egg_regex_match (term->priv->error_regex, message->str, 0) > 0)
+        if (g_regex_match (term->priv->error_regex, message->str, 0, &match_info))
         {
             char *file_string, *info_string, *line_string;
             long line_no;
 
-            info_string = egg_regex_fetch (term->priv->error_regex, 1, message->str);
-            file_string = egg_regex_fetch (term->priv->error_regex, 2, message->str);
-            line_string = egg_regex_fetch (term->priv->error_regex, 3, message->str);
+            info_string = g_match_info_fetch (match_info, 1);
+            file_string = g_match_info_fetch (match_info, 2);
+            line_string = g_match_info_fetch (match_info, 3);
 
             g_assert (info_string && file_string && line_string);
 
@@ -336,6 +335,9 @@ do_analyze (GapTerm *term)
             g_free (info_string);
             g_free (line_string);
         }
+
+        if (match_info)
+            g_match_info_free (match_info);
 
         g_string_free (message, TRUE);
         i = j;

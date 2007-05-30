@@ -12,12 +12,17 @@ if MOO_OS_MINGW
 bin_PROGRAMS += pipehelper
 endif
 
+if !GLIB_2_14
+regex_cflags = -I$(srcdir)/../moo/moo/mooutils/newgtk
+endif
+
 AM_CFLAGS =				\
     -I$(top_builddir)			\
     -I$(top_builddir)/ggap		\
     -I$(top_srcdir)/ggap		\
     -I$(top_builddir)/moo/moo		\
     -I$(top_srcdir)/moo/moo		\
+    $(regex_cflags)			\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
     -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"

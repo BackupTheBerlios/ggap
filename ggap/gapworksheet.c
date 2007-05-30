@@ -18,7 +18,7 @@
 #include "gap.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
-#include "mooutils/eggregex.h"
+#include <glib/gregex.h>
 
 
 struct _GapWorksheetPrivate {
@@ -263,33 +263,39 @@ child_died (GapWorksheet *ws)
 static gboolean
 line_starts_prompt (GString *line)
 {
-    static EggRegex *regex;
+    static GRegex *regex;
+    GMatchInfo *match_info;
+    gboolean result;
 
     if (!regex)
-    {
-        regex = egg_regex_new ("^ggap-prompt-(gap|brk(_\\d\\d)?|)> ", EGG_REGEX_ANCHORED,
-                               EGG_REGEX_MATCH_PARTIAL, NULL);
-        egg_regex_optimize (regex, NULL);
-    }
+        regex = g_regex_new ("^ggap-prompt-(gap|brk(_\\d\\d)?|)> ",
+                             G_REGEX_ANCHORED | G_REGEX_OPTIMIZE,
+                             G_REGEX_MATCH_PARTIAL, NULL);
 
-    egg_regex_clear (regex);
-    return egg_regex_match (regex, line->str, 0) ||
-           egg_regex_is_partial_match (regex);
+    g_return_val_if_fail (regex != NULL, FALSE);
+
+    if (g_regex_match (regex, line->str, 0, &match_info))
+        result = TRUE;
+    else
+        result = g_match_info_is_partial_match (match_info);
+
+    g_match_info_free (match_info);
+    return result;
 }
 
 static gboolean
 line_is_prompt (GString *line)
 {
-    static EggRegex *regex;
+    static GRegex *regex;
 
     if (!regex)
-    {
-        regex = egg_regex_new ("^ggap-prompt-(gap|brk(_\\d\\d)?|)> ", EGG_REGEX_ANCHORED, 0, NULL);
-        egg_regex_optimize (regex, NULL);
-    }
+        regex = g_regex_new ("^ggap-prompt-(gap|brk(_\\d\\d)?|)> ",
+                             G_REGEX_ANCHORED | G_REGEX_OPTIMIZE,
+                             0, NULL);
 
-    egg_regex_clear (regex);
-    return egg_regex_match (regex, line->str, 0);
+    g_return_val_if_fail (regex != NULL, FALSE);
+
+    return g_regex_match (regex, line->str, 0, NULL);
 }
 
 
