@@ -22,10 +22,10 @@ g_files =			\
     $(srcdir)/../gap/utils.gd	\
     $(srcdir)/../gap/utils.gi
 
-dist_ggap_doc_DATA =	\
-    manual.pdf		\
-    manual.six		\
-    $(tex_files)
+# dist_ggap_doc_DATA =	\
+#     manual.pdf		\
+#     manual.six		\
+#     $(tex_files)
 
 EXTRA_DIST =		\
     $(msk_files)	\
