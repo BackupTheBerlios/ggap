@@ -9,7 +9,9 @@ EXTRA_DIST =            \
     intltool-extract.in	\
     intltool-merge.in	\
     intltool-update.in	\
-    THANKS
+    THANKS		\
+    scripts/ggap-full.sh\
+    scripts/ggap.sh
 
 @MOO_PO_SUBDIRS_RULE@
 BUILT_SOURCES = po-subdirs-stamp
@@ -54,9 +56,7 @@ EXTRA_DIST +=		\
 	$(ggap_DATA)	\
 	ggap.png	\
 	ggap.ico	\
-	gap.png		\
-	ggap-script-tmpl\
-	ggap.sh
+	gap.png
 
 generated =			\
 	ggap/gap/PackageInfo.g	\
@@ -65,9 +65,13 @@ generated =			\
 
 all-am: $(generated)
 
-bin-dist: all
+_bin-dist: all
 	rm -fr ggap-bin-inst ggap-bin
 	$(MAKE) install DESTDIR=`pwd`/ggap-bin-inst && \
 	mv ggap-bin-inst/$(prefix) ggap-bin && \
-	cp $(srcdir)/ggap-script-tmpl ggap-bin/ggap.sh && \
+	cp $(srcdir)/scripts/$(ggap_script) ggap-bin/ggap.sh && \
 	rm -fr ggap-bin-inst
+bin-dist-full:
+	$(MAKE) _bin-dist ggap_script=ggap-full.sh
+bin-dist: all
+	$(MAKE) _bin-dist ggap_script=ggap.sh
