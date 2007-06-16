@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_SESSION_H__
-#define __GAP_SESSION_H__
+#ifndef GAP_SESSION_H
+#define GAP_SESSION_H
 
 #include <glib-object.h>
 
@@ -55,4 +55,4 @@ void             gap_session_shutdown       (GapSession *session);
 
 G_END_DECLS
 
-#endif /* __GAP_SESSION_H__ */
+#endif /* GAP_SESSION_H */

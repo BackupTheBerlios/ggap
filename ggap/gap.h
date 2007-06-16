@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_H__
-#define __GAP_H__
+#ifndef GAP_H
+#define GAP_H
 
 #include <glib.h>
 
@@ -36,4 +36,4 @@ gboolean     gap_parse_cmd_line     (const char *command_line,
 
 G_END_DECLS
 
-#endif /* __GAP_H__ */
+#endif /* GAP_H */

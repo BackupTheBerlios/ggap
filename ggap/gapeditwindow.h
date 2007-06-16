@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_EDIT_WINDOW_H__
-#define __GAP_EDIT_WINDOW_H__
+#ifndef GAP_EDIT_WINDOW_H
+#define GAP_EDIT_WINDOW_H
 
 #include <mooedit/mooeditwindow.h>
 
@@ -51,4 +51,4 @@ void    gap_edit_window_open_file   (const char *filename,
 
 G_END_DECLS
 
-#endif /* __GAP_EDIT_WINDOW_H__ */
+#endif /* GAP_EDIT_WINDOW_H */

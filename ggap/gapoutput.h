@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_APP_OUTPUT__
-#define __GAP_APP_OUTPUT__
+#ifndef GAP_APP_OUTPUT
+#define GAP_APP_OUTPUT
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -34,4 +34,4 @@ void            gap_app_output_write    (const char     *data,
 
 G_END_DECLS
 
-#endif /* __GAP_APP_OUTPUT__ */
+#endif /* GAP_APP_OUTPUT */

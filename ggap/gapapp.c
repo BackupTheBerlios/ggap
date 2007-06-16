@@ -28,6 +28,7 @@
 #include <mooterm/mootermpt.h>
 #include <mooedit/mooeditprefs.h>
 #include <mooedit/mooplugin.h>
+#include <mooedit/moousertools-prefs.h>
 #include <string.h>
 
 

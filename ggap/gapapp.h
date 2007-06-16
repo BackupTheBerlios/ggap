@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_APP_H__
-#define __GAP_APP_H__
+#ifndef GAP_APP_H
+#define GAP_APP_H
 
 #include <mooapp/mooapp.h>
 #include "gapwindow.h"
@@ -80,4 +80,4 @@ void        gap_app_feed_gap                (GapApp     *app,
 
 G_END_DECLS
 
-#endif /* __GAP_APP_H__ */
+#endif /* GAP_APP_H */

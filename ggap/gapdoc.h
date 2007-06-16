@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_DOC_H__
-#define __GAP_DOC_H__
+#ifndef GAP_DOC_H
+#define GAP_DOC_H
 
 #include <gtk/gtktreestore.h>
 
@@ -51,4 +51,4 @@ GapDoc *gap_doc_instance    (void);
 
 G_END_DECLS
 
-#endif /* __GAP_DOC_H__ */
+#endif /* GAP_DOC_H */

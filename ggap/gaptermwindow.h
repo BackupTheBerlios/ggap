@@ -11,8 +11,8 @@
  *   See COPYING file that comes with this distribution.
  */
 
-#ifndef __GAP_TERM_WINDOW_H__
-#define __GAP_TERM_WINDOW_H__
+#ifndef GAP_TERM_WINDOW_H
+#define GAP_TERM_WINDOW_H
 
 #include "gapwindow.h"
 
@@ -49,4 +49,4 @@ GType   gap_term_window_get_type    (void) G_GNUC_CONST;
 
 G_END_DECLS
 
-#endif /* __GAP_TERM_WINDOW_H__ */
+#endif /* GAP_TERM_WINDOW_H */
