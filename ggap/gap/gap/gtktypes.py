@@ -970,20 +970,7 @@ class GObject:
                     pass
                 class GtkLayout:
                     # TODO
-                    class FooCanvas:
-                        root = Function(gap_name='GetRoot')
-                        set_scroll_region = [FloatArg('x1'), FloatArg('y1'), FloatArg('x2'), FloatArg('y2')]
-                        get_scroll_region = []
-                        set_pixels_per_unit = [FloatArg('n')]
-                        set_center_scroll_region = [BoolArg('center_scroll_region')]
-                        scroll_to = [IntArg('cx'), IntArg('cy')]
-                        get_scroll_offsets = []
-                        update_now = []
-                        get_item_at = [FloatArg('x'), FloatArg('y')]
-                        w2c_rect = [FloatArg('x1'), FloatArg('y1'), FloatArg('x2'), FloatArg('y2')]
-                        w2c = [FloatArg('wx'), FloatArg('wy')]
-                        c2w = [IntArg('cx'), IntArg('cy')]
-#                         set_stipple_origin = [('IsGdkGC', 'gc')]
+                    pass
                 class GtkMenuShell:
                     class GtkMenuBar:
                         # TODO
@@ -1421,41 +1408,6 @@ class GObject:
                     # TODO
             class GtkCellRendererToggle: pass
                     # TODO
-        class FooCanvasItem:
-            __no_constructor__ = True
-            move = [FloatArg('dx'), FloatArg('dy')]
-            raise_ = Function(gap_name='Raise', args=[IntArg('positions')])
-            lower = [IntArg('positions')]
-            raise_to_top = []
-            lower_to_bottom = []
-            send_behind = [('IsFooCanvasItem', 'behind_item')]
-            show = []
-            hide = []
-            grab = 'doc_stub'
-            ungrab = [IntArg('etime')]
-            w2i = [FloatArg('x'), FloatArg('y')]
-            i2w = [FloatArg('x'), FloatArg('y')]
-            reparent = [('IsFooCanvasGroup', 'new_group')]
-            grab_focus = []
-            get_bounds = []
-            request_update = []
-            request_redraw = []
-            class FooCanvasGroup:
-                __new__ = 'doc_stub'
-            class FooCanvasLine:
-                __new__ = 'doc_stub'
-            class FooCanvasRE:
-                __no_constructor__ = True
-                class FooCanvasRect:
-                    __new__ = 'doc_stub'
-                class FooCanvasEllipse:
-                    __new__ = 'doc_stub'
-            class FooCanvasPolygon:
-                __new__ = 'doc_stub'
-            class FooCanvasPixbuf:
-                __new__ = 'doc_stub'
-            class FooCanvasWidget:
-                __new__ = 'doc_stub'
     class GtkTooltips: pass
                     # TODO
 

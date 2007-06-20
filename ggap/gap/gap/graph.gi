@@ -31,7 +31,7 @@ function(obj)
 end);
 
 
-InstallMethod(DisplayGraphOp, [IsFooCanvas],
-function(canvas)
-  _GGAP_CALL_FUNC("DISPLAY_GRAPH", canvas);
-end);
+# InstallMethod(DisplayGraphOp, [IsFooCanvas],
+# function(canvas)
+#   _GGAP_CALL_FUNC("DISPLAY_GRAPH", canvas);
+# end);

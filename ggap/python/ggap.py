@@ -16,7 +16,6 @@ import gap
 import gap_cb
 import gap_types
 import gap_canvas
-import foocanvas
 import gobject
 import pango
 import sys
@@ -140,7 +139,7 @@ class Session:
             "GET_PROPERTY" : gap_types.get_property,
         }
 
-        for m in ['gtk', 'sys', 'gap', 'pango', 'gobject', 'os', 'foocanvas', 'moo']:
+        for m in ['gtk', 'sys', 'gap', 'pango', 'gobject', 'os', 'moo']:
             try:
                 self.locals[m] = __import__(m)
             except ImportError:

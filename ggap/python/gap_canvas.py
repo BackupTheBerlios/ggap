@@ -13,4 +13,4 @@
 import gobject
 import gtk
 import moo
-import foocanvas
+
