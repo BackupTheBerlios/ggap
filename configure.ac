@@ -46,10 +46,10 @@ AC_SUBST(GGAP_DATA_DIR)
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 
-AC_ARG_ENABLE(gap-doc,
-  AC_HELP_STRING(--enable-gap-doc, [build GAP documentation (if sources were modified)]),
-  [:],[enable_gap_doc=no])
-AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$enable_gap_doc" = xyes)
+#AC_ARG_ENABLE(gap-doc,
+#  AC_HELP_STRING(--enable-gap-doc, [build GAP documentation (if sources were modified)]),
+#  [:],[enable_gap_doc=no])
+#AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$enable_gap_doc" = xyes)
 
 export MOO_BUILD_CANVAS=yes
 AC_CONFIG_SUBDIRS(moo)
@@ -63,7 +63,6 @@ ggap/pipehelper_res.rc
 ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
-ggap/gap/doc/Makefile
 po/Makefile.in
 wininstaller/ggap.iss
 ])

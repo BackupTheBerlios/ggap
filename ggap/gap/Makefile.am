@@ -1,4 +1,4 @@
-SUBDIRS = doc
+# SUBDIRS = doc
 
 ggap_pkgdir = ${GGAP_GAP_DIR}/ggap
 ggap_pkg_gapdir = ${GGAP_GAP_DIR}/ggap/gap
