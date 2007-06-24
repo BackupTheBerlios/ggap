@@ -39,7 +39,7 @@
    </configure>
   </optimized>
  </configurations>
- <file_selector_dir>/home/muntyan/projects/ggap/ggap/</file_selector_dir>
+ <file_selector_dir>/home/muntyan/projects/ggap/</file_selector_dir>
  <run>
   <args>--new-app --fancy</args>
   <exe>ggap/ggap</exe>
