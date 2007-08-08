@@ -2,7 +2,7 @@
 # ggap/configure.ac
 #
 
-m4_define([ggap_version], [0.7.4])
+m4_define([ggap_version], [0.8.0])
 
 AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
 AM_INIT_AUTOMAKE
@@ -13,6 +13,7 @@ MOO_DEFINE_VERSIONS(ggap,[ggap_version])
 
 export MOO_BUILD_MEDIT=false
 export MOO_PACKAGE_NAME=ggap
+export MOO_USE_PIPE_INPUT=true
 
 AC_PROG_CC
 AC_DISABLE_STATIC
@@ -46,12 +47,7 @@ AC_SUBST(GGAP_DATA_DIR)
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 
-#AC_ARG_ENABLE(gap-doc,
-#  AC_HELP_STRING(--enable-gap-doc, [build GAP documentation (if sources were modified)]),
-#  [:],[enable_gap_doc=no])
-#AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$enable_gap_doc" = xyes)
-
-export MOO_BUILD_CANVAS=yes
+export MOO_USE_PIPE_INPUT=yes
 AC_CONFIG_SUBDIRS(moo)
 
 AC_CONFIG_FILES([

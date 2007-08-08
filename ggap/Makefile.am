@@ -13,7 +13,7 @@ bin_PROGRAMS += pipehelper
 endif
 
 if !GLIB_2_14
-regex_cflags = -I$(srcdir)/../moo/moo/mooutils/newgtk
+regex_cflags = -I$(srcdir)/../moo/moo/mooutils/newgtk/glib-2.14
 endif
 
 AM_CFLAGS =				\
@@ -117,12 +117,7 @@ EXTRA_DIST =		\
     ggap.opag		\
     gapparser-yacc.y	\
     glade/gapprefs.glade\
-    glade/usermenu.glade\
-    python/ggap.py	\
-    python/gap_canvas.py\
-    python/gap_cb.py	\
-    python/gap_types.py	\
-    python/gap.py
+    glade/usermenu.glade
 
 BUILT_SOURCES =		\
 	gapparser-yacc.c\
@@ -130,11 +125,6 @@ BUILT_SOURCES =		\
 	ggap-ui.h	\
 	gapprefs-glade.h\
 	ggap.c		\
-	ggap-mod.h	\
-	gap-canvas-mod.h\
-	gap-cb-mod.h	\
-	gap-types-mod.h	\
-	gap-mod.h	\
 	ggap-credits.h
 
 XML2H = $(top_srcdir)/moo/moo/mooutils/xml2h.sh
@@ -152,14 +142,3 @@ gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c
-
-ggap-mod.h: $(srcdir)/python/ggap.py $(PY2H)
-	$(SHELL) $(PY2H) GGAP_PY $(srcdir)/python/ggap.py > ggap-mod.h
-gap-mod.h: $(srcdir)/python/gap.py $(PY2H)
-	$(SHELL) $(PY2H) GAP_PY $(srcdir)/python/gap.py > gap-mod.h
-gap-cb-mod.h: $(srcdir)/python/gap_cb.py $(PY2H)
-	$(SHELL) $(PY2H) GAP_CB_PY $(srcdir)/python/gap_cb.py > gap-cb-mod.h
-gap-canvas-mod.h: $(srcdir)/python/gap_canvas.py $(PY2H)
-	$(SHELL) $(PY2H) GAP_CANVAS_PY $(srcdir)/python/gap_canvas.py > gap-canvas-mod.h
-gap-types-mod.h: $(srcdir)/python/gap_types.py $(PY2H)
-	$(SHELL) $(PY2H) GAP_TYPES_PY $(srcdir)/python/gap_types.py > gap-types-mod.h

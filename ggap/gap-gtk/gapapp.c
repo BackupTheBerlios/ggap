@@ -48,6 +48,10 @@ static int          gap_app_run             (MooApp     *app);
 static void         gap_app_quit            (MooApp     *app);
 static gboolean     gap_app_try_quit        (MooApp     *app);
 static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
+static void         gap_app_exec_cmd        (MooApp     *app,
+                                             char        cmd,
+                                             const char *data,
+                                             guint       len);
 static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
 
 static void         new_editor_action       (MooApp     *app);
@@ -79,6 +83,7 @@ gap_app_class_init (GapAppClass *klass)
     app_class->quit = gap_app_quit;
     app_class->try_quit = gap_app_try_quit;
     app_class->prefs_dialog = gap_app_prefs_dialog;
+    app_class->exec_cmd = gap_app_exec_cmd;
 
     gobject_class->set_property = gap_app_set_property;
     gobject_class->get_property = gap_app_get_property;
@@ -363,6 +368,26 @@ gap_app_try_quit (MooApp *app)
         return TRUE;
 
     return FALSE;
+}
+
+
+static void
+gap_app_exec_cmd (MooApp     *app,
+                  char        cmd,
+                  const char *data,
+                  guint       len)
+{
+    GapApp *gapp = GAP_APP (app);
+
+    switch (cmd)
+    {
+        case 'g':
+            if (gapp->terminal)
+                gap_session_execute (gap_view_get_session (gapp->terminal), data, len);
+            break;
+        default:
+            MOO_APP_CLASS(gap_app_parent_class)->exec_cmd (app, cmd, data, len);
+    }
 }
 
 

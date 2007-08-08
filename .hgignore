@@ -42,4 +42,5 @@ ggap/.*\.example$
 ^intltool-merge.in$
 ^intltool-update\.in$
 ^mkinstalldirs$
-^po/ggap\.pot$
+^po/(ggap\.pot|dist|pot)$
+^moo$

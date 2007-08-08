@@ -14,6 +14,7 @@
     <args>--enable-debug=full --enable-all-warnings --disable-gap-doc</args>
     <vars>
      <var name="CFLAGS">-g</var>
+     <var name="OBJCFLAGS">-g</var>
     </vars>
    </configure>
   </debug>
@@ -35,11 +36,11 @@
     <args>--enable-all-gcc-warnings --disable-medit</args>
     <vars>
      <var name="CFLAGS">-O2</var>
+     <var name="OBJCFLAGS">-O2</var>
     </vars>
    </configure>
   </optimized>
  </configurations>
- <file_selector_dir>/home/muntyan/projects/ggap/</file_selector_dir>
  <run>
   <args>--new-app --fancy</args>
   <exe>ggap/ggap</exe>

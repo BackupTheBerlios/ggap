@@ -1,0 +1,1 @@
+#define PIPEHELPER_BUFSIZE 64

@@ -93,7 +93,7 @@ make_command_line (const char *cmd_base,
     const char *init_file = NULL;
     GString *cmd;
 
-    init_pkg = moo_prefs_get_bool (GGAP_PREFS_GAP_INIT_PKG);
+    init_pkg = moo_prefs_get_bool (GGAP_PREFS_GAP_INIT_PKG) && gap_session_available ();
     save_workspace = moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE);
 
     cmd = g_string_new (cmd_base);
@@ -313,4 +313,15 @@ gap_view_send_intr (GapView *view)
 
     if (gap_view_child_alive (view))
         GAP_VIEW_GET_IFACE (view)->send_intr (view);
+}
+
+
+void
+gap_view_display_graph (GapView *view,
+                        GObject *obj)
+{
+    g_return_if_fail (GAP_IS_VIEW (view));
+    g_return_if_fail (G_IS_OBJECT (obj));
+    g_return_if_fail (GAP_VIEW_GET_IFACE (view)->display_graph != NULL);
+    GAP_VIEW_GET_IFACE (view)->display_graph (view, obj);
 }

@@ -48,6 +48,9 @@ struct _GapViewIface
     void        (*get_gap_flags) (GapView    *view,
                                   char      **cmd_line_flags,
                                   gboolean   *fancy);
+
+    void        (*display_graph) (GapView    *view,
+                                  GObject    *obj);
 };
 
 
@@ -64,6 +67,9 @@ void        gap_view_feed_gap       (GapView    *view,
                                      const char *text);
 
 GapSession *gap_view_get_session    (GapView    *view);
+
+void        gap_view_display_graph  (GapView    *view,
+                                     GObject    *obj);
 
 
 G_END_DECLS
