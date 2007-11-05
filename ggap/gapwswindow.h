@@ -15,6 +15,8 @@
 #define GAP_WS_WINDOW_H
 
 #include "gapwindow.h"
+#include <gtk/gtkstatusbar.h>
+#include <gtk/gtkprogressbar.h>
 
 G_BEGIN_DECLS
 
@@ -28,12 +30,14 @@ G_BEGIN_DECLS
 
 
 typedef struct _GapWsWindow         GapWsWindow;
+typedef struct _GapWsWindowPrivate  GapWsWindowPrivate;
 typedef struct _GapWsWindowClass    GapWsWindowClass;
 
 
 struct _GapWsWindow
 {
     GapWindow base;
+    GapWsWindowPrivate *priv;
 };
 
 struct _GapWsWindowClass

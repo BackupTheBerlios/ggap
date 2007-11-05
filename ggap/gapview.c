@@ -215,7 +215,7 @@ gap_view_start_gap_real (GapView    *view,
     }
 #endif
 
-    if (session_id++ > 9999)
+    if (session_id++ >= 9999)
         session_id = 1;
 
     if (GAP_VIEW_GET_IFACE (view)->get_gap_flags)

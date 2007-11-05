@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <sys/poll.h>
 #endif /* !__WIN32__ */
+#include <gtk/gtk.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -245,14 +246,51 @@ output_write (GapAppOutput *ch,
  */
 #ifndef __WIN32__
 
+static char *
+get_pipe_dir (void)
+{
+    GdkDisplay *display;
+    char *display_name;
+    char *user_name;
+    char *name;
+    const char *appname;
+
+    appname = g_get_prgname ();
+    g_return_val_if_fail (appname != NULL, NULL);
+
+    display = gdk_display_get_default ();
+    g_return_val_if_fail (display != NULL, NULL);
+
+    display_name = g_strcanon (g_strdup (gdk_display_get_name (display)),
+                               G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS,
+                               '-');
+    user_name = g_strcanon (g_strdup (g_get_user_name ()),
+                            G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS,
+                            '-');
+
+    name = g_strdup_printf ("%s/%s-%s-%s", g_get_tmp_dir (), appname, user_name,
+                            display_name[0] == '-' ? &display_name[1] : display_name);
+
+    mkdir (name, S_IRWXU);
+
+    g_free (display_name);
+    g_free (user_name);
+    return name;
+}
+
 static gboolean
 output_start (GapAppOutput *ch)
 {
+    char *pipe_dir;
+
     g_return_val_if_fail (!ch->ready, FALSE);
 
-    ch->pipe_name = g_strdup_printf ("%s/ggap_out.%d",
-                                     g_get_tmp_dir(), getpid ());
+    pipe_dir = get_pipe_dir ();
+    g_return_val_if_fail (pipe_dir != NULL, FALSE);
+
+    ch->pipe_name = g_strdup_printf ("%s/out-%ld", pipe_dir, (long) getpid ());
     unlink (ch->pipe_name);
+    g_free (pipe_dir);
 
     if (mkfifo (ch->pipe_name, S_IRUSR | S_IWUSR))
     {

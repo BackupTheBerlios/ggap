@@ -19,6 +19,8 @@ BindGlobal("_GGAP_DATA",
 rec(init := false,              # ggap package is initialized
     session_id := 0,            # GAP session id in ggap
     debug := false,
+    original_funcs := rec(),
+    original_funcs_stored := false,
 ));
 
 
@@ -34,9 +36,73 @@ SetInfoLevel(InfoGGAP, 10);
 ##
 ##  _GGAP_INIT()
 ##
-InstallGlobalFunction(_GGAP_INIT,
+
+BindGlobal("_GGAP_INIT_FANCY",
+function(fancy)
+  local bind_global, unbind_global, store_global, restore_global;
+
+  unbind_global := function(name)
+    if IsBoundGlobal(name) then
+      if IsReadOnlyGlobal(name) then
+        MakeReadWriteGlobal(name);
+      fi;
+      UnbindGlobal(name);
+    fi;
+  end;
+
+  bind_global := function(name, value)
+    unbind_global(name);
+    BindGlobal(name, value);
+  end;
+
+  store_global := function(name)
+    if IsBoundGlobal(name) then
+      _GGAP_DATA.original_funcs.(name) := ValueGlobal(name);
+    fi;
+  end;
+
+  restore_global := function(name)
+    unbind_global(name);
+    if IsBound(_GGAP_DATA.original_funcs.(name)) then
+      BindGlobal(name, _GGAP_DATA.original_funcs.(name));
+    fi;
+  end;
+
+  if not _GGAP_DATA.original_funcs_stored then
+    store_global("InfoDoPrint");
+    store_global("ColorPrompt");
+    _GGAP_DATA.original_funcs_stored := true;
+  fi;
+
+#   bind_global("InfoDoPrint",
+#   function(arglist)
+#     Print("@GGAP-INFO@");
+#     CallFuncList(Print, arglist);
+#     Print("\n@GGAP-INFO-END@\c");
+#   end);
+
+  if fancy then
+    bind_global("PrintPromptHook",
+    function()
+      local prompt;
+      prompt := CPROMPT();
+      Print("@GGAP-PROMPT@", prompt, "\c");
+    end);
+
+    bind_global("ColorPrompt", function(setting)
+      if setting = true then
+        Print("# ColorPrompt() ignored\n");
+      fi;
+    end);
+  else
+    unbind_global("PrintPromptHook");
+    restore_global("ColorPrompt");
+  fi;
+end);
+
+BindGlobal("_GGAP_INIT",
 function(out_pipe, in_pipe, session_id, pipehelper, fancy)
-  local reset_data, init_fancy, create_input_pipe, create_output_pipe;
+  local reset_data, create_input_pipe, create_output_pipe;
 
   reset_data := function()
     _GGAP_DATA.init := false;
@@ -44,38 +110,9 @@ function(out_pipe, in_pipe, session_id, pipehelper, fancy)
     _GGAP_DATA.session_id := 0;
   end;
 
-  init_fancy := function(fancy)
-    local bind_global;
-
-    _GGAP_DATA.fancy := fancy;
-    Info(InfoGGAP, 3, "# fancy: ", fancy, "\n");
-
-    bind_global := function(name, value)
-      if IsBoundGlobal(name) then
-        if IsReadOnlyGlobal(name) then
-          MakeReadWriteGlobal(name);
-        fi;
-        UnbindGlobal(name);
-      fi;
-      BindGlobal(name, value);
-    end;
-
-    if fancy then
-      bind_global("PrintPromptHook",
-      function()
-        local prompt;
-        prompt := CPROMPT();
-        Info(InfoGGAP, 8, "# prompt: ", prompt, "\n");
-        Print("ggap-prompt-", prompt, "\c");
-      end);
-
-      bind_global("ColorPrompt", function(setting)
-        if setting = true then
-          Print("# ColorPrompt() ignored\n");
-        fi;
-      end);
-    fi;
-  end;
+  if not IsInt(session_id) or session_id < 0 or session_id > 255 then
+    Error("invalid session id ", session_id);
+  fi;
 
   if _GGAP_DATA.init then
     Info(InfoGGAP, 3, "GGAP package initialized, assuming loaded workspace");
@@ -84,14 +121,12 @@ function(out_pipe, in_pipe, session_id, pipehelper, fancy)
     Info(InfoGGAP, 3, "Initializing GGAP package");
   fi;
 
-  if not IsInt(session_id) or session_id < 0 or session_id > 255 then
-    Error("invalid session id ", session_id);
-  fi;
+  _GGAP_INIT_FANCY(fancy);
+  _GGAP_DATA.fancy := fancy;
+  Info(InfoGGAP, 3, "# fancy: ", fancy);
 
   _GGAP_DATA.session_id := session_id;
   Info(InfoGGAP, 3, "GGAP session id ", session_id);
-
-  init_fancy(fancy);
 
   _GGAP_DATA.init := true;
 end);

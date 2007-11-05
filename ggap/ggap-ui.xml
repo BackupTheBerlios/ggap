@@ -140,6 +140,8 @@
     <!-- menu item label -->
     <item name="Help" _label="_Help">
       <separator/>
+      <item action="Help"/>
+      <separator/>
       <item action="GapManual"/>
       <separator/>
       <item action="SystemInfo"/>
@@ -213,7 +215,7 @@
       <separator/>
       <item action="Restart"/>
       <separator/>
-<!--       <item action="Interrupt"/> -->
+      <item action="Interrupt"/>
       <separator/>
     </item>
 
@@ -235,6 +237,8 @@
     </item>
 
     <item name="Help" _label="_Help">
+      <separator/>
+      <item action="Help"/>
       <separator/>
       <item action="GapManual"/>
       <separator/>

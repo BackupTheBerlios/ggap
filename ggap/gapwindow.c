@@ -53,45 +53,6 @@ gap_window_class_init (GapWindowClass *klass)
 
     moo_window_class_set_id (window_class, "GAP", "GAP");
 
-//     moo_window_class_new_action (window_class, "Cut", NULL,
-//                                  "display-name", GTK_STOCK_CUT,
-//                                  "label", GTK_STOCK_CUT,
-//                                  "tooltip", GTK_STOCK_CUT,
-//                                  "stock-id", GTK_STOCK_COPY,
-//                                  "accel", "<alt>C",
-//                                  "closure-callback", copy_clipboard,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "Copy", NULL,
-//                                  "display-name", GTK_STOCK_COPY,
-//                                  "label", GTK_STOCK_COPY,
-//                                  "tooltip", GTK_STOCK_COPY,
-//                                  "stock-id", GTK_STOCK_COPY,
-//                                  "accel", "<alt>C",
-//                                  "closure-callback", copy_clipboard,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "Paste", NULL,
-//                                  "display-name", GTK_STOCK_PASTE,
-//                                  "label", GTK_STOCK_PASTE,
-//                                  "tooltip", GTK_STOCK_PASTE,
-//                                  "stock-id", GTK_STOCK_PASTE,
-//                                  "accel", "<alt>V",
-//                                  "closure-callback", paste_clipboard,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-
-//     moo_window_class_new_action (window_class, "SelectAll", NULL,
-//                                  "display-name", GTK_STOCK_SELECT_ALL,
-//                                  "label", GTK_STOCK_SELECT_ALL,
-//                                  "tooltip", GTK_STOCK_SELECT_ALL,
-//                                  "accel", "<alt>A",
-//                                  "closure-callback", moo_term_select_all,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-
     moo_window_class_new_action (window_class, "SwitchToEditor", NULL,
                                  "display-name", _("Switch to Editor"),
                                  "label", _("Switch to Editor"),
@@ -144,7 +105,7 @@ gap_window_constructor (GType type,
     gtk_widget_show (scrolledwindow);
     gtk_box_pack_start (GTK_BOX (MOO_WINDOW(window)->vbox), scrolledwindow, TRUE, TRUE, 0);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow),
-                                    GTK_POLICY_NEVER,
+                                    GTK_POLICY_AUTOMATIC,
                                     GTK_POLICY_ALWAYS);
     gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow),
                                          GTK_SHADOW_ETCHED_OUT);

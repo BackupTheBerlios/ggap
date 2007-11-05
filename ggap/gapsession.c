@@ -14,11 +14,6 @@
 #include "config.h"
 #include "gapsession.h"
 #include "gapview.h"
-#include "ggap-mod.h"
-#include "gap-mod.h"
-#include "gap-cb-mod.h"
-#include "gap-canvas-mod.h"
-#include "gap-types-mod.h"
 #include "gapoutput.h"
 
 

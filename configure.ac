@@ -14,6 +14,7 @@ MOO_DEFINE_VERSIONS(ggap,[ggap_version])
 export MOO_BUILD_MEDIT=false
 export MOO_PACKAGE_NAME=ggap
 export MOO_USE_PIPE_INPUT=true
+export MOO_BUILD_DOCS=no
 
 AC_PROG_CC
 AC_DISABLE_STATIC
@@ -28,6 +29,13 @@ ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
 PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_CHECK_HEADERS([readline/readline.h],[READLINE_LIBS='-lreadline'],[READLINE_LIBS=])
 AC_SUBST(READLINE_LIBS)
+
+# AC_PROG_OBJC
+# _MOO_OBJC_CHECK([
+#   AC_MSG_NOTICE([Objective-C flags: $MOO_OBJCFLAGS $MOO_OBJC_LIBS])
+# ],[
+#   AC_MSG_ERROR([Objective-C compiler not found])
+# ])
 
 MOO_AC_CHECK_OS
 _MOO_AC_CONFIGARGS_H
@@ -47,6 +55,34 @@ AC_SUBST(GGAP_DATA_DIR)
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
 
+
+AC_ARG_ENABLE([help],
+  AC_HELP_STRING(--disable-help, [Disable building html help files (default = auto).]),
+  [:],[enable_help=auto])
+
+if test "x$enable_help" = xauto -o "x$enable_help" = xyes; then
+  _MOO_AC_CHECK_XSLT_DOCBOOK([_moo_xslt_working=yes],[_moo_xslt_working=no])
+  if test $_moo_xslt_working = yes; then
+    enable_help=yes
+  elif test "x$enable_help" = xauto; then
+    enable_help=no
+  else
+    AC_MSG_ERROR([xsltproc will not work])
+  fi
+fi
+
+if test "x$enable_help" = xyes; then
+  export GGAP_BUILD_DOCS=yes
+  export MOO_ENABLE_HELP=yes
+  AC_DEFINE(MOO_ENABLE_HELP, [1], [enable help functionality])
+else
+  export GGAP_BUILD_DOCS=no
+  export MOO_ENABLE_HELP=no
+fi
+
+AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$GGAP_BUILD_DOCS" = xyes)
+
+
 export MOO_USE_PIPE_INPUT=yes
 AC_CONFIG_SUBDIRS(moo)
 
@@ -59,6 +95,8 @@ ggap/pipehelper_res.rc
 ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
+ggap/moows/Makefile
+help/Makefile
 po/Makefile.in
 wininstaller/ggap.iss
 ])
@@ -70,6 +108,8 @@ AC_OUTPUT
 #
 echo
 echo "    OS........................... $MOO_OS_NAME"
+if test "x$MOO_OS_CYGWIN" != "xyes"; then
 echo "    installation prefix.......... $prefix"
 echo "    shared package goes to....... $GGAP_GAP_DIR"
 echo
+fi

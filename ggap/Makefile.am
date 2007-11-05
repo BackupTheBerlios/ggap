@@ -1,4 +1,4 @@
-SUBDIRS = gap .
+SUBDIRS = gap moows .
 
 EXTRA_PROGRAMS = ggap pipehelper
 bin_PROGRAMS =
@@ -26,10 +26,11 @@ AM_CFLAGS =				\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
     -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"
+AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 
-testparser_LDADD = $(top_builddir)/moo/moo/libmoo.la $(READLINE_LIBS)
+testparser_LDADD = $(top_builddir)/moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(READLINE_LIBS)
 
-ggap_LDADD = $(top_builddir)/moo/moo/libmoo.la
+ggap_LDADD = moows/libmoows.la $(top_builddir)/moo/moo/libmoo.la $(MOO_OBJC_LIBS)
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
 if MOO_OS_MINGW
@@ -70,8 +71,6 @@ ggap_SOURCES =				\
 	gapwindow.h			\
 	gapworksheet.c			\
 	gapworksheet.h			\
-	mooworksheet.c			\
-	mooworksheet.h			\
 	gapwswindow.c			\
 	gapwswindow.h			\
 	gapoutput.c			\

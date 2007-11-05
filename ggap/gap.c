@@ -75,15 +75,6 @@ gap_init_file (const char *workspace,
 
     contents = g_string_new (NULL);
 
-    if (workspace)
-    {
-        char *wsp_escaped = gap_escape_filename (workspace);
-        g_string_append_printf (contents, SAVE_WORKSPACE,
-                                wsp_escaped, wsp_escaped,
-                                wsp_escaped);
-        g_free (wsp_escaped);
-    }
-
     if (init_pkg)
     {
         const char *in_name, *out_name;
@@ -112,6 +103,16 @@ gap_init_file (const char *workspace,
         g_free (ph_escaped);
         g_free (in_escaped);
         g_free (out_escaped);
+    }
+
+    /* FIRST load package, then save workspace */
+    if (workspace)
+    {
+        char *wsp_escaped = gap_escape_filename (workspace);
+        g_string_append_printf (contents, SAVE_WORKSPACE,
+                                wsp_escaped, wsp_escaped,
+                                wsp_escaped);
+        g_free (wsp_escaped);
     }
 
     if (!_moo_save_file_utf8 (filename, contents->str, -1, &error))

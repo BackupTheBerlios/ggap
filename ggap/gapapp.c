@@ -48,7 +48,6 @@ static int          gap_app_run             (MooApp     *app);
 static void         gap_app_quit            (MooApp     *app);
 static gboolean     gap_app_try_quit        (MooApp     *app);
 static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
-static GtkWidget   *gap_app_prefs_dialog    (MooApp     *app);
 
 static void         new_editor_action       (MooApp     *app);
 static void         open_in_editor_action   (GapTermWindow *term_window);
@@ -275,8 +274,8 @@ gap_app_init_real (MooApp *app)
     editor = moo_app_get_editor (app);
     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
     g_object_set (editor, "allow-empty-window", TRUE, NULL);
-    g_signal_connect_swapped (editor, "all-windows-closed",
-                              G_CALLBACK (editor_windows_closed), app);
+//     g_signal_connect_swapped (editor, "all-windows-closed",
+//                               G_CALLBACK (editor_windows_closed), app);
 
     return TRUE;
 }
@@ -564,7 +563,7 @@ gap_app_prefs_dialog (MooApp     *app)
     }
 
     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
-    moo_prefs_dialog_append_page (dialog, _moo_user_tools_prefs_page_new ());
+    moo_prefs_dialog_append_page (dialog, moo_user_tools_prefs_page_new ());
     moo_plugin_attach_prefs (GTK_WIDGET (dialog));
 
     return GTK_WIDGET (dialog);

@@ -56,10 +56,10 @@ TARGET=i686-pc-cygwin
 # NOTE: --build *must* be here, it's autoconf bug (aka 'feature'), confirmed and
 # *documented*.
 echo sh $CONFIGURE --build=`$CONFIG_GUESS` --host=$TARGET --target=$TARGET \
---enable-all-warnings --enable-maintainer-mode \
+--enable-all-warnings --enable-maintainer-mode --disable-nls \
 AR="$AR" RANLIB="$RANLIB" STRIP="$STRIP" AS="$AS" DLLTOOL="$DLLTOOL" \
 OBJDUMP="$OBJDUMP" NM="$NM" WINDRES="$WINDRES" $@
 exec sh $CONFIGURE --build=`$CONFIG_GUESS` --host=$TARGET --target=$TARGET \
---enable-all-warnings --enable-maintainer-mode \
+--enable-all-warnings --enable-maintainer-mode --disable-nls \
 AR="$AR" RANLIB="$RANLIB" STRIP="$STRIP" AS="$AS" DLLTOOL="$DLLTOOL" \
 OBJDUMP="$OBJDUMP" NM="$NM" WINDRES="$WINDRES" $@
