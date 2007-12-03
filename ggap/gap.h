@@ -33,6 +33,21 @@ gboolean     gap_parse_cmd_line     (const char *command_line,
                                      char      **root_dir);
 #endif
 
+char        *gap_escape_filename    (const char *filename);
+
+#define GGAP_CMD_RUN_COMMAND "run-command"
+
+char        *ggap_pkg_exec_command  (guint       stamp,
+                                     const char *cmdname,
+                                     const char *args);
+
+char        *gap_cmd_save_workspace (const char *filename);
+
+
+#define GGAP_DTC_FIXED      'f'
+#define GGAP_DTC_VARIABLE   'v'
+#define GGAP_DTC_END        'e'
+
 
 G_END_DECLS
 

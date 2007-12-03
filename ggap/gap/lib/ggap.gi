@@ -13,14 +13,15 @@
 
 #############################################################################
 ##
-##  _GGAP_DATA
+##  $GGAP_DATA
 ##
-BindGlobal("_GGAP_DATA",
+BindGlobal("$GGAP_DATA",
 rec(init := false,              # ggap package is initialized
     session_id := 0,            # GAP session id in ggap
     debug := false,
     original_funcs := rec(),
     original_funcs_stored := false,
+    next_prompt := [],
 ));
 
 
@@ -34,10 +35,93 @@ SetInfoLevel(InfoGGAP, 10);
 
 #############################################################################
 ##
-##  _GGAP_INIT()
+##  $GGAP_FORMAT_INT
 ##
+BindGlobal("$GGAP_FORMAT_INT",
+function(num)
+  local num_s;
+  num_s := HexStringInt(num);
+  return Concatenation(List([1 .. 8-Length(num_s)], i->'0'), num_s);
+end);
 
-BindGlobal("_GGAP_INIT_FANCY",
+
+#############################################################################
+##
+##  $GGAP_SEND_DATA()
+##
+BindGlobal("$GGAP_SEND_DATA",
+function(arg)
+  local a, len;
+
+  Print("@GGAP@f");
+
+  len := Sum(List(arg, s -> Length(s)));
+
+  Print($GGAP_FORMAT_INT(len));
+  for a in arg do
+    Print(a);
+  od;
+  Print("\c");
+end);
+
+
+#############################################################################
+##
+##  $GGAP_SEND_RESULT_ERROR(stamp, message)
+##
+BindGlobal("$GGAP_SEND_RESULT_ERROR",
+function(stamp, message)
+  $GGAP_SEND_DATA("result-error:", $GGAP_FORMAT_INT(stamp), message);
+end);
+
+# #############################################################################
+# ##
+# ##  $GGAP_SEND_RESULT(stamp, ...)
+# ##
+# BindGlobal("$GGAP_SEND_RESULT",
+# function(arg)
+#   local list;
+#   list := Concatenation(["result:", $GGAP_FORMAT_INT(arg[1])],
+#                         arg{2..Length(arg)});
+#   CallFuncList($GGAP_SEND_DATA, list);
+# end);
+
+#############################################################################
+##
+##  $GGAP_EXEC_COMMAND(stamp, cmdname, ...)
+##
+BindGlobal("$GGAP_EXEC_COMMAND",
+function(arg)
+  local stamp, cmd;
+
+  if Length(arg) < 2 then
+    $GGAP_SEND_RESULT_ERROR(0, "bad arguments");
+    $GGAP_DATA.next_prompt := [""];
+    return;
+  fi;
+
+  stamp := arg[1];
+  cmd := arg[2];
+
+  if cmd = "run-command" then
+    if Length(arg) <> 2 then
+      $GGAP_SEND_RESULT_ERROR(stamp, "bad arguments for run-command");
+      $GGAP_DATA.next_prompt := [""];
+    else
+      $GGAP_DATA.next_prompt := ["@GGAP@voutput:\c", "@GGAP@e\c"];
+    fi;
+  else
+    $GGAP_SEND_RESULT_ERROR(stamp, "bad command '", cmd, "'");
+    $GGAP_DATA.next_prompt := [""];
+  fi;
+end);
+
+
+#############################################################################
+##
+##  $GGAP_INIT_FANCY()
+##
+BindGlobal("$GGAP_INIT_FANCY",
 function(fancy)
   local bind_global, unbind_global, store_global, restore_global;
 
@@ -57,21 +141,21 @@ function(fancy)
 
   store_global := function(name)
     if IsBoundGlobal(name) then
-      _GGAP_DATA.original_funcs.(name) := ValueGlobal(name);
+      $GGAP_DATA.original_funcs.(name) := ValueGlobal(name);
     fi;
   end;
 
   restore_global := function(name)
     unbind_global(name);
-    if IsBound(_GGAP_DATA.original_funcs.(name)) then
-      BindGlobal(name, _GGAP_DATA.original_funcs.(name));
+    if IsBound($GGAP_DATA.original_funcs.(name)) then
+      BindGlobal(name, $GGAP_DATA.original_funcs.(name));
     fi;
   end;
 
-  if not _GGAP_DATA.original_funcs_stored then
+  if not $GGAP_DATA.original_funcs_stored then
     store_global("InfoDoPrint");
     store_global("ColorPrompt");
-    _GGAP_DATA.original_funcs_stored := true;
+    $GGAP_DATA.original_funcs_stored := true;
   fi;
 
 #   bind_global("InfoDoPrint",
@@ -84,9 +168,12 @@ function(fancy)
   if fancy then
     bind_global("PrintPromptHook",
     function()
-      local prompt;
-      prompt := CPROMPT();
-      Print("@GGAP-PROMPT@", prompt, "\c");
+      if not IsEmpty($GGAP_DATA.next_prompt) then
+        Print($GGAP_DATA.next_prompt[1]);
+        Remove($GGAP_DATA.next_prompt, 1);
+      else
+        $GGAP_SEND_DATA("prompt:", CPROMPT());
+      fi;
     end);
 
     bind_global("ColorPrompt", function(setting)
@@ -100,35 +187,41 @@ function(fancy)
   fi;
 end);
 
-BindGlobal("_GGAP_INIT",
+
+#############################################################################
+##
+##  $GGAP_INIT()
+##
+BindGlobal("$GGAP_INIT",
 function(out_pipe, in_pipe, session_id, pipehelper, fancy)
   local reset_data, create_input_pipe, create_output_pipe;
 
   reset_data := function()
-    _GGAP_DATA.init := false;
-    _GGAP_DATA.fancy := false;
-    _GGAP_DATA.session_id := 0;
+    $GGAP_DATA.init := false;
+    $GGAP_DATA.fancy := false;
+    $GGAP_DATA.session_id := 0;
+    $GGAP_DATA.next_prompt := [];
   end;
 
   if not IsInt(session_id) or session_id < 0 or session_id > 255 then
     Error("invalid session id ", session_id);
   fi;
 
-  if _GGAP_DATA.init then
+  if $GGAP_DATA.init then
     Info(InfoGGAP, 3, "GGAP package initialized, assuming loaded workspace");
     reset_data();
   else
     Info(InfoGGAP, 3, "Initializing GGAP package");
   fi;
 
-  _GGAP_INIT_FANCY(fancy);
-  _GGAP_DATA.fancy := fancy;
+  $GGAP_INIT_FANCY(fancy);
+  $GGAP_DATA.fancy := fancy;
   Info(InfoGGAP, 3, "# fancy: ", fancy);
 
-  _GGAP_DATA.session_id := session_id;
+  $GGAP_DATA.session_id := session_id;
   Info(InfoGGAP, 3, "GGAP session id ", session_id);
 
-  _GGAP_DATA.init := true;
+  $GGAP_DATA.init := true;
 end);
 
 

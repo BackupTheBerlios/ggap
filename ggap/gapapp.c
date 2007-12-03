@@ -61,7 +61,6 @@ G_DEFINE_TYPE(GapApp, gap_app, MOO_TYPE_APP)
 
 enum {
     PROP_0,
-    PROP_GAP_CMD_LINE,
     PROP_EDITOR_MODE,
     PROP_FANCY
 };
@@ -81,14 +80,6 @@ gap_app_class_init (GapAppClass *klass)
 
     gobject_class->set_property = gap_app_set_property;
     gobject_class->get_property = gap_app_get_property;
-
-    g_object_class_install_property (gobject_class,
-                                     PROP_GAP_CMD_LINE,
-                                     g_param_spec_string ("gap-cmd-line",
-                                             "gap-cmd-line",
-                                             "gap-cmd-line",
-                                             NULL,
-                                             G_PARAM_WRITABLE));
 
     g_object_class_install_property (gobject_class,
                                      PROP_EDITOR_MODE,
@@ -120,25 +111,6 @@ gap_app_class_init (GapAppClass *klass)
 //                                  "accel", "<shift><alt>Return",
 //                                  "closure-callback", execute_selection,
 //                                  NULL);
-
-    moo_window_class_new_action (term_class, "Restart", NULL,
-                                 "display-name", _("Restart"),
-                                 "label", _("_Restart"),
-                                 "tooltip", _("Restart GAP"),
-                                 "stock-id", MOO_STOCK_RESTART,
-                                 "accel", "<alt>R",
-                                 "closure-callback", gap_app_restart_gap,
-                                 "closure-proxy-func", moo_app_get_instance,
-                                 NULL);
-
-    moo_window_class_new_action (term_class, "Interrupt", NULL,
-                                 "display-name", _("Interrupt"),
-                                 "label", _("_Interrupt"),
-                                 "tooltip", _("Interrupt computation"),
-                                 "stock-id", GTK_STOCK_STOP,
-                                 "closure-callback", gap_app_send_intr,
-                                 "closure-proxy-func", moo_app_get_instance,
-                                 NULL);
 
 #if 0
     moo_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapDoc", NULL,
@@ -207,11 +179,6 @@ gap_app_set_property (GObject    *object,
 
     switch (prop_id)
     {
-        case PROP_GAP_CMD_LINE:
-            g_free (app->gap_cmd_line);
-            app->gap_cmd_line = g_strdup (g_value_get_string (value));
-            break;
-
         case PROP_EDITOR_MODE:
             app->editor_mode = g_value_get_boolean (value);
             break;
@@ -324,10 +291,7 @@ gap_app_run (MooApp *mapp)
     gap_app_output_start ();
 
     if (!GAP_APP_EDITOR_MODE && !app->editor_mode)
-    {
         gap_app_ensure_terminal (app);
-        gap_app_start_gap (app);
-    }
 
     if (GAP_APP_EDITOR_MODE || app->editor_mode)
     {
@@ -366,25 +330,6 @@ gap_app_try_quit (MooApp *app)
 
 
 void
-gap_app_send_intr (GapApp *app)
-{
-    g_return_if_fail (GAP_IS_APP (app) && GAP_IS_VIEW (app->terminal));
-
-    if (gap_view_child_alive (app->terminal))
-        gap_view_send_intr (app->terminal);
-}
-
-
-void
-gap_app_restart_gap (GapApp *app)
-{
-    gap_app_stop_gap (app);
-    g_usleep (100000);
-    gap_app_start_gap (app);
-}
-
-
-void
 gap_app_open_workspace (GapApp     *app,
                         const char *file)
 {
@@ -395,7 +340,7 @@ gap_app_open_workspace (GapApp     *app,
     g_return_if_fail (GAP_IS_VIEW (app->terminal));
 
     gap_view_stop_gap (app->terminal);
-    gap_view_start_gap (app->terminal, app->gap_cmd_line, file);
+    gap_view_start_gap (app->terminal, file);
 }
 
 
@@ -464,27 +409,6 @@ open_in_editor_action (GapTermWindow *terminal)
 
 
 void
-gap_app_start_gap (GapApp *app)
-{
-    g_return_if_fail (GAP_IS_APP (app));
-
-    gap_app_ensure_terminal (app);
-    g_return_if_fail (!gap_view_child_alive (app->terminal));
-
-    gap_view_start_gap (app->terminal, app->gap_cmd_line, NULL);
-}
-
-
-void
-gap_app_stop_gap (GapApp *app)
-{
-    g_return_if_fail (GAP_IS_APP (app));
-    g_return_if_fail (GAP_IS_VIEW (app->terminal));
-    gap_view_stop_gap (app->terminal);
-}
-
-
-void
 gap_app_feed_gap (GapApp     *app,
                   const char *text)
 {
@@ -494,7 +418,7 @@ gap_app_feed_gap (GapApp     *app,
     gap_app_ensure_terminal (app);
 
     if (!gap_view_child_alive (app->terminal))
-        gap_app_start_gap (app);
+        gap_view_start_gap (app->terminal, NULL);
 
     g_return_if_fail (gap_view_child_alive (app->terminal));
     gap_view_feed_gap (app->terminal, text);

@@ -57,7 +57,6 @@ gboolean    gap_view_child_alive    (GapView    *view);
 void        gap_view_send_intr      (GapView    *view);
 
 void        gap_view_start_gap      (GapView    *view,
-                                     const char *cmd_base,
                                      const char *workspace);
 void        gap_view_stop_gap       (GapView    *view);
 void        gap_view_feed_gap       (GapView    *view,

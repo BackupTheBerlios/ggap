@@ -160,10 +160,10 @@ make_command_line (const char *cmd_base,
 
 static void
 gap_view_start_gap_real (GapView    *view,
-                         const char *cmd_base,
                          const char *workspace)
 {
     static guint session_id;
+    const char *cmd_base;
     char *flags = NULL;
     GString *cmd;
     gboolean result;
@@ -173,9 +173,7 @@ gap_view_start_gap_real (GapView    *view,
     g_return_if_fail (GAP_IS_VIEW (view));
     g_return_if_fail (!gap_view_child_alive (view));
 
-    if (!cmd_base)
-        cmd_base = moo_prefs_get_string (GGAP_PREFS_GAP_COMMAND);
-
+    cmd_base = moo_prefs_get_string (GGAP_PREFS_GAP_COMMAND);
     g_return_if_fail (cmd_base && cmd_base[0]);
 
 #ifdef __WIN32__
@@ -265,11 +263,10 @@ gap_exited (GapView *view)
 
 void
 gap_view_start_gap (GapView    *view,
-                    const char *cmd_base,
                     const char *workspace)
 {
     g_return_if_fail (GAP_IS_VIEW (view));
-    gap_view_start_gap_real (view, cmd_base, workspace);
+    gap_view_start_gap_real (view, workspace);
 }
 
 

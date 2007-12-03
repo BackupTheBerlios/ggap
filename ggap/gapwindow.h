@@ -36,13 +36,13 @@ typedef struct _GapWindowClass   GapWindowClass;
 struct _GapWindow
 {
     MooWindow base;
-    GType view_type;
-    GapView *terminal;
 };
 
 struct _GapWindowClass
 {
     MooWindowClass  base_class;
+
+    GapView * (*get_terminal) (GapWindow *window);
 };
 
 

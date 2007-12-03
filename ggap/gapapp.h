@@ -50,7 +50,6 @@ struct _GapApp
     GapView *terminal;
     GapWindow *gap_window;
 
-    char *gap_cmd_line;
     gboolean editor_mode;
     gboolean fancy;
 };
@@ -64,11 +63,6 @@ struct _GapAppClass
 #define GAP_APP_INSTANCE (GAP_APP (moo_app_get_instance ()))
 
 GType       gap_app_get_type                (void) G_GNUC_CONST;
-
-void        gap_app_restart_gap             (GapApp     *app);
-void        gap_app_start_gap               (GapApp     *app);
-void        gap_app_stop_gap                (GapApp     *app);
-void        gap_app_send_intr               (GapApp     *app);
 
 void        gap_app_open_workspace          (GapApp     *app,
                                              const char *file);

@@ -12,6 +12,7 @@
  */
 
 #include "gapparser-priv.h"
+#include "mooutils/mooutils-misc.h"
 #include <string.h>
 
 
@@ -64,7 +65,7 @@ gap_parse (const char *string)
 GapParser *
 gap_parser_new (void)
 {
-    return g_new0 (GapParser, 1);
+    return _moo_new0 (GapParser);
 }
 
 void
@@ -73,7 +74,7 @@ gap_parser_free (GapParser *parser)
     if (parser)
     {
         gap_parser_cleanup (parser);
-        g_free (parser);
+        _moo_free (GapParser, parser);
     }
 }
 
@@ -115,7 +116,7 @@ gap_parser_cleanup (GapParser *parser)
 static GapLex *
 gap_lex_new (const char *string)
 {
-    GapLex *lex = g_new0 (GapLex, 1);
+    GapLex *lex = _moo_new0 (GapLex);
     lex->input = string;
     lex->_ptr = 0;
     lex->len = strlen (string);
@@ -127,7 +128,7 @@ gap_lex_new (const char *string)
 static void
 gap_lex_free (GapLex *lex)
 {
-    g_free (lex);
+    _moo_free (GapLex, lex);
 }
 
 
@@ -137,7 +138,7 @@ gap_parse_error_new (const char *message,
 {
     GapParseError *error;
 
-    error = g_new0 (GapParseError, 1);
+    error = _moo_new0 (GapParseError);
     error->message = g_strdup (message);
     error->line = location->first_line;
     error->first_column = location->first_column;
@@ -152,7 +153,7 @@ gap_parse_error_free (GapParseError *error)
     if (error)
     {
         g_free (error->message);
-        g_free (error);
+        _moo_free (GapParseError, error);
     }
 }
 

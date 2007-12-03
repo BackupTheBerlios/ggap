@@ -26,7 +26,8 @@ G_DEFINE_TYPE (MooWsTextBlock, moo_ws_text_block, MOO_TYPE_WS_BLOCK)
 static void
 moo_ws_text_block_init (MooWsTextBlock *block)
 {
-    block->priv = g_new0 (MooWsTextBlockPrivate, 1);
+    block->priv = G_TYPE_INSTANCE_GET_PRIVATE (block, MOO_TYPE_WS_TEXT_BLOCK,
+                                               MooWsTextBlockPrivate);
     block->priv->text = NULL;
 }
 
@@ -38,7 +39,7 @@ moo_ws_text_block_dispose (GObject *object)
     if (tb->priv)
     {
         g_free (tb->priv->text);
-        g_free (tb->priv);
+
         tb->priv = NULL;
     }
 
@@ -102,6 +103,8 @@ moo_ws_text_block_class_init (MooWsTextBlockClass *klass)
     block_class->add = moo_ws_text_block_add;
     block_class->insert_text = moo_ws_text_block_insert_text;
     block_class->delete_text = moo_ws_text_block_delete_text;
+
+    g_type_class_add_private (klass, sizeof (MooWsTextBlockPrivate));
 }
 
 

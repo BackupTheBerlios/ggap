@@ -20,7 +20,7 @@
 #include <errno.h>
 
 
-static char *
+char *
 gap_escape_filename (const char *filename)
 {
     g_return_val_if_fail (filename != NULL, NULL);
@@ -29,16 +29,45 @@ gap_escape_filename (const char *filename)
 
 
 #define INIT_PKG                                        \
-"if IsBoundGlobal(\"_GGAP_INIT\") then\n"               \
-"  _GGAP_INIT(\"%s\", \"%s\", %d, \"%s\", %s);\n"       \
+"if IsBoundGlobal(\"$GGAP_INIT\") then\n"               \
+"  $GGAP_INIT(\"%s\", \"%s\", %d, \"%s\", %s);\n"       \
 "fi;\n"
 
 #define SAVE_WORKSPACE                                  \
-"SaveWorkspace(\"%s\");\n"                              \
+"SaveWorkspace(\"%s\");\n"
+
+#define SAVE_WORKSPACE_AND_GZIP                         \
+SAVE_WORKSPACE                                          \
 "if ARCH_IS_UNIX() then\n"                              \
 "  Exec(\"rm -f\", Concatenation(\"%s\", \".gz\"));\n"  \
 "  Exec(\"gzip\", \"%s\");\n"                           \
 "fi;\n"
+
+
+char *
+ggap_pkg_exec_command (guint       stamp,
+                       const char *cmdname,
+                       const char *args)
+{
+    if (args && args[0])
+        return g_strdup_printf ("$GGAP_EXEC_COMMAND(%u, \"%s\", %s);\n", stamp, cmdname, args);
+    else
+        return g_strdup_printf ("$GGAP_EXEC_COMMAND(%u, \"%s\");\n", stamp, cmdname);
+}
+
+char *
+gap_cmd_save_workspace (const char *filename)
+{
+    char *escaped, *cmd;
+
+    g_return_val_if_fail (filename != NULL, NULL);
+
+    escaped = gap_escape_filename (filename);
+    cmd = g_strdup_printf (SAVE_WORKSPACE, filename);
+
+    g_free (escaped);
+    return cmd;
+}
 
 
 const char *
@@ -109,7 +138,7 @@ gap_init_file (const char *workspace,
     if (workspace)
     {
         char *wsp_escaped = gap_escape_filename (workspace);
-        g_string_append_printf (contents, SAVE_WORKSPACE,
+        g_string_append_printf (contents, SAVE_WORKSPACE_AND_GZIP,
                                 wsp_escaped, wsp_escaped,
                                 wsp_escaped);
         g_free (wsp_escaped);

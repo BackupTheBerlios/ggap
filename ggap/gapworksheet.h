@@ -36,7 +36,8 @@ typedef enum {
     GAP_DEAD = 0,
     GAP_IN_PROMPT,
     GAP_LOADING,
-    GAP_BUSY
+    GAP_BUSY,
+    GAP_BUSY_INTERNAL
 } GapState;
 
 struct _GapWorksheet
@@ -53,6 +54,18 @@ struct _GapWorksheetClass
 
 GType       gap_worksheet_get_type      (void) G_GNUC_CONST;
 GType       gap_state_get_type          (void) G_GNUC_CONST;
+
+gboolean    gap_worksheet_is_empty      (GapWorksheet   *ws);
+gboolean    gap_worksheet_is_modified   (GapWorksheet   *ws);
+
+const char *gap_worksheet_get_filename  (GapWorksheet   *ws);
+gboolean    gap_worksheet_load          (GapWorksheet   *ws,
+                                         const char     *filename,
+                                         GError        **error);
+gboolean    gap_worksheet_save          (GapWorksheet   *ws,
+                                         const char     *filename,
+                                         gboolean        save_workspace,
+                                         GError        **error);
 
 
 G_END_DECLS

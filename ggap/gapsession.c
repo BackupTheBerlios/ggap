@@ -32,7 +32,8 @@ G_DEFINE_TYPE(GapSession, gap_session, G_TYPE_OBJECT)
 static void
 gap_session_init (GapSession *session)
 {
-    session->priv = g_new0 (GapSessionPrivate, 1);
+    session->priv = G_TYPE_INSTANCE_GET_PRIVATE (session, GAP_TYPE_SESSION,
+                                                 GapSessionPrivate);
 }
 
 
@@ -41,7 +42,6 @@ gap_session_finalize (GObject *object)
 {
     GapSession *session = GAP_SESSION (object);
     gap_session_shutdown (session);
-    g_free (session->priv);
     G_OBJECT_CLASS (gap_session_parent_class)->finalize (object);
 }
 
@@ -50,6 +50,7 @@ static void
 gap_session_class_init (GapSessionClass *klass)
 {
     G_OBJECT_CLASS(klass)->finalize = gap_session_finalize;
+    g_type_class_add_private (klass, sizeof (GapSessionPrivate));
 }
 
 

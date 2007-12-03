@@ -71,6 +71,8 @@ void        moo_worksheet_write_error_len   (MooWorksheet   *ws,
                                              const char     *string,
                                              gssize          len);
 
+char       *moo_worksheet_format            (MooWorksheet   *ws);
+
 
 G_END_DECLS
 

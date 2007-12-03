@@ -60,7 +60,7 @@ static void     moo_ws_view_delete_block_priv   (MooWsView      *view,
 static void
 moo_ws_view_init (MooWsView *view)
 {
-    view->priv = g_new0 (MooWsViewPrivate, 1);
+    view->priv = G_TYPE_INSTANCE_GET_PRIVATE (view, MOO_TYPE_WS_VIEW, MooWsViewPrivate);
     view->priv->buffer = NULL;
     view->priv->first_block = NULL;
     view->priv->last_block = NULL;
@@ -97,7 +97,7 @@ moo_ws_view_dispose (GObject *object)
     {
         while (view->priv->first_block)
             moo_ws_view_delete_block_priv (view, view->priv->first_block, TRUE);
-        g_free (view->priv);
+
         view->priv = NULL;
     }
 
@@ -122,6 +122,8 @@ moo_ws_view_class_init (MooWsViewClass *klass)
     buffer_signals[BUFFER_DELETE_RANGE] =
         g_signal_lookup ("delete-range", GTK_TYPE_TEXT_BUFFER);
     g_type_class_unref (buf_class);
+
+    g_type_class_add_private (klass, sizeof (MooWsViewPrivate));
 }
 
 

@@ -46,7 +46,8 @@ enum {
 static void
 moo_ws_prompt_block_init (MooWsPromptBlock *block)
 {
-    block->priv = g_new0 (MooWsPromptBlockPrivate, 1);
+    block->priv = G_TYPE_INSTANCE_GET_PRIVATE (block, MOO_TYPE_WS_PROMPT_BLOCK,
+                                               MooWsPromptBlockPrivate);
     block->priv->ps = g_strdup (">>> ");
     block->priv->ps2 = g_strdup ("... ");
     block->priv->ps_len = block->priv->ps2_len = 4;
@@ -65,7 +66,7 @@ moo_ws_prompt_block_dispose (GObject *object)
         g_free (block->priv->text);
         g_free (block->priv->ps);
         g_free (block->priv->ps2);
-        g_free (block->priv);
+
         block->priv = NULL;
     }
 
@@ -277,6 +278,8 @@ moo_ws_prompt_block_class_init (MooWsPromptBlockClass *klass)
         g_param_spec_string ("text", "text", "text",
                              NULL,
                              G_PARAM_WRITABLE));
+
+    g_type_class_add_private (klass, sizeof (MooWsPromptBlockPrivate));
 }
 
 

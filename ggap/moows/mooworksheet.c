@@ -58,6 +58,14 @@ static guint signals[N_SIGNALS];
 
 static gboolean moo_worksheet_key_press         (GtkWidget      *widget,
                                                  GdkEventKey    *event);
+static gboolean moo_worksheet_extend_selection  (MooTextView    *view,
+                                                 MooTextSelectionType type,
+                                                 GtkTextIter    *insert,
+                                                 GtkTextIter    *selection_bound);
+static void     moo_worksheet_move_cursor       (GtkTextView    *text_view,
+                                                 GtkMovementStep step,
+                                                 gint            count,
+                                                 gboolean        extend_selection);
 
 static void     history_next                (MooWorksheet   *ws);
 static void     history_prev                (MooWorksheet   *ws);
@@ -75,7 +83,8 @@ static void     go_end                      (MooWorksheet   *ws,
 static void
 moo_worksheet_init (MooWorksheet *ws)
 {
-    ws->priv = g_new0 (MooWorksheetPrivate, 1);
+    ws->priv = G_TYPE_INSTANCE_GET_PRIVATE (ws, MOO_TYPE_WORKSHEET,
+                                            MooWorksheetPrivate);
     ws->priv->in_input = FALSE;
     ws->priv->allow_multiline = TRUE;
     ws->priv->history = g_queue_new ();
@@ -92,7 +101,7 @@ moo_worksheet_dispose (GObject *object)
     {
         g_queue_foreach (ws->priv->history, (GFunc) g_free, NULL);
         g_queue_free (ws->priv->history);
-        g_free (ws->priv);
+
         ws->priv = NULL;
     }
 
@@ -149,11 +158,16 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+    GtkTextViewClass *gtktextview_class = GTK_TEXT_VIEW_CLASS (klass);
+    MooTextViewClass *textview_class = MOO_TEXT_VIEW_CLASS (klass);
 
     object_class->dispose = moo_worksheet_dispose;
     object_class->set_property = moo_worksheet_set_property;
     object_class->get_property = moo_worksheet_get_property;
     widget_class->key_press_event = moo_worksheet_key_press;
+
+    textview_class->extend_selection = moo_worksheet_extend_selection;
+    gtktextview_class->move_cursor = moo_worksheet_move_cursor;
 
     g_object_class_install_property (object_class,
                                      PROP_ACCEPTING_INPUT,
@@ -180,6 +194,8 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
                       _moo_marshal_VOID__BOXED,
                       G_TYPE_NONE, 1,
                       G_TYPE_STRV | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+    g_type_class_add_private (klass, sizeof (MooWorksheetPrivate));
 }
 
 
@@ -321,6 +337,29 @@ moo_worksheet_key_press (GtkWidget   *widget,
 
 parent:
     return GTK_WIDGET_CLASS (moo_worksheet_parent_class)->key_press_event (widget, event);
+}
+
+static gboolean
+moo_worksheet_extend_selection (MooTextView          *view,
+                                MooTextSelectionType  type,
+                                GtkTextIter          *insert,
+                                GtkTextIter          *selection_bound)
+{
+    if (!MOO_TEXT_VIEW_CLASS (moo_worksheet_parent_class)->
+            extend_selection (view, type, insert, selection_bound))
+        return FALSE;
+    else
+        return TRUE;
+}
+
+static void
+moo_worksheet_move_cursor (GtkTextView    *text_view,
+                           GtkMovementStep step,
+                           gint            count,
+                           gboolean        extend_selection)
+{
+    GTK_TEXT_VIEW_CLASS (moo_worksheet_parent_class)->
+        move_cursor (text_view, step, count, extend_selection);
 }
 
 
@@ -822,4 +861,16 @@ go_end (MooWorksheet *ws,
         gtk_text_iter_forward_to_line_end (&iter);
 
     go_to_iter (ws, &iter);
+}
+
+
+/**********************************************************************/
+/* Loading and saving
+ */
+
+char *
+moo_worksheet_format (MooWorksheet *ws)
+{
+    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
+    return g_strdup ("lalalala");
 }

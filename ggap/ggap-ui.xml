@@ -183,7 +183,7 @@
 </object> <!-- Editor -->
 
 
-<object name="GAP">
+<object name="Terminal">
 
   <!-- GAP window menubar -->
   <widget name="Menubar">
@@ -252,6 +252,95 @@
   <!-- GAP window toolbar -->
   <widget name="Toolbar">
     <item action="GAPRead"/>
+    <separator/>
+    <item action="SwitchToEditor"/>
+    <separator/>
+    <item action="Cut"/>
+    <item action="Copy"/>
+    <item action="Paste"/>
+    <separator/>
+    <item action="Preferences"/>
+    <separator/>
+    <item action="Restart"/>
+    <separator/>
+<!--     <item action="Interrupt"/> -->
+  </widget>
+
+</object>
+
+<object name="Worksheet">
+
+  <!-- GAP window menubar -->
+  <widget name="Menubar">
+
+    <item name="File" _label="_File">
+      <separator/>
+      <item action="GAPOpenWorkspace"/>
+      <item action="GAPRead"/>
+      <separator/>
+      <item action="SwitchToEditor"/>
+      <item action="SaveSelection"/>
+      <separator/>
+      <item action="Quit"/>
+      <separator/>
+    </item>
+
+    <item name="Edit" _label="E_dit">
+      <separator/>
+      <item action="Cut"/>
+      <item action="Copy"/>
+      <item action="Paste"/>
+      <separator/>
+      <item action="SelectAll"/>
+      <separator/>
+    </item>
+
+    <item name="GAP" _label="_GAP">
+      <separator/>
+      <separator/>
+      <item action="Restart"/>
+      <separator/>
+      <item action="Interrupt"/>
+      <separator/>
+    </item>
+
+    <item name="Tools" _label="_Tools">
+      <separator/>
+      <placeholder name="TerminalUserMenu"/>
+      <separator/>
+    </item>
+
+    <item name="Settings" _label="_Settings">
+      <separator/>
+      <item action="ShowToolbar"/>
+      <item action="ToolbarStyle"/>
+      <separator/>
+      <item action="ConfigureShortcuts"/>
+      <separator/>
+      <item action="Preferences"/>
+      <separator/>
+    </item>
+
+    <item name="Help" _label="_Help">
+      <separator/>
+      <item action="Help"/>
+      <separator/>
+      <item action="GapManual"/>
+      <separator/>
+      <item action="SystemInfo"/>
+      <item action="About"/>
+      <separator/>
+    </item>
+
+  </widget>
+
+  <!-- GAP window toolbar -->
+  <widget name="Toolbar">
+    <item action="GAPRead"/>
+    <separator/>
+    <item action="OpenWorksheet"/>
+    <item action="SaveWorksheet"/>
+    <item action="SaveWorksheetAs"/>
     <separator/>
     <item action="SwitchToEditor"/>
     <separator/>

@@ -171,13 +171,13 @@ int main (int argc, char *argv[])
                         "logo", "ggap",
                         "credits", THANKS,
 
-                        "gap-cmd-line", _ggap_arg_gap_cmd,
+//                         "gap-cmd-line", _ggap_arg_gap_cmd,
                         "editor-mode", (gboolean) _ggap_opt_editor,
                         "fancy", (gboolean) _ggap_opt_fancy,
 
                         NULL);
 
-    if ((!new_instance && moo_app_send_files (app, files, 0, 0, NULL)) ||
+    if ((!new_instance && moo_app_send_files (app, files, 0, 0, NULL, 0)) ||
           !moo_app_init (app))
     {
         gdk_notify_startup_complete ();
@@ -187,7 +187,7 @@ int main (int argc, char *argv[])
     }
 
     if (files && *files)
-        moo_app_open_files (app, files, 0, 0);
+        moo_app_open_files (app, files, 0, 0, 0);
 
     g_strfreev (files);
 

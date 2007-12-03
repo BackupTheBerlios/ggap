@@ -46,16 +46,14 @@ testparser_SOURCES =			\
 
 ggap_SOURCES =				\
 	ggap-ui.h			\
-	gap-mod.h			\
-	gap-cb-mod.h			\
-	gap-canvas-mod.h		\
-	gap-types-mod.h			\
 	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
 	ggap-i18n.h			\
 	ggap-i18n.c			\
 	ggap.c				\
+	ggapfile.h			\
+	ggapfile.c			\
 	gapapp.c			\
 	gapapp.h			\
 	gapparser.c			\

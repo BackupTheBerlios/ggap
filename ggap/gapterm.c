@@ -16,6 +16,7 @@
 #include "gapapp.h"
 #include "gapeditwindow.h"
 #include "mooterm/mooterm-text.h"
+#include "mooutils/mooutils-misc.h"
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -81,6 +82,8 @@ gap_term_class_init (GapTermClass *klass)
     term_class->new_line = gap_term_new_line;
     term_class->reset = gap_term_reset;
     term_class->child_died = gap_term_child_died;
+
+    g_type_class_add_private (klass, sizeof (GapTermPrivate));
 }
 
 
@@ -135,7 +138,8 @@ gap_term_view_init (GapViewIface *iface)
 static void
 gap_term_init (GapTerm *term)
 {
-    term->priv = g_new0 (GapTermPrivate, 1);
+    term->priv = G_TYPE_INSTANCE_GET_PRIVATE (term, GAP_TYPE_TERM,
+                                              GapTermPrivate);
     term->priv->last_line_checked = -1;
 
     term->priv->error_regex = g_regex_new ("Syntax error: (.*) in (.*) line (\\d+)",
@@ -177,7 +181,7 @@ gap_term_destroy (GtkObject *object)
             g_source_remove (term->priv->analyze_idle_id);
         term->priv->analyze_idle_id = 0;
         g_regex_unref (term->priv->error_regex);
-        g_free (term->priv);
+
         term->priv = NULL;
     }
 
@@ -355,7 +359,7 @@ err_info_new (const char         *file,
 {
     ErrInfo *err_info;
     g_return_val_if_fail (file != NULL && info != NULL && line >= 0, NULL);
-    err_info = g_new (ErrInfo, 1);
+    err_info = _moo_new (ErrInfo);
     err_info->file = g_strdup (file);
     err_info->info = g_strdup (info);
     err_info->line = line;
@@ -364,13 +368,13 @@ err_info_new (const char         *file,
 
 
 static void
-err_info_free (ErrInfo            *err)
+err_info_free (ErrInfo *err)
 {
     if (err)
     {
         g_free (err->file);
         g_free (err->info);
-        g_free (err);
+        _moo_free (ErrInfo, err);
     }
 }
 
