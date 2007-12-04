@@ -55,8 +55,10 @@ struct _GapWorksheetClass
 GType       gap_worksheet_get_type      (void) G_GNUC_CONST;
 GType       gap_state_get_type          (void) G_GNUC_CONST;
 
-gboolean    gap_worksheet_is_empty      (GapWorksheet   *ws);
-gboolean    gap_worksheet_is_modified   (GapWorksheet   *ws);
+gboolean    gap_worksheet_get_empty     (GapWorksheet   *ws);
+gboolean    gap_worksheet_get_modified  (GapWorksheet   *ws);
+void        gap_worksheet_set_modified  (GapWorksheet   *ws,
+                                         gboolean        modified);
 
 const char *gap_worksheet_get_filename  (GapWorksheet   *ws);
 gboolean    gap_worksheet_load          (GapWorksheet   *ws,

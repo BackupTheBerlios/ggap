@@ -33,7 +33,7 @@
   <optimized>
    <build_dir>build/optimized</build_dir>
    <configure>
-    <args>--enable-all-gcc-warnings --disable-medit</args>
+    <args>--enable-all-gcc-warnings --enable-libmoo</args>
     <vars>
      <var name="CFLAGS">-O2</var>
      <var name="OBJCFLAGS">-O2</var>

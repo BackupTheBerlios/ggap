@@ -30,7 +30,7 @@ AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 
 testparser_LDADD = $(top_builddir)/moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(READLINE_LIBS)
 
-ggap_LDADD = moows/libmoows.la $(top_builddir)/moo/moo/libmoo.la $(MOO_OBJC_LIBS)
+ggap_LDADD = moows/libmoows.la $(top_builddir)/moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(ZLIB)
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
 if MOO_OS_MINGW
@@ -114,7 +114,8 @@ EXTRA_DIST =		\
     ggap.opag		\
     gapparser-yacc.y	\
     glade/gapprefs.glade\
-    glade/usermenu.glade
+    glade/usermenu.glade\
+    ggap.xml.in
 
 BUILT_SOURCES =		\
 	gapparser-yacc.c\
@@ -139,3 +140,28 @@ gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 
 ggap.c: ggap.opag
 	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c
+
+
+packagesdir = $(mimedir)/packages
+packages_DATA = ggap.xml
+CLEANFILES += ggap.xml
+update_mime = update-mime-database $(DESTDIR)${mimedir}
+@MOO_INTLTOOL_XML_RULE@
+
+if !MOO_OS_MINGW
+install-data-hook:
+	if echo "Updating mime database... " && $(update_mime); then		\
+		echo "Done.";							\
+	else									\
+		echo "*** ";							\
+		echo "*** Mime database not updated. After install, run this:";	\
+		echo $(update_mime);						\
+		echo "*** ";							\
+	fi
+uninstall-hook:
+	echo "Updating mime database" && $(update_mime) && echo "Done."
+else MOO_OS_MINGW
+install-data-hook:
+	cp /usr/share/mime/packages/freedesktop.org.xml $(DESTDIR)${mimedir}/packages/ && \
+	$(update_mime)
+endif

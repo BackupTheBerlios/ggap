@@ -47,6 +47,7 @@ GType           moo_ws_text_block_get_type  (void) G_GNUC_CONST;
 MooWsTextBlock *moo_ws_text_block_new       (void);
 void            moo_ws_text_block_set_text  (MooWsTextBlock *block,
                                              const char     *text);
+char           *moo_ws_text_block_get_text  (MooWsTextBlock *block);
 void            moo_ws_text_block_append    (MooWsTextBlock *block,
                                              const char     *text);
 

@@ -55,6 +55,7 @@ char       **moo_ws_prompt_block_get_lines      (MooWsPromptBlock   *pb);
 void         moo_ws_prompt_block_set_text       (MooWsPromptBlock   *pb,
                                                  const char         *text);
 const char  *moo_ws_prompt_block_get_ps         (MooWsPromptBlock   *pb);
+const char  *moo_ws_prompt_block_get_ps2        (MooWsPromptBlock   *pb);
 
 void         moo_ws_prompt_block_iter_set_line_offset
                                                 (MooWsPromptBlock   *pb,

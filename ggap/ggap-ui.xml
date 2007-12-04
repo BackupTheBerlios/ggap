@@ -275,11 +275,11 @@
 
     <item name="File" _label="_File">
       <separator/>
-      <item action="GAPOpenWorkspace"/>
-      <item action="GAPRead"/>
+      <item action="OpenWorksheet"/>
+      <item action="SaveWorksheet"/>
+      <item action="SaveWorksheetAs"/>
       <separator/>
       <item action="SwitchToEditor"/>
-      <item action="SaveSelection"/>
       <separator/>
       <item action="Quit"/>
       <separator/>
@@ -336,8 +336,6 @@
 
   <!-- GAP window toolbar -->
   <widget name="Toolbar">
-    <item action="GAPRead"/>
-    <separator/>
     <item action="OpenWorksheet"/>
     <item action="SaveWorksheet"/>
     <item action="SaveWorksheetAs"/>

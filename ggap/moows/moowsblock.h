@@ -60,7 +60,7 @@ struct _MooWsBlockClass
 };
 
 
-GType       moo_ws_block_get_type           (void) G_GNUC_CONST;
+GType        moo_ws_block_get_type          (void) G_GNUC_CONST;
 
 void        _moo_ws_block_add               (MooWsBlock     *block,
                                              MooWsView      *view,

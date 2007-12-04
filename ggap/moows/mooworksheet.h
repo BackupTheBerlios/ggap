@@ -45,33 +45,40 @@ struct _MooWorksheetClass
 };
 
 
-GType       moo_worksheet_get_type          (void) G_GNUC_CONST;
+GType       moo_worksheet_get_type              (void) G_GNUC_CONST;
 
-void        moo_worksheet_reset             (MooWorksheet   *ws);
-gboolean    moo_worksheet_accepting_input   (MooWorksheet   *ws);
-void        moo_worksheet_resume_input      (MooWorksheet   *ws,
-                                             int             line,
-                                             int             column);
-void        moo_worksheet_continue_input    (MooWorksheet   *ws);
-void        moo_worksheet_start_input       (MooWorksheet   *ws,
-                                             const char     *ps,
-                                             const char     *ps2);
+gboolean    moo_worksheet_get_accepting_input   (MooWorksheet   *ws);
+void        moo_worksheet_set_accepting_input   (MooWorksheet   *ws,
+                                                 gboolean        accepting);
 
-void        moo_worksheet_add_history       (MooWorksheet   *ws,
-                                             const char     *string);
-void        moo_worksheet_reset_history     (MooWorksheet   *ws);
+void        moo_worksheet_reset                 (MooWorksheet   *ws);
+void        moo_worksheet_resume_input          (MooWorksheet   *ws,
+                                                 int             line,
+                                                 int             column);
+void        moo_worksheet_continue_input        (MooWorksheet   *ws);
+void        moo_worksheet_start_input           (MooWorksheet   *ws,
+                                                 const char     *ps,
+                                                 const char     *ps2);
 
-void        moo_worksheet_write_output      (MooWorksheet   *ws,
-                                             const char     *string,
-                                             gssize          len);
-void        moo_worksheet_write_error       (MooWorksheet   *ws,
-                                             const char     *format,
-                                             ...);
-void        moo_worksheet_write_error_len   (MooWorksheet   *ws,
-                                             const char     *string,
-                                             gssize          len);
+void        moo_worksheet_add_history           (MooWorksheet   *ws,
+                                                 const char     *string);
+void        moo_worksheet_reset_history         (MooWorksheet   *ws);
 
-char       *moo_worksheet_format            (MooWorksheet   *ws);
+void        moo_worksheet_write_output          (MooWorksheet   *ws,
+                                                 const char     *string,
+                                                 gssize          len);
+void        moo_worksheet_write_error           (MooWorksheet   *ws,
+                                                 const char     *format,
+                                                 ...);
+void        moo_worksheet_write_error_len       (MooWorksheet   *ws,
+                                                 const char     *string,
+                                                 gssize          len);
+
+gboolean    moo_worksheet_load                  (MooWorksheet   *ws,
+                                                 const char     *text,
+                                                 gsize           text_len,
+                                                 GError        **error);
+char       *moo_worksheet_format                (MooWorksheet   *ws);
 
 
 G_END_DECLS

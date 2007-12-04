@@ -71,6 +71,9 @@ struct _GapWorksheetPrivate {
 
 static void     gap_worksheet_view_init         (GapViewIface   *iface);
 static void     gap_worksheet_destroy           (GtkObject      *object);
+static GObject *gap_worksheet_constructor       (GType           type,
+                                                 guint           n_props,
+                                                 GObjectConstructParam *props);
 
 static void     gap_worksheet_size_allocate     (GtkWidget      *widget,
                                                  GtkAllocation  *allocation);
@@ -100,7 +103,8 @@ G_DEFINE_TYPE_WITH_CODE (GapWorksheet, gap_worksheet, MOO_TYPE_WORKSHEET,
 enum {
     PROP_0,
     PROP_GAP_STATE,
-    PROP_FILENAME
+    PROP_FILENAME,
+    PROP_MODIFIED
 };
 
 // static void
@@ -142,6 +146,10 @@ gap_worksheet_get_property (GObject    *object,
             g_value_set_string (value, ws->priv->filename);
             break;
 
+        case PROP_MODIFIED:
+            g_value_set_boolean (value, gap_worksheet_get_modified (ws));
+            break;
+
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
             break;
@@ -156,6 +164,7 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
     MooWorksheetClass *ws_class = MOO_WORKSHEET_CLASS (klass);
 
+    object_class->constructor = gap_worksheet_constructor;
     object_class->get_property = gap_worksheet_get_property;
     gtk_object_class->destroy = gap_worksheet_destroy;
 
@@ -181,6 +190,14 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
                                                           "filename",
                                                           NULL,
                                                           G_PARAM_READABLE));
+
+    g_object_class_install_property (object_class,
+                                     PROP_MODIFIED,
+                                     g_param_spec_boolean ("modified",
+                                                           "modified",
+                                                           "modified",
+                                                           FALSE,
+                                                           G_PARAM_READABLE));
 
     g_type_class_add_private (klass, sizeof (GapWorksheetPrivate));
 }
@@ -225,7 +242,7 @@ gap_worksheet_view_start_gap (GapView    *view,
     GError *error = NULL;
     GapWorksheet *ws = GAP_WORKSHEET (view);
 
-    moo_worksheet_reset (MOO_WORKSHEET (view));
+//     moo_worksheet_reset (MOO_WORKSHEET (view));
     ws->priv->loaded = FALSE;
 
     if (!gap_worksheet_fork_command (GAP_WORKSHEET (view), cmd_line, &error))
@@ -235,6 +252,7 @@ gap_worksheet_view_start_gap (GapView    *view,
         return FALSE;
     }
 
+    set_state (ws, GAP_LOADING);
     return TRUE;
 }
 
@@ -297,6 +315,36 @@ gap_worksheet_init (GapWorksheet *ws)
     ws->priv->in_stderr = FALSE;
     ws->priv->width = -1;
     ws->priv->height = -1;
+}
+
+
+static void
+emit_modified_changed (GObject *object)
+{
+    g_object_notify (object, "modified");
+}
+
+static GObject *
+gap_worksheet_constructor (GType           type,
+                           guint           n_props,
+                           GObjectConstructParam *props)
+{
+    GObject *object;
+    GtkTextBuffer *buffer;
+
+    object = G_OBJECT_CLASS (gap_worksheet_parent_class)->constructor (type, n_props, props);
+
+    moo_worksheet_start_input (MOO_WORKSHEET (object), "gap> ", "> ");
+    gap_view_start_gap (GAP_VIEW (object), NULL);
+    gap_worksheet_set_modified (GAP_WORKSHEET (object), FALSE);
+    moo_worksheet_set_accepting_input (MOO_WORKSHEET (object), FALSE);
+
+    buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (object));
+    g_signal_connect_swapped (buffer, "modified-changed",
+                              G_CALLBACK (emit_modified_changed),
+                              object);
+
+    return object;
 }
 
 
@@ -394,6 +442,8 @@ gap_worksheet_process_input (MooWorksheet   *mws,
     GapParser *parser;
     char *text;
 
+    g_return_if_fail (ws->priv->gap_state == GAP_IN_PROMPT);
+
     moo_worksheet_reset_history (mws);
 
     parser = gap_parser_new ();
@@ -442,10 +492,13 @@ do_normal_text (GapWorksheet *ws,
         stop_running_command_loop (ws->priv->cmd_info);
     }
 
-    if (ws->priv->in_stderr)
-        moo_worksheet_write_error_len (mws, data, data_len);
-    else
-        moo_worksheet_write_output (mws, data, data_len);
+    if (ws->priv->loaded)
+    {
+        if (ws->priv->in_stderr)
+            moo_worksheet_write_error_len (mws, data, data_len);
+        else
+            moo_worksheet_write_output (mws, data, data_len);
+    }
 }
 
 static void
@@ -454,7 +507,6 @@ do_prompt (GapWorksheet *ws,
            gsize         len)
 {
     MooWorksheet *mws = MOO_WORKSHEET (ws);
-    gboolean continue_input;
 
     if (has_running_command_loop (ws))
     {
@@ -462,17 +514,24 @@ do_prompt (GapWorksheet *ws,
         stop_running_command_loop (ws->priv->cmd_info);
     }
 
-    continue_input = (len == 2 && strncmp (string, "> ", 2) == 0);
-
-    if (continue_input)
+    if (ws->priv->loaded)
     {
-        moo_worksheet_continue_input (mws);
+        gboolean continue_input = (len == 2 && strncmp (string, "> ", 2) == 0);
+
+        if (continue_input)
+        {
+            moo_worksheet_continue_input (mws);
+        }
+        else
+        {
+            char *prompt = g_strndup (string, len);
+            moo_worksheet_start_input (mws, prompt, "> ");
+            g_free (prompt);
+        }
     }
     else
     {
-        char *prompt = g_strndup (string, len);
-        moo_worksheet_start_input (mws, prompt, "> ");
-        g_free (prompt);
+        moo_worksheet_set_accepting_input (mws, TRUE);
     }
 
     ws->priv->loaded = TRUE;
@@ -492,7 +551,7 @@ do_output (GapWorksheet *ws,
     }
     else
     {
-        g_critical ("%s: output: %*s", G_STRLOC, data_len, data);
+        g_critical ("%s: output: %.*s", G_STRLOC, data_len, data);
     }
 }
 
@@ -509,7 +568,7 @@ do_data (GapWorksheet *ws,
 //         do_globals (ws, data + strlen ("globals:"), data_len - strlen ("globals:"));
     else
     {
-        g_critical ("%s: got unknown data: '%*s'", G_STRLOC, data_len, data);
+        g_critical ("%s: got unknown data: '%.*s'", G_STRLOC, data_len, data);
     }
 }
 
@@ -981,20 +1040,29 @@ gap_worksheet_realize (GtkWidget *widget)
 
 
 gboolean
-gap_worksheet_is_empty (GapWorksheet *ws)
+gap_worksheet_get_empty (GapWorksheet *ws)
 {
     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
 
-    return ws->priv->pt == NULL && ws->priv->filename == NULL &&
-            !gap_worksheet_is_modified (ws);
+    return ws->priv->filename == NULL && !gap_worksheet_get_modified (ws);
 }
 
 gboolean
-gap_worksheet_is_modified (GapWorksheet *ws)
+gap_worksheet_get_modified (GapWorksheet *ws)
 {
     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
 
     return gtk_text_buffer_get_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)));
+}
+
+void
+gap_worksheet_set_modified (GapWorksheet *ws,
+                            gboolean      modified)
+{
+    g_return_if_fail (GAP_IS_WORKSHEET (ws));
+
+    gtk_text_buffer_set_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)),
+                                  modified);
 }
 
 const char *
@@ -1016,20 +1084,25 @@ gap_worksheet_load (GapWorksheet   *ws,
 
     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
     g_return_val_if_fail (filename != NULL, FALSE);
-    g_return_val_if_fail (gap_worksheet_is_empty (ws), FALSE);
+    g_return_val_if_fail (gap_worksheet_get_empty (ws), FALSE);
 
     if (!ggap_file_unpack (filename, &text, &text_len, &workspace_file, error))
         return FALSE;
 
-    g_print ("text %d\n%*s\n", (int) text_len, (int) text_len, text);
+    g_print ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
     g_print ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+
+    if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, error))
+        return FALSE;
 
     tmp = ws->priv->filename;
     ws->priv->filename = g_strdup (filename);
     g_free (tmp);
     g_object_notify (G_OBJECT (ws), "filename");
 
+    gap_view_stop_gap (GAP_VIEW (ws));
     gap_view_start_gap (GAP_VIEW (ws), workspace_file);
+    gap_worksheet_set_modified (ws, FALSE);
 
     g_free (text);
     g_free (workspace_file);
@@ -1133,7 +1206,7 @@ parse_save_workspace_output (const char  *output,
         return FALSE;
     }
 
-    lines = _moo_splitlines (output);
+    lines = moo_splitlines (output);
 
     for (p = lines; p && *p; ++p)
     {
@@ -1178,7 +1251,7 @@ gap_worksheet_save_workspace (GapWorksheet  *ws,
                               GError       **error)
 {
     char *filename, *cmd;
-    char *output;
+    char *output = NULL;
     gboolean result;
 
     g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
@@ -1239,6 +1312,7 @@ gap_worksheet_save (GapWorksheet   *ws,
         char *tmp = ws->priv->filename;
         ws->priv->filename = g_strdup (filename);
         g_free (tmp);
+        gap_worksheet_set_modified (ws, FALSE);
         g_object_notify (G_OBJECT (ws), "filename");
     }
 

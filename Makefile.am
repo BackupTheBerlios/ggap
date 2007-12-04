@@ -1,21 +1,21 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip foreign nostdinc
 
-DIST_SUBDIRS = moo ggap po help
+DIST_SUBDIRS = moo ggap po
 SUBDIRS = moo .
 
 if !MOO_OS_CYGWIN
 SUBDIRS += ggap
 endif
 
-if MOO_ENABLE_NLS
-SUBDIRS += po
-endif
+# if MOO_ENABLE_NLS
+# SUBDIRS += po
+# endif
 
-if GGAP_BUILD_DOCS
-if !MOO_OS_CYGWIN
-SUBDIRS += help
-endif
-endif
+# if GGAP_BUILD_DOCS
+# if !MOO_OS_CYGWIN
+# SUBDIRS += help
+# endif
+# endif
 
 EXTRA_DIST =            \
     INSTALL             \

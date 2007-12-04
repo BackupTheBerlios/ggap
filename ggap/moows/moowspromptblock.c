@@ -51,9 +51,10 @@ moo_ws_prompt_block_init (MooWsPromptBlock *block)
     block->priv->ps = g_strdup (">>> ");
     block->priv->ps2 = g_strdup ("... ");
     block->priv->ps_len = block->priv->ps2_len = 4;
-    block->priv->ps_tag = NULL;
-    block->priv->text_tag = NULL;
     block->priv->text = NULL;
+    block->priv->text_tag = gtk_text_tag_new (NULL);
+    block->priv->ps_tag = gtk_text_tag_new (NULL);
+    g_object_set_data (G_OBJECT (block->priv->ps_tag), "moo-ws-prompt", GINT_TO_POINTER (TRUE));
 }
 
 static void
@@ -66,7 +67,8 @@ moo_ws_prompt_block_dispose (GObject *object)
         g_free (block->priv->text);
         g_free (block->priv->ps);
         g_free (block->priv->ps2);
-
+        g_object_unref (block->priv->text_tag);
+        g_object_unref (block->priv->ps_tag);
         block->priv = NULL;
     }
 
@@ -80,13 +82,14 @@ moo_ws_prompt_block_add (MooWsBlock *block,
                          MooWsBlock *before)
 {
     char *text;
+    GtkTextTagTable *tag_table;
     MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
 
     MOO_WS_BLOCK_CLASS (moo_ws_prompt_block_parent_class)->add (block, view, after, before);
 
-    pb->priv->ps_tag = gtk_text_buffer_create_tag (block->buffer, NULL, NULL);
-    g_object_set_data (G_OBJECT (pb->priv->ps_tag), "moo-ws-prompt", GINT_TO_POINTER (TRUE));
-    pb->priv->text_tag = gtk_text_buffer_create_tag (block->buffer, NULL, NULL);
+    tag_table = gtk_text_buffer_get_tag_table (block->buffer);
+    gtk_text_tag_table_add (tag_table, pb->priv->ps_tag);
+    gtk_text_tag_table_add (tag_table, pb->priv->text_tag);
 
     text = pb->priv->text;
     pb->priv->text = NULL;
@@ -480,6 +483,13 @@ moo_ws_prompt_block_get_ps (MooWsPromptBlock *pb)
 {
     g_return_val_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb), NULL);
     return pb->priv->ps;
+}
+
+const char *
+moo_ws_prompt_block_get_ps2 (MooWsPromptBlock *pb)
+{
+    g_return_val_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb), NULL);
+    return pb->priv->ps2;
 }
 
 

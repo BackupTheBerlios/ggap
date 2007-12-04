@@ -115,15 +115,6 @@ gap_ws_window_class_init (GapWsWindowClass *klass)
 //                                  "closure-callback", moo_term_select_all,
 //                                  "closure-proxy-func", gap_term_window_get_terminal,
 //                                  NULL);
-
-    moo_window_class_new_action (window_class, "Interrupt", NULL,
-                                 "display-name", "Interrupt",
-                                 "label", "Inte_rrupt",
-                                 "tooltip", "Interrupt",
-                                 "accel", "<Ctrl>Break",
-                                 "closure-callback", gap_view_send_intr,
-                                 "closure-proxy-func", gap_window_get_terminal,
-                                 NULL);
 }
 
 
@@ -188,7 +179,11 @@ filename_changed (GapWorksheet *ws,
 
     filename = gap_worksheet_get_filename (ws);
     display_name = filename ? g_filename_display_name (filename) : g_strdup ("Untitled");
-    title = g_strdup_printf ("ggap - %s", display_name);
+
+    if (gap_worksheet_get_modified (ws))
+        title = g_strdup_printf ("ggap - %s [modified]", display_name);
+    else
+        title = g_strdup_printf ("ggap - %s", display_name);
 
     gtk_window_set_title (GTK_WINDOW (window), title);
 
@@ -237,6 +232,12 @@ gap_ws_window_constructor (GType type,
     g_signal_connect (ws, "notify::filename",
                       G_CALLBACK (filename_changed),
                       window);
+    g_signal_connect (ws, "notify::modified",
+                      G_CALLBACK (filename_changed),
+                      window);
+
+    filename_changed (ws, NULL, window);
+    gap_state_changed (ws, NULL, window);
 
     return object;
 }
@@ -289,7 +290,7 @@ ask_close_worksheet (GapWsWindow  *window,
     const char *filename;
     char *display_name;
 
-    if (!gap_worksheet_is_modified (ws))
+    if (!gap_worksheet_get_modified (ws))
         return TRUE;
 
     filename = gap_worksheet_get_filename (ws);
@@ -325,7 +326,11 @@ set_worksheet (GapWsWindow  *window,
     g_signal_connect (ws, "notify::filename",
                       G_CALLBACK (filename_changed),
                       window);
+    g_signal_connect (ws, "notify::modified",
+                      G_CALLBACK (filename_changed),
+                      window);
 
+    gtk_widget_grab_focus (GTK_WIDGET (ws));
     gtk_widget_show (GTK_WIDGET (ws));
     filename_changed (ws, NULL, window);
 }
@@ -337,7 +342,7 @@ action_open_worksheet (GapWsWindow *window)
     gboolean do_close;
     GError *error = NULL;
 
-    if (!gap_worksheet_is_empty (window->priv->ws))
+    if (!gap_worksheet_get_empty (window->priv->ws))
     {
         if (!ask_close_worksheet (window, window->priv->ws))
             return;

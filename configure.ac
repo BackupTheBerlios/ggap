@@ -30,6 +30,16 @@ PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_CHECK_HEADERS([readline/readline.h],[READLINE_LIBS='-lreadline'],[READLINE_LIBS=])
 AC_SUBST(READLINE_LIBS)
 
+zlib_missing=true
+AC_CHECK_HEADER([zlib.h],[
+  AC_CHECK_LIB([z],[gzdopen],[
+    ZLIB="-lz"
+    zlib_missing=false
+])])
+if $zlib_missing; then
+  AC_MSG_ERROR([libz missing])
+fi
+
 # AC_PROG_OBJC
 # _MOO_OBJC_CHECK([
 #   AC_MSG_NOTICE([Objective-C flags: $MOO_OBJCFLAGS $MOO_OBJC_LIBS])
@@ -54,23 +64,24 @@ GGAP_DATA_DIR="${datadir}/ggap"
 AC_SUBST(GGAP_DATA_DIR)
 GGAP_GAP_DIR="${GGAP_DATA_DIR}/pkg"
 AC_SUBST(GGAP_GAP_DIR)
+mimedir="${datadir}/mime"
+AC_SUBST(mimedir)
 
+# AC_ARG_ENABLE([help],
+#   AC_HELP_STRING(--disable-help, [Disable building html help files (default = auto).]),
+#   [:],[enable_help=auto])
 
-AC_ARG_ENABLE([help],
-  AC_HELP_STRING(--disable-help, [Disable building html help files (default = auto).]),
-  [:],[enable_help=auto])
-
-if test "x$enable_help" = xauto -o "x$enable_help" = xyes; then
-  _MOO_AC_CHECK_XSLT_DOCBOOK([_moo_xslt_working=yes],[_moo_xslt_working=no])
-  if test $_moo_xslt_working = yes; then
-    enable_help=yes
-  elif test "x$enable_help" = xauto; then
-    enable_help=no
-  else
-    AC_MSG_ERROR([xsltproc will not work])
-  fi
-fi
-
+# if test "x$enable_help" = xauto -o "x$enable_help" = xyes; then
+#   _MOO_AC_CHECK_XSLT_DOCBOOK([_moo_xslt_working=yes],[_moo_xslt_working=no])
+#   if test $_moo_xslt_working = yes; then
+#     enable_help=yes
+#   elif test "x$enable_help" = xauto; then
+#     enable_help=no
+#   else
+#     AC_MSG_ERROR([xsltproc will not work])
+#   fi
+# fi
+enable_help=no
 if test "x$enable_help" = xyes; then
   export GGAP_BUILD_DOCS=yes
   export MOO_ENABLE_HELP=yes
@@ -96,7 +107,6 @@ ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
 ggap/moows/Makefile
-help/Makefile
 po/Makefile.in
 wininstaller/ggap.iss
 ])

@@ -17,6 +17,7 @@
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-gobject.h"
 #include "mooutils/moomarshals.h"
+#include "mooutils/moomarkup.h"
 #include <gdk/gdkkeysyms.h>
 #include <glib/gprintf.h>
 #include <string.h>
@@ -89,7 +90,6 @@ moo_worksheet_init (MooWorksheet *ws)
     ws->priv->allow_multiline = TRUE;
     ws->priv->history = g_queue_new ();
     ws->priv->history_ptr = NULL;
-    gtk_text_view_set_editable (GTK_TEXT_VIEW (ws), FALSE);
 }
 
 static void
@@ -199,17 +199,21 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
 }
 
 
-static void
-set_accepting_input (MooWorksheet *ws,
-                     gboolean      accepting_input)
+void
+moo_worksheet_set_accepting_input (MooWorksheet *ws,
+                                   gboolean      accepting_input)
 {
-    ws->priv->in_input = accepting_input;
+    g_return_if_fail (MOO_IS_WORKSHEET (ws));
 
-    if (accepting_input)
-        ws->priv->output_newline = FALSE;
+    if (ws->priv->in_input != accepting_input)
+    {
+        ws->priv->in_input = accepting_input;
 
-    gtk_text_view_set_editable (GTK_TEXT_VIEW (ws), accepting_input);
-    g_object_notify (G_OBJECT (ws), "accepting-input");
+        if (accepting_input)
+            ws->priv->output_newline = FALSE;
+
+        g_object_notify (G_OBJECT (ws), "accepting-input");
+    }
 }
 
 static gboolean
@@ -219,13 +223,19 @@ commit_input (MooWorksheet *ws)
     MooWsBlock *block;
     char **lines;
 
+    if (!ws->priv->in_input)
+    {
+        _moo_ws_view_beep (MOO_WS_VIEW (ws));
+        return TRUE;
+    }
+
     moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
     block = _moo_ws_iter_get_block (&iter);
 
     if (!block || !MOO_IS_WS_PROMPT_BLOCK (block))
         return FALSE;
 
-    set_accepting_input (ws, FALSE);
+    moo_worksheet_set_accepting_input (ws, FALSE);
 
     ws->priv->input = MOO_WS_PROMPT_BLOCK (block);
     ws->priv->output = NULL;
@@ -322,9 +332,6 @@ moo_worksheet_key_press (GtkWidget   *widget,
     if (steal_navigation_keys (ws, event))
         return TRUE;
 
-    if (!ws->priv->in_input)
-        goto parent;
-
     switch (event->keyval)
     {
         case GDK_Return:
@@ -375,11 +382,11 @@ moo_worksheet_reset (MooWorksheet *ws)
 
     ws->priv->input = NULL;
     ws->priv->output = NULL;
-    set_accepting_input (ws, FALSE);
+    moo_worksheet_set_accepting_input (ws, FALSE);
 }
 
 gboolean
-moo_worksheet_accepting_input (MooWorksheet *ws)
+moo_worksheet_get_accepting_input (MooWorksheet *ws)
 {
     g_return_val_if_fail (MOO_IS_WORKSHEET (ws), FALSE);
     return ws->priv->in_input;
@@ -399,6 +406,27 @@ scroll_insert_onscreen (MooWorksheet *ws)
                                         gtk_text_buffer_get_insert (get_buffer (ws)));
 }
 
+
+static MooWsBlock *
+create_ws_prompt_block (const char *ps,
+                        const char *ps2,
+                        const char *text)
+{
+    MooWsBlock *block;
+
+    block = moo_ws_prompt_block_new (ps, ps2);
+    g_return_val_if_fail (block != NULL, NULL);
+
+    g_object_set (moo_ws_prompt_block_get_ps_tag (MOO_WS_PROMPT_BLOCK (block)),
+                  "foreground", "darkred", NULL);
+    g_object_set (moo_ws_prompt_block_get_text_tag (MOO_WS_PROMPT_BLOCK (block)),
+                  "foreground", "darkgreen", NULL);
+
+    if (text)
+        moo_ws_prompt_block_set_text (MOO_WS_PROMPT_BLOCK (block), text);
+
+    return block;
+}
 
 void
 moo_worksheet_start_input (MooWorksheet   *ws,
@@ -429,7 +457,7 @@ moo_worksheet_start_input (MooWorksheet   *ws,
 
     if (!block)
     {
-        block = moo_ws_prompt_block_new (ps, ps2);
+        block = create_ws_prompt_block (ps, ps2, NULL);
 
         if (ws->priv->output)
             moo_ws_view_insert_block (MOO_WS_VIEW (ws), block, MOO_WS_BLOCK (ws->priv->output));
@@ -437,16 +465,11 @@ moo_worksheet_start_input (MooWorksheet   *ws,
             moo_ws_view_insert_block (MOO_WS_VIEW (ws), block, MOO_WS_BLOCK (ws->priv->input));
         else
             moo_ws_view_append_block (MOO_WS_VIEW (ws), block);
-
-        g_object_set (moo_ws_prompt_block_get_ps_tag (MOO_WS_PROMPT_BLOCK (block)),
-                      "foreground", "darkred", NULL);
-        g_object_set (moo_ws_prompt_block_get_text_tag (MOO_WS_PROMPT_BLOCK (block)),
-                      "foreground", "darkgreen", NULL);
     }
 
     moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (block), 0, 0);
     scroll_insert_onscreen (ws);
-    set_accepting_input (ws, TRUE);
+    moo_worksheet_set_accepting_input (ws, TRUE);
 }
 
 
@@ -463,7 +486,7 @@ moo_worksheet_continue_input (MooWorksheet *ws)
     gtk_text_buffer_place_cursor (get_buffer (ws), &iter);
     scroll_insert_onscreen (ws);
 
-    set_accepting_input (ws, TRUE);
+    moo_worksheet_set_accepting_input (ws, TRUE);
 }
 
 
@@ -479,7 +502,7 @@ moo_worksheet_resume_input (MooWorksheet *ws,
     moo_ws_prompt_block_place_cursor (ws->priv->input, line, column);
     scroll_insert_onscreen (ws);
 
-    set_accepting_input (ws, TRUE);
+    moo_worksheet_set_accepting_input (ws, TRUE);
 }
 
 
@@ -495,22 +518,12 @@ text_block_check_type (MooWsBlock *block,
         return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") != NULL;
 }
 
-static MooWsTextBlock *
-create_output (MooWorksheet *ws,
-               OutputType    out_type)
+static MooWsBlock *
+create_output_block (OutputType out_type)
 {
     MooWsTextBlock *block;
 
     block = moo_ws_text_block_new ();
-
-    if (ws->priv->output)
-        moo_ws_view_insert_block (MOO_WS_VIEW (ws), MOO_WS_BLOCK (block),
-                                  MOO_WS_BLOCK (ws->priv->output));
-    else if (ws->priv->input)
-        moo_ws_view_insert_block (MOO_WS_VIEW (ws), MOO_WS_BLOCK (block),
-                                  MOO_WS_BLOCK (ws->priv->input));
-    else
-        moo_ws_view_append_block (MOO_WS_VIEW (ws), MOO_WS_BLOCK (block));
 
     if (out_type == OUTPUT_ERR)
     {
@@ -519,10 +532,31 @@ create_output (MooWorksheet *ws,
         g_object_set (MOO_WS_BLOCK (block)->tag, "foreground", "red", NULL);
     }
 
-    ws->priv->output = block;
+    return MOO_WS_BLOCK (block);
+}
+
+static MooWsTextBlock *
+create_output (MooWorksheet *ws,
+               OutputType    out_type)
+{
+    MooWsBlock *block;
+
+    block = create_output_block (out_type);
+    g_return_val_if_fail (block != NULL, NULL);
+
+    if (ws->priv->output)
+        moo_ws_view_insert_block (MOO_WS_VIEW (ws), block,
+                                  MOO_WS_BLOCK (ws->priv->output));
+    else if (ws->priv->input)
+        moo_ws_view_insert_block (MOO_WS_VIEW (ws), block,
+                                  MOO_WS_BLOCK (ws->priv->input));
+    else
+        moo_ws_view_append_block (MOO_WS_VIEW (ws), block);
+
+    ws->priv->output = MOO_WS_TEXT_BLOCK (block);
     ws->priv->output_newline = FALSE;
 
-    return block;
+    return MOO_WS_TEXT_BLOCK (block);
 }
 
 static void
@@ -868,9 +902,181 @@ go_end (MooWorksheet *ws,
 /* Loading and saving
  */
 
+#define MOO_WORKSHEET_FILE_ERROR (g_quark_from_static_string ("moo-worksheet-file-error"))
+#define MOO_WORKSHEET_FILE_ERROR_FORMAT 0
+
+#define ELM_WORKSHEET   "ggap-worksheet"
+#define ELM_CONTENT     "content"
+#define ELM_INPUT       "input"
+#define ELM_OUTPUT      "output"
+
+#define PROP_PS         "ps"
+#define PROP_PS2        "ps2"
+#define PROP_TYPE       "type"
+
+#define PROP_OUTPUT_TYPE_STDOUT "out"
+#define PROP_OUTPUT_TYPE_STDERR "err"
+
+static void
+load_input (MooWorksheet  *ws,
+            MooMarkupNode *elm)
+{
+    const char *ps = NULL, *ps2 = NULL;
+    MooWsBlock *block;
+
+    ps = moo_markup_get_prop (elm, PROP_PS);
+    ps2 = moo_markup_get_prop (elm, PROP_PS2);
+
+    if (!ps)
+        g_critical ("%s: %s property missing", G_STRLOC, PROP_PS);
+    if (!ps2)
+        g_critical ("%s: %s property missing", G_STRLOC, PROP_PS2);
+
+    block = create_ws_prompt_block (ps, ps2, moo_markup_get_content (elm));
+    g_return_if_fail (block != NULL);
+
+    moo_ws_view_append_block (MOO_WS_VIEW (ws), block);
+}
+
+static void
+load_output (MooWorksheet  *ws,
+             MooMarkupNode *elm)
+{
+    MooWsBlock *block;
+    const char *type;
+    OutputType out_type = OUTPUT_OUT;
+
+    type = moo_markup_get_prop (elm, PROP_TYPE);
+    if (!type)
+    {
+        g_critical ("%s: %s property missing", G_STRLOC, PROP_TYPE);
+        type = PROP_OUTPUT_TYPE_STDOUT;
+    }
+
+    if (!strcmp (type, PROP_OUTPUT_TYPE_STDERR))
+        out_type = OUTPUT_ERR;
+
+    block = create_output_block (out_type);
+    g_return_if_fail (block != NULL);
+
+    moo_ws_text_block_set_text (MOO_WS_TEXT_BLOCK (block),
+                                moo_markup_get_content (elm));
+    moo_ws_view_append_block (MOO_WS_VIEW (ws), block);
+}
+
+gboolean
+moo_worksheet_load (MooWorksheet   *ws,
+                    const char     *text,
+                    gsize           text_len,
+                    GError        **error)
+{
+    MooMarkupDoc *doc;
+    MooMarkupNode *root, *elm, *child;
+
+    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), FALSE);
+    g_return_val_if_fail (text != NULL, FALSE);
+
+    if (!(doc = moo_markup_parse_memory (text, text_len, error)))
+        return FALSE;
+
+    if (!(root = moo_markup_get_root_element (doc, ELM_WORKSHEET)))
+    {
+        g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
+                     MOO_WORKSHEET_FILE_ERROR_FORMAT,
+                     "%s element missing", ELM_WORKSHEET);
+        goto error;
+    }
+
+    if (!(elm = moo_markup_get_element (root, ELM_CONTENT)))
+    {
+        g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
+                     MOO_WORKSHEET_FILE_ERROR_FORMAT,
+                     "%s element missing", ELM_CONTENT);
+        goto error;
+    }
+
+    moo_worksheet_reset (ws);
+
+    for (child = elm->children; child != NULL; child = child->next)
+    {
+        if (!MOO_MARKUP_IS_ELEMENT (child))
+            continue;
+
+        if (!strcmp (child->name, ELM_INPUT))
+            load_input (ws, child);
+        else if (!strcmp (child->name, ELM_OUTPUT))
+            load_output (ws, child);
+        else
+        {
+            g_critical ("%s: unknown element %s", G_STRFUNC, child->name);
+        }
+    }
+
+    moo_markup_doc_unref (doc);
+    return TRUE;
+
+error:
+    moo_markup_doc_unref (doc);
+    return FALSE;
+}
+
+
 char *
 moo_worksheet_format (MooWorksheet *ws)
 {
+    MooMarkupDoc *doc;
+    MooMarkupNode *root, *content;
+    MooWsBlock *block;
+    char *markup;
+
     g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
-    return g_strdup ("lalalala");
+
+    doc = moo_markup_doc_new ("moo-worksheet");
+    root = moo_markup_create_root_element (doc, ELM_WORKSHEET);
+    content = moo_markup_create_element (root, ELM_CONTENT);
+
+    for (block = _moo_ws_view_get_first_block (MOO_WS_VIEW (ws));
+         block != NULL; block = block->next)
+    {
+        MooMarkupNode *elm;
+
+        if (MOO_IS_WS_PROMPT_BLOCK (block))
+        {
+            const char *ps, *ps2;
+            char *text;
+
+            ps = moo_ws_prompt_block_get_ps (MOO_WS_PROMPT_BLOCK (block));
+            ps2 = moo_ws_prompt_block_get_ps2 (MOO_WS_PROMPT_BLOCK (block));
+            text = moo_ws_prompt_block_get_text (MOO_WS_PROMPT_BLOCK (block));
+
+            elm = moo_markup_create_text_element (content, ELM_INPUT, text);
+
+            moo_markup_set_prop (elm, PROP_PS, ps);
+            moo_markup_set_prop (elm, PROP_PS2, ps2);
+
+            g_free (text);
+        }
+        else if (MOO_IS_WS_TEXT_BLOCK (block))
+        {
+            char *text;
+
+            text = moo_ws_text_block_get_text (MOO_WS_TEXT_BLOCK (block));
+            elm = moo_markup_create_text_element (content, ELM_OUTPUT, text);
+
+            if (!g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr"))
+                moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDOUT);
+            else
+                moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDERR);
+
+            g_free (text);
+        }
+        else
+        {
+            g_critical ("%s: unknown block", G_STRLOC);
+        }
+    }
+
+    markup = moo_markup_format_pretty (doc, 2);
+    moo_markup_doc_unref (doc);
+    return markup;
 }

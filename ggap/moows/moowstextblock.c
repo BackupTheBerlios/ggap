@@ -161,3 +161,23 @@ moo_ws_text_block_append (MooWsTextBlock *tb,
     _moo_ws_block_insert (block, &iter, text, -1);
     _moo_ws_view_end_edit (block->view);
 }
+
+
+char *
+moo_ws_text_block_get_text (MooWsTextBlock *tb)
+{
+    GtkTextIter start, end;
+    MooWsBlock *block;
+
+    g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (tb), NULL);
+
+    block = MOO_WS_BLOCK (tb);
+
+    if (!block->view)
+        return g_strdup (tb->priv->text);
+
+    gtk_text_buffer_get_iter_at_mark (block->buffer, &start, block->start);
+    gtk_text_buffer_get_iter_at_mark (block->buffer, &end, block->end);
+
+    return gtk_text_buffer_get_slice (block->buffer, &start, &end, TRUE);
+}

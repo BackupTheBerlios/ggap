@@ -22,8 +22,18 @@ enum {
 };
 
 static void
-moo_ws_block_init (G_GNUC_UNUSED MooWsBlock *block)
+moo_ws_block_init (MooWsBlock *block)
 {
+    block->tag = gtk_text_tag_new (NULL);
+    g_object_set_data (G_OBJECT (block->tag), "moo-ws-block", block);
+}
+
+static void
+moo_ws_block_finalize (GObject *object)
+{
+    MooWsBlock *block = MOO_WS_BLOCK (object);
+    g_object_unref (block->tag);
+    G_OBJECT_CLASS (moo_ws_block_parent_class)->finalize (object);
 }
 
 static void
@@ -49,8 +59,8 @@ moo_ws_block_add_real (MooWsBlock *block,
     block->end = gtk_text_buffer_create_mark (block->buffer, NULL, &position, FALSE);
     g_object_set_data (G_OBJECT (block->end), "moo-ws-block", block);
     g_object_set_data (G_OBJECT (block->end), "moo-ws-block-end", GINT_TO_POINTER (TRUE));
-    block->tag = gtk_text_buffer_create_tag (block->buffer, NULL, NULL);
-    g_object_set_data (G_OBJECT (block->tag), "moo-ws-block", block);
+
+    gtk_text_tag_table_add (gtk_text_buffer_get_tag_table (block->buffer), block->tag);
 
     if (before)
     {
@@ -106,7 +116,6 @@ moo_ws_block_remove_real (MooWsBlock *block)
 
     block->view = NULL;
     block->buffer = NULL;
-    block->tag = NULL;
     block->start = NULL;
     block->end = NULL;
     block->prev = NULL;
@@ -163,6 +172,7 @@ moo_ws_block_class_init (MooWsBlockClass *klass)
 
 //     object_class->set_property = moo_ws_block_set_property;
     object_class->get_property = moo_ws_block_get_property;
+    object_class->finalize = moo_ws_block_finalize;
 
     klass->add = moo_ws_block_add_real;
     klass->remove = moo_ws_block_remove_real;
