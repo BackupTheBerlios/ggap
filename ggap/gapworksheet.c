@@ -18,8 +18,12 @@
 #include "ggapfile.h"
 #include "gap.h"
 #include "mooterm/mootermpt.h"
+#include "mooedit/moocompletionsimple.h"
 #include "mooutils/mooutils-misc.h"
+#include "mooutils/mootype-macros.h"
+#include "moows/moowsblock.h"
 #include <glib/gregex.h>
+#include <gdk/gdkkeysyms.h>
 #include <errno.h>
 #include <stdlib.h>
 
@@ -66,6 +70,9 @@ struct _GapWorksheetPrivate {
 
     guint last_stamp;
     GapCommandInfo *cmd_info;
+
+    MooTextCompletion *completion;
+    MooCompletionGroup *cmpl_group;
 };
 
 
@@ -80,6 +87,8 @@ static void     gap_worksheet_size_allocate     (GtkWidget      *widget,
 static void     gap_worksheet_style_set         (GtkWidget      *widget,
                                                  GtkStyle       *prev_style);
 static void     gap_worksheet_realize           (GtkWidget      *widget);
+static gboolean gap_worksheet_key_press         (GtkWidget      *widget,
+                                                 GdkEventKey    *event);
 
 static void     gap_worksheet_update_size       (GapWorksheet   *ws);
 
@@ -94,6 +103,15 @@ static gboolean gap_worksheet_child_alive       (GapWorksheet   *ws);
 
 static void     stop_running_command_loop       (GapCommandInfo *ci);
 static gboolean has_running_command_loop        (GapWorksheet   *ws);
+
+static void     gap_worksheet_add_globals       (GapWorksheet   *ws,
+                                                 const char     *data,
+                                                 gsize           data_len);
+static void     gap_worksheet_delete_globals    (GapWorksheet   *ws,
+                                                 const char     *data,
+                                                 gsize           data_len);
+static void     gap_worksheet_free_completion   (GapWorksheet   *ws);
+static void     gap_worksheet_complete          (GapWorksheet   *ws);
 
 
 /* GAP_TYPE_WORKSHEET */
@@ -171,6 +189,7 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
     widget_class->size_allocate = gap_worksheet_size_allocate;
     widget_class->style_set = gap_worksheet_style_set;
     widget_class->realize = gap_worksheet_realize;
+    widget_class->key_press_event = gap_worksheet_key_press;
 
     ws_class->process_input = gap_worksheet_process_input;
 
@@ -364,6 +383,8 @@ gap_worksheet_destroy (GtkObject *object)
             g_string_free (ws->priv->input_buf, TRUE);
         if (ws->priv->input_buf2)
             g_string_free (ws->priv->input_buf2, TRUE);
+
+        gap_worksheet_free_completion (ws);
 
         ws->priv = NULL;
     }
@@ -564,8 +585,10 @@ do_data (GapWorksheet *ws,
         do_prompt (ws, data + strlen ("prompt:"), data_len - strlen ("prompt:"));
     else if (data_len >= strlen ("output:") && strncmp (data, "output:", strlen ("output:")) == 0)
         do_output (ws, data + strlen ("output:"), data_len - strlen ("output:"));
-//     else if (data_len >= strlen ("globals:") && strncmp (data, "globals:", strlen ("globals:")) == 0)
-//         do_globals (ws, data + strlen ("globals:"), data_len - strlen ("globals:"));
+    else if (data_len >= strlen ("globals-added:") && strncmp (data, "globals-added:", strlen ("globals-added:")) == 0)
+        gap_worksheet_add_globals (ws, data + strlen ("globals-added:"), data_len - strlen ("globals-added:"));
+    else if (data_len >= strlen ("globals-deleted:") && strncmp (data, "globals-deleted:", strlen ("globals-deleted:")) == 0)
+        gap_worksheet_delete_globals (ws, data + strlen ("globals-deleted:"), data_len - strlen ("globals-deleted:"));
     else
     {
         g_critical ("%s: got unknown data: '%.*s'", G_STRLOC, data_len, data);
@@ -1039,6 +1062,20 @@ gap_worksheet_realize (GtkWidget *widget)
 }
 
 
+static gboolean
+gap_worksheet_key_press (GtkWidget   *widget,
+                         GdkEventKey *event)
+{
+    if (event->keyval == GDK_Tab)
+    {
+        gap_worksheet_complete (GAP_WORKSHEET (widget));
+        return TRUE;
+    }
+
+    return GTK_WIDGET_CLASS(gap_worksheet_parent_class)->key_press_event (widget, event);
+}
+
+
 gboolean
 gap_worksheet_get_empty (GapWorksheet *ws)
 {
@@ -1318,4 +1355,151 @@ gap_worksheet_save (GapWorksheet   *ws,
 
     g_free (markup);
     return result;
+}
+
+
+/**************************************************************************/
+/* Completion
+ */
+
+typedef MooCompletionSimple GapWsCompletion;
+typedef MooCompletionSimpleClass GapWsCompletionClass;
+
+#define GAP_TYPE_WS_COMPLETION             (gap_ws_completion_get_type ())
+#define GAP_WS_COMPLETION(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GAP_TYPE_WS_COMPLETION, GapWsCompletion))
+#define GAP_WS_COMPLETION_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GAP_TYPE_WS_COMPLETION, GapWsCompletionClass))
+#define GAP_IS_WS_COMPLETION(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GAP_TYPE_WS_COMPLETION))
+#define GAP_IS_WS_COMPLETION_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GAP_TYPE_WS_COMPLETION))
+#define GAP_WS_COMPLETION_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_WS_COMPLETION, GapWsCompletionClass))
+
+MOO_DEFINE_TYPE_STATIC (GapWsCompletion, gap_ws_completion, MOO_TYPE_COMPLETION_SIMPLE)
+
+
+static void
+gap_ws_completion_replace_text (G_GNUC_UNUSED MooTextCompletion *cmpl,
+                                GtkTextIter       *start,
+                                GtkTextIter       *end,
+                                const char        *text)
+{
+    MooWsBlock *block;
+
+    block = _moo_ws_iter_get_block (start);
+    g_return_if_fail (block != NULL);
+    g_return_if_fail (block == _moo_ws_iter_get_block (end));
+
+    if (!gtk_text_iter_equal (start, end))
+        if (!_moo_ws_block_delete_interactive (block, start, end))
+            return;
+
+    if (text && text[0])
+        _moo_ws_block_insert_interactive (block, start, text, -1);
+}
+
+static void
+gap_ws_completion_class_init (GapWsCompletionClass *klass)
+{
+    MOO_TEXT_COMPLETION_CLASS(klass)->replace_text = gap_ws_completion_replace_text;
+}
+
+static void
+gap_ws_completion_init (G_GNUC_UNUSED GapWsCompletion *cmpl)
+{
+}
+
+static void
+gap_worksheet_free_completion (GapWorksheet *ws)
+{
+    if (ws->priv->completion)
+    {
+        g_object_unref (ws->priv->completion);
+        ws->priv->completion = NULL;
+        ws->priv->cmpl_group = NULL;
+    }
+}
+
+static MooCompletionGroup *
+gap_worksheet_ensure_globals (GapWorksheet *ws)
+{
+    if (!ws->priv->completion)
+    {
+        ws->priv->completion = g_object_new (GAP_TYPE_WS_COMPLETION, NULL);
+        ws->priv->cmpl_group = moo_completion_simple_new_group (MOO_COMPLETION_SIMPLE (ws->priv->completion), NULL);
+        moo_completion_group_set_pattern (ws->priv->cmpl_group, "[A-Za-z0-9_]*", NULL, 0);
+        moo_text_completion_set_doc (ws->priv->completion, GTK_TEXT_VIEW (ws));
+    }
+
+    return ws->priv->cmpl_group;
+}
+
+static GList *
+parse_words (const char *data,
+             gsize       data_len)
+{
+    GQueue words = G_QUEUE_INIT;
+    gsize start, end;
+
+    for (start = 0, end = 0; end < data_len; end++)
+    {
+        if (data[end] == '\r' || data[end] == '\n')
+        {
+            if (start < end)
+                g_queue_push_tail (&words, g_strndup (data + start, end - start));
+            start = end + 1;
+        }
+    }
+
+    return words.head;
+}
+
+static void
+gap_worksheet_add_globals (GapWorksheet *ws,
+                           const char   *data,
+                           gsize         data_len)
+{
+    MooCompletionGroup *group = gap_worksheet_ensure_globals (ws);
+    GTimer *timer = g_timer_new ();
+    GList *words = parse_words (data, data_len);
+    g_print ("%f\n", g_timer_elapsed (timer, NULL));
+    g_timer_destroy (timer);
+    moo_completion_group_add_data (group, words);
+}
+
+static void
+gap_worksheet_delete_globals (GapWorksheet *ws,
+                              const char   *data,
+                              gsize         data_len)
+{
+    GList *words;
+    MooCompletionGroup *group;
+
+    group = gap_worksheet_ensure_globals (ws);
+    words = parse_words (data, data_len);
+    moo_completion_group_remove_data (group, words);
+
+    g_list_foreach (words, (GFunc) g_free, NULL);
+    g_list_free (words);
+}
+
+static void
+gap_worksheet_ask_completions (GapWorksheet *ws)
+{
+    char *string;
+    guint stamp;
+
+    if (ws->priv->gap_state != GAP_IN_PROMPT)
+        return;
+
+    stamp = ++ws->priv->last_stamp;
+    string = ggap_pkg_exec_command (stamp, "get-globals", NULL);
+    moo_term_pt_write (ws->priv->pt, string, -1);
+
+    g_free (string);
+}
+
+static void
+gap_worksheet_complete (GapWorksheet *ws)
+{
+    gap_worksheet_ensure_globals (ws);
+    gap_worksheet_ask_completions (ws);
+    moo_text_completion_try_complete (ws->priv->completion, FALSE);
 }

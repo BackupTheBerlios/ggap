@@ -322,7 +322,9 @@ _moo_ws_block_insert_interactive (MooWsBlock  *block,
     g_print ("-------------\n");
 #endif
 
+    _moo_ws_view_start_edit (block->view);
     retval = MOO_WS_BLOCK_GET_CLASS (block)->insert_interactive (block, where, text, len);
+    _moo_ws_view_end_edit (block->view);
 
 #if 0
     g_print ("--- after insert_interactive\n");
@@ -355,7 +357,9 @@ _moo_ws_block_delete_interactive (MooWsBlock  *block,
     g_print ("-------------\n");
 #endif
 
+    _moo_ws_view_start_edit (block->view);
     retval = MOO_WS_BLOCK_GET_CLASS (block)->delete_interactive (block, start, end);
+    _moo_ws_view_end_edit (block->view);
 
 #if 0
     g_print ("--- before delete_interactive\n");

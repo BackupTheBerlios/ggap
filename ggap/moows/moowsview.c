@@ -358,8 +358,6 @@ moo_ws_buffer_insert_text (GtkTextBuffer *buffer,
     if (block != view->priv->last_edited)
         clear_undo (view);
 
-    _moo_ws_view_start_edit (view);
-
     inserted = _moo_ws_block_insert_interactive (block, where, text, len);
 
     if (view->priv->in_key_press && inserted)
@@ -369,8 +367,6 @@ moo_ws_buffer_insert_text (GtkTextBuffer *buffer,
         if (!gtk_text_iter_equal (where, &cursor))
             gtk_text_buffer_place_cursor (buffer, where);
     }
-
-    _moo_ws_view_end_edit (view);
 
     view->priv->last_edited = block;
 
@@ -406,7 +402,7 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
     end_block = _moo_ws_iter_get_block (end);
     g_assert (start_block != NULL);
 
-    if (!end_block)
+    if (!end_block || gtk_text_iter_is_end (end))
     {
         end_block = view->priv->last_block;
         delete_to_end = TRUE;
@@ -458,10 +454,8 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
             if (start_block != view->priv->last_edited)
                 clear_undo (view);
 
-            _moo_ws_view_start_edit (view);
             _moo_ws_block_delete_interactive (start_block, start, end);
             gtk_text_buffer_move_mark (buffer, start_mark, start);
-            _moo_ws_view_end_edit (view);
 
             view->priv->last_edited = start_block;
         }
@@ -481,11 +475,9 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
     }
     else
     {
-        _moo_ws_view_start_edit (view);
         _moo_ws_block_get_end_iter (start_block, end);
         _moo_ws_block_delete_interactive (start_block, start, end);
         gtk_text_buffer_move_mark (buffer, start_mark, start);
-        _moo_ws_view_end_edit (view);
     }
 
     while (block != end_block)
@@ -503,9 +495,7 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
     {
         _moo_ws_block_get_start_iter (end_block, start);
         gtk_text_buffer_get_iter_at_mark (buffer, end, end_mark);
-        _moo_ws_view_start_edit (view);
         _moo_ws_block_delete_interactive (end_block, start, end);
-        _moo_ws_view_end_edit (view);
     }
 
     moo_text_view_end_not_undoable_action (MOO_TEXT_VIEW (view));

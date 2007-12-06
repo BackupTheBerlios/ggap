@@ -22,6 +22,8 @@ rec(init := false,              # ggap package is initialized
     original_funcs := rec(),
     original_funcs_stored := false,
     next_prompt := [],
+    globals := [],
+    globals_sent := false,
 ));
 
 
@@ -86,6 +88,61 @@ end);
 #   CallFuncList($GGAP_SEND_DATA, list);
 # end);
 
+BindGlobal("$GGAP_SEND_ADDED_DELETED",
+function(added, deleted)
+  local w;
+
+  if not IsEmpty(added) then
+    Print("@GGAP@vglobals-added:");
+    for w in added do
+      Print(w, "\n");
+    od;
+    Print("@GGAP@e\c");
+  fi;
+
+  if not IsEmpty(deleted) then
+    Print("@GGAP@vglobals-deleted:");
+    for w in deleted do
+      Print(w, "\n");
+    od;
+    Print("@GGAP@e\c");
+  fi;
+end);
+
+BindGlobal("$GGAP_SEND_GLOBALS_FIRST_TIME",
+function()
+  local current, added, deleted;
+
+  $GGAP_DATA.globals_sent := true;
+
+  current := NamesGVars();
+  added := Difference(current, $GGAP_GLOBALS_INIT);
+  deleted := Difference($GGAP_GLOBALS_INIT, current);
+  $GGAP_SEND_ADDED_DELETED(added, deleted);
+
+  UnbindGlobal("$GGAP_GLOBALS_INIT");
+
+  $GGAP_DATA.globals := List(NamesUserGVars());
+end);
+
+BindGlobal("$GGAP_SEND_GLOBALS",
+function()
+  local current, added, deleted;
+
+  if not $GGAP_DATA.globals_sent then
+    $GGAP_SEND_GLOBALS_FIRST_TIME();
+    return;
+  fi;
+
+  current := NamesUserGVars();
+  added := Difference(current, $GGAP_DATA.globals);
+  deleted := Difference($GGAP_DATA.globals, current);
+  $GGAP_SEND_ADDED_DELETED(added, deleted);
+
+  $GGAP_DATA.globals := List(current);
+end);
+
+
 #############################################################################
 ##
 ##  $GGAP_EXEC_COMMAND(stamp, cmdname, ...)
@@ -110,8 +167,11 @@ function(arg)
     else
       $GGAP_DATA.next_prompt := ["@GGAP@voutput:\c", "@GGAP@e\c"];
     fi;
+  elif cmd = "get-globals" then
+    $GGAP_SEND_GLOBALS();
+    $GGAP_DATA.next_prompt := [""];
   else
-    $GGAP_SEND_RESULT_ERROR(stamp, "bad command '", cmd, "'");
+    $GGAP_SEND_RESULT_ERROR(stamp, Concatenation("bad command '", String(cmd), "'"));
     $GGAP_DATA.next_prompt := [""];
   fi;
 end);

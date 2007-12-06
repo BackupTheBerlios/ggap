@@ -11,6 +11,7 @@
 ##
 
 
+ReadPkg("ggap", "lib/globals.g");
 ReadPkg("ggap", "lib/ggap.gi");
 
 

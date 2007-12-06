@@ -7,7 +7,8 @@ ggap_pkg_DATA =			\
 	read.g
 
 ggap_pkg_gap_DATA =		\
-	lib/ggap.gi
+	lib/ggap.gi		\
+	lib/globals.g
 
 EXTRA_DIST =			\
 	$(ggap_pkg_DATA)	\
