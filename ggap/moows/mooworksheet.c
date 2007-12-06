@@ -418,9 +418,17 @@ create_ws_prompt_block (const char *ps,
     g_return_val_if_fail (block != NULL, NULL);
 
     g_object_set (moo_ws_prompt_block_get_ps_tag (MOO_WS_PROMPT_BLOCK (block)),
-                  "foreground", "darkred", NULL);
+                  "foreground", "darkred",
+#if 0
+                  "background", "blue",
+#endif
+                  NULL);
     g_object_set (moo_ws_prompt_block_get_text_tag (MOO_WS_PROMPT_BLOCK (block)),
-                  "foreground", "darkgreen", NULL);
+                  "foreground", "darkgreen",
+#if 0
+                  "background", "magenta",
+#endif
+                  NULL);
 
     if (text)
         moo_ws_prompt_block_set_text (MOO_WS_PROMPT_BLOCK (block), text);
@@ -529,7 +537,20 @@ create_output_block (OutputType out_type)
     {
         g_object_set_data (G_OBJECT (block), "moo-worksheet-stderr",
                            GINT_TO_POINTER (TRUE));
-        g_object_set (MOO_WS_BLOCK (block)->tag, "foreground", "red", NULL);
+        g_object_set (MOO_WS_BLOCK (block)->tag,
+                      "foreground", "red",
+#if 0
+                      "background", "green",
+#endif
+                      NULL);
+    }
+    else
+    {
+#if 0
+        g_object_set (MOO_WS_BLOCK (block)->tag,
+                      "background", "yellow",
+                      NULL);
+#endif
     }
 
     return MOO_WS_BLOCK (block);

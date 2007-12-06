@@ -50,13 +50,19 @@ struct _MooWsBlockClass
                     MooWsBlock *before);
     void (*remove) (MooWsBlock *block);
 
-    void (*insert_text) (MooWsBlock  *block,
-                         GtkTextIter *where,
-                         const char  *text,
-                         gssize       len);
-    void (*delete_text) (MooWsBlock  *block,
-                         GtkTextIter *start,
-                         GtkTextIter *end);
+    gboolean (*insert_interactive) (MooWsBlock      *block,
+                                    GtkTextIter     *where,
+                                    const char      *text,
+                                    gssize           len);
+    gboolean (*delete_interactive) (MooWsBlock      *block,
+                                    GtkTextIter     *start,
+                                    GtkTextIter     *end);
+    /* TRUE if the position was modified */
+    gboolean (*check_move_cursor)  (MooWsBlock      *block,
+                                    GtkTextIter     *pos,
+                                    GtkMovementStep  step,
+                                    int              count,
+                                    gboolean         extend_selection);
 };
 
 
@@ -68,13 +74,18 @@ void        _moo_ws_block_add               (MooWsBlock     *block,
                                              MooWsBlock     *before);
 void        _moo_ws_block_remove            (MooWsBlock     *block);
 
-void        _moo_ws_block_insert_text       (MooWsBlock     *block,
+gboolean    _moo_ws_block_insert_interactive(MooWsBlock     *block,
                                              GtkTextIter    *where,
                                              const char     *text,
                                              gssize          len);
-void        _moo_ws_block_delete_text       (MooWsBlock     *block,
+gboolean    _moo_ws_block_delete_interactive(MooWsBlock     *block,
                                              GtkTextIter    *start,
                                              GtkTextIter    *end);
+gboolean    _moo_ws_block_check_move_cursor (MooWsBlock     *block,
+                                             GtkTextIter    *pos,
+                                             GtkMovementStep step,
+                                             int             count,
+                                             gboolean        extend_selection);
 
 void        _moo_ws_block_insert            (MooWsBlock         *block,
                                              GtkTextIter        *where,
@@ -87,6 +98,7 @@ void        _moo_ws_block_insert_with_tags  (MooWsBlock         *block,
                                              GtkTextTag         *first_tag,
                                              ...) G_GNUC_NULL_TERMINATED;
 
+MooWsView  *_moo_ws_iter_get_view           (const GtkTextIter  *iter);
 MooWsBlock *_moo_ws_iter_get_block          (const GtkTextIter  *pos);
 void        _moo_ws_block_get_start_iter    (MooWsBlock         *block,
                                              GtkTextIter        *iter);

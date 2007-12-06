@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <string.h>
 #include <glib/gstdio.h>
-#include <mooapp/mooapp.h>
+#include <mooutils/mooutils-misc.h>
 
 #define GGAP_FILE_VERSION       "0001"
 #define GGAP_FILE_VERSION_LEN   4
@@ -69,7 +69,7 @@ open_file_w (const char *filename,
         return NULL;
     }
 
-    file = gzdopen (fd, "ab");
+    file = gzdopen (fd, "ab1");
 
     if (!file)
     {
@@ -583,7 +583,7 @@ gap_file_read_f (gzFile   file,
     char *filename = NULL;
     guint32 length;
 
-    if (!(filename = moo_app_tempnam (moo_app_get_instance ())))
+    if (!(filename = moo_tempnam ()))
         goto error;
 
     if (!(dest = g_fopen (filename, "w")))

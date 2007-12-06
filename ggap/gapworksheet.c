@@ -1256,7 +1256,7 @@ gap_worksheet_save_workspace (GapWorksheet  *ws,
 
     g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
 
-    filename = moo_app_tempnam (moo_app_get_instance ());
+    filename = moo_tempnam ();
     cmd = gap_cmd_save_workspace (filename);
 
     result = gap_worksheet_run_command (ws, GGAP_CMD_RUN_COMMAND, NULL, cmd, &output);

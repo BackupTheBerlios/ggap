@@ -36,6 +36,38 @@ moo_ws_block_finalize (GObject *object)
     G_OBJECT_CLASS (moo_ws_block_parent_class)->finalize (object);
 }
 
+#if 0
+static void
+pb (const char *text, MooWsBlock *block)
+{
+    if (block)
+    {
+        GtkTextIter s, e;
+        _moo_ws_block_get_start_iter (block, &s);
+        _moo_ws_block_get_end_iter (block, &e);
+        if (text)
+            g_print ("%s: start: %d, %d; end: %d, %d\n", text,
+                     gtk_text_iter_get_line (&s),
+                     gtk_text_iter_get_line_offset (&s),
+                     gtk_text_iter_get_line (&e),
+                     gtk_text_iter_get_line_offset (&e));
+        else
+            g_print ("start: %d, %d; end: %d, %d\n",
+                     gtk_text_iter_get_line (&s),
+                     gtk_text_iter_get_line_offset (&s),
+                     gtk_text_iter_get_line (&e),
+                     gtk_text_iter_get_line_offset (&e));
+    }
+    else
+    {
+        if (text)
+            g_print ("%s: null\n", text);
+        else
+            g_print ("null\n");
+    }
+}
+#endif
+
 static void
 moo_ws_block_add_real (MooWsBlock *block,
                        MooWsView  *view,
@@ -62,6 +94,13 @@ moo_ws_block_add_real (MooWsBlock *block,
 
     gtk_text_tag_table_add (gtk_text_buffer_get_tag_table (block->buffer), block->tag);
 
+#if 0
+    g_print ("--- before insert\n");
+    pb ("prev", after);
+    pb ("next", before);
+    g_print ("------------\n");
+#endif
+
     if (before)
     {
         gtk_text_buffer_get_iter_at_mark (block->buffer, &position, before->start);
@@ -73,11 +112,27 @@ moo_ws_block_add_real (MooWsBlock *block,
     else
     {
         gtk_text_buffer_get_end_iter (block->buffer, &position);
-        g_assert (gtk_text_iter_get_line_offset (&position) == 0);
-        _moo_ws_block_insert (block, &position, "\n", -1);
-        gtk_text_iter_backward_line (&position);
+
+        if (after)
+        {
+            _moo_ws_block_insert (after, &position, "\n", -1);
+#if 0
+            g_print ("after nl: %d, %d\n",
+                     gtk_text_iter_get_line (&position),
+                     gtk_text_iter_get_line_offset (&position));
+#endif
+            gtk_text_iter_backward_cursor_position (&position);
+            gtk_text_buffer_move_mark (block->buffer, after->end, &position);
+#if 0
+            g_print ("moved end mark to %d, %d\n",
+                     gtk_text_iter_get_line (&position),
+                     gtk_text_iter_get_line_offset (&position));
+#endif
+            gtk_text_iter_forward_line (&position);
+        }
     }
 
+    g_assert (gtk_text_iter_get_line_offset (&position) == 0);
     gtk_text_buffer_move_mark (block->buffer, block->start, &position);
     gtk_text_buffer_move_mark (block->buffer, block->end, &position);
 
@@ -87,6 +142,16 @@ moo_ws_block_add_real (MooWsBlock *block,
         after->next = block;
     block->prev = after;
     block->next = before;
+
+#if 0
+    g_print ("--- after insert\n");
+    if (after)
+        pb ("prev", after);
+    pb ("this", block);
+    if (before)
+        pb ("next", before);
+    g_print ("------------\n");
+#endif
 }
 
 static void
@@ -97,10 +162,24 @@ moo_ws_block_remove_real (MooWsBlock *block)
 
     g_return_if_fail (block->view != NULL);
 
+#if 0
+    g_print ("--- before remove\n");
+    if (block->prev)
+        pb ("prev", block->prev);
+    pb ("this", block);
+    if (block->next)
+        pb ("next", block->next);
+    g_print ("-------------\n");
+#endif
+
     gtk_text_buffer_get_iter_at_mark (block->buffer, &start_pos, block->start);
+    if (!block->next)
+        gtk_text_iter_backward_cursor_position (&start_pos);
+
     gtk_text_buffer_get_iter_at_mark (block->buffer, &end_pos, block->end);
     g_assert (gtk_text_iter_ends_line (&end_pos));
     gtk_text_iter_forward_line (&end_pos);
+
     gtk_text_buffer_delete (block->buffer, &start_pos, &end_pos);
 
     gtk_text_buffer_delete_mark (block->buffer, block->start);
@@ -108,6 +187,15 @@ moo_ws_block_remove_real (MooWsBlock *block)
 
     tag_table = gtk_text_buffer_get_tag_table (block->buffer);
     gtk_text_tag_table_remove (tag_table, block->tag);
+
+#if 0
+    g_print ("--- after remove\n");
+    if (block->prev)
+        pb ("prev", block->prev);
+    if (block->next)
+        pb ("next", block->next);
+    g_print ("-------------\n");
+#endif
 
     if (block->next)
         block->next->prev = block->prev;
@@ -211,39 +299,88 @@ _moo_ws_block_remove (MooWsBlock *block)
     MOO_WS_BLOCK_GET_CLASS(block)->remove (block);
 }
 
-void
-_moo_ws_block_insert_text (MooWsBlock  *block,
-                           GtkTextIter *where,
-                           const char  *text,
-                           gssize       len)
+gboolean
+_moo_ws_block_insert_interactive (MooWsBlock  *block,
+                                  GtkTextIter *where,
+                                  const char  *text,
+                                  gssize       len)
 {
-    g_return_if_fail (MOO_IS_WS_BLOCK (block));
-    g_return_if_fail (block->view != NULL);
+    gboolean retval;
 
-    if (!MOO_WS_BLOCK_GET_CLASS (block)->insert_text)
+    g_return_val_if_fail (MOO_IS_WS_BLOCK (block), FALSE);
+    g_return_val_if_fail (block->view != NULL, FALSE);
+
+    if (!MOO_WS_BLOCK_GET_CLASS (block)->insert_interactive)
     {
         _moo_ws_view_beep (block->view);
-        return;
+        return FALSE;
     }
 
-    MOO_WS_BLOCK_GET_CLASS (block)->insert_text (block, where, text, len);
+#if 0
+    g_print ("--- before insert_interactive\n");
+    pb (NULL, block);
+    g_print ("-------------\n");
+#endif
+
+    retval = MOO_WS_BLOCK_GET_CLASS (block)->insert_interactive (block, where, text, len);
+
+#if 0
+    g_print ("--- after insert_interactive\n");
+    pb (NULL, block);
+    g_print ("-------------\n");
+#endif
+
+    return retval;
 }
 
-void
-_moo_ws_block_delete_text (MooWsBlock  *block,
-                           GtkTextIter *start,
-                           GtkTextIter *end)
+gboolean
+_moo_ws_block_delete_interactive (MooWsBlock  *block,
+                                  GtkTextIter *start,
+                                  GtkTextIter *end)
 {
-    g_return_if_fail (MOO_IS_WS_BLOCK (block));
-    g_return_if_fail (block->view != NULL);
+    gboolean retval;
 
-    if (!MOO_WS_BLOCK_GET_CLASS (block)->delete_text)
+    g_return_val_if_fail (MOO_IS_WS_BLOCK (block), FALSE);
+    g_return_val_if_fail (block->view != NULL, FALSE);
+
+    if (!MOO_WS_BLOCK_GET_CLASS (block)->delete_interactive)
     {
         _moo_ws_view_beep (block->view);
-        return;
+        return FALSE;
     }
 
-    MOO_WS_BLOCK_GET_CLASS (block)->delete_text (block, start, end);
+#if 0
+    g_print ("--- before delete_interactive\n");
+    pb (NULL, block);
+    g_print ("-------------\n");
+#endif
+
+    retval = MOO_WS_BLOCK_GET_CLASS (block)->delete_interactive (block, start, end);
+
+#if 0
+    g_print ("--- before delete_interactive\n");
+    pb (NULL, block);
+    g_print ("-------------\n");
+#endif
+
+    return retval;
+}
+
+gboolean
+_moo_ws_block_check_move_cursor (MooWsBlock     *block,
+                                 GtkTextIter    *pos,
+                                 GtkMovementStep step,
+                                 int             count,
+                                 gboolean        extend_selection)
+{
+    g_return_val_if_fail (MOO_IS_WS_BLOCK (block), FALSE);
+    g_return_val_if_fail (block->view != NULL, FALSE);
+
+    if (!MOO_WS_BLOCK_GET_CLASS (block)->check_move_cursor)
+        return FALSE;
+    else
+        return MOO_WS_BLOCK_GET_CLASS (block)->
+            check_move_cursor (block, pos, step, count, extend_selection);
 }
 
 
@@ -289,6 +426,12 @@ _moo_ws_block_insert_with_tags (MooWsBlock  *block,
     }
 
     va_end (args);
+
+#if 0
+    g_print ("--- after insert_with_tags\n");
+    pb (NULL, block);
+    g_print ("-------------\n");
+#endif
 }
 
 
@@ -298,6 +441,16 @@ _moo_ws_iter_get_block (const GtkTextIter *pos)
     GSList *tags;
 
     g_return_val_if_fail (pos != NULL, NULL);
+
+    if (gtk_text_iter_is_end (pos))
+    {
+        MooWsView *view;
+
+        view = _moo_ws_iter_get_view (pos);
+        g_return_val_if_fail (view != NULL, NULL);
+
+        return _moo_ws_view_get_last_block (view);
+    }
 
     tags = gtk_text_iter_get_tags (pos);
 
@@ -315,6 +468,17 @@ _moo_ws_iter_get_block (const GtkTextIter *pos)
     }
 
     return NULL;
+}
+
+MooWsView *
+_moo_ws_iter_get_view (const GtkTextIter *iter)
+{
+    GtkTextBuffer *buffer;
+
+    buffer = gtk_text_iter_get_buffer (iter);
+    g_return_val_if_fail (buffer != NULL, NULL);
+
+    return _moo_ws_buffer_get_view (buffer);
 }
 
 void
@@ -357,7 +521,7 @@ _moo_ws_block_get_iter_at_line (MooWsBlock  *block,
         else
         {
             gtk_text_buffer_get_end_iter (block->buffer, iter);
-            gtk_text_iter_backward_line (iter);
+            gtk_text_iter_set_line_offset (iter, 0);
         }
 
         _moo_ws_block_get_start_iter (block, &start_iter);
@@ -366,22 +530,27 @@ _moo_ws_block_get_iter_at_line (MooWsBlock  *block,
     }
     else
     {
-        int i;
-
         _moo_ws_block_get_start_iter (block, iter);
 
-        for (i = 0; i < line; ++i)
+        if (line > 0)
         {
-            gtk_text_iter_forward_line (iter);
+            int first_line, last_line;
+            GtkTextIter end;
 
-            if (_moo_ws_iter_get_block (iter) != block)
+            _moo_ws_block_get_end_iter (block, &end);
+            first_line = gtk_text_iter_get_line (iter);
+            last_line = gtk_text_iter_get_line (&end);
+
+            if (line > last_line - first_line)
             {
                 g_critical ("%s: line number %d too big", G_STRFUNC, line);
-                gtk_text_iter_backward_line (iter);
-                break;
+                line = last_line - first_line;
             }
         }
 
-        *real_line = i;
+        if (line > 0)
+            gtk_text_iter_forward_lines (iter, line);
+
+        *real_line = line;
     }
 }

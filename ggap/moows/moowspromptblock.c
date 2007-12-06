@@ -111,22 +111,31 @@ moo_ws_prompt_block_remove (MooWsBlock *block)
 }
 
 static void
-moo_ws_prompt_block_insert_text (MooWsBlock  *block,
-                                 GtkTextIter *where,
-                                 const char  *text,
-                                 gssize       len)
+place_cursor_past_prompt (MooWsPromptBlock *pb,
+                          GtkTextIter      *where)
+{
+    int character;
+
+    moo_ws_prompt_block_get_iter_position (pb, where, NULL, &character);
+
+    if (character < 0)
+        gtk_text_iter_forward_chars (where, -character);
+}
+
+static gboolean
+moo_ws_prompt_block_insert_interactive (MooWsBlock  *block,
+                                        GtkTextIter *where,
+                                        const char  *text,
+                                        gssize       len)
 {
     char **lines, **p;
     MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
 
-    if (moo_ws_iter_is_prompt (where))
-    {
-        _moo_ws_view_beep (block->view);
-        return;
-    }
-
     if (!text || !text[0])
-        return;
+        return FALSE;
+
+    if (moo_ws_iter_is_prompt (where))
+        place_cursor_past_prompt (pb, where);
 
     lines = moo_strnsplit_lines (text, len, NULL);
 
@@ -145,13 +154,29 @@ moo_ws_prompt_block_insert_text (MooWsBlock  *block,
                                             pb->priv->text_tag, NULL);
     }
 
+#if 0
+    {
+        GtkTextIter s, e;
+        _moo_ws_block_get_start_iter (block, &s);
+        _moo_ws_block_get_end_iter (block, &e);
+        g_print ("... after moo_ws_prompt_block_insert_interactive\n");
+        g_print ("start: %d, %d; end: %d, %d\n",
+                 gtk_text_iter_get_line (&s),
+                 gtk_text_iter_get_line_offset (&s),
+                 gtk_text_iter_get_line (&e),
+                 gtk_text_iter_get_line_offset (&e));
+        g_print ("...\n");
+    }
+#endif
+
     g_strfreev (lines);
+    return TRUE;
 }
 
-static void
-moo_ws_prompt_block_delete_text (MooWsBlock  *block,
-                                 GtkTextIter *start,
-                                 GtkTextIter *end)
+static gboolean
+moo_ws_prompt_block_delete_interactive (MooWsBlock  *block,
+                                        GtkTextIter *start,
+                                        GtkTextIter *end)
 {
     int start_line, end_line;
     int start_char, end_char;
@@ -184,10 +209,87 @@ moo_ws_prompt_block_delete_text (MooWsBlock  *block,
     }
 
     if (gtk_text_iter_compare (start, end) >= 0)
+    {
         _moo_ws_view_beep (block->view);
-    else
-        gtk_text_buffer_delete (block->buffer, start, end);
+        return FALSE;
+    }
+
+    gtk_text_buffer_delete (block->buffer, start, end);
+
+#if 0
+    {
+        GtkTextIter s, e;
+        _moo_ws_block_get_start_iter (block, &s);
+        _moo_ws_block_get_end_iter (block, &e);
+        g_print ("... after moo_ws_prompt_block_delete_interactive\n");
+        g_print ("start: %d, %d; end: %d, %d\n",
+                 gtk_text_iter_get_line (&s),
+                 gtk_text_iter_get_line_offset (&s),
+                 gtk_text_iter_get_line (&e),
+                 gtk_text_iter_get_line_offset (&e));
+        g_print ("...\n");
+    }
+#endif
+
+    return TRUE;
 }
+
+
+static gboolean
+moo_ws_pompt_block_check_move_cursor (MooWsBlock     *block,
+                                      GtkTextIter    *pos,
+                                      GtkMovementStep step,
+                                      int             count,
+                                      gboolean        extend_selection)
+{
+    MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
+
+    if (!moo_ws_iter_is_prompt (pos))
+        return FALSE;
+
+    switch (step)
+    {
+        case GTK_MOVEMENT_LOGICAL_POSITIONS: /* move by forw/back graphemes */
+        case GTK_MOVEMENT_VISUAL_POSITIONS:  /* move by left/right graphemes */
+            if (!extend_selection)
+            {
+                place_cursor_past_prompt (pb, pos);
+                return TRUE;
+            }
+            /* fall through */
+        case GTK_MOVEMENT_WORDS:             /* move by forward/back words */
+            if (count > 0)
+            {
+                if (extend_selection && gtk_text_iter_get_line_offset (pos) == 0)
+                    return FALSE;
+                place_cursor_past_prompt (pb, pos);
+            }
+            else if (gtk_text_iter_backward_line (pos))
+            {
+                if (!gtk_text_iter_ends_line (pos))
+                    gtk_text_iter_forward_to_line_end (pos);
+            }
+            else
+            {
+                place_cursor_past_prompt (pb, pos);
+            }
+            return TRUE;
+
+        case GTK_MOVEMENT_DISPLAY_LINES:     /* move up/down lines (wrapped lines) */
+        case GTK_MOVEMENT_DISPLAY_LINE_ENDS: /* move up/down lines (wrapped lines) */
+        case GTK_MOVEMENT_PARAGRAPHS:        /* move up/down paragraphs (newline-ended lines) */
+        case GTK_MOVEMENT_PARAGRAPH_ENDS:    /* move to either end of a paragraph */
+        case GTK_MOVEMENT_PAGES:	     /* move by pages */
+        case GTK_MOVEMENT_BUFFER_ENDS:       /* move to ends of the buffer */
+            place_cursor_past_prompt (pb, pos);
+            return TRUE;
+
+        case GTK_MOVEMENT_HORIZONTAL_PAGES:  /* move horizontally by pages */
+        default:
+            return FALSE;
+    }
+}
+
 
 static void
 moo_ws_prompt_block_set_property (GObject      *object,
@@ -264,8 +366,9 @@ moo_ws_prompt_block_class_init (MooWsPromptBlockClass *klass)
 
     block_class->add = moo_ws_prompt_block_add;
     block_class->remove = moo_ws_prompt_block_remove;
-    block_class->insert_text = moo_ws_prompt_block_insert_text;
-    block_class->delete_text = moo_ws_prompt_block_delete_text;
+    block_class->insert_interactive = moo_ws_prompt_block_insert_interactive;
+    block_class->delete_interactive = moo_ws_prompt_block_delete_interactive;
+    block_class->check_move_cursor = moo_ws_pompt_block_check_move_cursor;
 
     g_object_class_install_property (object_class, PROP_PS,
         g_param_spec_string ("ps", "ps", "ps",
@@ -452,10 +555,10 @@ moo_ws_prompt_block_get_lines (MooWsPromptBlock *pb)
 
         g_ptr_array_add (array, gtk_text_iter_get_slice (&iter, &end));
 
-        gtk_text_iter_forward_line (&iter);
         first_line = FALSE;
 
-        if (_moo_ws_iter_get_block (&iter) != MOO_WS_BLOCK (pb))
+        if (!gtk_text_iter_forward_line (&iter) ||
+            _moo_ws_iter_get_block (&iter) != MOO_WS_BLOCK (pb))
             break;
     }
 
@@ -511,10 +614,20 @@ moo_ws_prompt_block_place_cursor (MooWsPromptBlock *pb,
         if (!gtk_text_iter_ends_line (&iter))
             gtk_text_iter_forward_to_line_end (&iter);
     }
-    else if (line == 0)
-        gtk_text_iter_set_line_offset (&iter, column + pb->priv->ps_len);
     else
-        gtk_text_iter_set_line_offset (&iter, column + pb->priv->ps2_len);
+    {
+        int add, line_chars;
+
+        if (line == 0)
+            add = pb->priv->ps_len;
+        else
+            add = pb->priv->ps2_len;
+
+        line_chars = gtk_text_iter_get_chars_in_line (&iter);
+        column = MIN (column, line_chars - add);
+
+        gtk_text_iter_set_line_offset (&iter, column + add);
+    }
 
     gtk_text_buffer_place_cursor (block->buffer, &iter);
 }

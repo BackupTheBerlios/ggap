@@ -18,10 +18,12 @@
 #include "ggap-ui.h"
 #include "ggap-credits.h"
 #include "ggap-i18n.h"
+#include "ggapfile.h"
 #include "mooutils/mooutils-fs.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/moostock.h"
 #include <gtk/gtk.h>
+#include <glib/gstdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -46,11 +48,12 @@ e  editor       "Do not start GAP automatically"
 E  pure-editor  "Do not enable any GAP stuff"
 n  new-app      "Run new instance of application"
    fancy        "Fancy mode"
+x  extract      "=FILE Unpack saved worksheet file"
 l  log          "[=FILE] Show debug output or write it to FILE" optarg
    version      "Display version information and exit"          return
 h  help         "Display this help text and exit"               return
 %%
-#line 54 "../../../ggap/ggap.opag"
+#line 57 "../../../ggap/ggap.opag"
 /* end of generated code
  ********************************************************/
 
@@ -65,6 +68,7 @@ static void usage (void)
     g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
     g_print ("%s", STR_HELP_FANCY);
+    g_print ("%s", STR_HELP_EXTRACT);
     g_print ("%s", STR_HELP_LOG);
     g_print ("%s", STR_HELP_VERSION);
     g_print ("%s", STR_HELP_HELP);
@@ -101,6 +105,55 @@ push_appdir_to_path (void)
 #endif
 }
 
+static void
+extract_file (const char *filename)
+{
+    GError *error = NULL;
+    char *text = NULL;
+    gsize text_len = 0;
+    char *workspace = NULL;
+
+    if (g_file_test ("worksheet.xml", G_FILE_TEST_EXISTS))
+    {
+        g_printerr ("File worksheet.xml already exists\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_file_test ("workspace", G_FILE_TEST_EXISTS))
+    {
+        g_printerr ("File workspace already exists\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (!ggap_file_unpack (filename, &text, &text_len, &workspace, &error))
+    {
+        if (error)
+            g_printerr ("%s\n", error->message);
+        else
+            g_printerr ("Failed\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_rename (workspace, "workspace") != 0)
+    {
+        perror ("rename");
+        exit (EXIT_FAILURE);
+    }
+
+    if (!g_file_set_contents ("worksheet.xml", text, text_len, &error))
+    {
+        g_printerr ("%s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+}
+
+G_GNUC_NORETURN static void
+extract_files (char **files)
+{
+    while (*files)
+        extract_file (*files++);
+    exit (EXIT_SUCCESS);
+}
 
 int main (int argc, char *argv[])
 {
@@ -128,18 +181,18 @@ int main (int argc, char *argv[])
     if (opt_remain < 0)
     {
         usage ();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if (_ggap_opt_help)
     {
         usage ();
-        return 0;
+        return EXIT_SUCCESS;
     }
     else if (_ggap_opt_version)
     {
         version ();
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (_ggap_opt_log)
@@ -149,6 +202,9 @@ int main (int argc, char *argv[])
         else
             moo_set_log_func_window (TRUE);
     }
+
+    if (_ggap_opt_extract)
+        extract_files (argv + opt_remain);
 
     if (_ggap_opt_new_app)
         new_instance = TRUE;
@@ -183,7 +239,7 @@ int main (int argc, char *argv[])
         gdk_notify_startup_complete ();
         g_strfreev (files);
         g_object_unref (app);
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (files && *files)

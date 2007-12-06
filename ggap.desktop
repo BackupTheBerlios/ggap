@@ -6,6 +6,6 @@ Exec=ggap %F
 Terminal=false
 Type=Application
 StartupNotify=true
-MimeType=text/*;
+MimeType=application/x-ggap;
 Icon=ggap.png
 Categories=Math;Science;

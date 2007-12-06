@@ -65,31 +65,43 @@ moo_ws_text_block_add (MooWsBlock *block,
     }
 }
 
-static void
-moo_ws_text_block_insert_text (MooWsBlock  *block,
-                               GtkTextIter *where,
-                               const char  *text,
-                               gssize       len)
+static gboolean
+moo_ws_text_block_insert_interactive (MooWsBlock  *block,
+                                      GtkTextIter *where,
+                                      const char  *text,
+                                      gssize       len)
 {
     MooWsTextBlock *tb = MOO_WS_TEXT_BLOCK (block);
 
     if (tb->priv->editable)
+    {
         _moo_ws_block_insert (block, where, text, len);
+        return TRUE;
+    }
     else
+    {
         _moo_ws_view_beep (block->view);
+        return FALSE;
+    }
 }
 
-static void
-moo_ws_text_block_delete_text (MooWsBlock  *block,
-                               GtkTextIter *start,
-                               GtkTextIter *end)
+static gboolean
+moo_ws_text_block_delete_interactive (MooWsBlock  *block,
+                                      GtkTextIter *start,
+                                      GtkTextIter *end)
 {
     MooWsTextBlock *tb = MOO_WS_TEXT_BLOCK (block);
 
     if (tb->priv->editable)
+    {
         gtk_text_buffer_delete (block->buffer, start, end);
+        return TRUE;
+    }
     else
+    {
         _moo_ws_view_beep (block->view);
+        return FALSE;
+    }
 }
 
 static void
@@ -101,8 +113,8 @@ moo_ws_text_block_class_init (MooWsTextBlockClass *klass)
     object_class->dispose = moo_ws_text_block_dispose;
 
     block_class->add = moo_ws_text_block_add;
-    block_class->insert_text = moo_ws_text_block_insert_text;
-    block_class->delete_text = moo_ws_text_block_delete_text;
+    block_class->insert_interactive = moo_ws_text_block_insert_interactive;
+    block_class->delete_interactive = moo_ws_text_block_delete_interactive;
 
     g_type_class_add_private (klass, sizeof (MooWsTextBlockPrivate));
 }

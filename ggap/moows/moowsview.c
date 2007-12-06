@@ -43,6 +43,10 @@ static void     moo_ws_view_check               (MooWsView      *view);
 
 static gboolean moo_ws_view_key_press           (GtkWidget      *widget,
                                                  GdkEventKey    *event);
+static void     moo_ws_view_move_cursor         (GtkTextView    *text_view,
+                                                 GtkMovementStep step,
+                                                 int             count,
+                                                 gboolean        extend_selection);
 static void     moo_ws_buffer_insert_text       (GtkTextBuffer  *buffer,
                                                  GtkTextIter    *where,
                                                  char           *text,
@@ -84,6 +88,7 @@ moo_ws_view_constructor (GType                  type,
                       G_CALLBACK (moo_ws_buffer_insert_text), view);
     g_signal_connect (view->priv->buffer, "delete-range",
                       G_CALLBACK (moo_ws_buffer_delete_range), view);
+    g_object_set_data (G_OBJECT (view->priv->buffer), "moo-ws-view", view);
 
     return object;
 }
@@ -110,11 +115,13 @@ moo_ws_view_class_init (MooWsViewClass *klass)
     GtkTextBufferClass *buf_class;
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+    GtkTextViewClass *textview_class = GTK_TEXT_VIEW_CLASS (klass);
 
     object_class->constructor = moo_ws_view_constructor;
     object_class->dispose = moo_ws_view_dispose;
 
     widget_class->key_press_event = moo_ws_view_key_press;
+    textview_class->move_cursor = moo_ws_view_move_cursor;
 
     buf_class = g_type_class_ref (GTK_TYPE_TEXT_BUFFER);
     buffer_signals[BUFFER_INSERT_TEXT] =
@@ -124,6 +131,14 @@ moo_ws_view_class_init (MooWsViewClass *klass)
     g_type_class_unref (buf_class);
 
     g_type_class_add_private (klass, sizeof (MooWsViewPrivate));
+}
+
+
+MooWsView *
+_moo_ws_buffer_get_view (GtkTextBuffer *buffer)
+{
+    g_return_val_if_fail (GTK_IS_TEXT_BUFFER (buffer), NULL);
+    return g_object_get_data (G_OBJECT (buffer), "moo-ws-view");
 }
 
 
@@ -225,7 +240,11 @@ void
 _moo_ws_view_beep (MooWsView *view)
 {
     g_return_if_fail (MOO_IS_WS_VIEW (view));
+#if GTK_CHECK_VERSION(2,12,0)
+    gdk_window_beep (GTK_WIDGET (view)->window);
+#else
     gdk_display_beep (gtk_widget_get_display (GTK_WIDGET (view)));
+#endif
 }
 
 
@@ -252,6 +271,34 @@ moo_ws_view_key_press (GtkWidget   *widget,
     view->priv->in_key_press = FALSE;
 
     return retval;
+}
+
+static void
+moo_ws_view_move_cursor (GtkTextView    *text_view,
+                         GtkMovementStep step,
+                         int             count,
+                         gboolean        extend_selection)
+{
+    MooWsView *ws = MOO_WS_VIEW (text_view);
+    GtkTextIter iter;
+    MooWsBlock *block;
+
+    GTK_TEXT_VIEW_CLASS (moo_ws_view_parent_class)->
+        move_cursor (text_view, step, count, extend_selection);
+
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
+
+    block = _moo_ws_iter_get_block (&iter);
+    if (block && _moo_ws_block_check_move_cursor (block, &iter, step,
+                                                  count, extend_selection))
+    {
+        if (extend_selection)
+            gtk_text_buffer_move_mark_by_name (gtk_text_view_get_buffer (text_view),
+                                               "insert", &iter);
+        else
+            gtk_text_buffer_place_cursor (gtk_text_view_get_buffer (text_view),
+                                          &iter);
+    }
 }
 
 void
@@ -284,6 +331,7 @@ moo_ws_buffer_insert_text (GtkTextBuffer *buffer,
                            MooWsView     *view)
 {
     MooWsBlock *block;
+    gboolean inserted;
 
     if (!view->priv->modifying_text && !view->priv->in_key_press)
     {
@@ -310,9 +358,19 @@ moo_ws_buffer_insert_text (GtkTextBuffer *buffer,
     if (block != view->priv->last_edited)
         clear_undo (view);
 
-    _moo_ws_view_start_edit (block->view);
-    _moo_ws_block_insert_text (block, where, text, len);
-    _moo_ws_view_end_edit (block->view);
+    _moo_ws_view_start_edit (view);
+
+    inserted = _moo_ws_block_insert_interactive (block, where, text, len);
+
+    if (view->priv->in_key_press && inserted)
+    {
+        GtkTextIter cursor;
+        moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &cursor);
+        if (!gtk_text_iter_equal (where, &cursor))
+            gtk_text_buffer_place_cursor (buffer, where);
+    }
+
+    _moo_ws_view_end_edit (view);
 
     view->priv->last_edited = block;
 
@@ -401,7 +459,7 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
                 clear_undo (view);
 
             _moo_ws_view_start_edit (view);
-            _moo_ws_block_delete_text (start_block, start, end);
+            _moo_ws_block_delete_interactive (start_block, start, end);
             gtk_text_buffer_move_mark (buffer, start_mark, start);
             _moo_ws_view_end_edit (view);
 
@@ -425,7 +483,7 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
     {
         _moo_ws_view_start_edit (view);
         _moo_ws_block_get_end_iter (start_block, end);
-        _moo_ws_block_delete_text (start_block, start, end);
+        _moo_ws_block_delete_interactive (start_block, start, end);
         gtk_text_buffer_move_mark (buffer, start_mark, start);
         _moo_ws_view_end_edit (view);
     }
@@ -446,7 +504,7 @@ moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
         _moo_ws_block_get_start_iter (end_block, start);
         gtk_text_buffer_get_iter_at_mark (buffer, end, end_mark);
         _moo_ws_view_start_edit (view);
-        _moo_ws_block_delete_text (end_block, start, end);
+        _moo_ws_block_delete_interactive (end_block, start, end);
         _moo_ws_view_end_edit (view);
     }
 

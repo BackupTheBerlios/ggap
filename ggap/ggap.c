@@ -19,10 +19,12 @@
 #include "ggap-ui.h"
 #include "ggap-credits.h"
 #include "ggap-i18n.h"
+#include "ggapfile.h"
 #include "mooutils/mooutils-fs.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/moostock.h"
 #include <gtk/gtk.h>
+#include <glib/gstdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -80,6 +82,9 @@ int _ggap_parse_options (const char *const program_name,
 #define STR_HELP_FANCY "\
       --fancy              Fancy mode\n"
 
+#define STR_HELP_EXTRACT "\
+  -x, --extract            =FILE Unpack saved worksheet file\n"
+
 #define STR_HELP_LOG "\
   -l, --log[=FILE]         Show debug output or write it to FILE\n"
 
@@ -95,6 +100,7 @@ int _ggap_parse_options (const char *const program_name,
   -E, --pure-editor        Do not enable any GAP stuff\n\
   -n, --new-app            Run new instance of application\n\
       --fancy              Fancy mode\n\
+  -x, --extract            =FILE Unpack saved worksheet file\n\
   -l, --log[=FILE]         Show debug output or write it to FILE\n\
       --version            Display version information and exit\n\
   -h, --help               Display this help text and exit\n"
@@ -113,6 +119,9 @@ char _ggap_opt_new_app;
 
 /* Set to 1 if option --fancy has been specified.  */
 char _ggap_opt_fancy;
+
+/* Set to 1 if option --extract (-x) has been specified.  */
+char _ggap_opt_extract;
 
 /* Set to 1 if option --log (-l) has been specified.  */
 char _ggap_opt_log;
@@ -138,6 +147,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   static const char *const optstr__pure_editor = "pure-editor";
   static const char *const optstr__new_app = "new-app";
   static const char *const optstr__fancy = "fancy";
+  static const char *const optstr__extract = "extract";
   static const char *const optstr__version = "version";
   static const char *const optstr__help = "help";
   int i = 0;
@@ -146,6 +156,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   _ggap_opt_pure_editor = 0;
   _ggap_opt_new_app = 0;
   _ggap_opt_fancy = 0;
+  _ggap_opt_extract = 0;
   _ggap_opt_log = 0;
   _ggap_opt_version = 0;
   _ggap_opt_help = 0;
@@ -176,12 +187,26 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
        case 'e':
         if (strncmp (option + 1, optstr__editor + 1, option_len - 1) == 0)
         {
+          if (option_len <= 1)
+            goto error_long_opt_ambiguous;
           if (argument != 0)
           {
             option = optstr__editor;
             goto error_unexpec_arg_long;
           }
           _ggap_opt_editor = 1;
+          break;
+        }
+        if (strncmp (option + 1, optstr__extract + 1, option_len - 1) == 0)
+        {
+          if (option_len <= 1)
+            goto error_long_opt_ambiguous;
+          if (argument != 0)
+          {
+            option = optstr__extract;
+            goto error_unexpec_arg_long;
+          }
+          _ggap_opt_extract = 1;
           break;
         }
         goto error_unknown_long_opt;
@@ -272,6 +297,9 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
        error_unknown_long_opt:
         fprintf (stderr, STR_ERR_UNKNOWN_LONG_OPT, program_name, option);
         return -1;
+       error_long_opt_ambiguous:
+        fprintf (stderr, STR_ERR_LONG_OPT_AMBIGUOUS, program_name, option);
+        return -1;
        error_missing_arg_long:
         fprintf (stderr, STR_ERR_MISSING_ARG_LONG, program_name, option);
         return -1;
@@ -317,6 +345,9 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
          case 'n':
           _ggap_opt_new_app = 1;
           break;
+         case 'x':
+          _ggap_opt_extract = 1;
+          break;
          default:
           fprintf (stderr, STR_ERR_UNKNOWN_SHORT_OPT, program_name, *option);
           return -1;
@@ -328,7 +359,7 @@ int _ggap_parse_options (const char *const program_name, const int argc, char **
   }
   return i;
 }
-#line 54 "../../../ggap/ggap.opag"
+#line 57 "../../../ggap/ggap.opag"
 /* end of generated code
  ********************************************************/
 
@@ -343,6 +374,7 @@ static void usage (void)
     g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
     g_print ("%s", STR_HELP_FANCY);
+    g_print ("%s", STR_HELP_EXTRACT);
     g_print ("%s", STR_HELP_LOG);
     g_print ("%s", STR_HELP_VERSION);
     g_print ("%s", STR_HELP_HELP);
@@ -379,6 +411,55 @@ push_appdir_to_path (void)
 #endif
 }
 
+static void
+extract_file (const char *filename)
+{
+    GError *error = NULL;
+    char *text = NULL;
+    gsize text_len = 0;
+    char *workspace = NULL;
+
+    if (g_file_test ("worksheet.xml", G_FILE_TEST_EXISTS))
+    {
+        g_printerr ("File worksheet.xml already exists\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_file_test ("workspace", G_FILE_TEST_EXISTS))
+    {
+        g_printerr ("File workspace already exists\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (!ggap_file_unpack (filename, &text, &text_len, &workspace, &error))
+    {
+        if (error)
+            g_printerr ("%s\n", error->message);
+        else
+            g_printerr ("Failed\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_rename (workspace, "workspace") != 0)
+    {
+        perror ("rename");
+        exit (EXIT_FAILURE);
+    }
+
+    if (!g_file_set_contents ("worksheet.xml", text, text_len, &error))
+    {
+        g_printerr ("%s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+}
+
+G_GNUC_NORETURN static void
+extract_files (char **files)
+{
+    while (*files)
+        extract_file (*files++);
+    exit (EXIT_SUCCESS);
+}
 
 int main (int argc, char *argv[])
 {
@@ -406,18 +487,18 @@ int main (int argc, char *argv[])
     if (opt_remain < 0)
     {
         usage ();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if (_ggap_opt_help)
     {
         usage ();
-        return 0;
+        return EXIT_SUCCESS;
     }
     else if (_ggap_opt_version)
     {
         version ();
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (_ggap_opt_log)
@@ -427,6 +508,9 @@ int main (int argc, char *argv[])
         else
             moo_set_log_func_window (TRUE);
     }
+
+    if (_ggap_opt_extract)
+        extract_files (argv + opt_remain);
 
     if (_ggap_opt_new_app)
         new_instance = TRUE;
@@ -461,7 +545,7 @@ int main (int argc, char *argv[])
         gdk_notify_startup_complete ();
         g_strfreev (files);
         g_object_unref (app);
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (files && *files)

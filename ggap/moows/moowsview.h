@@ -46,20 +46,22 @@ struct _MooWsViewClass
 
 GType       moo_ws_view_get_type            (void) G_GNUC_CONST;
 
-void        moo_ws_view_insert_block        (MooWsView  *view,
-                                             MooWsBlock *block,
-                                             MooWsBlock *after);
-void        moo_ws_view_append_block        (MooWsView  *view,
-                                             MooWsBlock *block);
-void        moo_ws_view_delete_block        (MooWsView  *view,
-                                             MooWsBlock *block);
+void        moo_ws_view_insert_block        (MooWsView      *view,
+                                             MooWsBlock     *block,
+                                             MooWsBlock     *after);
+void        moo_ws_view_append_block        (MooWsView      *view,
+                                             MooWsBlock     *block);
+void        moo_ws_view_delete_block        (MooWsView      *view,
+                                             MooWsBlock     *block);
 
-MooWsBlock *_moo_ws_view_get_first_block    (MooWsView  *view);
-MooWsBlock *_moo_ws_view_get_last_block     (MooWsView  *view);
+MooWsBlock *_moo_ws_view_get_first_block    (MooWsView      *view);
+MooWsBlock *_moo_ws_view_get_last_block     (MooWsView      *view);
 
-void        _moo_ws_view_beep               (MooWsView  *view);
-void        _moo_ws_view_start_edit         (MooWsView  *view);
-void        _moo_ws_view_end_edit           (MooWsView  *view);
+void        _moo_ws_view_beep               (MooWsView      *view);
+void        _moo_ws_view_start_edit         (MooWsView      *view);
+void        _moo_ws_view_end_edit           (MooWsView      *view);
+
+MooWsView  *_moo_ws_buffer_get_view         (GtkTextBuffer  *buffer);
 
 
 G_END_DECLS

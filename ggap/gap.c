@@ -77,7 +77,6 @@ gap_init_file (const char *workspace,
                gboolean    fancy)
 {
     GString *contents;
-    MooApp *app;
     GError *error = NULL;
 
     static char *filename;
@@ -96,10 +95,7 @@ gap_init_file (const char *workspace,
 
     g_return_val_if_fail (workspace || init_pkg, NULL);
 
-    app = moo_app_get_instance ();
-    g_return_val_if_fail (GAP_IS_APP (app), NULL);
-
-    filename = moo_app_tempnam (app);
+    filename = moo_tempnam ();
     g_return_val_if_fail (filename != NULL, NULL);
 
     contents = g_string_new (NULL);

@@ -107,7 +107,7 @@ send_copy (GapEditWindow *window,
     app = moo_app_get_instance ();
     editor = moo_edit_window_get_editor (MOO_EDIT_WINDOW (window));
 
-    filename = moo_app_tempnam (app);
+    filename = moo_tempnam ();
     g_return_if_fail (filename != NULL);
 
     if (moo_editor_save_copy (editor, doc, filename, NULL, &error))
