@@ -22,6 +22,7 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 MOO_AC_PROGS
 
+MOO_INTLTOOL_MERGE='$(top_srcdir)/moo/moo/mooutils/moo-intltool-merge'
 MOO_AC_I18N(ggap)
 
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
