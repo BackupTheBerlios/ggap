@@ -17,8 +17,8 @@
 #include "gapparser.h"
 #include "ggapfile.h"
 #include "gap.h"
+#include "gapwscompletion.h"
 #include "mooterm/mootermpt.h"
-#include "mooedit/moocompletionsimple.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mootype-macros.h"
 #include "moows/moowsblock.h"
@@ -1361,50 +1361,6 @@ gap_worksheet_save (GapWorksheet   *ws,
 /**************************************************************************/
 /* Completion
  */
-
-typedef MooCompletionSimple GapWsCompletion;
-typedef MooCompletionSimpleClass GapWsCompletionClass;
-
-#define GAP_TYPE_WS_COMPLETION             (gap_ws_completion_get_type ())
-#define GAP_WS_COMPLETION(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GAP_TYPE_WS_COMPLETION, GapWsCompletion))
-#define GAP_WS_COMPLETION_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GAP_TYPE_WS_COMPLETION, GapWsCompletionClass))
-#define GAP_IS_WS_COMPLETION(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GAP_TYPE_WS_COMPLETION))
-#define GAP_IS_WS_COMPLETION_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GAP_TYPE_WS_COMPLETION))
-#define GAP_WS_COMPLETION_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_WS_COMPLETION, GapWsCompletionClass))
-
-MOO_DEFINE_TYPE_STATIC (GapWsCompletion, gap_ws_completion, MOO_TYPE_COMPLETION_SIMPLE)
-
-
-static void
-gap_ws_completion_replace_text (G_GNUC_UNUSED MooTextCompletion *cmpl,
-                                GtkTextIter       *start,
-                                GtkTextIter       *end,
-                                const char        *text)
-{
-    MooWsBlock *block;
-
-    block = _moo_ws_iter_get_block (start);
-    g_return_if_fail (block != NULL);
-    g_return_if_fail (block == _moo_ws_iter_get_block (end));
-
-    if (!gtk_text_iter_equal (start, end))
-        if (!_moo_ws_block_delete_interactive (block, start, end))
-            return;
-
-    if (text && text[0])
-        _moo_ws_block_insert_interactive (block, start, text, -1);
-}
-
-static void
-gap_ws_completion_class_init (GapWsCompletionClass *klass)
-{
-    MOO_TEXT_COMPLETION_CLASS(klass)->replace_text = gap_ws_completion_replace_text;
-}
-
-static void
-gap_ws_completion_init (G_GNUC_UNUSED GapWsCompletion *cmpl)
-{
-}
 
 static void
 gap_worksheet_free_completion (GapWorksheet *ws)

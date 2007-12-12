@@ -11,7 +11,7 @@
   <debug>
    <build_dir>build/debug</build_dir>
    <configure>
-    <args>--enable-debug=full --enable-all-warnings --disable-help</args>
+    <args>--enable-debug=full --enable-all-warnings --disable-help --disable-nls</args>
     <vars>
      <var name="CFLAGS">-g</var>
      <var name="OBJCFLAGS">-g</var>
@@ -43,7 +43,7 @@
  </configurations>
  <run>
   <args>--new-app --fancy</args>
-  <exe>ggap/ggap</exe>
+  <exe>ggap/mooui/testui</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
   </vars>

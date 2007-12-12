@@ -15,7 +15,6 @@
 #include "gapapp.h"
 #include "gap.h"
 #include "gapoutput.h"
-#include "mooutils/moomarshals.h"
 #include "mooutils/mooutils-misc.h"
 #include <gtk/gtkwidget.h>
 
@@ -65,7 +64,7 @@ gap_view_base_init (G_GNUC_UNUSED GapViewIface *iface)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (GapViewIface, gap_exited),
                       NULL, NULL,
-                      _moo_marshal_VOID__VOID,
+                      g_cclosure_marshal_VOID__VOID,
                       G_TYPE_NONE, 0);
 
         been_here = TRUE;

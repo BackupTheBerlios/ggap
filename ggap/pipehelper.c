@@ -50,7 +50,7 @@ writelog (const char *format,
         remove ("c:\\log.txt");
     }
 
-    file = fopen ("c:\\log.txt", "a");
+    file = fopen ("c:\\log.txt", "ab");
 
     if (!file)
         return;

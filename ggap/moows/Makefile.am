@@ -1,7 +1,7 @@
 noinst_PROGRAMS = testws
 noinst_LTLIBRARIES = libmoows.la
 
-testws_LDADD = libmoows.la $(top_builddir)/moo/moo/libmoo.la $(MOO_OBJC_LIBS)
+testws_LDADD = libmoows.la $(MOO_LIBS) $(MOO_OBJC_LIBS)
 
 testws_SOURCES =		\
 	testws.c
@@ -26,9 +26,8 @@ AM_CFLAGS =				\
     -I$(top_builddir)			\
     -I$(top_builddir)/ggap		\
     -I$(top_srcdir)/ggap		\
-    -I$(top_builddir)/moo/moo		\
-    -I$(top_srcdir)/moo/moo		\
     $(regex_cflags)			\
+    $(MOO_CFLAGS)			\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
     -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"

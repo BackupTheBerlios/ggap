@@ -359,7 +359,7 @@ err_info_new (const char         *file,
 {
     ErrInfo *err_info;
     g_return_val_if_fail (file != NULL && info != NULL && line >= 0, NULL);
-    err_info = _moo_new (ErrInfo);
+    err_info = moo_new (ErrInfo);
     err_info->file = g_strdup (file);
     err_info->info = g_strdup (info);
     err_info->line = line;
@@ -374,7 +374,7 @@ err_info_free (ErrInfo *err)
     {
         g_free (err->file);
         g_free (err->info);
-        _moo_free (ErrInfo, err);
+        moo_free (ErrInfo, err);
     }
 }
 

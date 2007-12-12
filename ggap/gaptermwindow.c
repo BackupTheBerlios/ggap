@@ -11,13 +11,16 @@
  *   See COPYING file that comes with this distribution.
  */
 
+#include "config.h"
 #include "ggap-i18n.h"
 #include "gapapp.h"
 #include "gap.h"
 #include "gaptermwindow.h"
 #include "gapterm.h"
 #include "mooutils/moofiledialog.h"
+#ifdef USE_MOO_SUBDIR
 #include "mooutils/moocompat.h"
+#endif
 #include "mooutils/mooutils-misc.h"
 #include "mooterm/mooterm-prefs.h"
 #include "mooapp/mooapp.h"

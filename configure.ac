@@ -11,10 +11,7 @@ AC_CONFIG_HEADERS(config.h)
 
 MOO_DEFINE_VERSIONS(ggap,[ggap_version])
 
-export MOO_BUILD_MEDIT=false
 export MOO_PACKAGE_NAME=ggap
-export MOO_USE_PIPE_INPUT=true
-export MOO_BUILD_DOCS=no
 
 AC_PROG_CC
 AC_DISABLE_STATIC
@@ -95,8 +92,23 @@ fi
 AM_CONDITIONAL(GGAP_BUILD_DOCS, test "x$GGAP_BUILD_DOCS" = xyes)
 
 
-export MOO_USE_PIPE_INPUT=yes
-AC_CONFIG_SUBDIRS(moo)
+m4_if([yes],[no],[
+  PKG_CHECK_MODULES(MOO, moo)
+  USE_MOO_SUBDIR=false
+],[
+  export MOO_USE_PIPE_INPUT=yes
+  export MOO_BUILD_MEDIT=false
+  export MOO_BUILD_DOCS=no
+  AC_CONFIG_SUBDIRS(moo)
+  MOO_CFLAGS='-I$(top_builddir)/moo/moo -I$(top_srcdir)/moo/moo'
+  MOO_LIBS='$(top_builddir)/moo/moo/libmoo.la'
+  USE_MOO_SUBDIR=true
+  AC_DEFINE(USE_MOO_SUBDIR,[1],[USE_MOO_SUBDIR])
+])
+AC_SUBST(MOO_CFLAGS)
+AC_SUBST(MOO_LIBS)
+AM_CONDITIONAL(USE_MOO_SUBDIR,[$USE_MOO_SUBDIR])
+
 
 AC_CONFIG_FILES([
 Makefile
@@ -108,6 +120,7 @@ ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
 ggap/moows/Makefile
+ggap/mooui/Makefile
 po/Makefile.in
 wininstaller/ggap.iss
 ])

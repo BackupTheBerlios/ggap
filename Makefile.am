@@ -1,7 +1,12 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip foreign nostdinc
 
-DIST_SUBDIRS = moo ggap po
-SUBDIRS = moo .
+moo =
+if USE_MOO_SUBDIR
+moo += moo
+endif USE_MOO_SUBDIR
+
+DIST_SUBDIRS = $(moo) ggap po
+SUBDIRS = $(moo) .
 
 if !MOO_OS_CYGWIN
 SUBDIRS += ggap

@@ -23,7 +23,7 @@
 
 #define GGAP_FILE_VERSION       "0001"
 #define GGAP_FILE_VERSION_LEN   4
-#define GGAP_FILE_MAGIC         "ggap\x12\x34\x56\x78"
+#define GGAP_FILE_MAGIC         "ggap\0\1\2\3"
 #define GGAP_FILE_MAGIC_LEN     8
 #define GGAP_FILE_HEADER        GGAP_FILE_MAGIC GGAP_FILE_VERSION
 #define GGAP_FILE_HEADER_LEN    (GGAP_FILE_MAGIC_LEN + GGAP_FILE_VERSION_LEN)
@@ -586,7 +586,7 @@ gap_file_read_f (gzFile   file,
     if (!(filename = moo_tempnam ()))
         goto error;
 
-    if (!(dest = g_fopen (filename, "w")))
+    if (!(dest = g_fopen (filename, "wb")))
         goto error;
 
     if (gzread (file, &length, 4) != 4)

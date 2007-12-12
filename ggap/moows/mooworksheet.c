@@ -16,7 +16,6 @@
 #include "moowstextblock.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-gobject.h"
-#include "mooutils/moomarshals.h"
 #include "mooutils/moomarkup.h"
 #include <gdk/gdkkeysyms.h>
 #include <glib/gprintf.h>
@@ -191,7 +190,7 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MooWorksheetClass, process_input),
                       NULL, NULL,
-                      _moo_marshal_VOID__BOXED,
+                      g_cclosure_marshal_VOID__BOXED,
                       G_TYPE_NONE, 1,
                       G_TYPE_STRV | G_SIGNAL_TYPE_STATIC_SCOPE);
 
