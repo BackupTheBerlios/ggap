@@ -115,28 +115,12 @@ md_document_class_init (MdDocumentIface *iface)
     md_document_data_quark = g_quark_from_static_string ("md-document-data");
 
     g_object_interface_install_property (iface,
-        g_param_spec_flags ("doc-status", "doc-status", "doc-status",
+        g_param_spec_flags ("md-doc-status", "md-doc-status", "md-doc-status",
                             MD_TYPE_DOCUMENT_STATUS, 0, G_PARAM_READABLE));
 
     g_object_interface_install_property (iface,
-        g_param_spec_boxed ("doc-file-info", "doc-file-info", "doc-file-info",
+        g_param_spec_boxed ("md-doc-file-info", "md-doc-file-info", "md-doc-file-info",
                             MD_TYPE_FILE_INFO, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-
-//     g_signal_new ("can-undo-changed",
-//                   MD_TYPE_DOCUMENT,
-//                   G_SIGNAL_RUN_LAST,
-//                   0,
-//                   NULL, NULL,
-//                   _moo_marshal_VOID__VOID,
-//                   G_TYPE_NONE, 0);
-
-//     g_object_interface_install_property (iface,
-//         g_param_spec_boolean ("doc-can-undo", "doc-can-undo", "doc-can-undo",
-//                               FALSE, G_PARAM_READABLE));
-//
-//     g_object_interface_install_property (iface,
-//         g_param_spec_boolean ("doc-can-redo", "doc-can-redo", "doc-can-redo",
-//                               FALSE, G_PARAM_READABLE));
 }
 
 GType
@@ -229,8 +213,19 @@ md_document_set_modified (MdDocument *doc,
         else
             data->status &= ~MD_DOCUMENT_MODIFIED;
 
-        g_object_notify (G_OBJECT (doc), "doc-status");
+        g_object_notify (G_OBJECT (doc), "md-doc-status");
     }
+}
+
+gboolean
+md_document_get_modified (MdDocument *doc)
+{
+    MdDocumentData *data;
+
+    g_return_val_if_fail (MD_IS_DOCUMENT (doc), FALSE);
+
+    data = md_document_get_data (doc);
+    return (data->status & MD_DOCUMENT_MODIFIED) != 0;
 }
 
 void
@@ -246,7 +241,7 @@ md_document_set_status (MdDocument       *doc,
     if (data->status != status)
     {
         data->status = status;
-        g_object_notify (G_OBJECT (doc), "doc-status");
+        g_object_notify (G_OBJECT (doc), "md-doc-status");
     }
 }
 
@@ -332,7 +327,6 @@ md_document_set_file_info (MdDocument *doc,
     MdFileInfo *tmp;
 
     g_return_if_fail (MD_IS_DOCUMENT (doc));
-    g_return_if_fail (file_info != NULL);
 
     data = md_document_get_data (doc);
     g_return_if_fail (data != NULL);
@@ -344,18 +338,18 @@ md_document_set_file_info (MdDocument *doc,
         _md_manager_remove_untitled (data->mgr, doc);
 
     tmp = data->file_info;
-    data->file_info = md_file_info_copy (file_info);
+    data->file_info = file_info ? md_file_info_copy (file_info) : NULL;
     md_file_info_free (tmp);
 
     g_free (data->filename);
-    data->filename = md_file_info_get_filename (data->file_info);
+    data->filename = file_info ? md_file_info_get_filename (data->file_info) : NULL;
 
     g_free (data->display_name);
     g_free (data->display_basename);
     data->display_name = NULL;
     data->display_basename = NULL;
 
-    g_object_notify (G_OBJECT (doc), "doc-file-info");
+    g_object_notify (G_OBJECT (doc), "md-doc-file-info");
 }
 
 MdFileInfo *

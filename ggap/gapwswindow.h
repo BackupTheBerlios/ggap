@@ -14,7 +14,7 @@
 #ifndef GAP_WS_WINDOW_H
 #define GAP_WS_WINDOW_H
 
-#include "gapwindow.h"
+#include <mooui/mdwindow.h>
 #include <gtk/gtkstatusbar.h>
 #include <gtk/gtkprogressbar.h>
 
@@ -29,20 +29,20 @@ G_BEGIN_DECLS
 #define GAP_WS_WINDOW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_WS_WINDOW, GapWsWindowClass))
 
 
-typedef struct _GapWsWindow         GapWsWindow;
-typedef struct _GapWsWindowPrivate  GapWsWindowPrivate;
-typedef struct _GapWsWindowClass    GapWsWindowClass;
+typedef struct GapWsWindow        GapWsWindow;
+typedef struct GapWsWindowPrivate GapWsWindowPrivate;
+typedef struct GapWsWindowClass   GapWsWindowClass;
 
 
-struct _GapWsWindow
+struct GapWsWindow
 {
-    GapWindow base;
+    MdWindow base;
     GapWsWindowPrivate *priv;
 };
 
-struct _GapWsWindowClass
+struct GapWsWindowClass
 {
-    GapWindowClass base_class;
+    MdWindowClass base_class;
 };
 
 

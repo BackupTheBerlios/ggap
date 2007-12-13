@@ -29,7 +29,7 @@ AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 
 testparser_LDADD = $(MOO_LIBS) $(MOO_OBJC_LIBS) $(READLINE_LIBS)
 
-ggap_LDADD = moows/libmoows.la mooui/libmooui.la $(MOO_LIBS) $(MOO_OBJC_LIBS) $(ZLIB)
+ggap_LDADD = moows/libmoows.la mooui/libmooui.la ../moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(ZLIB)
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
 if MOO_OS_MINGW
@@ -43,8 +43,18 @@ testparser_SOURCES =			\
 	gapparser-yacc.c		\
 	gapparser-yacc.h
 
+ws_sources =				\
+	gapworksheet.c			\
+	gapworksheet.h			\
+	gapwscompletion.c		\
+	gapwscompletion.h		\
+	gapwswindow.c			\
+	gapwswindow.h
+
 ggap_SOURCES =				\
+	$(ws_sources)			\
 	ggap-ui.h			\
+	gapwswindow-ui.h		\
 	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
@@ -60,22 +70,10 @@ ggap_SOURCES =				\
 	gapparser-priv.h		\
 	gapparser-yacc.c		\
 	gapparser-yacc.h		\
-	gapview.c			\
-	gapview.h			\
 	gapeditwindow.c			\
 	gapeditwindow.h			\
-	gapwindow.c			\
-	gapwindow.h			\
-	gapworksheet.c			\
-	gapworksheet.h			\
-	gapwscompletion.c		\
-	gapwscompletion.h		\
-	gapwswindow.c			\
-	gapwswindow.h			\
 	gapoutput.c			\
 	gapoutput.h			\
-	gapsession.c			\
-	gapsession.h			\
 	gapterm.c			\
 	gapterm.h			\
 	gaptermwindow.c			\
@@ -112,6 +110,7 @@ EXTRA_DIST =		\
     ggap_res.rc.in	\
     pipehelper_res.rc.in\
     ggap-ui.xml		\
+    gapwswindow-ui.xml	\
     ggap.opag		\
     gapparser-yacc.y	\
     glade/gapprefs.glade\
@@ -122,6 +121,7 @@ BUILT_SOURCES =		\
 	gapparser-yacc.c\
 	gapparser-yacc.h\
 	ggap-ui.h	\
+	gapwswindow-ui.h\
 	gapprefs-glade.h\
 	ggap.c		\
 	ggap-credits.h
@@ -135,6 +135,9 @@ ggap-credits.h: ../THANKS $(XML2H)
 ggap-ui.h: ggap-ui.xml $(XML2H)
 	sh $(XML2H) GGAP_UI $(srcdir)/ggap-ui.xml > ggap-ui.h.tmp && \
 	mv ggap-ui.h.tmp ggap-ui.h
+gapwswindow-ui.h: gapwswindow-ui.xml $(XML2H)
+	sh $(XML2H) GAP_WS_WINDOW_UI $(srcdir)/gapwswindow-ui.xml > gapwswindow-ui.h.tmp && \
+	mv gapwswindow-ui.h.tmp gapwswindow-ui.h
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h

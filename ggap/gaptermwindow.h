@@ -14,7 +14,7 @@
 #ifndef GAP_TERM_WINDOW_H
 #define GAP_TERM_WINDOW_H
 
-#include "gapwindow.h"
+#include <mooutils/moowindow.h>
 
 G_BEGIN_DECLS
 
@@ -27,24 +27,27 @@ G_BEGIN_DECLS
 #define GAP_TERM_WINDOW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_TERM_WINDOW, GapTermWindowClass))
 
 
-typedef struct _GapTermWindow        GapTermWindow;
-typedef struct _GapTermWindowPrivate GapTermWindowPrivate;
-typedef struct _GapTermWindowClass   GapTermWindowClass;
+typedef struct GapTermWindow        GapTermWindow;
+typedef struct GapTermWindowPrivate GapTermWindowPrivate;
+typedef struct GapTermWindowClass   GapTermWindowClass;
 
 
-struct _GapTermWindow
+struct GapTermWindow
 {
-    GapWindow base;
+    MooWindow base;
     GapTermWindowPrivate *priv;
 };
 
-struct _GapTermWindowClass
+struct GapTermWindowClass
 {
-    GapWindowClass  base_class;
+    MooWindowClass base_class;
 };
 
 
 GType   gap_term_window_get_type    (void) G_GNUC_CONST;
+
+void    gap_term_window_feed_gap    (GapTermWindow  *window,
+                                     const char     *string);
 
 
 G_END_DECLS

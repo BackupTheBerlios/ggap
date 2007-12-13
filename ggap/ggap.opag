@@ -44,8 +44,6 @@ int _ggap_parse_options (const char *const program_name,
 #line 43 "ggap.c"
 %%
 g  gap-cmd      "=COMMAND GAP command line"                     reqarg
-e  editor       "Do not start GAP automatically"
-E  pure-editor  "Do not enable any GAP stuff"
 n  new-app      "Run new instance of application"
    fancy        "Fancy mode"
 x  extract      "=FILE Unpack saved worksheet file"
@@ -53,7 +51,7 @@ l  log          "[=FILE] Show debug output or write it to FILE" optarg
    version      "Display version information and exit"          return
 h  help         "Display this help text and exit"               return
 %%
-#line 57 "../../../ggap/ggap.opag"
+#line 55 "../../../ggap/ggap.opag"
 /* end of generated code
  ********************************************************/
 
@@ -64,8 +62,6 @@ static void usage (void)
     g_print ("Options:\n");
 
     g_print ("%s", STR_HELP_GAP_CMD);
-    g_print ("%s", STR_HELP_EDITOR);
-    g_print ("%s", STR_HELP_PURE_EDITOR);
     g_print ("%s", STR_HELP_NEW_APP);
     g_print ("%s", STR_HELP_FANCY);
     g_print ("%s", STR_HELP_EXTRACT);
@@ -211,7 +207,6 @@ int main (int argc, char *argv[])
     else
         new_instance = DEFAULT_NEW_INSTANCE;
 
-    GAP_APP_EDITOR_MODE = _ggap_opt_pure_editor != 0;
     files = moo_filenames_from_locale (argv + opt_remain);
 
     push_appdir_to_path ();
@@ -228,7 +223,6 @@ int main (int argc, char *argv[])
                         "credits", THANKS,
 
 //                         "gap-cmd-line", _ggap_arg_gap_cmd,
-                        "editor-mode", (gboolean) _ggap_opt_editor,
                         "fancy", (gboolean) _ggap_opt_fancy,
 
                         NULL);

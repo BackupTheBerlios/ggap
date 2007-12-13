@@ -55,6 +55,8 @@ void    md_manager_set_doc_type         (MdManager  *mgr,
                                          GType       type);
 void    md_manager_set_window_type      (MdManager  *mgr,
                                          GType       type);
+void    md_manager_set_ui_xml           (MdManager  *mgr,
+                                         MooUIXML   *xml);
 
 void    md_manager_set_active_window    (MdManager  *mgr,
                                          MdWindow   *window);

@@ -18,6 +18,7 @@
 #include "ggapfile.h"
 #include "gap.h"
 #include "gapwscompletion.h"
+#include "mooui/mddocument.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mootype-macros.h"
@@ -61,9 +62,6 @@ struct _GapWorksheetPrivate {
     gsize input_data_len;
     InputState input_state;
 
-    char *filename;
-    gboolean loaded;
-
     guint resize_idle;
     int width;
     int height;
@@ -73,10 +71,15 @@ struct _GapWorksheetPrivate {
 
     MooTextCompletion *completion;
     MooCompletionGroup *cmpl_group;
+
+    gboolean loaded;
+    MdDocumentStatus status;
+    MdFileInfo *file_info;
 };
 
 
-static void     gap_worksheet_view_init         (GapViewIface   *iface);
+static void     doc_iface_init                  (MdDocumentIface *iface);
+
 static void     gap_worksheet_destroy           (GtkObject      *object);
 static GObject *gap_worksheet_constructor       (GType           type,
                                                  guint           n_props,
@@ -116,35 +119,38 @@ static void     gap_worksheet_complete          (GapWorksheet   *ws);
 
 /* GAP_TYPE_WORKSHEET */
 G_DEFINE_TYPE_WITH_CODE (GapWorksheet, gap_worksheet, MOO_TYPE_WORKSHEET,
-                         G_IMPLEMENT_INTERFACE (GAP_TYPE_VIEW, gap_worksheet_view_init))
+                         G_IMPLEMENT_INTERFACE (MD_TYPE_DOCUMENT, doc_iface_init))
 
 enum {
     PROP_0,
     PROP_GAP_STATE,
-    PROP_FILENAME,
-    PROP_MODIFIED
+    PROP_MD_DOC_STATUS,
+    PROP_MD_DOC_FILE_INFO
 };
 
-// static void
-// gap_worksheet_set_property (GObject      *object,
-//                             guint         prop_id,
-//                             const GValue *value,
-//                             GParamSpec   *pspec)
-// {
-//     GapWorksheet *ws = GAP_WORKSHEET (object);
-//
-//     switch (prop_id)
-//     {
-//         case PROP_ALLOW_MULTILINE:
-//             ws->priv->allow_multiline = g_value_get_boolean (value);
-//             g_object_notify (object, "allow-multiline");
-//             break;
-//
-//         default:
-//             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-//             break;
-//     }
-// }
+static void
+gap_worksheet_set_property (GObject      *object,
+                            guint         prop_id,
+                            const GValue *value,
+                            GParamSpec   *pspec)
+{
+    GapWorksheet *ws = GAP_WORKSHEET (object);
+
+    switch (prop_id)
+    {
+        case PROP_MD_DOC_FILE_INFO:
+            md_document_set_file_info (MD_DOCUMENT (ws), g_value_get_boxed (value));
+            break;
+
+        case PROP_MD_DOC_STATUS:
+            md_document_set_status (MD_DOCUMENT (ws), g_value_get_flags (value));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
+}
 
 static void
 gap_worksheet_get_property (GObject    *object,
@@ -160,12 +166,12 @@ gap_worksheet_get_property (GObject    *object,
             g_value_set_enum (value, ws->priv->gap_state);
             break;
 
-        case PROP_FILENAME:
-            g_value_set_string (value, ws->priv->filename);
+        case PROP_MD_DOC_FILE_INFO:
+            g_value_set_boxed (value, md_document_get_file_info (MD_DOCUMENT (ws)));
             break;
 
-        case PROP_MODIFIED:
-            g_value_set_boolean (value, gap_worksheet_get_modified (ws));
+        case PROP_MD_DOC_STATUS:
+            g_value_set_flags (value, md_document_get_status (MD_DOCUMENT (ws)));
             break;
 
         default:
@@ -184,6 +190,7 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
 
     object_class->constructor = gap_worksheet_constructor;
     object_class->get_property = gap_worksheet_get_property;
+    object_class->set_property = gap_worksheet_set_property;
     gtk_object_class->destroy = gap_worksheet_destroy;
 
     widget_class->size_allocate = gap_worksheet_size_allocate;
@@ -192,6 +199,13 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
     widget_class->key_press_event = gap_worksheet_key_press;
 
     ws_class->process_input = gap_worksheet_process_input;
+
+    g_signal_new ("gap-exited",
+                  GAP_TYPE_WORKSHEET,
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
 
     g_object_class_install_property (object_class,
                                      PROP_GAP_STATE,
@@ -202,21 +216,8 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
                                                         GAP_DEAD,
                                                         G_PARAM_READABLE));
 
-    g_object_class_install_property (object_class,
-                                     PROP_FILENAME,
-                                     g_param_spec_string ("filename",
-                                                          "filename",
-                                                          "filename",
-                                                          NULL,
-                                                          G_PARAM_READABLE));
-
-    g_object_class_install_property (object_class,
-                                     PROP_MODIFIED,
-                                     g_param_spec_boolean ("modified",
-                                                           "modified",
-                                                           "modified",
-                                                           FALSE,
-                                                           G_PARAM_READABLE));
+    g_object_class_override_property (object_class, PROP_MD_DOC_STATUS, "md-doc-status");
+    g_object_class_override_property (object_class, PROP_MD_DOC_FILE_INFO, "md-doc-file-info");
 
     g_type_class_add_private (klass, sizeof (GapWorksheetPrivate));
 }
@@ -255,68 +256,29 @@ set_state (GapWorksheet *ws,
 
 
 static gboolean
-gap_worksheet_view_start_gap (GapView    *view,
-                              const char *cmd_line)
+gap_worksheet_start_gap (GapWorksheet *ws,
+                         const char   *workspace)
 {
     GError *error = NULL;
-    GapWorksheet *ws = GAP_WORKSHEET (view);
+    char *cmd_line;
+
+    cmd_line = gap_make_cmd_line (workspace, "-n", TRUE, 0);
+    g_return_val_if_fail (cmd_line != NULL, FALSE);
 
 //     moo_worksheet_reset (MOO_WORKSHEET (view));
     ws->priv->loaded = FALSE;
 
-    if (!gap_worksheet_fork_command (GAP_WORKSHEET (view), cmd_line, &error))
+    if (!gap_worksheet_fork_command (ws, cmd_line, &error))
     {
-        moo_worksheet_write_error (MOO_WORKSHEET (view), error->message);
+        moo_worksheet_write_error (MOO_WORKSHEET (ws), error->message);
         g_error_free (error);
         return FALSE;
     }
 
     set_state (ws, GAP_LOADING);
+
+    g_free (cmd_line);
     return TRUE;
-}
-
-static void
-gap_worksheet_view_stop_gap (GapView *view)
-{
-    gap_worksheet_kill_child (GAP_WORKSHEET (view));
-}
-
-static void
-gap_worksheet_view_feed_gap (G_GNUC_UNUSED GapView    *view,
-                             G_GNUC_UNUSED const char *text)
-{
-    g_warning ("%s: implement me", G_STRLOC);
-}
-
-static gboolean
-gap_worksheet_view_child_alive (GapView *view)
-{
-    return gap_worksheet_child_alive (GAP_WORKSHEET (view));
-}
-
-static void
-gap_worksheet_view_send_intr (G_GNUC_UNUSED GapView *view)
-{
-    g_warning ("%s: implement me", G_STRLOC);
-}
-
-static void
-gap_worksheet_view_get_gap_flags (G_GNUC_UNUSED GapView *view,
-                                  char **flags, gboolean *fancy)
-{
-    *flags = g_strdup ("-n");
-    *fancy = TRUE;
-}
-
-static void
-gap_worksheet_view_init (GapViewIface *iface)
-{
-    iface->start_gap = gap_worksheet_view_start_gap;
-    iface->stop_gap = gap_worksheet_view_stop_gap;
-    iface->feed_gap = gap_worksheet_view_feed_gap;
-    iface->child_alive = gap_worksheet_view_child_alive;
-    iface->send_intr = gap_worksheet_view_send_intr;
-    iface->get_gap_flags = gap_worksheet_view_get_gap_flags;
 }
 
 
@@ -334,13 +296,24 @@ gap_worksheet_init (GapWorksheet *ws)
     ws->priv->in_stderr = FALSE;
     ws->priv->width = -1;
     ws->priv->height = -1;
+
+    md_document_init (MD_DOCUMENT (ws), MD_DOCUMENT_SUPPORTS_EVERYTHING);
 }
 
 
 static void
-emit_modified_changed (GObject *object)
+buffer_modified_changed (GapWorksheet  *ws,
+                         GtkTextBuffer *buffer)
 {
-    g_object_notify (object, "modified");
+    md_document_set_modified (MD_DOCUMENT (ws),
+                              gtk_text_buffer_get_modified (buffer));
+}
+
+static void
+doc_status_changed (GapWorksheet *ws)
+{
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws));
+    gtk_text_buffer_set_modified (buffer, md_document_get_modified (MD_DOCUMENT (ws)));
 }
 
 static GObject *
@@ -354,14 +327,18 @@ gap_worksheet_constructor (GType           type,
     object = G_OBJECT_CLASS (gap_worksheet_parent_class)->constructor (type, n_props, props);
 
     moo_worksheet_start_input (MOO_WORKSHEET (object), "gap> ", "> ");
-    gap_view_start_gap (GAP_VIEW (object), NULL);
-    gap_worksheet_set_modified (GAP_WORKSHEET (object), FALSE);
+    gap_worksheet_start_gap (GAP_WORKSHEET (object), NULL);
     moo_worksheet_set_accepting_input (MOO_WORKSHEET (object), FALSE);
 
     buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (object));
     g_signal_connect_swapped (buffer, "modified-changed",
-                              G_CALLBACK (emit_modified_changed),
+                              G_CALLBACK (buffer_modified_changed),
                               object);
+    g_signal_connect (object, "notify::md-doc-status",
+                      G_CALLBACK (doc_status_changed), NULL);
+
+    md_document_set_modified (MD_DOCUMENT (object), FALSE);
+    gtk_text_buffer_set_modified (buffer, FALSE);
 
     return object;
 }
@@ -390,6 +367,40 @@ gap_worksheet_destroy (GtkObject *object)
     }
 
     GTK_OBJECT_CLASS (gap_worksheet_parent_class)->destroy (object);
+}
+
+
+static void
+doc_iface_init (MdDocumentIface *iface)
+{
+//     GdkPixbuf*      (*get_icon)         (MdDocument  *doc,
+//                                          GtkIconSize  size);
+//
+//     MdFileOpStatus  (*load_file)        (MdDocument  *doc,
+//                                          MdFileInfo  *file_info,
+//                                          GError     **error);
+//     gboolean        (*load_local)       (MdDocument  *doc,
+//                                          MdFileInfo  *file_info,
+//                                          const char  *filename,
+//                                          GError     **error);
+//     gboolean        (*load_content)     (MdDocument  *doc,
+//                                          MdFileInfo  *file_info,
+//                                          const char  *content,
+//                                          gsize        len,
+//                                          GError     **error);
+//
+//     MdFileOpStatus  (*save_file)        (MdDocument  *doc,
+//                                          MdFileInfo  *file_info,
+//                                          GError     **error);
+//     gboolean        (*get_content)      (MdDocument  *doc,
+//                                          MdFileInfo  *file_info,
+//                                          char       **content,
+//                                          gsize       *content_len,
+//                                          GError     **error);
+//     gboolean        (*save_local)       (MdDocument  *doc,
+//                                          MdFileInfo  *file_info,
+//                                          const char  *filename,
+//                                          GError     **error);
 }
 
 
@@ -1076,75 +1087,67 @@ gap_worksheet_key_press (GtkWidget   *widget,
 }
 
 
-gboolean
-gap_worksheet_get_empty (GapWorksheet *ws)
-{
-    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
+// gboolean
+// gap_worksheet_get_modified (GapWorksheet *ws)
+// {
+//     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
+//
+//     return gtk_text_buffer_get_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)));
+// }
+//
+// void
+// gap_worksheet_set_modified (GapWorksheet *ws,
+//                             gboolean      modified)
+// {
+//     g_return_if_fail (GAP_IS_WORKSHEET (ws));
+//
+//     gtk_text_buffer_set_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)),
+//                                   modified);
+// }
 
-    return ws->priv->filename == NULL && !gap_worksheet_get_modified (ws);
-}
+// const char *
+// gap_worksheet_get_filename (GapWorksheet *ws)
+// {
+//     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), NULL);
+//     return ws->priv->filename;
+// }
 
-gboolean
-gap_worksheet_get_modified (GapWorksheet *ws)
-{
-    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
-
-    return gtk_text_buffer_get_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)));
-}
-
-void
-gap_worksheet_set_modified (GapWorksheet *ws,
-                            gboolean      modified)
-{
-    g_return_if_fail (GAP_IS_WORKSHEET (ws));
-
-    gtk_text_buffer_set_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)),
-                                  modified);
-}
-
-const char *
-gap_worksheet_get_filename (GapWorksheet *ws)
-{
-    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), NULL);
-    return ws->priv->filename;
-}
-
-gboolean
-gap_worksheet_load (GapWorksheet   *ws,
-                    const char     *filename,
-                    GError        **error)
-{
-    char *text;
-    gsize text_len;
-    char *workspace_file;
-    char *tmp;
-
-    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
-    g_return_val_if_fail (filename != NULL, FALSE);
-    g_return_val_if_fail (gap_worksheet_get_empty (ws), FALSE);
-
-    if (!ggap_file_unpack (filename, &text, &text_len, &workspace_file, error))
-        return FALSE;
-
-    g_print ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
-    g_print ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
-
-    if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, error))
-        return FALSE;
-
-    tmp = ws->priv->filename;
-    ws->priv->filename = g_strdup (filename);
-    g_free (tmp);
-    g_object_notify (G_OBJECT (ws), "filename");
-
-    gap_view_stop_gap (GAP_VIEW (ws));
-    gap_view_start_gap (GAP_VIEW (ws), workspace_file);
-    gap_worksheet_set_modified (ws, FALSE);
-
-    g_free (text);
-    g_free (workspace_file);
-    return TRUE;
-}
+// gboolean
+// gap_worksheet_load (GapWorksheet   *ws,
+//                     const char     *filename,
+//                     GError        **error)
+// {
+//     char *text;
+//     gsize text_len;
+//     char *workspace_file;
+//     char *tmp;
+//
+//     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
+//     g_return_val_if_fail (filename != NULL, FALSE);
+//     g_return_val_if_fail (gap_worksheet_get_empty (ws), FALSE);
+//
+//     if (!ggap_file_unpack (filename, &text, &text_len, &workspace_file, error))
+//         return FALSE;
+//
+//     g_print ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
+//     g_print ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+//
+//     if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, error))
+//         return FALSE;
+//
+//     tmp = ws->priv->filename;
+//     ws->priv->filename = g_strdup (filename);
+//     g_free (tmp);
+//     g_object_notify (G_OBJECT (ws), "filename");
+//
+//     gap_worksheet_kill_child (ws);
+//     gap_worksheet_start_gap (ws, workspace_file);
+//     gap_worksheet_set_modified (ws, FALSE);
+//
+//     g_free (text);
+//     g_free (workspace_file);
+//     return TRUE;
+// }
 
 
 static void
@@ -1162,200 +1165,200 @@ has_running_command_loop (GapWorksheet *ws)
             g_main_loop_is_running (ws->priv->cmd_info->loop);
 }
 
-static void
-run_command_destroy (G_GNUC_UNUSED GapWorksheet *ws,
-                     GapCommandInfo *ci)
-{
-    ci->destroyed = TRUE;
-    stop_running_command_loop (ci);
-}
+// static void
+// run_command_destroy (G_GNUC_UNUSED GapWorksheet *ws,
+//                      GapCommandInfo *ci)
+// {
+//     ci->destroyed = TRUE;
+//     stop_running_command_loop (ci);
+// }
 
-static gboolean
-gap_worksheet_run_command (GapWorksheet *ws,
-                           const char   *command,
-                           const char   *args,
-                           const char   *gap_cmd_line,
-                           char        **output)
-{
-    char *string;
-    GapCommandInfo ci;
-    gulong destroy_cb_id;
-    guint stamp;
+// static gboolean
+// gap_worksheet_run_command (GapWorksheet *ws,
+//                            const char   *command,
+//                            const char   *args,
+//                            const char   *gap_cmd_line,
+//                            char        **output)
+// {
+//     char *string;
+//     GapCommandInfo ci;
+//     gulong destroy_cb_id;
+//     guint stamp;
+//
+//     g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
+//     g_return_val_if_fail (command != NULL, FALSE);
+//
+//     stamp = ++ws->priv->last_stamp;
+//     string = ggap_pkg_exec_command (stamp, command, args);
+//     moo_term_pt_write (ws->priv->pt, string, -1);
+//
+//     if (gap_cmd_line)
+//         moo_term_pt_write (ws->priv->pt, gap_cmd_line, -1);
+//
+//     g_object_ref (ws);
+//
+//     ws->priv->cmd_info = &ci;
+//     ci.success = FALSE;
+//     ci.loop = NULL;
+//     ci.destroyed = FALSE;
+//     ci.stamp = stamp;
+//     ci.output = NULL;
+//
+//     destroy_cb_id = g_signal_connect (ws, "destroy",
+//                                       G_CALLBACK (run_command_destroy),
+//                                       &ci);
+//
+//     ci.loop = g_main_loop_new (NULL, FALSE);
+//
+//     gdk_threads_leave ();
+//     g_main_loop_run (ci.loop);
+//     gdk_threads_enter ();
+//
+//     g_main_loop_unref (ci.loop);
+//     ci.loop = NULL;
+//
+//     if (!ci.destroyed)
+//         g_signal_handler_disconnect (ws, destroy_cb_id);
+//
+//     if (ci.destroyed)
+//         ci.success = FALSE;
+//
+//     *output = ci.output;
+//     ws->priv->cmd_info = NULL;
+//
+//     g_object_unref (ws);
+//     return ci.success;
+// }
 
-    g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
-    g_return_val_if_fail (command != NULL, FALSE);
 
-    stamp = ++ws->priv->last_stamp;
-    string = ggap_pkg_exec_command (stamp, command, args);
-    moo_term_pt_write (ws->priv->pt, string, -1);
+// static gboolean
+// parse_save_workspace_output (const char  *output,
+//                              GError     **error)
+// {
+//     char **lines, **p;
+//     gboolean success = FALSE;
+//
+//     if (!output)
+//     {
+//         g_set_error (error, GGAP_FILE_ERROR,
+//                      GGAP_FILE_ERROR_FAILED,
+//                      "no output");
+//         return FALSE;
+//     }
+//
+//     lines = moo_splitlines (output);
+//
+//     for (p = lines; p && *p; ++p)
+//     {
+//         if (p[0][0] == '#')
+//         {
+//             continue;
+//         }
+//         else if (!strcmp (*p, "true"))
+//         {
+//             success = TRUE;
+//             goto out;
+//         }
+//         else if (!strncmp (*p, "Couldn't open file", strlen ("Couldn't open file")))
+//         {
+//             g_set_error (error, GGAP_FILE_ERROR,
+//                          GGAP_FILE_ERROR_FAILED,
+//                          "could not save workspace");
+//             goto out;
+//         }
+//         else
+//         {
+//             g_set_error (error, GGAP_FILE_ERROR,
+//                          GGAP_FILE_ERROR_FAILED,
+//                          "unknown output: %s",
+//                          output);
+//             goto out;
+//         }
+//     }
+//
+//     g_set_error (error, GGAP_FILE_ERROR,
+//                  GGAP_FILE_ERROR_FAILED,
+//                  "empty output");
+//
+// out:
+//     g_strfreev (lines);
+//     return success;
+// }
 
-    if (gap_cmd_line)
-        moo_term_pt_write (ws->priv->pt, gap_cmd_line, -1);
+// static gboolean
+// gap_worksheet_save_workspace (GapWorksheet  *ws,
+//                               char         **filename_p,
+//                               GError       **error)
+// {
+//     char *filename, *cmd;
+//     char *output = NULL;
+//     gboolean result;
+//
+//     g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
+//
+//     filename = moo_tempnam ();
+//     cmd = gap_cmd_save_workspace (filename);
+//
+//     result = gap_worksheet_run_command (ws, GGAP_CMD_RUN_COMMAND, NULL, cmd, &output);
+//
+//     if (!result)
+//     {
+//         g_set_error (error, GGAP_FILE_ERROR,
+//                      GGAP_FILE_ERROR_FAILED,
+//                      "Failed");
+//     }
+//     else
+//     {
+//         result = parse_save_workspace_output (output, error);
+//
+//         if (result)
+//         {
+//             *filename_p = filename;
+//             filename = NULL;
+//         }
+//     }
+//
+//     g_free (output);
+//     g_free (cmd);
+//     g_free (filename);
+//     return result;
+// }
 
-    g_object_ref (ws);
-
-    ws->priv->cmd_info = &ci;
-    ci.success = FALSE;
-    ci.loop = NULL;
-    ci.destroyed = FALSE;
-    ci.stamp = stamp;
-    ci.output = NULL;
-
-    destroy_cb_id = g_signal_connect (ws, "destroy",
-                                      G_CALLBACK (run_command_destroy),
-                                      &ci);
-
-    ci.loop = g_main_loop_new (NULL, FALSE);
-
-    gdk_threads_leave ();
-    g_main_loop_run (ci.loop);
-    gdk_threads_enter ();
-
-    g_main_loop_unref (ci.loop);
-    ci.loop = NULL;
-
-    if (!ci.destroyed)
-        g_signal_handler_disconnect (ws, destroy_cb_id);
-
-    if (ci.destroyed)
-        ci.success = FALSE;
-
-    *output = ci.output;
-    ws->priv->cmd_info = NULL;
-
-    g_object_unref (ws);
-    return ci.success;
-}
-
-
-static gboolean
-parse_save_workspace_output (const char  *output,
-                             GError     **error)
-{
-    char **lines, **p;
-    gboolean success = FALSE;
-
-    if (!output)
-    {
-        g_set_error (error, GGAP_FILE_ERROR,
-                     GGAP_FILE_ERROR_FAILED,
-                     "no output");
-        return FALSE;
-    }
-
-    lines = moo_splitlines (output);
-
-    for (p = lines; p && *p; ++p)
-    {
-        if (p[0][0] == '#')
-        {
-            continue;
-        }
-        else if (!strcmp (*p, "true"))
-        {
-            success = TRUE;
-            goto out;
-        }
-        else if (!strncmp (*p, "Couldn't open file", strlen ("Couldn't open file")))
-        {
-            g_set_error (error, GGAP_FILE_ERROR,
-                         GGAP_FILE_ERROR_FAILED,
-                         "could not save workspace");
-            goto out;
-        }
-        else
-        {
-            g_set_error (error, GGAP_FILE_ERROR,
-                         GGAP_FILE_ERROR_FAILED,
-                         "unknown output: %s",
-                         output);
-            goto out;
-        }
-    }
-
-    g_set_error (error, GGAP_FILE_ERROR,
-                 GGAP_FILE_ERROR_FAILED,
-                 "empty output");
-
-out:
-    g_strfreev (lines);
-    return success;
-}
-
-static gboolean
-gap_worksheet_save_workspace (GapWorksheet  *ws,
-                              char         **filename_p,
-                              GError       **error)
-{
-    char *filename, *cmd;
-    char *output = NULL;
-    gboolean result;
-
-    g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
-
-    filename = moo_tempnam ();
-    cmd = gap_cmd_save_workspace (filename);
-
-    result = gap_worksheet_run_command (ws, GGAP_CMD_RUN_COMMAND, NULL, cmd, &output);
-
-    if (!result)
-    {
-        g_set_error (error, GGAP_FILE_ERROR,
-                     GGAP_FILE_ERROR_FAILED,
-                     "Failed");
-    }
-    else
-    {
-        result = parse_save_workspace_output (output, error);
-
-        if (result)
-        {
-            *filename_p = filename;
-            filename = NULL;
-        }
-    }
-
-    g_free (output);
-    g_free (cmd);
-    g_free (filename);
-    return result;
-}
-
-gboolean
-gap_worksheet_save (GapWorksheet   *ws,
-                    const char     *filename,
-                    gboolean        save_workspace,
-                    GError        **error)
-{
-    char *markup;
-    char *workspace = NULL;
-    gboolean result;
-
-    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
-    g_return_val_if_fail (filename != NULL, FALSE);
-    g_return_val_if_fail (ws->priv->gap_state == GAP_DEAD ||
-                          ws->priv->gap_state == GAP_IN_PROMPT, FALSE);
-
-    if (save_workspace)
-        if (ws->priv->gap_state != GAP_DEAD && !gap_worksheet_save_workspace (ws, &workspace, error))
-            return FALSE;
-
-    markup = moo_worksheet_format (MOO_WORKSHEET (ws));
-
-    result = ggap_file_pack (markup, workspace, filename, error);
-
-    if (result)
-    {
-        char *tmp = ws->priv->filename;
-        ws->priv->filename = g_strdup (filename);
-        g_free (tmp);
-        gap_worksheet_set_modified (ws, FALSE);
-        g_object_notify (G_OBJECT (ws), "filename");
-    }
-
-    g_free (markup);
-    return result;
-}
+// gboolean
+// gap_worksheet_save (GapWorksheet   *ws,
+//                     const char     *filename,
+//                     gboolean        save_workspace,
+//                     GError        **error)
+// {
+//     char *markup;
+//     char *workspace = NULL;
+//     gboolean result;
+//
+//     g_return_val_if_fail (GAP_IS_WORKSHEET (ws), FALSE);
+//     g_return_val_if_fail (filename != NULL, FALSE);
+//     g_return_val_if_fail (ws->priv->gap_state == GAP_DEAD ||
+//                           ws->priv->gap_state == GAP_IN_PROMPT, FALSE);
+//
+//     if (save_workspace)
+//         if (ws->priv->gap_state != GAP_DEAD && !gap_worksheet_save_workspace (ws, &workspace, error))
+//             return FALSE;
+//
+//     markup = moo_worksheet_format (MOO_WORKSHEET (ws));
+//
+//     result = ggap_file_pack (markup, workspace, filename, error);
+//
+//     if (result)
+//     {
+//         char *tmp = ws->priv->filename;
+//         ws->priv->filename = g_strdup (filename);
+//         g_free (tmp);
+//         gap_worksheet_set_modified (ws, FALSE);
+//         g_object_notify (G_OBJECT (ws), "filename");
+//     }
+//
+//     g_free (markup);
+//     return result;
+// }
 
 
 /**************************************************************************/

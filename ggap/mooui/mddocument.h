@@ -10,13 +10,11 @@
 
 #define MD_TYPE_HAS_UNDO            (md_has_undo_get_type ())
 #define MD_HAS_UNDO(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MD_TYPE_HAS_UNDO, MdHasUndo))
-#define MD_HAS_UNDO_CLASS(obj)      (G_TYPE_CHECK_CLASS_CAST ((obj), MD_TYPE_HAS_UNDO, MdHasUndoIface))
 #define MD_IS_HAS_UNDO(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MD_TYPE_HAS_UNDO))
 #define MD_HAS_UNDO_GET_IFACE(obj)  (G_TYPE_INSTANCE_GET_INTERFACE ((obj), MD_TYPE_HAS_UNDO, MdHasUndoIface))
 
 #define MD_TYPE_DOCUMENT            (md_document_get_type ())
 #define MD_DOCUMENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MD_TYPE_DOCUMENT, MdDocument))
-#define MD_DOCUMENT_CLASS(obj)      (G_TYPE_CHECK_CLASS_CAST ((obj), MD_TYPE_DOCUMENT, MdDocumentIface))
 #define MD_IS_DOCUMENT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MD_TYPE_DOCUMENT))
 #define MD_DOCUMENT_GET_IFACE(obj)  (G_TYPE_INSTANCE_GET_INTERFACE ((obj), MD_TYPE_DOCUMENT, MdDocumentIface))
 
@@ -110,6 +108,7 @@ MdManager          *md_document_get_manager             (MdDocument     *doc);
 
 void                md_document_set_modified            (MdDocument     *doc,
                                                          gboolean        modified);
+gboolean            md_document_get_modified            (MdDocument     *doc);
 void                md_document_set_status              (MdDocument     *doc,
                                                          MdDocumentStatus status);
 MdDocumentStatus    md_document_get_status              (MdDocument     *doc);

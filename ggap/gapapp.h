@@ -15,13 +15,9 @@
 #define GAP_APP_H
 
 #include <mooapp/mooapp.h>
-#include "gapwindow.h"
-#include "gapsession.h"
 
 G_BEGIN_DECLS
 
-
-extern gboolean GAP_APP_EDITOR_MODE;
 
 #define GGAP_PREFS_PREFIX               "ggap"
 #define GGAP_PREFS_GAP_COMMAND          GGAP_PREFS_PREFIX "/command"
@@ -39,22 +35,17 @@ extern gboolean GAP_APP_EDITOR_MODE;
 #define GAP_APP_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_APP, GapAppClass))
 
 
-typedef struct _GapApp              GapApp;
-typedef struct _GapAppPrivate       GapAppPrivate;
-typedef struct _GapAppClass         GapAppClass;
+typedef struct GapApp        GapApp;
+typedef struct GapAppPrivate GapAppPrivate;
+typedef struct GapAppClass   GapAppClass;
 
-struct _GapApp
+struct GapApp
 {
     MooApp base;
-
-    GapView *terminal;
-    GapWindow *gap_window;
-
-    gboolean editor_mode;
-    gboolean fancy;
+    GapAppPrivate *priv;
 };
 
-struct _GapAppClass
+struct GapAppClass
 {
     MooAppClass base_class;
 };
@@ -64,12 +55,7 @@ struct _GapAppClass
 
 GType       gap_app_get_type                (void) G_GNUC_CONST;
 
-void        gap_app_open_workspace          (GapApp     *app,
-                                             const char *file);
-char       *gap_saved_workspace_filename    (void);
-
-void        gap_app_feed_gap                (GapApp     *app,
-                                             const char *text);
+void        gap_app_send_and_bring_to_front (const char *string);
 
 
 G_END_DECLS

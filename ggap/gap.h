@@ -33,6 +33,13 @@ gboolean     gap_parse_cmd_line     (const char *command_line,
                                      char      **root_dir);
 #endif
 
+char        *gap_make_cmd_line      (const char *workspace,
+                                     const char *flags,
+                                     gboolean    fancy,
+                                     guint       session_id);
+
+char        *gap_saved_workspace_filename   (void);
+
 char        *gap_escape_filename    (const char *filename);
 
 #define GGAP_CMD_RUN_COMMAND "run-command"

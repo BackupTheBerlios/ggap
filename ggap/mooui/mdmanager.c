@@ -15,6 +15,8 @@ struct MdManagerPrivate {
 
     GSList *windows;
     GSList *windowless;
+
+    MooUIXML *xml;
 };
 
 
@@ -314,10 +316,10 @@ _md_manager_add_untitled (MdManager  *mgr,
     else
         mgr->priv->untitled->pdata[i] = doc;
 
-    if (i)
+    if (i == 0)
         return g_strdup_printf (_("Untitled%s"), mgr->priv->default_ext);
     else
-        return g_strdup_printf (_("Untitled %u%s"), i, mgr->priv->default_ext);
+        return g_strdup_printf (_("Untitled %u%s"), i+1, mgr->priv->default_ext);
 }
 
 void
@@ -358,6 +360,24 @@ md_manager_set_window_type (MdManager *mgr,
     g_return_if_fail (g_type_is_a (type, MD_TYPE_WINDOW));
 
     mgr->priv->window_type = type;
+}
+
+
+void
+md_manager_set_ui_xml (MdManager *mgr,
+                       MooUIXML  *xml)
+{
+    g_return_if_fail (MD_IS_MANAGER (mgr));
+    g_return_if_fail (!xml || MOO_IS_UI_XML (xml));
+
+    if (mgr->priv->xml != xml)
+    {
+        if (mgr->priv->xml)
+            g_object_unref (mgr->priv->xml);
+        mgr->priv->xml = xml;
+        if (mgr->priv->xml)
+            g_object_ref (mgr->priv->xml);
+    }
 }
 
 
@@ -416,6 +436,7 @@ _md_manager_action_new_doc (MdManager *mgr,
 
     doc = create_doc (mgr, window, NULL);
     md_window_set_active_doc (window, doc);
+    gtk_widget_grab_focus (GTK_WIDGET (doc));
 }
 
 void
@@ -559,7 +580,10 @@ create_window (MdManager *mgr)
 {
     MdWindow *window;
 
-    window = g_object_new (mgr->priv->window_type, "document-manager", mgr, NULL);
+    window = g_object_new (mgr->priv->window_type,
+                           "document-manager", mgr,
+                           "ui-xml", mgr->priv->xml,
+                           NULL);
     g_return_val_if_fail (window != NULL, NULL);
 
     gtk_widget_show (GTK_WIDGET (window));
@@ -610,7 +634,7 @@ create_doc (MdManager  *mgr,
     MdDocument *doc;
 
     doc = g_object_new (mgr->priv->doc_type,
-                        "doc-uri", file ? md_file_info_get_uri (file) : NULL,
+                        "md-doc-file-info", file,
                         NULL);
     g_return_val_if_fail (doc != NULL, NULL);
 

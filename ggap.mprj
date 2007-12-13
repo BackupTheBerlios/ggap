@@ -43,7 +43,7 @@
  </configurations>
  <run>
   <args>--new-app --fancy</args>
-  <exe>ggap/mooui/testui</exe>
+  <exe>ggap/ggap</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
   </vars>

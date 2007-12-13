@@ -239,3 +239,145 @@ gap_parse_cmd_line (const char *command_line,
     return TRUE;
 }
 #endif
+
+
+char *
+gap_saved_workspace_filename (void)
+{
+    return moo_get_user_data_file (GGAP_WORKSPACE_FILE);
+}
+
+
+static GString *
+make_command_line (const char *cmd_base,
+                   const char *flags,
+                   const char *custom_wsp,
+                   guint       session_id,
+                   gboolean    fancy)
+{
+    gboolean init_pkg, save_workspace;
+    gboolean wsp_already_saved = FALSE;
+    char *wsp_file = NULL;
+    const char *init_file = NULL;
+    GString *cmd;
+
+    init_pkg = moo_prefs_get_bool (GGAP_PREFS_GAP_INIT_PKG);
+    save_workspace = moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE);
+
+    cmd = g_string_new (cmd_base);
+
+    if (flags)
+        g_string_append_printf (cmd, " %s", flags);
+
+    if (!custom_wsp && save_workspace)
+    {
+        wsp_file = gap_saved_workspace_filename ();
+
+        g_return_val_if_fail (wsp_file != NULL, cmd);
+
+        wsp_already_saved = g_file_test (wsp_file, G_FILE_TEST_EXISTS);
+
+        if (!wsp_already_saved)
+        {
+            char *gzipped = g_strdup_printf ("%s.gz", wsp_file);
+            wsp_already_saved = g_file_test (gzipped, G_FILE_TEST_EXISTS);
+            g_free (gzipped);
+        }
+    }
+
+    if (custom_wsp)
+    {
+        g_string_append_printf (cmd, " -L \"%s\"", custom_wsp);
+    }
+    else if (save_workspace)
+    {
+        if (wsp_already_saved)
+            g_string_append_printf (cmd, " -L \"%s\"", wsp_file);
+
+        if (!wsp_already_saved && !moo_make_user_data_dir (NULL))
+            g_critical ("%s: could not create user data dir", G_STRLOC);
+
+        if (!wsp_already_saved || init_pkg)
+            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file,
+                                       init_pkg, session_id, fancy);
+    }
+
+    if (init_pkg && !init_file)
+        init_file = gap_init_file (NULL, TRUE, session_id, fancy);
+
+    if (init_pkg)
+    {
+        char **dirs;
+        guint i, n_dirs = 0;
+
+        dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
+
+        for (i = 0; i < n_dirs; ++i)
+            g_string_append_printf (cmd, " -l \"%s\";", dirs[i]);
+
+        g_strfreev (dirs);
+    }
+
+    if (init_file)
+        g_string_append_printf (cmd, " \"%s\"", init_file);
+
+    g_free (wsp_file);
+    return cmd;
+}
+
+char *
+gap_make_cmd_line (const char *workspace,
+                   const char *flags,
+                   gboolean    fancy,
+                   guint       session_id)
+{
+    const char *cmd_base;
+    GString *cmd;
+
+    cmd_base = moo_prefs_get_string (GGAP_PREFS_GAP_COMMAND);
+    if (!cmd_base)
+    {
+        g_critical ("%s: gap command line not set", G_STRFUNC);
+        cmd_base = "gap";
+    }
+
+#ifdef __WIN32__
+    {
+        static char *saved_bin_dir;
+        static const char *saved_path;
+        char *bin_dir;
+
+        if (gap_parse_cmd_line (cmd_base, &bin_dir, NULL))
+        {
+            if (!saved_bin_dir || strcmp (saved_bin_dir, bin_dir))
+            {
+                char *path;
+
+                if (!saved_path)
+                    saved_path = g_getenv ("PATH");
+
+                if (saved_path)
+                    path = g_strdup_printf ("%s;%s", bin_dir, saved_path);
+                else
+                    path = g_strdup (bin_dir);
+
+                g_setenv ("PATH", path, TRUE);
+                g_free (path);
+
+                saved_bin_dir = bin_dir;
+                bin_dir = NULL;
+            }
+
+            g_free (bin_dir);
+        }
+        else
+        {
+            g_warning ("%s: could not parse command line `%s`",
+                       G_STRLOC, cmd_base);
+        }
+    }
+#endif
+
+    cmd = make_command_line (cmd_base, flags, workspace, session_id, fancy);
+    return g_string_free (cmd, FALSE);
+}

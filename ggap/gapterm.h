@@ -44,7 +44,15 @@ struct _GapTermClass
 };
 
 
-GType   gap_term_get_type   (void) G_GNUC_CONST;
+GType       gap_term_get_type       (void) G_GNUC_CONST;
+
+void        gap_term_start_gap      (GapTerm    *term,
+                                     const char *workspace);
+void        gap_term_stop_gap       (GapTerm    *term);
+void        gap_term_feed_gap       (GapTerm    *term,
+                                     const char *text);
+
+void        gap_term_send_intr      (GapTerm    *term);
 
 
 G_END_DECLS

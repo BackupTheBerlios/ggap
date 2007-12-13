@@ -139,6 +139,7 @@ static gboolean     notebook_drag_motion            (GtkWidget          *widget,
 
 /* actions */
 static void action_new_doc          (MdWindow   *window);
+static void action_new_window       (MdWindow   *window);
 static void action_open             (MdWindow   *window);
 static void action_reload           (MdWindow   *window);
 static void action_save             (MdWindow   *window);
@@ -171,8 +172,7 @@ enum {
     PROP_MD_HAS_OPEN_DOCUMENT,
     PROP_MD_HAS_UNDO,
     PROP_MD_CAN_UNDO,
-    PROP_MD_CAN_REDO,
-    PROP_MD_HAS_SELECTION
+    PROP_MD_CAN_REDO
 };
 
 
@@ -252,7 +252,6 @@ md_window_class_init (MdWindowClass *klass)
     INSTALL_BOOL_PROP (PROP_MD_HAS_UNDO, "md-has-undo");
     INSTALL_BOOL_PROP (PROP_MD_CAN_UNDO, "md-can-undo");
     INSTALL_BOOL_PROP (PROP_MD_CAN_REDO, "md-can-redo");
-    INSTALL_BOOL_PROP (PROP_MD_HAS_SELECTION, "md-has-selection");
 
     moo_window_class_new_action (window_class, "NewDoc", NULL,
                                  "display-name", GTK_STOCK_NEW,
@@ -261,6 +260,15 @@ md_window_class_init (MdWindowClass *klass)
                                  "stock-id", GTK_STOCK_NEW,
                                  "accel", "<ctrl>N",
                                  "closure-callback", action_new_doc,
+                                 NULL);
+
+    moo_window_class_new_action (window_class, "NewWindow", NULL,
+                                 "display-name", MOO_STOCK_NEW_WINDOW,
+                                 "label", MOO_STOCK_NEW_WINDOW,
+                                 "tooltip", _("Open new window"),
+                                 "stock-id", MOO_STOCK_NEW_WINDOW,
+                                 "accel", "<shift><ctrl>N",
+                                 "closure-callback", action_new_window,
                                  NULL);
 
     moo_window_class_new_action (window_class, "Open", NULL,
@@ -343,49 +351,6 @@ md_window_class_init (MdWindowClass *klass)
                                  "closure-proxy-func", md_window_get_active_doc,
                                  "condition::visible", "md-has-undo",
                                  "condition::sensitive", "md-can-redo",
-                                 NULL);
-
-    moo_window_class_new_action (window_class, "Cut", NULL,
-                                 "display-name", GTK_STOCK_CUT,
-                                 "label", GTK_STOCK_CUT,
-                                 "tooltip", GTK_STOCK_CUT,
-                                 "stock-id", GTK_STOCK_CUT,
-                                 "accel", "<ctrl>X",
-                                 "closure-signal", "cut-clipboard",
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::sensitive", "md-has-selection",
-                                 NULL);
-
-    moo_window_class_new_action (window_class, "Copy", NULL,
-                                 "display-name", GTK_STOCK_COPY,
-                                 "label", GTK_STOCK_COPY,
-                                 "tooltip", GTK_STOCK_COPY,
-                                 "stock-id", GTK_STOCK_COPY,
-                                 "accel", "<ctrl>C",
-                                 "closure-signal", "copy-clipboard",
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::sensitive", "md-has-selection",
-                                 NULL);
-
-    moo_window_class_new_action (window_class, "Paste", NULL,
-                                 "display-name", GTK_STOCK_PASTE,
-                                 "label", GTK_STOCK_PASTE,
-                                 "tooltip", GTK_STOCK_PASTE,
-                                 "stock-id", GTK_STOCK_PASTE,
-                                 "accel", "<ctrl>V",
-                                 "closure-signal", "paste-clipboard",
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
-
-    moo_window_class_new_action (window_class, "Delete", NULL,
-                                 "display-name", GTK_STOCK_DELETE,
-                                 "label", GTK_STOCK_DELETE,
-                                 "tooltip", GTK_STOCK_DELETE,
-                                 "stock-id", GTK_STOCK_DELETE,
-                                 "closure-signal", "delete-selection",
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::sensitive", "md-has-selection",
                                  NULL);
 
     moo_window_class_new_action (window_class, "PreviousTab", NULL,
@@ -588,17 +553,11 @@ md_window_get_property (GObject    *object,
             break;
         case PROP_MD_CAN_UNDO:
             doc = ACTIVE_DOC (window);
-            g_value_set_boolean (value, doc && _md_document_can_undo (doc));
+            g_value_set_boolean (value, doc && MD_IS_HAS_UNDO (doc) && _md_document_can_undo (doc));
             break;
         case PROP_MD_CAN_REDO:
             doc = ACTIVE_DOC (window);
-            g_value_set_boolean (value, doc && _md_document_can_redo (doc));
-            break;
-        case PROP_MD_HAS_SELECTION:
-            doc = ACTIVE_DOC (window);
-            if (doc)
-                g_warning ("%s: implement me", G_STRLOC);
-            g_value_set_boolean (value, FALSE);
+            g_value_set_boolean (value, doc && MD_IS_HAS_UNDO (doc) && _md_document_can_redo (doc));
             break;
 
         default:
@@ -620,12 +579,15 @@ md_window_constructor (GType                  type,
     window = MD_WINDOW (object);
     g_return_val_if_fail (window->priv->mgr != NULL, object);
 
+    gtk_box_pack_start (GTK_BOX (MOO_WINDOW (window)->vbox), window->notebook, TRUE, TRUE, 0);
+
     group = gtk_window_group_new ();
     gtk_window_group_add_window (group, GTK_WINDOW (window));
     g_object_unref (group);
 
     g_signal_connect (window, "notify::ui-xml",
                       G_CALLBACK (update_doc_list), NULL);
+    update_doc_list (window);
 
     return object;
 }
@@ -647,7 +609,7 @@ get_doc_status_string (MdDocument *doc)
     const char *doc_title_format;
 
     status = md_document_get_status (doc);
-    modified = (status & MD_DOCUMENT_MODIFIED);
+    modified = md_document_get_modified (doc);
 
     if (!modified)
     {
@@ -830,6 +792,12 @@ static void
 action_new_doc (MdWindow *window)
 {
     _md_manager_action_new_doc (window->priv->mgr, window);
+}
+
+static void
+action_new_window (MdWindow *window)
+{
+    _md_manager_action_new_window (window->priv->mgr);
 }
 
 static void
@@ -1375,7 +1343,6 @@ md_window_active_doc_changed (MdWindow *window)
     g_object_notify (G_OBJECT (window), "md-has-undo");
     g_object_notify (G_OBJECT (window), "md-can-undo");
     g_object_notify (G_OBJECT (window), "md-can-redo");
-    g_object_notify (G_OBJECT (window), "md-has-selection");
     g_object_thaw_notify (G_OBJECT (window));
 
     update_window_title (window);
@@ -1430,9 +1397,9 @@ md_window_insert_doc_real (MdWindow   *window,
     moo_notebook_insert_page (MOO_NOTEBOOK (window->notebook), scrolledwindow, label, position);
     _md_document_set_window (doc, window);
 
-    g_signal_connect_swapped (doc, "notify::doc-status",
+    g_signal_connect_swapped (doc, "notify::md-doc-status",
                               G_CALLBACK (doc_status_notify), window);
-    g_signal_connect_swapped (doc, "notify::doc-file-info",
+    g_signal_connect_swapped (doc, "notify::md-doc-file-info",
                               G_CALLBACK (doc_file_info_notify), window);
     if (MD_IS_HAS_UNDO (doc))
     {
@@ -1446,6 +1413,7 @@ md_window_insert_doc_real (MdWindow   *window,
 //     g_signal_connect_swapped (edit, "notify::has-text",
 //                               G_CALLBACK (proxy_boolean_property), window);
 
+    update_tab_label (window, doc);
     update_active_doc (window);
     update_doc_list (window);
 }
@@ -1469,28 +1437,26 @@ md_window_remove_doc_real (MdWindow   *window,
     g_signal_handlers_disconnect_by_func (doc, (gpointer) doc_file_info_notify, window);
     g_signal_handlers_disconnect_by_func (doc, (gpointer) proxy_boolean_property, window);
 
-    action = g_object_get_data (G_OBJECT (doc), "moo-doc-list-action");
+    action = g_object_get_data (G_OBJECT (doc), "md-doc-list-action");
 
     if (action)
     {
         moo_action_collection_remove_action (moo_window_get_actions (MOO_WINDOW (window)), action);
-        g_object_set_data (G_OBJECT (doc), "moo-doc-list-action", NULL);
+        g_object_set_data (G_OBJECT (doc), "md-doc-list-action", NULL);
     }
 
     window->priv->history = g_list_remove (window->priv->history, doc);
     window->priv->history_blocked = TRUE;
 
-    update_doc_list (window);
-
     if (window->priv->active == doc)
         window->priv->active = NULL;
+
+    update_doc_list (window);
 
     /* removing scrolled window from the notebook will destroy the scrolled window,
      * and that in turn will destroy the doc if it's not removed before */
     gtk_container_remove (GTK_CONTAINER (GTK_WIDGET(doc)->parent), GTK_WIDGET (doc));
     moo_notebook_remove_page (MOO_NOTEBOOK (window->notebook), page);
-
-    /* doc may be dead after here */
 
     window->priv->history_blocked = FALSE;
     if (window->priv->history)
@@ -1857,6 +1823,8 @@ update_tab_label (MdWindow   *window,
     pixbuf = _md_document_get_icon (doc, GTK_ICON_SIZE_MENU);
     set_tab_icon (icon, evbox, pixbuf);
 
+    if (pixbuf)
+        g_object_unref (pixbuf);
     g_free (label_text);
 }
 
@@ -1950,7 +1918,7 @@ do_update_doc_list (MdWindow *window)
         GtkRadioAction *action;
         gpointer doc = docs->data;
 
-        action = g_object_get_data (doc, "moo-doc-list-action");
+        action = g_object_get_data (doc, "md-doc-list-action");
 
         if (action)
         {
@@ -1962,14 +1930,14 @@ do_update_doc_list (MdWindow *window)
         else
         {
             GtkActionGroup *action_group;
-            char *name = g_strdup_printf ("MooEdit-%p", doc);
+            char *name = g_strdup_printf ("MooDocument-%p", doc);
             action = g_object_new (MOO_TYPE_RADIO_ACTION ,
                                    "name", name,
                                    "label", md_document_get_display_basename (doc),
                                    "tooltip", md_document_get_display_name (doc),
                                    "use-underline", FALSE,
                                    NULL);
-            g_object_set_data_full (doc, "moo-doc-list-action", action, g_object_unref);
+            g_object_set_data_full (doc, "md-doc-list-action", action, g_object_unref);
             g_object_set_data (G_OBJECT (action), "md-document", doc);
             moo_action_set_no_accel (GTK_ACTION (action), TRUE);
             g_signal_connect (action, "toggled", G_CALLBACK (doc_list_action_toggled), window);
@@ -2004,6 +1972,7 @@ do_update_doc_list (MdWindow *window)
     }
 
 out:
+    /* toggled callback checks this, so it must be unset at the end */
     window->priv->doc_list_update_idle = 0;
     return FALSE;
 }

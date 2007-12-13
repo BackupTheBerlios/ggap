@@ -17,8 +17,7 @@ mddocument-private.lo: mddocument.lo
 mdwindow-private.lo: mdwindow.lo
 mdmanager-private.lo: mdmanager.lo
 
-libmooui_la_LIBADD = $(MOO_LIBS)
-testui_LDADD = libmooui.la
+testui_LDADD = libmooui.la $(MOO_LIBS)
 
 AM_CFLAGS =				\
     -I$(top_builddir)			\

@@ -12,8 +12,8 @@
  */
 
 #include "gapterm.h"
-#include "gapview.h"
 #include "gapapp.h"
+#include "gap.h"
 #include "gapeditwindow.h"
 #include "mooterm/mooterm-text.h"
 #include "mooutils/mooutils-misc.h"
@@ -39,9 +39,6 @@ typedef struct {
 } ErrInfo;
 
 
-static void     gap_term_class_init     (GapTermClass   *klass);
-static void     gap_term_view_init      (GapViewIface   *iface);
-static void     gap_term_init           (GapTerm        *window);
 static GObject *gap_term_constructor    (GType           type,
                                          guint           n_props,
                                          GObjectConstructParam *props);
@@ -63,8 +60,7 @@ static void     err_info_free           (ErrInfo            *err);
 
 
 /* GAP_TYPE_TERM */
-G_DEFINE_TYPE_WITH_CODE (GapTerm, gap_term, MOO_TYPE_TERM,
-                         G_IMPLEMENT_INTERFACE (GAP_TYPE_VIEW, gap_term_view_init))
+G_DEFINE_TYPE (GapTerm, gap_term, MOO_TYPE_TERM)
 
 
 static void
@@ -84,54 +80,13 @@ gap_term_class_init (GapTermClass *klass)
     term_class->child_died = gap_term_child_died;
 
     g_type_class_add_private (klass, sizeof (GapTermPrivate));
-}
 
-
-static gboolean
-gap_term_view_start_gap (GapView    *view,
-                         const char *cmd_line)
-{
-    if (moo_prefs_get_bool (GGAP_PREFS_GAP_CLEAR_TERMINAL))
-        moo_term_reset (MOO_TERM (view));
-
-    return moo_term_fork_command_line (MOO_TERM (view), cmd_line,
-                                       NULL, NULL, NULL);
-}
-
-static void
-gap_term_view_stop_gap (GapView *view)
-{
-    moo_term_kill_child (MOO_TERM (view));
-}
-
-static void
-gap_term_view_feed_gap (GapView    *view,
-                        const char *text)
-{
-    moo_term_feed_child (MOO_TERM (view), text, -1);
-}
-
-static gboolean
-gap_term_view_child_alive (GapView *view)
-{
-    return moo_term_child_alive (MOO_TERM (view));
-}
-
-static void
-gap_term_view_send_intr (GapView *view)
-{
-    moo_term_ctrl_c (MOO_TERM (view));
-}
-
-static void
-gap_term_view_init (GapViewIface *iface)
-{
-    iface->start_gap = gap_term_view_start_gap;
-    iface->stop_gap = gap_term_view_stop_gap;
-    iface->feed_gap = gap_term_view_feed_gap;
-    iface->child_alive = gap_term_view_child_alive;
-    iface->send_intr = gap_term_view_send_intr;
-    iface->get_gap_flags = NULL;
+    g_signal_new ("gap-exited",
+                  GAP_TYPE_TERM,
+                  G_SIGNAL_RUN_LAST,
+                  0, NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
 }
 
 
@@ -146,7 +101,6 @@ gap_term_init (GapTerm *term)
                                            G_REGEX_ANCHORED, 0, NULL);
     g_return_if_fail (term->priv->error_regex != NULL);
 }
-
 
 static GObject*
 gap_term_constructor (GType               type,
@@ -168,7 +122,6 @@ gap_term_constructor (GType               type,
 
     return object;
 }
-
 
 static void
 gap_term_destroy (GtkObject *object)
@@ -492,11 +445,57 @@ gap_term_key_press (GtkWidget      *widget,
 
     if (s)
     {
-        gap_app_feed_gap (GAP_APP_INSTANCE, s);
+        gap_term_feed_gap (GAP_TERM (widget), s);
         return TRUE;
     }
     else
     {
         return GTK_WIDGET_CLASS(gap_term_parent_class)->key_press_event (widget, event);
     }
+}
+
+
+void
+gap_term_start_gap (GapTerm    *term,
+                    const char *workspace)
+{
+    char *cmd_line;
+
+    g_return_if_fail (GAP_IS_TERM (term));
+    g_return_if_fail (!moo_term_child_alive (MOO_TERM (term)));
+
+    if (moo_prefs_get_bool (GGAP_PREFS_GAP_CLEAR_TERMINAL))
+        moo_term_reset (MOO_TERM (term));
+
+    cmd_line = gap_make_cmd_line (workspace, NULL, FALSE, 0);
+    moo_term_fork_command_line (MOO_TERM (term), cmd_line,
+                                NULL, NULL, NULL);
+
+    g_free (cmd_line);
+}
+
+void
+gap_term_stop_gap (GapTerm *term)
+{
+    g_return_if_fail (GAP_IS_TERM (term));
+
+    if (moo_term_child_alive (MOO_TERM (term)))
+        moo_term_kill_child (MOO_TERM (term));
+}
+
+void
+gap_term_feed_gap (GapTerm    *term,
+                   const char *text)
+{
+    g_return_if_fail (GAP_IS_TERM (term));
+    g_return_if_fail (text != NULL);
+
+    moo_term_feed_child (MOO_TERM (term), text, -1);
+}
+
+void
+gap_term_send_intr (GapTerm *term)
+{
+    g_return_if_fail (GAP_IS_TERM (term));
+    moo_term_ctrl_c (MOO_TERM (term));
 }
