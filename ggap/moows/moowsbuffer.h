@@ -58,9 +58,8 @@ MooWsBlock *_moo_ws_buffer_get_last_block   (MooWsBuffer    *buffer);
 void        _moo_ws_buffer_beep             (MooWsBuffer    *buffer);
 void        _moo_ws_buffer_start_edit       (MooWsBuffer    *buffer);
 void        _moo_ws_buffer_end_edit         (MooWsBuffer    *buffer);
-void        _moo_ws_buffer_set_in_key_press (MooWsBuffer    *buffer,
-                                             gboolean        in_key_press);
-
+void        _moo_ws_buffer_start_user_edit  (MooWsBuffer    *buffer);
+void        _moo_ws_buffer_end_user_edit    (MooWsBuffer    *buffer);
 
 G_END_DECLS
 

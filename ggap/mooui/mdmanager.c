@@ -254,7 +254,7 @@ md_manager_class_init (MdManagerClass *klass)
                       NULL, NULL,
                       _moo_ui_marshal_BOXED__OBJECT,
                       MD_TYPE_FILE_INFO, 1,
-                      MD_TYPE_DOCUMENT);
+                      MD_TYPE_VIEW);
 }
 
 static void

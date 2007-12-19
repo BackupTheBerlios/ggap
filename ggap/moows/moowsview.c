@@ -31,6 +31,8 @@ static void     moo_ws_view_move_cursor (GtkTextView    *text_view,
                                          GtkMovementStep step,
                                          int             count,
                                          gboolean        extend_selection);
+static void     moo_ws_view_cut_clipboard (GtkTextView  *text_view);
+static void     moo_ws_view_paste_clipboard (GtkTextView *text_view);
 
 static void     go_prev_block           (MooWsView      *view);
 static void     go_next_block           (MooWsView      *view);
@@ -100,9 +102,14 @@ moo_ws_view_constructor (GType                  type,
 static void
 moo_ws_view_class_init (MooWsViewClass *klass)
 {
+    GtkTextViewClass *textview_class = GTK_TEXT_VIEW_CLASS (klass);
+
     G_OBJECT_CLASS (klass)->constructor = moo_ws_view_constructor;
     GTK_WIDGET_CLASS (klass)->key_press_event = moo_ws_view_key_press;
-    GTK_TEXT_VIEW_CLASS (klass)->move_cursor = moo_ws_view_move_cursor;
+
+    textview_class->move_cursor = moo_ws_view_move_cursor;
+    textview_class->cut_clipboard = moo_ws_view_cut_clipboard;
+    textview_class->paste_clipboard = moo_ws_view_paste_clipboard;
 
     g_type_class_add_private (klass, sizeof (MooWsViewPrivate));
 }
@@ -376,11 +383,29 @@ moo_ws_view_key_press (GtkWidget   *widget,
                     return TRUE;
     }
 
-    _moo_ws_buffer_set_in_key_press (get_ws_buffer (view), TRUE);
+    _moo_ws_buffer_start_user_edit (get_ws_buffer (view));
     retval = GTK_WIDGET_CLASS (moo_ws_view_parent_class)->key_press_event (widget, event);
-    _moo_ws_buffer_set_in_key_press (get_ws_buffer (view), FALSE);
+    _moo_ws_buffer_end_user_edit (get_ws_buffer (view));
 
     return retval;
+}
+
+static void
+moo_ws_view_cut_clipboard (GtkTextView *text_view)
+{
+    MooWsView *view = MOO_WS_VIEW (text_view);
+    _moo_ws_buffer_start_user_edit (get_ws_buffer (view));
+    GTK_TEXT_VIEW_CLASS (moo_ws_view_parent_class)->cut_clipboard (text_view);
+    _moo_ws_buffer_end_user_edit (get_ws_buffer (view));
+}
+
+static void
+moo_ws_view_paste_clipboard (GtkTextView *text_view)
+{
+    MooWsView *view = MOO_WS_VIEW (text_view);
+    _moo_ws_buffer_start_user_edit (get_ws_buffer (view));
+    GTK_TEXT_VIEW_CLASS (moo_ws_view_parent_class)->paste_clipboard (text_view);
+    _moo_ws_buffer_end_user_edit (get_ws_buffer (view));
 }
 
 static void

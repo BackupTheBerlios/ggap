@@ -24,7 +24,7 @@ struct MooWsBufferPrivate {
     MooWsBlock *last_block;
     MooWsBlock *last_edited;
     guint modifying_text;
-    guint in_key_press : 1;
+    guint user_edit;
 };
 
 static void     moo_ws_buffer_check             (MooWsBuffer    *buffer);
@@ -218,11 +218,18 @@ _moo_ws_buffer_end_edit (MooWsBuffer *buffer)
 }
 
 void
-_moo_ws_buffer_set_in_key_press (MooWsBuffer *buffer,
-                                 gboolean     in_key_press)
+_moo_ws_buffer_start_user_edit (MooWsBuffer *buffer)
 {
     g_return_if_fail (MOO_IS_WS_BUFFER (buffer));
-    buffer->priv->in_key_press = in_key_press != 0;
+    buffer->priv->user_edit += 1;
+}
+
+void
+_moo_ws_buffer_end_user_edit (MooWsBuffer *buffer)
+{
+    g_return_if_fail (MOO_IS_WS_BUFFER (buffer));
+    g_return_if_fail (buffer->priv->user_edit != 0);
+    buffer->priv->user_edit -= 1;
 }
 
 
@@ -243,7 +250,7 @@ moo_ws_buffer_insert_text (GtkTextBuffer *text_buffer,
     MooWsBlock *block;
     gboolean inserted;
 
-    if (!buffer->priv->modifying_text && !buffer->priv->in_key_press)
+    if (!buffer->priv->modifying_text && !buffer->priv->user_edit)
     {
         g_critical ("%s: oops", G_STRFUNC);
         return;
@@ -272,7 +279,7 @@ moo_ws_buffer_insert_text (GtkTextBuffer *text_buffer,
 
     inserted = _moo_ws_block_insert_interactive (block, where, text, len);
 
-    if (buffer->priv->in_key_press && inserted)
+    if (buffer->priv->user_edit && inserted)
     {
         GtkTextIter cursor;
         gtk_text_buffer_get_iter_at_mark (text_buffer, &cursor,
@@ -298,7 +305,7 @@ moo_ws_buffer_delete_range (GtkTextBuffer *text_buffer,
     GtkTextMark *start_mark, *end_mark;
     GtkTextIter iter;
 
-    if (!buffer->priv->modifying_text && !buffer->priv->in_key_press)
+    if (!buffer->priv->modifying_text && !buffer->priv->user_edit)
     {
         g_critical ("%s: oops", G_STRFUNC);
         return;

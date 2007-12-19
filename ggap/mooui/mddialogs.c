@@ -18,7 +18,7 @@ md_save_changes_dialog (MdView *view)
     const char *display_name;
     MdDocument *doc;
 
-    g_return_val_if_fail (MD_IS_VIEW (doc), MD_SAVE_CHANGES_RESPONSE_CANCEL);
+    g_return_val_if_fail (MD_IS_VIEW (view), MD_SAVE_CHANGES_RESPONSE_CANCEL);
 
     doc = md_view_get_doc (view);
     g_return_val_if_fail (MD_IS_DOCUMENT (doc), MD_SAVE_CHANGES_RESPONSE_CANCEL);

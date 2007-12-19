@@ -366,7 +366,6 @@ md_view_detach_async_op (MdView *view)
 
     if (data->async_op)
     {
-        g_print ("%s\n", G_STRFUNC);
         g_signal_emit_by_name (view, "detach-async-op", data->async_op);
         data->async_op = NULL;
     }
@@ -523,6 +522,8 @@ md_view_update_tab_label (MdView *view)
     char *label_text;
     gboolean modified, deleted;
     GdkPixbuf *pixbuf;
+
+    g_return_if_fail (MD_IS_VIEW (view));
 
     data = md_view_get_data (view);
 

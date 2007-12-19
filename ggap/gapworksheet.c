@@ -1062,7 +1062,7 @@ gap_worksheet_run_command (GapWorksheet *ws,
     ci.stamp = stamp;
     ci.output = NULL;
 
-    destroy_cb_id = g_signal_connect (ws, "destroy",
+    destroy_cb_id = g_signal_connect (ws, "close",
                                       G_CALLBACK (run_command_destroy),
                                       &ci);
 

@@ -1442,6 +1442,8 @@ md_window_insert_view_real (MdWindow *window,
     MdDocument *doc;
     int position;
 
+    _md_view_set_window (view, window);
+
     label = create_tab_label (window, view);
     gtk_widget_show (label);
 
@@ -1456,7 +1458,6 @@ md_window_insert_view_real (MdWindow *window,
 
     position = moo_notebook_get_current_page (MOO_NOTEBOOK (window->notebook)) + 1;
     moo_notebook_insert_page (MOO_NOTEBOOK (window->notebook), scrolledwindow, label, position);
-    _md_view_set_window (view, window);
 
     if (moo_notebook_get_n_pages (MOO_NOTEBOOK (window->notebook)) == 1)
     {
