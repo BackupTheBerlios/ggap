@@ -12,10 +12,11 @@
  */
 
 #include "moowspromptblock.h"
+#include "moowsbuffer.h"
 #include "mooutils/mooutils-misc.h"
 
 
-struct _MooWsPromptBlockPrivate
+struct MooWsPromptBlockPrivate
 {
     char *ps;
     char *ps2;
@@ -76,18 +77,19 @@ moo_ws_prompt_block_dispose (GObject *object)
 }
 
 static void
-moo_ws_prompt_block_add (MooWsBlock *block,
-                         MooWsView  *view,
-                         MooWsBlock *after,
-                         MooWsBlock *before)
+moo_ws_prompt_block_add (MooWsBlock  *block,
+                         MooWsBuffer *buffer,
+                         MooWsBlock  *after,
+                         MooWsBlock  *before)
 {
     char *text;
     GtkTextTagTable *tag_table;
     MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
 
-    MOO_WS_BLOCK_CLASS (moo_ws_prompt_block_parent_class)->add (block, view, after, before);
+    MOO_WS_BLOCK_CLASS (moo_ws_prompt_block_parent_class)->
+        add (block, buffer, after, before);
 
-    tag_table = gtk_text_buffer_get_tag_table (block->buffer);
+    tag_table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (block->buffer));
     gtk_text_tag_table_add (tag_table, pb->priv->ps_tag);
     gtk_text_tag_table_add (tag_table, pb->priv->text_tag);
 
@@ -103,7 +105,7 @@ moo_ws_prompt_block_remove (MooWsBlock *block)
     MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
     GtkTextTagTable *tag_table;
 
-    tag_table = gtk_text_buffer_get_tag_table (block->buffer);
+    tag_table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (block->buffer));
     gtk_text_tag_table_remove (tag_table, pb->priv->ps_tag);
     gtk_text_tag_table_remove (tag_table, pb->priv->text_tag);
 
@@ -210,11 +212,11 @@ moo_ws_prompt_block_delete_interactive (MooWsBlock  *block,
 
     if (gtk_text_iter_compare (start, end) >= 0)
     {
-        _moo_ws_view_beep (block->view);
+        _moo_ws_buffer_beep (block->buffer);
         return FALSE;
     }
 
-    gtk_text_buffer_delete (block->buffer, start, end);
+    gtk_text_buffer_delete (GTK_TEXT_BUFFER (block->buffer), start, end);
 
 #if 0
     {
@@ -409,7 +411,7 @@ moo_ws_prompt_block_set_text (MooWsPromptBlock *pb,
 
     block = MOO_WS_BLOCK (pb);
 
-    if (!block->view)
+    if (!block->buffer)
     {
         char *tmp = pb->priv->text;
         pb->priv->text = g_strdup (text);
@@ -417,11 +419,11 @@ moo_ws_prompt_block_set_text (MooWsPromptBlock *pb,
         return;
     }
 
-    _moo_ws_view_start_edit (block->view);
+    _moo_ws_buffer_start_edit (block->buffer);
 
     _moo_ws_block_get_start_iter (block, &start);
     _moo_ws_block_get_end_iter (block, &end);
-    gtk_text_buffer_delete (block->buffer, &start, &end);
+    gtk_text_buffer_delete (GTK_TEXT_BUFFER (block->buffer), &start, &end);
 
     if (text && text[0])
         lines = moo_strnsplit_lines (text, -1, NULL);
@@ -450,7 +452,7 @@ moo_ws_prompt_block_set_text (MooWsPromptBlock *pb,
 
     g_strfreev (lines);
 
-    _moo_ws_view_end_edit (block->view);
+    _moo_ws_buffer_end_edit (block->buffer);
 }
 
 
@@ -629,7 +631,7 @@ moo_ws_prompt_block_place_cursor (MooWsPromptBlock *pb,
         gtk_text_iter_set_line_offset (&iter, column + add);
     }
 
-    gtk_text_buffer_place_cursor (block->buffer, &iter);
+    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (block->buffer), &iter);
 }
 
 void
@@ -661,7 +663,7 @@ moo_ws_prompt_block_new_line (MooWsPromptBlock *pb)
     g_return_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb));
 
     block = MOO_WS_BLOCK (pb);
-    _moo_ws_view_start_edit (block->view);
+    _moo_ws_buffer_start_edit (block->buffer);
 
     _moo_ws_block_get_end_iter (block, &iter);
     _moo_ws_block_insert (block, &iter, "\n", -1);
@@ -670,6 +672,6 @@ moo_ws_prompt_block_new_line (MooWsPromptBlock *pb)
         _moo_ws_block_insert_with_tags (block, &iter, pb->priv->ps2, -1,
                                         pb->priv->ps_tag, NULL);
 
-    _moo_ws_view_end_edit (block->view);
-    gtk_text_buffer_place_cursor (block->buffer, &iter);
+    _moo_ws_buffer_end_edit (block->buffer);
+    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (block->buffer), &iter);
 }

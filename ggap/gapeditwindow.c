@@ -15,6 +15,7 @@
 #include "gapeditwindow.h"
 #include "gapapp.h"
 #include "gap.h"
+#include "mooedit/mooeditor.h"
 #include "mooutils/mooutils-misc.h"
 #include <gtk/gtkstock.h>
 
@@ -87,13 +88,13 @@ send_copy (GapEditWindow *window,
            MooEdit       *doc)
 {
     MooEditor *editor;
-    MooApp *app;
+    MdApp *app;
     char *filename;
     GError *error = NULL;
 
     g_return_if_fail (doc != NULL);
 
-    app = moo_app_get_instance ();
+    app = md_app_instance ();
     editor = moo_edit_window_get_editor (MOO_EDIT_WINDOW (window));
 
     filename = moo_tempnam ();
@@ -199,7 +200,7 @@ gap_edit_window_open_file (const char *filename,
 
     g_return_if_fail (filename != NULL);
 
-    editor = moo_app_get_editor (moo_app_get_instance ());
+    editor = moo_editor_instance ();
     doc = g_hash_table_lookup (tmp_to_real, filename);
 
     if (!doc)

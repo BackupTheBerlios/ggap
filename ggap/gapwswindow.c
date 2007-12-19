@@ -30,10 +30,6 @@ static GObject *gap_ws_window_constructor   (GType   type,
                                              guint   n_props,
                                              GObjectConstructParam *props);
 
-static void     action_open_worksheet       (GapWsWindow    *window);
-static void     action_save_worksheet       (GapWsWindow    *window);
-static void     action_save_worksheet_as    (GapWsWindow    *window);
-
 static void
 gap_ws_window_class_init (GapWsWindowClass *klass)
 {
@@ -44,72 +40,6 @@ gap_ws_window_class_init (GapWsWindowClass *klass)
 
     moo_window_class_set_id (MOO_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
     g_type_class_add_private (klass, sizeof (GapWsWindowPrivate));
-
-//     moo_window_class_new_action (window_class, "OpenWorksheet", NULL,
-//                                  "display-name", _("Open Worksheet"),
-//                                  "label", _("_Open Worksheet..."),
-//                                  "tooltip", _("Open worksheet..."),
-//                                  "stock-id", GTK_STOCK_OPEN,
-//                                  "accel", "<Ctrl>O",
-//                                  "closure-callback", action_open_worksheet,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "SaveWorksheet", NULL,
-//                                  "display-name", _("Save Worksheet"),
-//                                  "label", _("_Save Worksheet"),
-//                                  "tooltip", _("Save worksheet"),
-//                                  "stock-id", GTK_STOCK_SAVE,
-//                                  "accel", "<Ctrl>S",
-//                                  "closure-callback", action_save_worksheet,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "SaveWorksheetAs", NULL,
-//                                  "display-name", _("Save Worksheet As"),
-//                                  "label", _("_Save Worksheet As..."),
-//                                  "tooltip", _("Save worksheet as..."),
-//                                  "stock-id", GTK_STOCK_SAVE_AS,
-//                                  "accel", "<Shift><Ctrl>S",
-//                                  "closure-callback", action_save_worksheet_as,
-//                                  NULL);
-
-//     moo_window_class_new_action (window_class, "Cut", NULL,
-//                                  "display-name", GTK_STOCK_CUT,
-//                                  "label", GTK_STOCK_CUT,
-//                                  "tooltip", GTK_STOCK_CUT,
-//                                  "stock-id", GTK_STOCK_COPY,
-//                                  "accel", "<Ctrl>C",
-//                                  "closure-callback", copy_clipboard,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "Copy", NULL,
-//                                  "display-name", GTK_STOCK_COPY,
-//                                  "label", GTK_STOCK_COPY,
-//                                  "tooltip", GTK_STOCK_COPY,
-//                                  "stock-id", GTK_STOCK_COPY,
-//                                  "accel", "<alt>C",
-//                                  "closure-callback", copy_clipboard,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "Paste", NULL,
-//                                  "display-name", GTK_STOCK_PASTE,
-//                                  "label", GTK_STOCK_PASTE,
-//                                  "tooltip", GTK_STOCK_PASTE,
-//                                  "stock-id", GTK_STOCK_PASTE,
-//                                  "accel", "<alt>V",
-//                                  "closure-callback", paste_clipboard,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
-//
-//     moo_window_class_new_action (window_class, "SelectAll", NULL,
-//                                  "display-name", GTK_STOCK_SELECT_ALL,
-//                                  "label", GTK_STOCK_SELECT_ALL,
-//                                  "tooltip", GTK_STOCK_SELECT_ALL,
-//                                  "accel", "<alt>A",
-//                                  "closure-callback", moo_term_select_all,
-//                                  "closure-proxy-func", gap_term_window_get_terminal,
-//                                  NULL);
 }
 
 

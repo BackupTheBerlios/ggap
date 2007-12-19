@@ -12,13 +12,18 @@ gboolean            _md_document_can_redo       (MdDocument     *doc);
 
 gboolean            _md_document_need_save      (MdDocument     *doc);
 gboolean            _md_document_is_untitled    (MdDocument     *doc);
+gboolean            _md_document_is_empty       (MdDocument     *doc);
 
 void                _md_document_set_manager    (MdDocument     *doc,
                                                  MdManager      *mgr);
-void                _md_document_set_window     (MdDocument     *doc,
-                                                 MdWindow       *window);
+void                _md_document_add_view       (MdDocument     *doc,
+                                                 MdView         *view);
+void                _md_document_remove_view    (MdDocument     *doc,
+                                                 MdView         *view);
+void                _md_document_close          (MdDocument     *doc);
 
 GdkPixbuf          *_md_document_get_icon       (MdDocument     *doc,
+                                                 GtkWidget      *widget,
                                                  GtkIconSize     size);
 
 MdFileOpStatus      _md_document_load_file      (MdDocument     *doc,

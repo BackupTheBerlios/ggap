@@ -1,4 +1,5 @@
 #include "mddialogs.h"
+#include "mdview.h"
 #include "ggap-i18n.h"
 #include "mooedit/mooeditsavemult-glade.h"
 #include "mooutils/moodialogs.h"
@@ -9,17 +10,20 @@
 
 
 MdSaveChangesDialogResponse
-md_save_changes_dialog (MdDocument *doc)
+md_save_changes_dialog (MdView *view)
 {
     GtkWidget *parent;
     GtkWidget *dialog;
     int response;
     const char *display_name;
+    MdDocument *doc;
 
-    g_return_val_if_fail (MD_IS_DOCUMENT (doc),
-                          MD_SAVE_CHANGES_RESPONSE_CANCEL);
+    g_return_val_if_fail (MD_IS_VIEW (doc), MD_SAVE_CHANGES_RESPONSE_CANCEL);
 
-    parent = gtk_widget_get_toplevel (GTK_WIDGET (doc));
+    doc = md_view_get_doc (view);
+    g_return_val_if_fail (MD_IS_DOCUMENT (doc), MD_SAVE_CHANGES_RESPONSE_CANCEL);
+
+    parent = gtk_widget_get_toplevel (GTK_WIDGET (view));
     display_name = md_document_get_display_basename (doc);
     dialog = gtk_message_dialog_new (parent ? GTK_WINDOW (parent) : NULL,
                                      GTK_DIALOG_MODAL,
@@ -75,7 +79,7 @@ md_save_changes_dialog (MdDocument *doc)
 
 enum {
     COLUMN_SAVE = 0,
-    COLUMN_DOC,
+    COLUMN_VIEW,
     NUM_COLUMNS
 };
 
@@ -85,13 +89,15 @@ name_data_func (G_GNUC_UNUSED GtkTreeViewColumn *column,
                 GtkTreeModel      *model,
                 GtkTreeIter       *iter)
 {
-    MdDocument *doc = NULL;
+    MdView *view = NULL;
+    MdDocument *doc;
 
-    gtk_tree_model_get (model, iter, COLUMN_DOC, &doc, -1);
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    gtk_tree_model_get (model, iter, COLUMN_VIEW, &view, -1);
+    g_return_if_fail (MD_IS_VIEW (view));
 
+    doc = md_view_get_doc (view);
     g_object_set (cell, "text", md_document_get_display_basename (doc), NULL);
-    g_object_unref (doc);
+    g_object_unref (view);
 }
 
 
@@ -150,22 +156,22 @@ save_toggled (GtkCellRendererToggle *cell,
 }
 
 static void
-files_treeview_init (GtkTreeView *treeview, GtkWidget *dialog, GSList  *docs)
+files_treeview_init (GtkTreeView *treeview, GtkWidget *dialog, GSList  *views)
 {
     GtkListStore *store;
     GtkTreeViewColumn *column;
     GtkCellRenderer *cell;
     GSList *l;
 
-    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_BOOLEAN, MD_TYPE_DOCUMENT);
+    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_BOOLEAN, MD_TYPE_VIEW);
 
-    for (l = docs; l != NULL; l = l->next)
+    for (l = views; l != NULL; l = l->next)
     {
         GtkTreeIter iter;
         gtk_list_store_append (store, &iter);
         gtk_list_store_set (store, &iter,
                             COLUMN_SAVE, TRUE,
-                            COLUMN_DOC, l->data,
+                            COLUMN_VIEW, l->data,
                             -1);
     }
 
@@ -209,18 +215,18 @@ files_treeview_get_to_save (GtkWidget *treeview)
 
     do
     {
-        MdDocument *doc = NULL;
+        MdView *view = NULL;
         gboolean save = TRUE;
 
         gtk_tree_model_get (model, &iter,
                             COLUMN_SAVE, &save,
-                            COLUMN_DOC, &doc, -1);
-        g_return_val_if_fail (MD_IS_DOCUMENT (doc), list);
+                            COLUMN_VIEW, &view, -1);
+        g_return_val_if_fail (MD_IS_VIEW (view), list);
 
         if (save)
-            list = g_slist_prepend (list, doc);
+            list = g_slist_prepend (list, view);
 
-        g_object_unref (doc);
+        g_object_unref (view);
     }
     while (gtk_tree_model_iter_next (model, &iter));
 
@@ -228,7 +234,7 @@ files_treeview_get_to_save (GtkWidget *treeview)
 }
 
 MdSaveChangesDialogResponse
-md_save_multiple_changes_dialog (GSList  *docs,
+md_save_multiple_changes_dialog (GSList  *views,
                                  GSList **to_save)
 {
     GSList *l;
@@ -238,17 +244,17 @@ md_save_multiple_changes_dialog (GSList  *docs,
     MdSaveChangesDialogResponse retval;
     MooGladeXML *xml;
 
-    g_return_val_if_fail (docs != NULL, MD_SAVE_CHANGES_RESPONSE_CANCEL);
+    g_return_val_if_fail (views != NULL, MD_SAVE_CHANGES_RESPONSE_CANCEL);
     g_return_val_if_fail (to_save != NULL, MD_SAVE_CHANGES_RESPONSE_CANCEL);
 
-    for (l = docs; l != NULL; l = l->next)
-        g_return_val_if_fail (MD_IS_DOCUMENT (l->data), MD_SAVE_CHANGES_RESPONSE_CANCEL);
+    for (l = views; l != NULL; l = l->next)
+        g_return_val_if_fail (MD_IS_VIEW (l->data), MD_SAVE_CHANGES_RESPONSE_CANCEL);
 
     xml = moo_glade_xml_new_from_buf (mooeditsavemult_glade_xml, -1,
                                       "dialog", GETTEXT_PACKAGE, NULL);
     dialog = moo_glade_xml_get_widget (xml, "dialog");
 
-    moo_window_set_parent (dialog, docs->data);
+    moo_window_set_parent (dialog, views->data);
 
     gtk_dialog_add_buttons (GTK_DIALOG (dialog),
                             MOO_STOCK_SAVE_NONE, GTK_RESPONSE_NO,
@@ -271,14 +277,14 @@ md_save_multiple_changes_dialog (GSList  *docs,
                                             "Save changes before closing?",
                                            "There are %u documents with unsaved changes. "
                                             "Save changes before closing?",
-                                           g_slist_length (docs)),
-                                g_slist_length (docs));
+                                           g_slist_length (views)),
+                                g_slist_length (views));
     msg = g_markup_printf_escaped ("<span weight=\"bold\" size=\"larger\">%s</span>",
                                    question);
     gtk_label_set_markup (GTK_LABEL (label), msg);
 
     treeview = moo_glade_xml_get_widget (xml, "treeview");
-    files_treeview_init (GTK_TREE_VIEW (treeview), dialog, docs);
+    files_treeview_init (GTK_TREE_VIEW (treeview), dialog, views);
 
     response = gtk_dialog_run (GTK_DIALOG (dialog));
 
@@ -304,18 +310,24 @@ md_save_multiple_changes_dialog (GSList  *docs,
 
 
 MdFileInfo *
-md_save_as_dialog (MdDocument *doc)
+md_save_as_dialog (MdView *view)
 {
     const char *start = NULL;
     const char *uri = NULL;
     MooFileDialog *dialog;
     MdFileInfo *file_info;
+    MdDocument *doc;
+
+    g_return_val_if_fail (MD_IS_VIEW (view), NULL);
+
+    doc = md_view_get_doc (view);
+    g_return_val_if_fail (MD_IS_DOCUMENT (doc), NULL);
 
 //     moo_prefs_create_key (moo_edit_setting (MD_EDIT_PREFS_LAST_DIR),
 //                           MD_PREFS_STATE, G_TYPE_STRING, NULL);
 //     start = moo_prefs_get_filename (moo_edit_setting (MD_EDIT_PREFS_LAST_DIR));
 
-    dialog = moo_file_dialog_new (MOO_FILE_DIALOG_SAVE, GTK_WIDGET (doc),
+    dialog = moo_file_dialog_new (MOO_FILE_DIALOG_SAVE, GTK_WIDGET (view),
                                   FALSE, GTK_STOCK_SAVE_AS, start,
                                   md_document_get_display_basename (doc));
     g_object_set (dialog, "enable-encodings", TRUE, NULL);
@@ -405,9 +417,9 @@ md_open_error_dialog (GtkWidget   *widget,
 
 
 void
-md_save_error_dialog (GtkWidget   *widget,
+md_save_error_dialog (GtkWidget  *widget,
                       MdFileInfo *file,
-                      GError      *error)
+                      const char *error)
 {
     char *filename_utf8, *msg = NULL;
 
@@ -422,7 +434,7 @@ md_save_error_dialog (GtkWidget   *widget,
     else
         msg = g_strdup (_("Could not save file"));
 
-    moo_error_dialog (widget, msg, error ? error->message : NULL);
+    moo_error_dialog (widget, msg, error);
 
     g_free (msg);
     g_free (filename_utf8);

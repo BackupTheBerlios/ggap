@@ -1,5 +1,5 @@
 /*
- *   moowsview.m
+ *   moowsview.c
  *
  *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
  *
@@ -12,64 +12,64 @@
  */
 
 #include "ggap-i18n.h"
-#include "moowsblock.h"
+#include "moowsview.h"
+#include "mooworksheet.h"
+#include "moowspromptblock.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-gobject.h"
 #include <gdk/gdkkeysyms.h>
 #include <string.h>
 
 
+struct MooWsViewPrivate {
+    int dummy;
+};
+
+static gboolean moo_ws_view_key_press   (GtkWidget      *widget,
+                                         GdkEventKey    *event);
+static void     moo_ws_view_move_cursor (GtkTextView    *text_view,
+                                         GtkMovementStep step,
+                                         int             count,
+                                         gboolean        extend_selection);
+
+static void     go_prev_block           (MooWsView      *view);
+static void     go_next_block           (MooWsView      *view);
+static void     go_first_block          (MooWsView      *view);
+static void     go_last_block           (MooWsView      *view);
+static void     go_home                 (MooWsView      *view,
+                                         gboolean        block_end);
+static void     go_end                  (MooWsView      *view,
+                                         gboolean        block_end);
+
+static void     scroll_insert_onscreen  (MooWsView      *view);
+
+
 G_DEFINE_TYPE (MooWsView, moo_ws_view, MOO_TYPE_TEXT_VIEW)
-
-
-struct _MooWsViewPrivate {
-    MooWsBlock *first_block;
-    MooWsBlock *last_block;
-    MooWsBlock *last_edited;
-    GtkTextBuffer *buffer;
-    guint modifying_text;
-    guint in_key_press : 1;
-};
-
-enum {
-    BUFFER_INSERT_TEXT,
-    BUFFER_DELETE_RANGE,
-    N_BUFFER_SIGNALS
-};
-
-static guint buffer_signals[N_BUFFER_SIGNALS];
-
-static void     moo_ws_view_check               (MooWsView      *view);
-
-static gboolean moo_ws_view_key_press           (GtkWidget      *widget,
-                                                 GdkEventKey    *event);
-static void     moo_ws_view_move_cursor         (GtkTextView    *text_view,
-                                                 GtkMovementStep step,
-                                                 int             count,
-                                                 gboolean        extend_selection);
-static void     moo_ws_buffer_insert_text       (GtkTextBuffer  *buffer,
-                                                 GtkTextIter    *where,
-                                                 char           *text,
-                                                 int             len,
-                                                 MooWsView      *view);
-static void     moo_ws_buffer_delete_range      (GtkTextBuffer  *buffer,
-                                                 GtkTextIter    *start,
-                                                 GtkTextIter    *end,
-                                                 MooWsView      *view);
-
-static void     moo_ws_view_delete_block_priv   (MooWsView      *view,
-                                                 MooWsBlock     *block,
-                                                 gboolean        destroying);
 
 static void
 moo_ws_view_init (MooWsView *view)
 {
     view->priv = G_TYPE_INSTANCE_GET_PRIVATE (view, MOO_TYPE_WS_VIEW, MooWsViewPrivate);
-    view->priv->buffer = NULL;
-    view->priv->first_block = NULL;
-    view->priv->last_block = NULL;
-    view->priv->last_edited = NULL;
+    moo_text_view_set_buffer_type (MOO_TEXT_VIEW (view), MOO_TYPE_WORKSHEET);
     moo_text_view_set_font_from_string (MOO_TEXT_VIEW (view), "Monospace");
+}
+
+static GtkTextBuffer *
+get_buffer (MooWsView *view)
+{
+    return gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
+}
+
+static MooWsBuffer *
+get_ws_buffer (MooWsView *view)
+{
+    return MOO_WS_BUFFER (get_buffer (view));
+}
+
+static MooWorksheet *
+get_worksheet (MooWsView *view)
+{
+    return MOO_WORKSHEET (get_buffer (view));
 }
 
 static GObject *
@@ -79,160 +79,32 @@ moo_ws_view_constructor (GType                  type,
 {
     GObject *object;
     MooWsView *view;
+    MooWsBuffer *buffer;
 
     object = G_OBJECT_CLASS (moo_ws_view_parent_class)->constructor (type, n_props, props);
     view = MOO_WS_VIEW (object);
 
-    view->priv->buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
-    g_signal_connect (view->priv->buffer, "insert-text",
-                      G_CALLBACK (moo_ws_buffer_insert_text), view);
-    g_signal_connect (view->priv->buffer, "delete-range",
-                      G_CALLBACK (moo_ws_buffer_delete_range), view);
-    g_object_set_data (G_OBJECT (view->priv->buffer), "moo-ws-view", view);
+    buffer = get_ws_buffer (view);
+    g_object_set_data (G_OBJECT (buffer), "moo-ws-view", view);
+    g_signal_connect_swapped (buffer, "beep",
+                              G_CALLBACK (_moo_ws_view_beep),
+                              view);
+    g_signal_connect_swapped (buffer, "scroll-insert-onscreen",
+                              G_CALLBACK (scroll_insert_onscreen),
+                              view);
 
     return object;
 }
 
-static void
-moo_ws_view_dispose (GObject *object)
-{
-    MooWsView *view = MOO_WS_VIEW (object);
-
-    if (view->priv)
-    {
-        while (view->priv->first_block)
-            moo_ws_view_delete_block_priv (view, view->priv->first_block, TRUE);
-
-        view->priv = NULL;
-    }
-
-    G_OBJECT_CLASS (moo_ws_view_parent_class)->dispose (object);
-}
 
 static void
 moo_ws_view_class_init (MooWsViewClass *klass)
 {
-    GtkTextBufferClass *buf_class;
-    GObjectClass *object_class = G_OBJECT_CLASS (klass);
-    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
-    GtkTextViewClass *textview_class = GTK_TEXT_VIEW_CLASS (klass);
-
-    object_class->constructor = moo_ws_view_constructor;
-    object_class->dispose = moo_ws_view_dispose;
-
-    widget_class->key_press_event = moo_ws_view_key_press;
-    textview_class->move_cursor = moo_ws_view_move_cursor;
-
-    buf_class = g_type_class_ref (GTK_TYPE_TEXT_BUFFER);
-    buffer_signals[BUFFER_INSERT_TEXT] =
-        g_signal_lookup ("insert-text", GTK_TYPE_TEXT_BUFFER);
-    buffer_signals[BUFFER_DELETE_RANGE] =
-        g_signal_lookup ("delete-range", GTK_TYPE_TEXT_BUFFER);
-    g_type_class_unref (buf_class);
+    G_OBJECT_CLASS (klass)->constructor = moo_ws_view_constructor;
+    GTK_WIDGET_CLASS (klass)->key_press_event = moo_ws_view_key_press;
+    GTK_TEXT_VIEW_CLASS (klass)->move_cursor = moo_ws_view_move_cursor;
 
     g_type_class_add_private (klass, sizeof (MooWsViewPrivate));
-}
-
-
-MooWsView *
-_moo_ws_buffer_get_view (GtkTextBuffer *buffer)
-{
-    g_return_val_if_fail (GTK_IS_TEXT_BUFFER (buffer), NULL);
-    return g_object_get_data (G_OBJECT (buffer), "moo-ws-view");
-}
-
-
-void
-moo_ws_view_insert_block (MooWsView  *view,
-                          MooWsBlock *block,
-                          MooWsBlock *after)
-{
-    g_return_if_fail (MOO_IS_WS_VIEW (view));
-    g_return_if_fail (MOO_IS_WS_BLOCK (block));
-    g_return_if_fail (block->view == NULL);
-    g_return_if_fail (!after || after->view == view);
-
-    MOO_OBJECT_REF_SINK (block);
-
-    moo_text_view_begin_not_undoable_action (MOO_TEXT_VIEW (view));
-    _moo_ws_view_start_edit (view);
-    _moo_ws_block_add (block, view, after,
-                       after ? after->next : view->priv->first_block);
-    _moo_ws_view_end_edit (view);
-    moo_text_view_end_not_undoable_action (MOO_TEXT_VIEW (view));
-    view->priv->last_edited = NULL;
-
-    g_return_if_fail (block->view == view);
-
-    if (after == view->priv->last_block)
-        view->priv->last_block = block;
-    if (!after)
-        view->priv->first_block = block;
-
-    moo_ws_view_check (view);
-}
-
-void
-moo_ws_view_append_block (MooWsView  *view,
-                          MooWsBlock *block)
-{
-    g_return_if_fail (MOO_IS_WS_VIEW (view));
-    g_return_if_fail (MOO_IS_WS_BLOCK (block));
-    moo_ws_view_insert_block (view, block, view->priv->last_block);
-}
-
-static void
-moo_ws_view_delete_block_priv (MooWsView  *view,
-                               MooWsBlock *block,
-                               gboolean    destroying)
-{
-    g_return_if_fail (MOO_IS_WS_VIEW (view));
-    g_return_if_fail (MOO_IS_WS_BLOCK (block));
-    g_return_if_fail (block->view == view);
-
-    if (block == view->priv->first_block)
-        view->priv->first_block = block->next;
-    if (block == view->priv->last_block)
-        view->priv->last_block = block->prev;
-
-    if (!destroying)
-    {
-        moo_text_view_begin_not_undoable_action (MOO_TEXT_VIEW (view));
-        _moo_ws_view_start_edit (view);
-        _moo_ws_block_remove (block);
-        _moo_ws_view_end_edit (view);
-        moo_text_view_end_not_undoable_action (MOO_TEXT_VIEW (view));
-        view->priv->last_edited = NULL;
-        moo_ws_view_check (view);
-    }
-
-    gtk_object_destroy (GTK_OBJECT (block));
-    g_object_unref (block);
-}
-
-void
-moo_ws_view_delete_block (MooWsView  *view,
-                          MooWsBlock *block)
-{
-    g_return_if_fail (MOO_IS_WS_VIEW (view));
-    g_return_if_fail (MOO_IS_WS_BLOCK (block));
-    g_return_if_fail (block->view == view);
-    moo_ws_view_delete_block_priv (view, block, FALSE);
-}
-
-
-MooWsBlock *
-_moo_ws_view_get_first_block (MooWsView *view)
-{
-    g_return_val_if_fail (MOO_IS_WS_VIEW (view), NULL);
-    return view->priv->first_block;
-}
-
-MooWsBlock *
-_moo_ws_view_get_last_block (MooWsView *view)
-{
-    g_return_val_if_fail (MOO_IS_WS_VIEW (view), NULL);
-    return view->priv->last_block;
 }
 
 
@@ -240,6 +112,7 @@ void
 _moo_ws_view_beep (MooWsView *view)
 {
     g_return_if_fail (MOO_IS_WS_VIEW (view));
+
 #if GTK_CHECK_VERSION(2,12,0)
     gdk_window_beep (GTK_WIDGET (view)->window);
 #else
@@ -248,13 +121,241 @@ _moo_ws_view_beep (MooWsView *view)
 }
 
 
-static gboolean
-do_special_keys (G_GNUC_UNUSED MooWsView   *view,
-                 G_GNUC_UNUSED GdkEventKey *event)
+static void
+scroll_insert_onscreen (MooWsView *view)
 {
-    // handle Enter here
+    gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW (view),
+                                        gtk_text_buffer_get_insert (get_buffer (view)));
+}
+
+
+static MooWsBlock *
+find_block (MooWsView  *view,
+            MooWsBlock *block,
+            int         steps)
+{
+    if (!block)
+    {
+        if (steps > 0)
+            block = _moo_ws_buffer_get_first_block (get_ws_buffer (view));
+        else
+            block = _moo_ws_buffer_get_last_block (get_ws_buffer (view));
+    }
+
+    if (!block)
+        return NULL;
+
+    while (steps != 0)
+    {
+        if (steps > 0)
+        {
+            MooWsBlock *next;
+
+            for (next = block->next;
+                 next != NULL && !MOO_IS_WS_PROMPT_BLOCK (next);
+                 next = next->next);
+
+            if (next)
+            {
+                block = next;
+                steps -= 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else
+        {
+            MooWsBlock *prev;
+
+            for (prev = block->prev;
+                 prev != NULL && !MOO_IS_WS_PROMPT_BLOCK (prev);
+                 prev = prev->prev);
+
+            if (prev)
+            {
+                block = prev;
+                steps += 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    return block;
+}
+
+static void
+go_to_block (MooWsView *view,
+             int        steps)
+{
+    MooWsBlock *block;
+    MooWsBlock *go_to = NULL;
+    GtkTextIter iter;
+
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+    block = _moo_ws_iter_get_block (&iter);
+    go_to = find_block (view, block, steps);
+
+    if (go_to && go_to != block)
+    {
+        moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (go_to), -1, -1);
+        scroll_insert_onscreen (view);
+    }
+}
+
+static void
+go_prev_block (MooWsView *view)
+{
+    go_to_block (view, -1);
+}
+
+static void
+go_next_block (MooWsView *view)
+{
+    go_to_block (view, 1);
+}
+
+static void
+go_first_block (MooWsView *view)
+{
+    go_to_block (view, G_MININT);
+}
+
+static void
+go_last_block (MooWsView *view)
+{
+    go_to_block (view, G_MAXINT);
+}
+
+static void
+go_to_iter (MooWsView         *view,
+            const GtkTextIter *iter)
+{
+    gtk_text_buffer_place_cursor (get_buffer (view), iter);
+    scroll_insert_onscreen (view);
+}
+
+static void
+go_home (MooWsView *view,
+         gboolean   block_start)
+{
+    GtkTextIter iter;
+    MooWsBlock *block;
+
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+    block = _moo_ws_iter_get_block (&iter);
+
+    if (block && block_start)
+        _moo_ws_block_get_start_iter (block, &iter);
+
+    if (MOO_IS_WS_PROMPT_BLOCK (block))
+        moo_ws_prompt_block_iter_set_line_offset (MOO_WS_PROMPT_BLOCK (block), &iter, 0);
+    else
+        gtk_text_iter_set_line_offset (&iter, 0);
+
+    go_to_iter (view, &iter);
+}
+
+static void
+go_end (MooWsView *view,
+        gboolean   block_end)
+{
+    GtkTextIter iter;
+
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+
+    if (block_end)
+    {
+        MooWsBlock *block = _moo_ws_iter_get_block (&iter);
+
+        if (block)
+            _moo_ws_block_get_end_iter (block, &iter);
+    }
+
+    if (!gtk_text_iter_ends_line (&iter))
+        gtk_text_iter_forward_to_line_end (&iter);
+
+    go_to_iter (view, &iter);
+}
+
+static gboolean
+steal_navigation_keys (MooWsView   *view,
+                       GdkEventKey *event)
+{
+    GdkModifierType mods = event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_SHIFT_MASK);
+
+    switch (event->keyval)
+    {
+        case GDK_Up:
+            if (mods == GDK_MOD1_MASK)
+            {
+                go_prev_block (view);
+                return TRUE;
+            }
+            else if (mods == GDK_CONTROL_MASK)
+            {
+                _moo_worksheet_history_prev (get_worksheet (view));
+                return TRUE;
+            }
+            break;
+
+        case GDK_Down:
+            if (mods == GDK_MOD1_MASK)
+            {
+                go_next_block (view);
+                return TRUE;
+            }
+            else if (mods == GDK_CONTROL_MASK)
+            {
+                _moo_worksheet_history_next (get_worksheet (view));
+                return TRUE;
+            }
+            break;
+
+        case GDK_Home:
+        case GDK_KP_Home:
+            switch (mods)
+            {
+                case GDK_MOD1_MASK | GDK_CONTROL_MASK:
+                    go_first_block (view);
+                    return TRUE;
+                case GDK_MOD1_MASK:
+                    go_home (view, TRUE);
+                    return TRUE;
+                case 0:
+                    go_home (view, FALSE);
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+            break;
+
+        case GDK_End:
+        case GDK_KP_End:
+            switch (mods)
+            {
+                case GDK_MOD1_MASK | GDK_CONTROL_MASK:
+                    go_last_block (view);
+                    return TRUE;
+                case GDK_MOD1_MASK:
+                    go_end (view, TRUE);
+                    return TRUE;
+                case 0:
+                    go_end (view, FALSE);
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+            break;
+    }
+
     return FALSE;
 }
+
 
 static gboolean
 moo_ws_view_key_press (GtkWidget   *widget,
@@ -263,12 +364,21 @@ moo_ws_view_key_press (GtkWidget   *widget,
     gboolean retval;
     MooWsView *view = MOO_WS_VIEW (widget);
 
-    if (do_special_keys (view, event))
+    if (steal_navigation_keys (view, event))
         return TRUE;
 
-    view->priv->in_key_press = TRUE;
+    switch (event->keyval)
+    {
+        case GDK_Return:
+            if (!(_moo_worksheet_get_allow_multiline (get_worksheet (view)) &&
+                  (event->state & GDK_SHIFT_MASK)) &&
+                _moo_worksheet_commit_input (get_worksheet (view)))
+                    return TRUE;
+    }
+
+    _moo_ws_buffer_set_in_key_press (get_ws_buffer (view), TRUE);
     retval = GTK_WIDGET_CLASS (moo_ws_view_parent_class)->key_press_event (widget, event);
-    view->priv->in_key_press = FALSE;
+    _moo_ws_buffer_set_in_key_press (get_ws_buffer (view), FALSE);
 
     return retval;
 }
@@ -279,16 +389,16 @@ moo_ws_view_move_cursor (GtkTextView    *text_view,
                          int             count,
                          gboolean        extend_selection)
 {
-    MooWsView *ws = MOO_WS_VIEW (text_view);
+    MooWsView *view = MOO_WS_VIEW (text_view);
     GtkTextIter iter;
     MooWsBlock *block;
 
     GTK_TEXT_VIEW_CLASS (moo_ws_view_parent_class)->
         move_cursor (text_view, step, count, extend_selection);
 
-    moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
-
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
     block = _moo_ws_iter_get_block (&iter);
+
     if (block && _moo_ws_block_check_move_cursor (block, &iter, step,
                                                   count, extend_selection))
     {
@@ -305,253 +415,12 @@ void
 _moo_ws_view_start_edit (MooWsView *view)
 {
     g_return_if_fail (MOO_IS_WS_VIEW (view));
-    view->priv->modifying_text += 1;
+    _moo_ws_buffer_start_edit (get_ws_buffer (view));
 }
 
 void
 _moo_ws_view_end_edit (MooWsView *view)
 {
     g_return_if_fail (MOO_IS_WS_VIEW (view));
-    g_return_if_fail (view->priv->modifying_text != 0);
-    view->priv->modifying_text -= 1;
-}
-
-static void
-clear_undo (MooWsView *view)
-{
-    moo_text_view_begin_not_undoable_action (MOO_TEXT_VIEW (view));
-    moo_text_view_end_not_undoable_action (MOO_TEXT_VIEW (view));
-}
-
-static void
-moo_ws_buffer_insert_text (GtkTextBuffer *buffer,
-                           GtkTextIter   *where,
-                           char          *text,
-                           int            len,
-                           MooWsView     *view)
-{
-    MooWsBlock *block;
-    gboolean inserted;
-
-    if (!view->priv->modifying_text && !view->priv->in_key_press)
-    {
-        g_critical ("%s: oops", G_STRFUNC);
-        g_signal_stop_emission (buffer, buffer_signals[BUFFER_INSERT_TEXT], 0);
-        return;
-    }
-
-    if (view->priv->modifying_text)
-        return;
-
-    g_signal_stop_emission (buffer, buffer_signals[BUFFER_INSERT_TEXT], 0);
-
-    g_assert (gtk_text_iter_is_end (where) || gtk_text_iter_is_cursor_position (where));
-
-    block = _moo_ws_iter_get_block (where);
-
-    if (!block)
-    {
-        _moo_ws_view_beep (view);
-        return;
-    }
-
-    if (block != view->priv->last_edited)
-        clear_undo (view);
-
-    inserted = _moo_ws_block_insert_interactive (block, where, text, len);
-
-    if (view->priv->in_key_press && inserted)
-    {
-        GtkTextIter cursor;
-        moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &cursor);
-        if (!gtk_text_iter_equal (where, &cursor))
-            gtk_text_buffer_place_cursor (buffer, where);
-    }
-
-    view->priv->last_edited = block;
-
-    moo_ws_view_check (view);
-}
-
-static void
-moo_ws_buffer_delete_range (GtkTextBuffer *buffer,
-                            GtkTextIter   *start,
-                            GtkTextIter   *end,
-                            MooWsView     *view)
-{
-    MooWsBlock *start_block, *end_block, *block;
-    gboolean delete_from_start = FALSE;
-    gboolean delete_to_end = FALSE;
-    GtkTextMark *start_mark, *end_mark;
-    GtkTextIter iter;
-
-    if (!view->priv->modifying_text && !view->priv->in_key_press)
-    {
-        g_critical ("%s: oops", G_STRFUNC);
-        g_signal_stop_emission (buffer, buffer_signals[BUFFER_DELETE_RANGE], 0);
-        return;
-    }
-
-    if (view->priv->modifying_text)
-        return;
-
-    g_signal_stop_emission (buffer, buffer_signals[BUFFER_DELETE_RANGE], 0);
-
-    gtk_text_iter_order (start, end);
-    start_block = _moo_ws_iter_get_block (start);
-    end_block = _moo_ws_iter_get_block (end);
-    g_assert (start_block != NULL);
-
-    if (!end_block || gtk_text_iter_is_end (end))
-    {
-        end_block = view->priv->last_block;
-        delete_to_end = TRUE;
-    }
-    else if (gtk_text_iter_starts_line (end))
-    {
-        _moo_ws_block_get_start_iter (end_block, &iter);
-
-        if (gtk_text_iter_equal (end, &iter))
-        {
-            end_block = end_block->prev;
-            delete_to_end = TRUE;
-        }
-    }
-
-    if (gtk_text_iter_starts_line (start))
-    {
-        _moo_ws_block_get_start_iter (start_block, &iter);
-
-        if (gtk_text_iter_equal (start, &iter))
-            delete_from_start = TRUE;
-    }
-
-    start_mark = gtk_text_buffer_create_mark (buffer, NULL, start, TRUE);
-    end_mark = gtk_text_buffer_create_mark (buffer, NULL, end, FALSE);
-
-    if (start_block == end_block)
-    {
-        if (delete_from_start && delete_to_end)
-        {
-            moo_ws_view_delete_block (view, start_block);
-        }
-        else
-        {
-            if (delete_to_end)
-            {
-                if (gtk_text_iter_starts_line (start))
-                {
-                    gtk_text_iter_backward_line (start);
-                    if (!gtk_text_iter_ends_line (start))
-                        gtk_text_iter_forward_to_line_end (start);
-                }
-
-                gtk_text_iter_backward_line (end);
-                if (!gtk_text_iter_ends_line (end))
-                    gtk_text_iter_forward_to_line_end (end);
-            }
-
-            if (start_block != view->priv->last_edited)
-                clear_undo (view);
-
-            _moo_ws_block_delete_interactive (start_block, start, end);
-            gtk_text_buffer_move_mark (buffer, start_mark, start);
-
-            view->priv->last_edited = start_block;
-        }
-
-        goto out;
-    }
-
-    view->priv->last_edited = NULL;
-    moo_text_view_begin_not_undoable_action (MOO_TEXT_VIEW (view));
-
-    block = start_block->next;
-    g_assert (block != NULL);
-
-    if (delete_from_start)
-    {
-        moo_ws_view_delete_block (view, start_block);
-    }
-    else
-    {
-        _moo_ws_block_get_end_iter (start_block, end);
-        _moo_ws_block_delete_interactive (start_block, start, end);
-        gtk_text_buffer_move_mark (buffer, start_mark, start);
-    }
-
-    while (block != end_block)
-    {
-        MooWsBlock *next = block->next;
-        moo_ws_view_delete_block (view, block);
-        block = next;
-    }
-
-    if (delete_to_end)
-    {
-        moo_ws_view_delete_block (view, end_block);
-    }
-    else
-    {
-        _moo_ws_block_get_start_iter (end_block, start);
-        gtk_text_buffer_get_iter_at_mark (buffer, end, end_mark);
-        _moo_ws_block_delete_interactive (end_block, start, end);
-    }
-
-    moo_text_view_end_not_undoable_action (MOO_TEXT_VIEW (view));
-
-out:
-    gtk_text_buffer_get_iter_at_mark (buffer, start, start_mark);
-    gtk_text_buffer_get_iter_at_mark (buffer, end, end_mark);
-    gtk_text_buffer_delete_mark (buffer, start_mark);
-    gtk_text_buffer_delete_mark (buffer, end_mark);
-
-    gtk_text_buffer_get_iter_at_mark (buffer, &iter, gtk_text_buffer_get_insert (buffer));
-    gtk_text_buffer_place_cursor (buffer, &iter);
-
-    moo_ws_view_check (view);
-}
-
-
-static void
-moo_ws_view_check_tags (MooWsView *view)
-{
-    GtkTextIter iter;
-
-    gtk_text_buffer_get_start_iter (view->priv->buffer, &iter);
-
-    while (!gtk_text_iter_is_end (&iter))
-    {
-        GSList *tags;
-        GtkTextTag *block_tag = NULL;
-
-        tags = gtk_text_iter_get_tags (&iter);
-
-        while (tags)
-        {
-            if (g_object_get_data (tags->data, "moo-ws-block"))
-            {
-                if (block_tag)
-                    g_assert (g_object_get_data (tags->data, "moo-ws-block") ==
-                                g_object_get_data (G_OBJECT (block_tag), "moo-ws-block"));
-                else
-                    block_tag = tags->data;
-            }
-
-            tags = g_slist_delete_link (tags, tags);
-        }
-
-        g_assert (block_tag != NULL);
-
-        gtk_text_iter_forward_to_tag_toggle (&iter, NULL);
-    }
-}
-
-static void
-moo_ws_view_check (MooWsView *view)
-{
-    if (!view->priv->buffer)
-        return;
-
-    moo_ws_view_check_tags (view);
+    _moo_ws_buffer_end_edit (get_ws_buffer (view));
 }

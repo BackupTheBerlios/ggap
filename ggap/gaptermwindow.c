@@ -223,8 +223,7 @@ gap_term_window_feed_gap (GapTermWindow *window,
 static void
 action_switch_to_editor (void)
 {
-    MooApp *app = moo_app_get_instance ();
-    MooEditor *editor = moo_app_get_editor (app);
+    MooEditor *editor = moo_editor_instance ();
     moo_editor_present (editor, 0);
 }
 

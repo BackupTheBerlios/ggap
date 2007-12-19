@@ -14,7 +14,7 @@
 #ifndef MOO_WS_BLOCK_H
 #define MOO_WS_BLOCK_H
 
-#include "moows/moowsview.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -26,7 +26,13 @@ G_BEGIN_DECLS
 #define MOO_IS_WS_BLOCK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), MOO_TYPE_WS_BLOCK))
 #define MOO_WS_BLOCK_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), MOO_TYPE_WS_BLOCK, MooWsBlockClass))
 
-struct _MooWsBlock
+typedef struct MooWsBuffer MooWsBuffer;
+typedef struct MooWsView MooWsView;
+
+typedef struct MooWsBlock MooWsBlock;
+typedef struct MooWsBlockClass MooWsBlockClass;
+
+struct MooWsBlock
 {
     GtkObject base;
 
@@ -36,19 +42,18 @@ struct _MooWsBlock
     GtkTextMark *end;
     GtkTextTag *tag;
 
-    MooWsView *view;
-    GtkTextBuffer *buffer;
+    MooWsBuffer *buffer;
 };
 
-struct _MooWsBlockClass
+struct MooWsBlockClass
 {
     GtkObjectClass base_class;
 
-    void (*add)    (MooWsBlock *block,
-                    MooWsView  *view,
-                    MooWsBlock *after,
-                    MooWsBlock *before);
-    void (*remove) (MooWsBlock *block);
+    void (*add)    (MooWsBlock  *block,
+                    MooWsBuffer *buffer,
+                    MooWsBlock  *after,
+                    MooWsBlock  *before);
+    void (*remove) (MooWsBlock  *block);
 
     gboolean (*insert_interactive) (MooWsBlock      *block,
                                     GtkTextIter     *where,
@@ -69,7 +74,7 @@ struct _MooWsBlockClass
 GType        moo_ws_block_get_type          (void) G_GNUC_CONST;
 
 void        _moo_ws_block_add               (MooWsBlock     *block,
-                                             MooWsView      *view,
+                                             MooWsBuffer    *buffer,
                                              MooWsBlock     *after,
                                              MooWsBlock     *before);
 void        _moo_ws_block_remove            (MooWsBlock     *block);
@@ -98,7 +103,7 @@ void        _moo_ws_block_insert_with_tags  (MooWsBlock         *block,
                                              GtkTextTag         *first_tag,
                                              ...) G_GNUC_NULL_TERMINATED;
 
-MooWsView  *_moo_ws_iter_get_view           (const GtkTextIter  *iter);
+MooWsBuffer *_moo_ws_iter_get_buffer        (const GtkTextIter  *iter);
 MooWsBlock *_moo_ws_iter_get_block          (const GtkTextIter  *pos);
 void        _moo_ws_block_get_start_iter    (MooWsBlock         *block,
                                              GtkTextIter        *iter);

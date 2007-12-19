@@ -1,21 +1,30 @@
-#include <mooui/mdmanager.h>
+#include <mooui/mdapp.h>
 #include <gtk/gtk.h>
+#include <stdlib.h>
 
 int main (int argc, char *argv[])
 {
-    MdManager *mgr;
+    MdApp *app;
+    GError *error = NULL;
+    GOptionContext *context;
 
-    gtk_init (&argc, &argv);
+    g_type_init ();
 
-    moo_window_class_set_id (g_type_class_ref (MD_TYPE_WINDOW), "Worksheet", "Worksheet");
+    if (!(app = g_object_new (MD_TYPE_APP, NULL)))
+        return EXIT_FAILURE;
 
-    mgr = g_object_new (MD_TYPE_MANAGER, NULL);
-    _md_manager_action_new_window (mgr);
+    context = g_option_context_new (NULL);
+    md_app_setup_option_context (app, context);
+    g_option_context_add_group (context, gtk_get_option_group (FALSE));
 
-//     window = g_object_new (MD_TYPE_WINDOW, NULL);
-//     gtk_widget_show (window);
-//     g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-    gtk_main ();
+    if (!g_option_context_parse (context, &argc, &argv, &error))
+    {
+        g_printerr ("%s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
 
-    return 0;
+    md_app_run (app, argc, argv);
+
+    /* never reached */
+    return EXIT_SUCCESS;
 }

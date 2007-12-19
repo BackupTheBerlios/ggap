@@ -12,9 +12,10 @@
  */
 
 #include "moowstextblock.h"
+#include "moowsbuffer.h"
 
 
-struct _MooWsTextBlockPrivate {
+struct MooWsTextBlockPrivate {
     char *text;
     gboolean editable;
 };
@@ -47,14 +48,15 @@ moo_ws_text_block_dispose (GObject *object)
 }
 
 static void
-moo_ws_text_block_add (MooWsBlock *block,
-                       MooWsView  *view,
-                       MooWsBlock *after,
-                       MooWsBlock *before)
+moo_ws_text_block_add (MooWsBlock  *block,
+                       MooWsBuffer *buffer,
+                       MooWsBlock  *after,
+                       MooWsBlock  *before)
 {
     MooWsTextBlock *tb = MOO_WS_TEXT_BLOCK (block);
 
-    MOO_WS_BLOCK_CLASS (moo_ws_text_block_parent_class)->add (block, view, after, before);
+    MOO_WS_BLOCK_CLASS (moo_ws_text_block_parent_class)->
+        add (block, buffer, after, before);
 
     if (tb->priv->text)
     {
@@ -80,7 +82,7 @@ moo_ws_text_block_insert_interactive (MooWsBlock  *block,
     }
     else
     {
-        _moo_ws_view_beep (block->view);
+        _moo_ws_buffer_beep (block->buffer);
         return FALSE;
     }
 }
@@ -94,12 +96,12 @@ moo_ws_text_block_delete_interactive (MooWsBlock  *block,
 
     if (tb->priv->editable)
     {
-        gtk_text_buffer_delete (block->buffer, start, end);
+        gtk_text_buffer_delete (GTK_TEXT_BUFFER (block->buffer), start, end);
         return TRUE;
     }
     else
     {
-        _moo_ws_view_beep (block->view);
+        _moo_ws_buffer_beep (block->buffer);
         return FALSE;
     }
 }
@@ -134,24 +136,26 @@ moo_ws_text_block_set_text (MooWsTextBlock *tb,
     GtkTextIter start, end;
     MooWsBlock *block = MOO_WS_BLOCK (tb);
 
-    if (!block->view)
+    if (!block->buffer)
     {
         g_free (tb->priv->text);
         tb->priv->text = g_strdup (text);
         return;
     }
 
-    gtk_text_buffer_get_iter_at_mark (block->buffer, &start, block->start);
-    gtk_text_buffer_get_iter_at_mark (block->buffer, &end, block->end);
+    gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (block->buffer),
+                                      &start, block->start);
+    gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (block->buffer),
+                                      &end, block->end);
 
-    _moo_ws_view_start_edit (block->view);
+    _moo_ws_buffer_start_edit (block->buffer);
 
-    gtk_text_buffer_delete (block->buffer, &start, &end);
+    gtk_text_buffer_delete (GTK_TEXT_BUFFER (block->buffer), &start, &end);
 
     if (text)
         _moo_ws_block_insert (block, &start, text, -1);
 
-    _moo_ws_view_end_edit (block->view);
+    _moo_ws_buffer_end_edit (block->buffer);
 }
 
 void
@@ -165,13 +169,13 @@ moo_ws_text_block_append (MooWsTextBlock *tb,
     g_return_if_fail (text != NULL);
 
     block = MOO_WS_BLOCK (tb);
-    g_return_if_fail (block->view != NULL);
+    g_return_if_fail (block->buffer != NULL);
 
     _moo_ws_block_get_end_iter (block, &iter);
 
-    _moo_ws_view_start_edit (block->view);
+    _moo_ws_buffer_start_edit (block->buffer);
     _moo_ws_block_insert (block, &iter, text, -1);
-    _moo_ws_view_end_edit (block->view);
+    _moo_ws_buffer_end_edit (block->buffer);
 }
 
 
@@ -185,11 +189,14 @@ moo_ws_text_block_get_text (MooWsTextBlock *tb)
 
     block = MOO_WS_BLOCK (tb);
 
-    if (!block->view)
+    if (!block->buffer)
         return g_strdup (tb->priv->text);
 
-    gtk_text_buffer_get_iter_at_mark (block->buffer, &start, block->start);
-    gtk_text_buffer_get_iter_at_mark (block->buffer, &end, block->end);
+    gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (block->buffer),
+                                      &start, block->start);
+    gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (block->buffer),
+                                      &end, block->end);
 
-    return gtk_text_buffer_get_slice (block->buffer, &start, &end, TRUE);
+    return gtk_text_buffer_get_slice (GTK_TEXT_BUFFER (block->buffer),
+                                      &start, &end, TRUE);
 }

@@ -52,8 +52,14 @@ struct _GapWorksheetClass
 };
 
 
-GType       gap_worksheet_get_type      (void) G_GNUC_CONST;
-GType       gap_state_get_type          (void) G_GNUC_CONST;
+GType       gap_worksheet_get_type              (void) G_GNUC_CONST;
+GType       gap_state_get_type                  (void) G_GNUC_CONST;
+
+void       _gap_worksheet_set_size              (GapWorksheet   *ws,
+                                                 int             width,
+                                                 int             height);
+void       _gap_worksheet_ask_for_completions   (GapWorksheet   *ws);
+gpointer   _gap_worksheet_get_completion        (GapWorksheet   *ws);
 
 
 G_END_DECLS

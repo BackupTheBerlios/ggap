@@ -16,6 +16,7 @@
 #include "gapoutput.h"
 #include "mooutils/mooutils-fs.h"
 #include "mooutils/mooutils-misc.h"
+#include "mooutils/mooprefs.h"
 #include <string.h>
 #include <errno.h>
 
@@ -106,7 +107,8 @@ gap_init_file (const char *workspace,
         char *in_escaped, *out_escaped;
         char *appdir = NULL, *ph = NULL, *ph_escaped;
 
-        in_name = moo_app_get_input_pipe_name ();
+//         in_name = moo_app_get_input_pipe_name ();
+        in_name = NULL;
         out_name = gap_app_output_get_name ();
 
 #ifdef __WIN32__

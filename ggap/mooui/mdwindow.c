@@ -11,6 +11,7 @@
  */
 
 #include "mdwindow-private.h"
+#include "mdview-private.h"
 #include "mddocument-private.h"
 #include "mdmanager-private.h"
 #include "marshals.h"
@@ -33,11 +34,12 @@
 #define DEFAULT_TITLE_FORMAT_NO_DOC "%a"
 
 #define ACTIVE_DOC md_window_get_active_doc
+#define ACTIVE_VIEW md_window_get_active_view
 
 struct MdWindowPrivate {
     MdManager *mgr;
 
-    MdDocument *active;
+    MdView *active;
 
     char *title_format;
     char *title_format_no_doc;
@@ -56,9 +58,9 @@ enum {
 };
 
 enum {
-    ACTIVE_DOC_CHANGED,
-    INSERT_DOC,
-    REMOVE_DOC,
+    ACTIVE_VIEW_CHANGED,
+    INSERT_VIEW,
+    REMOVE_VIEW,
     N_SIGNALS
 };
 
@@ -87,32 +89,30 @@ static void         md_window_get_property          (GObject            *object,
 
 static gboolean     md_window_close                 (MooWindow  *window);
 
-static void         md_window_active_doc_changed    (MdWindow   *window);
-static void         md_window_insert_doc_real       (MdWindow   *window,
-                                                     MdDocument *doc);
-static void         md_window_remove_doc_real       (MdWindow   *window,
-                                                     MdDocument *doc);
+static void         md_window_active_view_changed   (MdWindow   *window);
+static void         md_window_insert_view_real      (MdWindow   *window,
+                                                     MdView     *view);
+static void         md_window_remove_view_real      (MdWindow   *window,
+                                                     MdView     *view);
 
 static GtkWidget   *create_notebook                 (MdWindow   *window);
 static void         update_window_title             (MdWindow   *window);
 
-static int          md_window_num_docs              (MdWindow   *window);
+static int          md_window_n_views               (MdWindow   *window);
 
-static void         proxy_boolean_property          (MdWindow   *window,
+static void         proxy_doc_boolean_property      (MdWindow   *window,
                                                      GParamSpec *prop,
                                                      MdDocument *doc);
 static GtkWidget   *create_tab_label                (MdWindow   *window,
-                                                     MdDocument *doc);
-static void         update_tab_label                (MdWindow   *window,
-                                                     MdDocument *doc);
+                                                     MdView     *view);
 static void         set_title_format                (MdWindow   *window,
                                                      const char *format,
                                                      const char *format_no_doc);
 
-static MdDocument  *get_nth_tab                     (MdWindow   *window,
+static MdView      *get_nth_tab                     (MdWindow   *window,
                                                      guint       n);
 static int          get_page_num                    (MdWindow   *window,
-                                                     MdDocument *doc);
+                                                     MdView     *view);
 
 static void         update_doc_list                 (MdWindow   *window);
 
@@ -165,7 +165,7 @@ G_DEFINE_TYPE (MdWindow, md_window, MOO_TYPE_WINDOW)
 enum {
     PROP_0,
     PROP_DOCUMENT_MANAGER,
-    PROP_ACTIVE_DOC,
+    PROP_ACTIVE_VIEW,
 
     /* aux properties */
     PROP_MD_CAN_RELOAD,
@@ -195,9 +195,9 @@ md_window_class_init (MdWindowClass *klass)
 
     window_class->close = md_window_close;
 
-    klass->active_doc_changed = md_window_active_doc_changed;
-    klass->insert_doc = md_window_insert_doc_real;
-    klass->remove_doc = md_window_remove_doc_real;
+    klass->active_view_changed = md_window_active_view_changed;
+    klass->insert_view = md_window_insert_view_real;
+    klass->remove_view = md_window_remove_view_real;
 
     document_tab_atom = gdk_atom_intern ("MD_DOCUMENT_TAB", FALSE);
     text_uri_atom = gdk_atom_intern ("text/uri-list", FALSE);
@@ -211,41 +211,41 @@ md_window_class_init (MdWindowClass *klass)
                              MD_TYPE_MANAGER,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-    g_object_class_install_property (gobject_class, PROP_ACTIVE_DOC,
-        g_param_spec_object ("active-doc",
-                             "active-doc",
-                             "active-doc",
-                             MD_TYPE_DOCUMENT,
+    g_object_class_install_property (gobject_class, PROP_ACTIVE_VIEW,
+        g_param_spec_object ("active-view",
+                             "active-view",
+                             "active-view",
+                             MD_TYPE_VIEW,
                              G_PARAM_READWRITE));
 
-    signals[ACTIVE_DOC_CHANGED] =
-            g_signal_new ("active-doc-changed",
+    signals[ACTIVE_VIEW_CHANGED] =
+            g_signal_new ("active-view-changed",
                           G_OBJECT_CLASS_TYPE (klass),
                           G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MdWindowClass, active_doc_changed),
+                          G_STRUCT_OFFSET (MdWindowClass, active_view_changed),
                           NULL, NULL,
                           _moo_ui_marshal_VOID__VOID,
                           G_TYPE_NONE, 0);
 
-    signals[INSERT_DOC] =
-            g_signal_new ("insert-doc",
+    signals[INSERT_VIEW] =
+            g_signal_new ("insert-view",
                           G_OBJECT_CLASS_TYPE (klass),
                           G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MdWindowClass, insert_doc),
+                          G_STRUCT_OFFSET (MdWindowClass, insert_view),
                           NULL, NULL,
                           _moo_ui_marshal_VOID__OBJECT,
                           G_TYPE_NONE, 1,
-                          MD_TYPE_DOCUMENT);
+                          MD_TYPE_VIEW);
 
-    signals[REMOVE_DOC] =
-            g_signal_new ("remove-doc",
+    signals[REMOVE_VIEW] =
+            g_signal_new ("remove-view",
                           G_OBJECT_CLASS_TYPE (klass),
                           G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (MdWindowClass, remove_doc),
+                          G_STRUCT_OFFSET (MdWindowClass, remove_view),
                           NULL, NULL,
                           _moo_ui_marshal_VOID__OBJECT,
                           G_TYPE_NONE, 1,
-                          MD_TYPE_DOCUMENT);
+                          MD_TYPE_VIEW);
 
     INSTALL_BOOL_PROP (PROP_MD_CAN_RELOAD, "md-can-reload");
     INSTALL_BOOL_PROP (PROP_MD_HAS_OPEN_DOCUMENT, "md-has-open-document");
@@ -496,6 +496,13 @@ md_window_dispose (GObject *object)
     G_OBJECT_CLASS (md_window_parent_class)->dispose (object);
 }
 
+gboolean
+_md_window_destroyed (MdWindow *window)
+{
+    g_return_val_if_fail (MD_IS_WINDOW (window), TRUE);
+    return window->priv == NULL;
+}
+
 
 static void
 md_window_set_property (GObject      *object,
@@ -511,8 +518,8 @@ md_window_set_property (GObject      *object,
             window->priv->mgr = g_value_get_object (value);
             break;
 
-        case PROP_ACTIVE_DOC:
-            md_window_set_active_doc (window, g_value_get_object (value));
+        case PROP_ACTIVE_VIEW:
+            md_window_set_active_view (window, g_value_get_object (value));
             break;
 
         default:
@@ -536,8 +543,8 @@ md_window_get_property (GObject    *object,
             g_value_set_object (value, window->priv->mgr);
             break;
 
-        case PROP_ACTIVE_DOC:
-            g_value_set_object (value, ACTIVE_DOC (window));
+        case PROP_ACTIVE_VIEW:
+            g_value_set_object (value, ACTIVE_VIEW (window));
             break;
 
         case PROP_MD_CAN_RELOAD:
@@ -809,51 +816,51 @@ action_open (MdWindow *window)
 static void
 action_reload (MdWindow *window)
 {
-    MdDocument *doc = ACTIVE_DOC (window);
-    g_return_if_fail (doc != NULL);
-    _md_manager_action_reload (window->priv->mgr, doc);
+    MdView *view = ACTIVE_VIEW (window);
+    g_return_if_fail (view != NULL);
+    _md_manager_action_reload (window->priv->mgr, view);
 }
 
 static void
 action_save (MdWindow *window)
 {
-    MdDocument *doc = ACTIVE_DOC (window);
-    g_return_if_fail (doc != NULL);
-    _md_manager_action_save (window->priv->mgr, doc);
+    MdView *view = ACTIVE_VIEW (window);
+    g_return_if_fail (view != NULL);
+    _md_manager_action_save (window->priv->mgr, view);
 }
 
 static void
 action_save_as (MdWindow *window)
 {
-    MdDocument *doc = ACTIVE_DOC (window);
-    g_return_if_fail (doc != NULL);
-    _md_manager_action_save_as (window->priv->mgr, doc);
+    MdView *view = ACTIVE_VIEW (window);
+    g_return_if_fail (view != NULL);
+    _md_manager_action_save_as (window->priv->mgr, view);
 }
 
 static void
-action_close_one (MdWindow   *window,
-                  MdDocument *doc)
+action_close_one (MdWindow *window,
+                  MdView   *view)
 {
     GSList *list;
 
-    g_return_if_fail (doc != NULL);
+    g_return_if_fail (view != NULL);
 
-    list = g_slist_prepend (NULL, doc);
-    _md_manager_action_close_docs (window->priv->mgr, list);
+    list = g_slist_prepend (NULL, view);
+    _md_manager_action_close_views (window->priv->mgr, list);
     g_slist_free (list);
 }
 
 static void
 action_close_tab (MdWindow *window)
 {
-    action_close_one (window, ACTIVE_DOC (window));
+    action_close_one (window, ACTIVE_VIEW (window));
 }
 
 static void
 action_close_all (MdWindow *window)
 {
-    GSList *list = md_window_list_docs (window);
-    _md_manager_action_close_docs (window->priv->mgr, list);
+    GSList *list = md_window_list_views (window);
+    _md_manager_action_close_views (window->priv->mgr, list);
     g_slist_free (list);
 }
 
@@ -865,9 +872,9 @@ switch_to_tab (MdWindow *window,
     MdDocument *doc;
 
     if (n < 0)
-        n = md_window_num_docs (window) - 1;
+        n = md_window_n_views (window) - 1;
 
-    if (n < 0 || n >= md_window_num_docs (window))
+    if (n < 0 || n >= md_window_n_views (window))
         return;
 
     moo_notebook_set_current_page (MOO_NOTEBOOK (window->notebook), n);
@@ -985,12 +992,12 @@ static void
 close_activated (GtkWidget *item,
                  MdWindow  *window)
 {
-    MdDocument *doc = g_object_get_data (G_OBJECT (item), "md-document");
+    MdView *view = g_object_get_data (G_OBJECT (item), "md-document-view");
 
     g_return_if_fail (MD_IS_WINDOW (window));
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    g_return_if_fail (MD_IS_VIEW (view));
 
-    action_close_one (window, doc);
+    action_close_one (window, view);
 }
 
 static void
@@ -998,16 +1005,16 @@ close_others_activated (GtkWidget *item,
                         MdWindow  *window)
 {
     GSList *list;
-    MdDocument *doc = g_object_get_data (G_OBJECT (item), "md-document");
+    MdView *view = g_object_get_data (G_OBJECT (item), "md-document-view");
 
     g_return_if_fail (MD_IS_WINDOW (window));
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    g_return_if_fail (MD_IS_VIEW (view));
 
-    list = md_window_list_docs (window);
-    list = g_slist_remove (list, doc);
+    list = md_window_list_views (window);
+    list = g_slist_remove (list, view);
 
     if (list)
-        _md_manager_action_close_docs (window->priv->mgr, list);
+        _md_manager_action_close_views (window->priv->mgr, list);
 
     g_slist_free (list);
 }
@@ -1016,12 +1023,12 @@ static void
 detach_activated (GtkWidget *item,
                   MdWindow  *window)
 {
-    MdDocument *doc = g_object_get_data (G_OBJECT (item), "md-document");
+    MdView *view = g_object_get_data (G_OBJECT (item), "md-document-view");
 
     g_return_if_fail (MD_IS_WINDOW (window));
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    g_return_if_fail (MD_IS_VIEW (view));
 
-    _md_manager_move_doc (window->priv->mgr, doc, NULL);
+    _md_manager_move_view (window->priv->mgr, view, NULL);
 }
 
 
@@ -1030,23 +1037,31 @@ detach_activated (GtkWidget *item,
  */
 
 MdDocument *
-md_window_get_active_doc (MdWindow  *window)
+md_window_get_active_doc (MdWindow *window)
+{
+    g_return_val_if_fail (MD_IS_WINDOW (window), NULL);
+    return (window->priv && window->priv->active) ?
+                md_view_get_doc (window->priv->active) : NULL;
+}
+
+MdView *
+md_window_get_active_view (MdWindow *window)
 {
     g_return_val_if_fail (MD_IS_WINDOW (window), NULL);
     return window->priv ? window->priv->active : NULL;
 }
 
 void
-md_window_set_active_doc (MdWindow   *window,
-                          MdDocument *doc)
+md_window_set_active_view (MdWindow  *window,
+                           MdView    *view)
 {
     GtkWidget *swin;
     int page;
 
     g_return_if_fail (MD_IS_WINDOW (window));
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    g_return_if_fail (MD_IS_VIEW (view));
 
-    swin = GTK_WIDGET (doc)->parent;
+    swin = GTK_WIDGET (view)->parent;
     page = moo_notebook_page_num (MOO_NOTEBOOK (window->notebook), swin);
     g_return_if_fail (page >= 0);
 
@@ -1056,7 +1071,7 @@ md_window_set_active_doc (MdWindow   *window,
 static void
 update_active_doc (MdWindow *window)
 {
-    MdDocument *doc;
+    MdView *view;
     int page;
 
     if (!window->notebook)
@@ -1066,19 +1081,19 @@ update_active_doc (MdWindow *window)
 
     if (page < 0)
     {
-        doc = NULL;
+        view = NULL;
     }
     else
     {
         GtkWidget *swin = moo_notebook_get_nth_page (MOO_NOTEBOOK (window->notebook), page);
-        doc = MD_DOCUMENT (gtk_bin_get_child (GTK_BIN (swin)));
+        view = MD_VIEW (gtk_bin_get_child (GTK_BIN (swin)));
     }
 
-    if (doc != window->priv->active)
+    if (view != window->priv->active)
     {
-        window->priv->active = doc;
-        g_object_notify (G_OBJECT (window), "active-doc");
-        g_signal_emit (window, signals[ACTIVE_DOC_CHANGED], 0);
+        window->priv->active = view;
+        g_object_notify (G_OBJECT (window), "active-view");
+        g_signal_emit (window, signals[ACTIVE_VIEW_CHANGED], 0);
     }
 }
 
@@ -1110,23 +1125,23 @@ notebook_populate_popup (MooNotebook *notebook,
     item = gtk_menu_item_new_with_label ("Close");
     gtk_widget_show (item);
     gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-    g_object_set_data (G_OBJECT (item), "md-document", doc);
+    g_object_set_data (G_OBJECT (item), "md-document-view", doc);
     g_signal_connect (item, "activate",
                       G_CALLBACK (close_activated),
                       window);
 
-    if (md_window_num_docs (window) > 1)
+    if (md_window_n_views (window) > 1)
     {
         item = gtk_menu_item_new_with_label ("Close All Others");
         gtk_widget_show (item);
         gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-        g_object_set_data (G_OBJECT (item), "md-document", doc);
+        g_object_set_data (G_OBJECT (item), "md-document-view", doc);
         g_signal_connect (item, "activate",
                           G_CALLBACK (close_others_activated),
                           window);
     }
 
-    if (md_window_num_docs (window) > 1)
+    if (md_window_n_views (window) > 1)
     {
         gtk_menu_shell_append (GTK_MENU_SHELL (menu),
                                g_object_new (GTK_TYPE_SEPARATOR_MENU_ITEM,
@@ -1135,7 +1150,7 @@ notebook_populate_popup (MooNotebook *notebook,
         item = gtk_menu_item_new_with_label ("Detach");
         gtk_widget_show (item);
         gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-        g_object_set_data (G_OBJECT (item), "md-document", doc);
+        g_object_set_data (G_OBJECT (item), "md-document-view", doc);
         g_signal_connect (item, "activate",
                           G_CALLBACK (detach_activated),
                           window);
@@ -1235,9 +1250,9 @@ create_notebook (MdWindow *window)
 
 
 static void
-proxy_boolean_property (MdWindow   *window,
-                        GParamSpec *prop,
-                        MdDocument *doc)
+proxy_doc_boolean_property (MdWindow   *window,
+                            GParamSpec *prop,
+                            MdDocument *doc)
 {
     if (doc == ACTIVE_DOC (window))
         g_object_notify (G_OBJECT (window), prop->name);
@@ -1245,7 +1260,7 @@ proxy_boolean_property (MdWindow   *window,
 
 
 GSList *
-md_window_list_docs (MdWindow *window)
+md_window_list_views (MdWindow *window)
 {
     GSList *list = NULL;
     int num, i;
@@ -1262,7 +1277,7 @@ md_window_list_docs (MdWindow *window)
 
 
 static int
-md_window_num_docs (MdWindow *window)
+md_window_n_views (MdWindow *window)
 {
     g_return_val_if_fail (MD_IS_WINDOW (window), 0);
     return moo_notebook_get_n_pages (MOO_NOTEBOOK (window->notebook));
@@ -1282,7 +1297,7 @@ md_window_num_docs (MdWindow *window)
 // }
 
 
-static MdDocument *
+static MdView *
 get_nth_tab (MdWindow *window,
              guint     n)
 {
@@ -1291,55 +1306,54 @@ get_nth_tab (MdWindow *window,
     swin = moo_notebook_get_nth_page (MOO_NOTEBOOK (window->notebook), n);
 
     if (swin)
-        return MD_DOCUMENT (gtk_bin_get_child (GTK_BIN (swin)));
+        return MD_VIEW (gtk_bin_get_child (GTK_BIN (swin)));
     else
         return NULL;
 }
 
 
 static int
-get_page_num (MdWindow   *window,
-              MdDocument *doc)
+get_page_num (MdWindow *window,
+              MdView   *view)
 {
     GtkWidget *swin;
 
     g_return_val_if_fail (MD_IS_WINDOW (window), -1);
-    g_return_val_if_fail (MD_IS_DOCUMENT (doc), -1);
+    g_return_val_if_fail (MD_IS_VIEW (view), -1);
 
-    swin = GTK_WIDGET(doc)->parent;
+    swin = GTK_WIDGET (view)->parent;
     return moo_notebook_page_num (MOO_NOTEBOOK (window->notebook), swin);
 }
 
 
 void
-_md_window_insert_doc (MdWindow   *window,
-                       MdDocument *doc)
+_md_window_insert_view (MdWindow *window,
+                        MdView   *view)
 {
     g_return_if_fail (MD_IS_WINDOW (window));
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
-    g_return_if_fail (md_document_get_window (doc) == NULL);
+    g_return_if_fail (MD_IS_VIEW (view));
+    g_return_if_fail (md_view_get_window (view) == NULL);
 
-    g_signal_emit (window, signals[INSERT_DOC], 0, doc);
+    g_signal_emit (window, signals[INSERT_VIEW], 0, view);
 }
 
 void
-_md_window_remove_doc (MdWindow   *window,
-                       MdDocument *doc)
+_md_window_remove_view (MdWindow *window,
+                        MdView   *view)
 {
     g_return_if_fail (MD_IS_WINDOW (window));
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
-    g_return_if_fail (md_document_get_window (doc) == window);
+    g_return_if_fail (MD_IS_VIEW (view));
+    g_return_if_fail (md_view_get_window (view) == window);
 
-    g_signal_emit (window, signals[REMOVE_DOC], 0, doc);
+    g_signal_emit (window, signals[REMOVE_VIEW], 0, view);
 }
 
 
 static void
-md_window_active_doc_changed (MdWindow *window)
+md_window_active_view_changed (MdWindow *window)
 {
     g_object_freeze_notify (G_OBJECT (window));
     g_object_notify (G_OBJECT (window), "md-can-reload");
-    g_object_notify (G_OBJECT (window), "md-has-open-document");
     g_object_notify (G_OBJECT (window), "md-has-undo");
     g_object_notify (G_OBJECT (window), "md-can-undo");
     g_object_notify (G_OBJECT (window), "md-can-redo");
@@ -1355,8 +1369,6 @@ doc_status_notify (MdWindow   *window,
                    G_GNUC_UNUSED GParamSpec *pspec,
                    MdDocument *doc)
 {
-    update_tab_label (window, doc);
-
     if (doc == ACTIVE_DOC (window))
         update_window_title (window);
 }
@@ -1367,21 +1379,70 @@ doc_file_info_notify (MdWindow   *window,
                       MdDocument *doc)
 {
     update_doc_list (window);
-    update_tab_label (window, doc);
 
     if (doc == ACTIVE_DOC (window))
         update_window_title (window);
 }
 
 static void
-md_window_insert_doc_real (MdWindow   *window,
-                           MdDocument *doc)
+connect_doc (MdWindow   *window,
+             MdDocument *doc)
+{
+    /* XXX multiple views */
+
+    g_signal_connect_swapped (doc, "notify::md-doc-status",
+                              G_CALLBACK (doc_status_notify), window);
+    g_signal_connect_swapped (doc, "notify::md-doc-file-info",
+                              G_CALLBACK (doc_file_info_notify), window);
+
+    if (MD_IS_HAS_UNDO (doc))
+    {
+        g_signal_connect_swapped (doc, "notify::md-can-undo",
+                                  G_CALLBACK (proxy_doc_boolean_property), window);
+        g_signal_connect_swapped (doc, "notify::md-can-redo",
+                                  G_CALLBACK (proxy_doc_boolean_property), window);
+    }
+}
+
+static void
+disconnect_doc (MdWindow   *window,
+                MdDocument *doc)
+{
+    /* XXX multiple views */
+
+    g_signal_handlers_disconnect_by_func (doc, (gpointer) doc_status_notify, window);
+    g_signal_handlers_disconnect_by_func (doc, (gpointer) doc_file_info_notify, window);
+
+    if (MD_IS_HAS_UNDO (doc))
+        g_signal_handlers_disconnect_by_func (doc, (gpointer) proxy_doc_boolean_property, window);
+}
+
+static void
+view_set_document (MdView     *view,
+                   MdDocument *doc,
+                   MdWindow   *window)
+{
+    MdDocument *old_doc;
+
+    /* XXX multiple views */
+
+    if ((old_doc = md_view_get_doc (view)))
+        disconnect_doc (window, old_doc);
+
+    if (doc)
+        connect_doc (window, doc);
+}
+
+static void
+md_window_insert_view_real (MdWindow *window,
+                            MdView   *view)
 {
     GtkWidget *label;
     GtkWidget *scrolledwindow;
+    MdDocument *doc;
     int position;
 
-    label = create_tab_label (window, doc);
+    label = create_tab_label (window, view);
     gtk_widget_show (label);
 
     scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
@@ -1390,83 +1451,83 @@ md_window_insert_doc_real (MdWindow   *window,
                                     GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolledwindow),
                                          GTK_SHADOW_ETCHED_IN);
-    gtk_container_add (GTK_CONTAINER (scrolledwindow), GTK_WIDGET (doc));
+    gtk_container_add (GTK_CONTAINER (scrolledwindow), GTK_WIDGET (view));
     gtk_widget_show_all (scrolledwindow);
 
     position = moo_notebook_get_current_page (MOO_NOTEBOOK (window->notebook)) + 1;
     moo_notebook_insert_page (MOO_NOTEBOOK (window->notebook), scrolledwindow, label, position);
-    _md_document_set_window (doc, window);
+    _md_view_set_window (view, window);
 
-    g_signal_connect_swapped (doc, "notify::md-doc-status",
-                              G_CALLBACK (doc_status_notify), window);
-    g_signal_connect_swapped (doc, "notify::md-doc-file-info",
-                              G_CALLBACK (doc_file_info_notify), window);
-    if (MD_IS_HAS_UNDO (doc))
+    if (moo_notebook_get_n_pages (MOO_NOTEBOOK (window->notebook)) == 1)
     {
-        g_signal_connect_swapped (doc, "notify::md-can-undo",
-                                  G_CALLBACK (proxy_boolean_property), window);
-        g_signal_connect_swapped (doc, "notify::md-can-redo",
-                                  G_CALLBACK (proxy_boolean_property), window);
+        gtk_widget_grab_focus (GTK_WIDGET (view));
+        g_object_notify (G_OBJECT (window), "md-has-open-document");
     }
-//     g_signal_connect_swapped (edit, "notify::has-selection",
-//                               G_CALLBACK (proxy_boolean_property), window);
-//     g_signal_connect_swapped (edit, "notify::has-text",
-//                               G_CALLBACK (proxy_boolean_property), window);
 
-    update_tab_label (window, doc);
+    g_signal_connect (view, "set-document", G_CALLBACK (view_set_document), window);
+    if ((doc = md_view_get_doc (view)))
+        connect_doc (window, doc);
+
     update_active_doc (window);
     update_doc_list (window);
 }
 
 
 static void
-md_window_remove_doc_real (MdWindow   *window,
-                           MdDocument *doc)
+md_window_remove_view_real (MdWindow *window,
+                            MdView   *view)
 {
     int page;
     GtkAction *action;
-    MdDocument *new_doc;
-    gboolean had_focus;
+    MdView *new_view;
+//     gboolean had_focus;
+    gboolean was_active;
+    MdDocument *doc;
 
-    page = get_page_num (window, doc);
+    page = get_page_num (window, view);
     g_return_if_fail (page >= 0);
 
-    had_focus = GTK_WIDGET_HAS_FOCUS (doc);
+//     had_focus = GTK_WIDGET_HAS_FOCUS (view);
 
-    g_signal_handlers_disconnect_by_func (doc, (gpointer) doc_status_notify, window);
-    g_signal_handlers_disconnect_by_func (doc, (gpointer) doc_file_info_notify, window);
-    g_signal_handlers_disconnect_by_func (doc, (gpointer) proxy_boolean_property, window);
+    if ((doc = md_view_get_doc (view)))
+        disconnect_doc (window, doc);
+    g_signal_handlers_disconnect_by_func (view, (gpointer) view_set_document, window);
 
-    action = g_object_get_data (G_OBJECT (doc), "md-doc-list-action");
+    action = g_object_get_data (G_OBJECT (view), "md-view-list-action");
 
     if (action)
     {
         moo_action_collection_remove_action (moo_window_get_actions (MOO_WINDOW (window)), action);
-        g_object_set_data (G_OBJECT (doc), "md-doc-list-action", NULL);
+        g_object_set_data (G_OBJECT (view), "md-view-list-action", NULL);
     }
 
-    window->priv->history = g_list_remove (window->priv->history, doc);
+    window->priv->history = g_list_remove (window->priv->history, view);
     window->priv->history_blocked = TRUE;
 
-    if (window->priv->active == doc)
+    was_active = window->priv->active == view;
+    if (was_active)
         window->priv->active = NULL;
 
     update_doc_list (window);
 
     /* removing scrolled window from the notebook will destroy the scrolled window,
      * and that in turn will destroy the doc if it's not removed before */
-    gtk_container_remove (GTK_CONTAINER (GTK_WIDGET(doc)->parent), GTK_WIDGET (doc));
+    gtk_container_remove (GTK_CONTAINER (GTK_WIDGET (view)->parent), GTK_WIDGET (view));
     moo_notebook_remove_page (MOO_NOTEBOOK (window->notebook), page);
 
     window->priv->history_blocked = FALSE;
-    if (window->priv->history)
-        md_window_set_active_doc (window, window->priv->history->data);
+
+    if (was_active && window->priv->history)
+        md_window_set_active_view (window, window->priv->history->data);
 
     update_active_doc (window);
-    new_doc = ACTIVE_DOC (window);
+    new_view = ACTIVE_VIEW (window);
 
-    if (new_doc && had_focus)
-        gtk_widget_grab_focus (GTK_WIDGET (new_doc));
+//     if (was_active && new_view && had_focus)
+//         gtk_widget_grab_focus (GTK_WIDGET (new_view));
+
+    if (!new_view)
+        g_object_notify (G_OBJECT (window), "md-has-open-document");
 }
 
 
@@ -1475,7 +1536,6 @@ typedef struct {
     int y;
     gboolean drag_started;
 } DragInfo;
-
 
 static gboolean tab_icon_button_press       (GtkWidget      *evbox,
                                              GdkEventButton *event,
@@ -1514,7 +1574,6 @@ tab_icon_button_release (GtkWidget *evbox,
     return FALSE;
 }
 
-
 static void
 tab_icon_start_drag (GtkWidget *evbox,
                      GdkEvent  *event,
@@ -1523,7 +1582,7 @@ tab_icon_start_drag (GtkWidget *evbox,
     GtkTargetList *targets;
     MdDocument *doc;
 
-    doc = g_object_get_data (G_OBJECT (evbox), "md-document");
+    doc = g_object_get_data (G_OBJECT (evbox), "md-document-view");
     g_return_if_fail (MD_IS_DOCUMENT (doc));
 
     g_signal_connect (evbox, "drag-begin", G_CALLBACK (tab_icon_drag_begin), window);
@@ -1548,7 +1607,6 @@ tab_icon_start_drag (GtkWidget *evbox,
     gtk_target_list_unref (targets);
 }
 
-
 static gboolean
 tab_icon_motion_notify (GtkWidget      *evbox,
                         GdkEventMotion *event,
@@ -1571,7 +1629,6 @@ tab_icon_motion_notify (GtkWidget      *evbox,
     return TRUE;
 }
 
-
 static gboolean
 tab_icon_button_press (GtkWidget      *evbox,
                        GdkEventButton *event,
@@ -1593,7 +1650,6 @@ tab_icon_button_press (GtkWidget      *evbox,
     return FALSE;
 }
 
-
 static void
 tab_icon_drag_begin (GtkWidget      *evbox,
                      GdkDragContext *context,
@@ -1606,7 +1662,6 @@ tab_icon_drag_begin (GtkWidget      *evbox,
     gtk_drag_set_icon_pixbuf (context, pixbuf, 0, 0);
 }
 
-
 static void
 tab_icon_drag_data_delete (G_GNUC_UNUSED GtkWidget      *evbox,
                            G_GNUC_UNUSED GdkDragContext *context,
@@ -1614,7 +1669,6 @@ tab_icon_drag_data_delete (G_GNUC_UNUSED GtkWidget      *evbox,
 {
     g_print ("delete!\n");
 }
-
 
 static void
 tab_icon_drag_data_get (GtkWidget    *evbox,
@@ -1624,20 +1678,29 @@ tab_icon_drag_data_get (GtkWidget    *evbox,
                         G_GNUC_UNUSED guint time,
                         G_GNUC_UNUSED MdWindow *window)
 {
-    MdDocument *doc = g_object_get_data (G_OBJECT (evbox), "md-document");
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    MdView *view;
+
+    view = g_object_get_data (G_OBJECT (evbox), "md-document-view");
+    g_return_if_fail (MD_IS_VIEW (view));
 
     if (info == TARGET_DOCUMENT_TAB)
     {
         moo_selection_data_set_pointer (data,
                                         gdk_atom_intern ("MD_DOCUMENT_TAB", FALSE),
-                                        doc);
+                                        view);
     }
     else if (info == TARGET_URI_LIST)
     {
         /* XXX cancel dnd if no uri */
         const char *uris[] = {NULL, NULL};
+        MdDocument *doc;
+
+        doc = md_view_get_doc (view);
         uris[0] = md_document_get_uri (doc);
+
+        if (!uris[0])
+            g_critical ("%s: oops", G_STRLOC);
+
         gtk_selection_data_set_uris (data, (char**) uris);
     }
     else
@@ -1646,7 +1709,6 @@ tab_icon_drag_data_get (GtkWidget    *evbox,
         gtk_selection_data_set_text (data, "", -1);
     }
 }
-
 
 static void
 tab_icon_drag_end (GtkWidget *evbox,
@@ -1661,171 +1723,27 @@ tab_icon_drag_end (GtkWidget *evbox,
 }
 
 
-static void
-update_evbox_shape (GtkWidget *image,
-                    GtkWidget *evbox)
-{
-    GtkMisc *misc;
-    GdkPixbuf *pixbuf;
-    GdkBitmap *mask;
-    int width, height;
-    int x, y;
-
-    g_return_if_fail (GTK_IS_EVENT_BOX (evbox));
-    g_return_if_fail (GTK_IS_IMAGE (image));
-
-    if (!GTK_WIDGET_REALIZED (image) || !(pixbuf = gtk_image_get_pixbuf (GTK_IMAGE (image))))
-        return;
-
-    width = gdk_pixbuf_get_width (pixbuf);
-    height = gdk_pixbuf_get_height (pixbuf);
-    g_return_if_fail (width < 2000 && height < 2000);
-
-    gdk_pixbuf_render_pixmap_and_mask (pixbuf, NULL, &mask, 1);
-    g_return_if_fail (mask != NULL);
-
-    misc = GTK_MISC (image);
-    x = floor (image->allocation.x + misc->xpad
-             + ((image->allocation.width - image->requisition.width) * misc->xalign));
-    y = floor (image->allocation.y + misc->ypad
-             + ((image->allocation.height - image->requisition.height) * misc->yalign));
-
-    gtk_widget_shape_combine_mask (evbox, NULL, 0, 0);
-    gtk_widget_shape_combine_mask (evbox, mask, x, y);
-
-    g_object_unref (mask);
-}
-
-static void
-icon_size_allocate (GtkWidget     *image,
-                    GtkAllocation *allocation,
-                    GtkWidget     *evbox)
-{
-    GtkAllocation *old_allocation;
-
-    old_allocation = g_object_get_data (G_OBJECT (image), "moo-icon-allocation");
-
-    if (!old_allocation ||
-        old_allocation->x != allocation->x ||
-        old_allocation->y != allocation->y ||
-        old_allocation->width != allocation->width ||
-        old_allocation->height != allocation->height)
-    {
-        GtkAllocation *copy = g_memdup (allocation, sizeof *allocation);
-        g_object_set_data_full (G_OBJECT (image), "moo-icon-allocation", copy, g_free);
-        update_evbox_shape (image, evbox);
-    }
-}
-
-
 static GtkWidget *
-create_tab_label (MdWindow   *window,
-                  MdDocument *doc)
+create_tab_label (MdWindow *window,
+                  MdView   *view)
 {
-    GtkWidget *hbox, *icon, *label, *evbox;
-    GtkSizeGroup *group;
+    GtkWidget *hbox, *icon, *evbox = NULL;
 
-    group = gtk_size_group_new (GTK_SIZE_GROUP_VERTICAL);
+    hbox = _md_view_create_tab_label (view, &evbox);
+    g_return_val_if_fail (hbox != NULL, NULL);
+    g_return_val_if_fail (evbox != NULL, hbox);
 
-    hbox = gtk_hbox_new (FALSE, 3);
-    gtk_widget_show (hbox);
+    icon = gtk_bin_get_child (GTK_BIN (evbox));
+    g_return_val_if_fail (GTK_IS_IMAGE (icon), hbox);
 
-    evbox = gtk_event_box_new ();
-    gtk_box_pack_start (GTK_BOX (hbox), evbox, FALSE, FALSE, 0);
-
-    icon = gtk_image_new ();
-    gtk_container_add (GTK_CONTAINER (evbox), icon);
-    gtk_widget_show_all (evbox);
-
-    g_signal_connect (icon, "realize", G_CALLBACK (update_evbox_shape), evbox);
-    g_signal_connect (icon, "size-allocate", G_CALLBACK (icon_size_allocate), evbox);
-
-    label = gtk_label_new (md_document_get_display_basename (doc));
-    gtk_label_set_single_line_mode (GTK_LABEL (label), TRUE);
-    gtk_widget_show (label);
-    gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
-
-    gtk_size_group_add_widget (group, evbox);
-    gtk_size_group_add_widget (group, label);
-
-    g_object_set_data (G_OBJECT (hbox), "md-document-icon", icon);
-    g_object_set_data (G_OBJECT (hbox), "md-document-icon-evbox", evbox);
-    g_object_set_data (G_OBJECT (hbox), "md-document-label", label);
     g_object_set_data (G_OBJECT (evbox), "md-document-icon", icon);
-    g_object_set_data (G_OBJECT (evbox), "md-document", doc);
-    g_object_set_data (G_OBJECT (icon), "md-document", doc);
+    g_object_set_data (G_OBJECT (evbox), "md-document-view", view);
 
     g_signal_connect (evbox, "button-press-event",
                       G_CALLBACK (tab_icon_button_press),
                       window);
 
-    g_object_unref (group);
-
     return hbox;
-}
-
-
-static void
-set_tab_icon (GtkWidget *image,
-              GtkWidget *evbox,
-              GdkPixbuf *pixbuf)
-{
-    GdkPixbuf *old_pixbuf;
-
-    /* file icons are cached, so it's likely the same pixbuf
-     * object as before (and it happens every time you switch tabs) */
-    old_pixbuf = gtk_image_get_pixbuf (GTK_IMAGE (image));
-
-    if (old_pixbuf != pixbuf)
-    {
-        gtk_image_set_from_pixbuf (GTK_IMAGE (image), pixbuf);
-
-        if (GTK_WIDGET_REALIZED (evbox))
-            update_evbox_shape (image, evbox);
-    }
-}
-
-static void
-update_tab_label (MdWindow   *window,
-                  MdDocument *doc)
-{
-    GtkWidget *hbox, *icon, *label, *evbox;
-    MdDocumentStatus status;
-    char *label_text;
-    gboolean modified, deleted;
-    GdkPixbuf *pixbuf;
-    int page;
-
-    page = get_page_num (window, doc);
-    g_return_if_fail (page >= 0);
-
-    hbox = moo_notebook_get_tab_label (MOO_NOTEBOOK (MOO_NOTEBOOK (window->notebook)),
-                                       GTK_WIDGET(doc)->parent);
-    g_return_if_fail (GTK_IS_WIDGET (hbox));
-
-    icon = g_object_get_data (G_OBJECT (hbox), "md-document-icon");
-    label = g_object_get_data (G_OBJECT (hbox), "md-document-label");
-    evbox = g_object_get_data (G_OBJECT (hbox), "md-document-icon-evbox");
-    g_return_if_fail (GTK_IS_WIDGET (icon) && GTK_IS_WIDGET (label));
-    g_return_if_fail (GTK_IS_WIDGET (evbox));
-
-    status = md_document_get_status (doc);
-
-    deleted = (status & (MD_DOCUMENT_DELETED | MD_DOCUMENT_MODIFIED_ON_DISK)) != 0;
-    modified = (status & MD_DOCUMENT_MODIFIED) != 0;
-
-    label_text = g_strdup_printf ("%s%s%s",
-                                  deleted ? "!" : "",
-                                  modified ? "*" : "",
-                                  md_document_get_display_basename (doc));
-    gtk_label_set_text (GTK_LABEL (label), label_text);
-
-    pixbuf = _md_document_get_icon (doc, GTK_ICON_SIZE_MENU);
-    set_tab_icon (icon, evbox, pixbuf);
-
-    if (pixbuf)
-        g_object_unref (pixbuf);
-    g_free (label_text);
 }
 
 
@@ -1837,34 +1755,43 @@ static void
 doc_list_action_toggled (gpointer  action,
                          MdWindow *window)
 {
-    MdDocument *doc;
+    MdView *view;
 
     if (window->priv->doc_list_update_idle ||
         !gtk_toggle_action_get_active (action))
             return;
 
-    doc = g_object_get_data (action, "md-document");
-    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    view = g_object_get_data (action, "md-document-view");
+    g_return_if_fail (MD_IS_VIEW (view));
     g_return_if_fail (MD_IS_WINDOW (window));
 
-    if (doc != ACTIVE_DOC (window))
-        md_window_set_active_doc (window, doc);
+    if (view != ACTIVE_VIEW (window))
+        md_window_set_active_view (window, view);
 }
 
 
 static int
-compare_doc_list_actions (gpointer a1,
-                          gpointer a2)
+compare_doc_list_actions (gconstpointer a1,
+                          gconstpointer a2,
+                          gpointer      window)
 {
+    MdView *v1, *v2;
     MdDocument *d1, *d2;
     int result;
 
-    d1 = g_object_get_data (a1, "md-document");
-    d2 = g_object_get_data (a2, "md-document");
-    g_return_val_if_fail (d1 && d2, -1);
+    v1 = g_object_get_data ((gpointer) a1, "md-document-view");
+    v2 = g_object_get_data ((gpointer) a2, "md-document-view");
+    g_return_val_if_fail (v1 && v2, 0);
+
+    d1 = md_view_get_doc (v1);
+    d2 = md_view_get_doc (v2);
+    g_return_val_if_fail (d1 && d2, 0);
 
     result = strcmp (md_document_get_display_basename (d1),
                      md_document_get_display_basename (d2));
+
+    if (!result)
+        result = get_page_num (window, v1) - get_page_num (window, v2);
 
     return result;
 }
@@ -1874,12 +1801,12 @@ static gboolean
 do_update_doc_list (MdWindow *window)
 {
     MooUIXML *xml;
-    GSList *actions = NULL, *docs;
+    GSList *actions = NULL, *views;
     GSList *group = NULL;
     MooUINode *ph;
-    gpointer active_doc;
+    MdView *active_view;
 
-    active_doc = ACTIVE_DOC (window);
+    active_view = ACTIVE_VIEW (window);
 
     xml = moo_window_get_ui_xml (MOO_WINDOW (window));
     g_return_val_if_fail (xml != NULL, FALSE);
@@ -1908,17 +1835,18 @@ do_update_doc_list (MdWindow *window)
     if (!ph)
         goto out;
 
-    docs = md_window_list_docs (window);
+    views = md_window_list_views (window);
 
-    if (!docs)
+    if (!views)
         goto out;
 
-    while (docs)
+    while (views)
     {
         GtkRadioAction *action;
-        gpointer doc = docs->data;
+        MdView *view = views->data;
+        MdDocument *doc = md_view_get_doc (view);
 
-        action = g_object_get_data (doc, "md-doc-list-action");
+        action = g_object_get_data (G_OBJECT (view), "md-view-list-action");
 
         if (action)
         {
@@ -1930,15 +1858,15 @@ do_update_doc_list (MdWindow *window)
         else
         {
             GtkActionGroup *action_group;
-            char *name = g_strdup_printf ("MooDocument-%p", doc);
+            char *name = g_strdup_printf ("MdView-%p", view);
             action = g_object_new (MOO_TYPE_RADIO_ACTION ,
                                    "name", name,
                                    "label", md_document_get_display_basename (doc),
                                    "tooltip", md_document_get_display_name (doc),
                                    "use-underline", FALSE,
                                    NULL);
-            g_object_set_data_full (doc, "md-doc-list-action", action, g_object_unref);
-            g_object_set_data (G_OBJECT (action), "md-document", doc);
+            g_object_set_data_full (G_OBJECT (view), "md-view-list-action", action, g_object_unref);
+            g_object_set_data (G_OBJECT (action), "md-document-view", view);
             moo_action_set_no_accel (GTK_ACTION (action), TRUE);
             g_signal_connect (action, "toggled", G_CALLBACK (doc_list_action_toggled), window);
             action_group = moo_action_collection_get_group (moo_window_get_actions (MOO_WINDOW (window)), NULL);
@@ -1950,22 +1878,22 @@ do_update_doc_list (MdWindow *window)
         group = gtk_radio_action_get_group (action);
         actions = g_slist_prepend (actions, action);
 
-        docs = g_slist_delete_link (docs, docs);
+        views = g_slist_delete_link (views, views);
     }
 
     window->priv->doc_list_merge_id = moo_ui_xml_new_merge_id (xml);
-    actions = g_slist_sort (actions, (GCompareFunc) compare_doc_list_actions);
+    actions = g_slist_sort_with_data (actions, compare_doc_list_actions, window);
 
     while (actions)
     {
         gpointer action = actions->data;
-        gpointer doc = g_object_get_data (G_OBJECT (action), "md-document");
+        MdView *view = g_object_get_data (G_OBJECT (action), "md-document-view");
         char *markup = g_markup_printf_escaped ("<item action=\"%s\"/>",
                                                 gtk_action_get_name (action));
 
         moo_ui_xml_insert (xml, window->priv->doc_list_merge_id, ph, -1, markup);
         gtk_toggle_action_set_active (GTK_TOGGLE_ACTION (action),
-                                      doc == active_doc);
+                                      view == active_view);
 
         g_free (markup);
         actions = g_slist_delete_link (actions, actions);
@@ -1981,7 +1909,7 @@ out:
 static void
 update_doc_list (MdWindow *window)
 {
-    MdDocument *doc;
+    MdView *view;
 
     if (!window->priv->doc_list_update_idle)
         window->priv->doc_list_update_idle =
@@ -1990,18 +1918,18 @@ update_doc_list (MdWindow *window)
                                window, NULL);
 
     if (!window->priv->history_blocked &&
-        (doc = ACTIVE_DOC (window)))
+        (view = ACTIVE_VIEW (window)))
     {
-        GList *link = g_list_find (window->priv->history, doc);
+        GList *link = g_list_find (window->priv->history, view);
 
         if (link && link != window->priv->history)
         {
             window->priv->history = g_list_delete_link (window->priv->history, link);
-            window->priv->history = g_list_prepend (window->priv->history, doc);
+            window->priv->history = g_list_prepend (window->priv->history, view);
         }
         else if (!link)
         {
-            window->priv->history = g_list_prepend (window->priv->history, doc);
+            window->priv->history = g_list_prepend (window->priv->history, view);
             if (g_list_length (window->priv->history) > 2)
                 window->priv->history = g_list_delete_link (window->priv->history,
                                                             g_list_last (window->priv->history));
@@ -2084,15 +2012,15 @@ notebook_drag_data_recv (GtkWidget          *widget,
         if (data->target == document_tab_atom)
         {
             GtkWidget *toplevel;
-            MdDocument *doc = moo_selection_data_get_pointer (data, document_tab_atom);
+            MdView *view = moo_selection_data_get_pointer (data, document_tab_atom);
 
-            if (!doc)
+            if (!view)
                 goto out;
 
-            toplevel = gtk_widget_get_toplevel (GTK_WIDGET (doc));
+            toplevel = gtk_widget_get_toplevel (GTK_WIDGET (view));
 
             if (toplevel != GTK_WIDGET (window))
-                _md_manager_move_doc (window->priv->mgr, doc, window);
+                _md_manager_move_view (window->priv->mgr, view, window);
 
             goto out;
         }

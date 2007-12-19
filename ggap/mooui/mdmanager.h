@@ -2,6 +2,8 @@
 #define MD_MANAGER_H
 
 #include <mooui/mdwindow.h>
+#include <mooui/mddocument.h>
+#include <mooui/mdview.h>
 
 
 #define MD_TYPE_MANAGER             (md_manager_get_type ())
@@ -14,6 +16,12 @@
 typedef struct MdManagerClass MdManagerClass;
 typedef struct MdManagerPrivate MdManagerPrivate;
 
+typedef enum {
+    MD_CLOSE_ALL_DONE,
+    MD_CLOSE_ALL_CANCELLED,
+    MD_CLOSE_ALL_IN_PROGRESS
+} MdCloseAllResult;
+
 struct MdManager {
     GObject base;
     MdManagerPrivate *priv;
@@ -22,24 +30,29 @@ struct MdManager {
 struct MdManagerClass {
     GObjectClass base_class;
 
-    /* Signals, may not be stopped */
+    /* Signals which do the job, may not be stopped */
     void         (*new_doc)                 (MdManager  *mgr,
-                                             MdDocument *doc,
-                                             MdWindow   *window);
+                                             MdDocument *doc);
+    void         (*new_view)                (MdManager  *mgr,
+                                             MdView     *view);
     void         (*new_window)              (MdManager  *mgr,
                                              MdWindow   *window);
     void         (*close_doc)               (MdManager  *mgr,
                                              MdDocument *doc);
+    void         (*close_view)              (MdManager  *mgr,
+                                             MdView     *view);
     void         (*close_window)            (MdManager  *mgr,
                                              MdWindow   *window);
     MdFileInfo** (*ask_open)                (MdManager  *mgr,
                                              MdWindow   *window);
     MdFileInfo*  (*ask_save_as)             (MdManager  *mgr,
-                                             MdDocument *doc);
+                                             MdView     *view);
 
-    /* Action signals, may be stopped */
-    void         (*action_close_docs)       (MdManager  *mgr,
-                                             GSList     *docs);
+    MdCloseAllResult (*close_all)           (MdManager  *mgr);
+
+    /* Action signals, may safely be emitted and stopped */
+    void         (*action_close_views)      (MdManager  *mgr,
+                                             GSList     *views);
     void         (*action_close_windows)    (MdManager  *mgr,
                                              GSList     *windows);
 
@@ -49,17 +62,20 @@ struct MdManagerClass {
 };
 
 
-GType   md_manager_get_type             (void) G_GNUC_CONST;
+GType       md_manager_get_type             (void) G_GNUC_CONST;
 
-void    md_manager_set_doc_type         (MdManager  *mgr,
-                                         GType       type);
-void    md_manager_set_window_type      (MdManager  *mgr,
-                                         GType       type);
-void    md_manager_set_ui_xml           (MdManager  *mgr,
-                                         MooUIXML   *xml);
+void        md_manager_set_doc_type         (MdManager  *mgr,
+                                             GType       type);
+void        md_manager_set_view_type        (MdManager  *mgr,
+                                             GType       type);
+void        md_manager_set_window_type      (MdManager  *mgr,
+                                             GType       type);
+void        md_manager_set_ui_xml           (MdManager  *mgr,
+                                             MooUIXML   *xml);
 
-void    md_manager_set_active_window    (MdManager  *mgr,
-                                         MdWindow   *window);
+void        md_manager_set_active_window    (MdManager  *mgr,
+                                             MdWindow   *window);
+MdWindow   *md_manager_get_active_window    (MdManager  *mgr);
 
 
 #endif /* MD_MANAGER_H */

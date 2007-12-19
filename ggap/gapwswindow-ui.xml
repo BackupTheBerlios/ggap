@@ -90,7 +90,7 @@
       <item action="WrapText"/>
       <item action="LineNumbers"/>
       <separator/>
-      <item action="FocusDoc"/>
+<!--      <item action="FocusDoc"/>-->
       <separator/>
       <placeholder name="UserMenu"/>
       <separator/>

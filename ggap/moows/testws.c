@@ -1,31 +1,32 @@
 #include "moows/moowstextblock.h"
 #include "moows/moowspromptblock.h"
+#include "moows/moowsview.h"
 #include <gtk/gtk.h>
 
 static void
-add_blocks (MooWsView *view)
+add_blocks (MooWsBuffer *buffer)
 {
     MooWsBlock *block;
 
     block = g_object_new (MOO_TYPE_WS_PROMPT_BLOCK, "ps", "gap> ",
                           "ps2", "> ", "text", "lalalala\nlalalala",
                           NULL);
-    moo_ws_view_append_block (view, block);
+    moo_ws_buffer_append_block (buffer, block);
     g_object_set (block->tag, "paragraph-background", "yellow", NULL);
 
     block = g_object_new (MOO_TYPE_WS_TEXT_BLOCK, NULL);
-    moo_ws_view_append_block (view, block);
+    moo_ws_buffer_append_block (buffer, block);
     moo_ws_text_block_set_text (MOO_WS_TEXT_BLOCK (block), "efwefwefwef");
     g_object_set (block->tag, "paragraph-background", "green", NULL);
 
     block = g_object_new (MOO_TYPE_WS_PROMPT_BLOCK, "ps", "gap> ",
                           "ps2", "> ", "text", "foobatr",
                           NULL);
-    moo_ws_view_append_block (view, block);
+    moo_ws_buffer_append_block (buffer, block);
     g_object_set (block->tag, "paragraph-background", "yellow", NULL);
 
     block = g_object_new (MOO_TYPE_WS_TEXT_BLOCK, NULL);
-    moo_ws_view_append_block (view, block);
+    moo_ws_buffer_append_block (buffer, block);
     moo_ws_text_block_set_text (MOO_WS_TEXT_BLOCK (block), "tyjtyjtyjtyj");
     g_object_set (block->tag, "paragraph-background", "blue", NULL);
 }
@@ -45,7 +46,7 @@ main (int argc, char *argv[])
     view = g_object_new (MOO_TYPE_WS_VIEW, NULL);
     gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
 
-    add_blocks (view);
+    add_blocks (MOO_WS_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view))));
 
     gtk_widget_show_all (window);
     gtk_main ();

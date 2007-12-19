@@ -1,7 +1,7 @@
 #ifndef MD_WINDOW_H
 #define MD_WINDOW_H
 
-#include <mooui/mddocument.h>
+#include <mooui/mdview.h>
 #include <mooutils/moowindow.h>
 
 
@@ -24,11 +24,11 @@ struct MdWindow {
 struct MdWindowClass {
     MooWindowClass base_class;
 
-    void    (*active_doc_changed)   (MdWindow   *window);
-    void    (*insert_doc)           (MdWindow   *window,
-                                     MdDocument *doc);
-    void    (*remove_doc)           (MdWindow   *window,
-                                     MdDocument *doc);
+    void    (*active_view_changed)  (MdWindow   *window);
+    void    (*insert_view)          (MdWindow   *window,
+                                     MdView     *view);
+    void    (*remove_view)          (MdWindow   *window,
+                                     MdView     *view);
 };
 
 
@@ -37,10 +37,11 @@ GType        md_window_get_type         (void) G_GNUC_CONST;
 MdManager   *md_window_get_manager      (MdWindow   *window);
 
 MdDocument  *md_window_get_active_doc   (MdWindow   *window);
-void         md_window_set_active_doc   (MdWindow   *window,
-                                         MdDocument *doc);
+MdView      *md_window_get_active_view  (MdWindow   *window);
+void         md_window_set_active_view  (MdWindow   *window,
+                                         MdView     *view);
 
-GSList      *md_window_list_docs        (MdWindow   *window);
+GSList      *md_window_list_views       (MdWindow   *window);
 
 
 #endif /* MD_WINDOW_H */

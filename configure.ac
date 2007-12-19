@@ -28,6 +28,9 @@ PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_CHECK_HEADERS([readline/readline.h],[READLINE_LIBS='-lreadline'],[READLINE_LIBS=])
 AC_SUBST(READLINE_LIBS)
 
+# remove this
+MOO_AC_FUNCS
+
 zlib_missing=true
 AC_CHECK_HEADER([zlib.h],[
   AC_CHECK_LIB([z],[gzdopen],[
@@ -37,13 +40,6 @@ AC_CHECK_HEADER([zlib.h],[
 if $zlib_missing; then
   AC_MSG_ERROR([libz missing])
 fi
-
-# AC_PROG_OBJC
-# _MOO_OBJC_CHECK([
-#   AC_MSG_NOTICE([Objective-C flags: $MOO_OBJCFLAGS $MOO_OBJC_LIBS])
-# ],[
-#   AC_MSG_ERROR([Objective-C compiler not found])
-# ])
 
 MOO_AC_CHECK_OS
 _MOO_AC_CONFIGARGS_H

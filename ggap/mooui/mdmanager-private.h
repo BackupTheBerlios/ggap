@@ -4,8 +4,8 @@
 #include <mooui/mdmanager.h>
 
 
-void         _md_manager_move_doc               (MdManager      *mgr,
-                                                 MdDocument     *doc,
+void         _md_manager_move_view              (MdManager      *mgr,
+                                                 MdView         *view,
                                                  MdWindow       *dest);
 const char  *_md_manager_get_app_name           (MdManager      *mgr);
 char        *_md_manager_add_untitled           (MdManager      *mgr,
@@ -21,12 +21,12 @@ void         _md_manager_action_new_window      (MdManager      *mgr);
 void         _md_manager_action_open            (MdManager      *mgr,
                                                  MdWindow       *window);
 void         _md_manager_action_reload          (MdManager      *mgr,
-                                                 MdDocument     *doc);
+                                                 MdView         *view);
 void         _md_manager_action_save            (MdManager      *mgr,
-                                                 MdDocument     *doc);
+                                                 MdView         *view);
 void         _md_manager_action_save_as         (MdManager      *mgr,
-                                                 MdDocument     *doc);
-void         _md_manager_action_close_docs      (MdManager      *mgr,
+                                                 MdView         *view);
+void         _md_manager_action_close_views     (MdManager      *mgr,
                                                  GSList         *list);
 void         _md_manager_action_open_files      (MdManager      *mgr,
                                                  MdWindow       *window,

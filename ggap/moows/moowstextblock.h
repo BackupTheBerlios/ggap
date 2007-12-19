@@ -14,7 +14,7 @@
 #ifndef MOO_WS_TEXT_BLOCK_H
 #define MOO_WS_TEXT_BLOCK_H
 
-#include "moows/moowsblock.h"
+#include <moows/moowsblock.h>
 
 G_BEGIN_DECLS
 
@@ -26,17 +26,17 @@ G_BEGIN_DECLS
 #define MOO_IS_WS_TEXT_BLOCK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), MOO_TYPE_WS_TEXT_BLOCK))
 #define MOO_WS_TEXT_BLOCK_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), MOO_TYPE_WS_TEXT_BLOCK, MooWsTextBlockClass))
 
-typedef struct _MooWsTextBlock MooWsTextBlock;
-typedef struct _MooWsTextBlockPrivate MooWsTextBlockPrivate;
-typedef struct _MooWsTextBlockClass MooWsTextBlockClass;
+typedef struct MooWsTextBlock MooWsTextBlock;
+typedef struct MooWsTextBlockPrivate MooWsTextBlockPrivate;
+typedef struct MooWsTextBlockClass MooWsTextBlockClass;
 
-struct _MooWsTextBlock
+struct MooWsTextBlock
 {
     MooWsBlock base;
     MooWsTextBlockPrivate *priv;
 };
 
-struct _MooWsTextBlockClass
+struct MooWsTextBlockClass
 {
     MooWsBlockClass base_class;
 };

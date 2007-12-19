@@ -14,7 +14,7 @@
 #ifndef MOO_WORKSHEET_H
 #define MOO_WORKSHEET_H
 
-#include "moows/moowsview.h"
+#include <moows/moowsbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -26,19 +26,19 @@ G_BEGIN_DECLS
 #define MOO_IS_WORKSHEET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), MOO_TYPE_WORKSHEET))
 #define MOO_WORKSHEET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), MOO_TYPE_WORKSHEET, MooWorksheetClass))
 
-typedef struct _MooWorksheet MooWorksheet;
-typedef struct _MooWorksheetPrivate MooWorksheetPrivate;
-typedef struct _MooWorksheetClass MooWorksheetClass;
+typedef struct MooWorksheet MooWorksheet;
+typedef struct MooWorksheetPrivate MooWorksheetPrivate;
+typedef struct MooWorksheetClass MooWorksheetClass;
 
-struct _MooWorksheet
+struct MooWorksheet
 {
-    MooWsView base;
+    MooWsBuffer base;
     MooWorksheetPrivate *priv;
 };
 
-struct _MooWorksheetClass
+struct MooWorksheetClass
 {
-    MooWsViewClass base_class;
+    MooWsBufferClass base_class;
 
     void (*process_input) (MooWorksheet  *sheet,
                            char         **lines);
@@ -79,6 +79,11 @@ gboolean    moo_worksheet_load                  (MooWorksheet   *ws,
                                                  gsize           text_len,
                                                  GError        **error);
 char       *moo_worksheet_format                (MooWorksheet   *ws);
+
+void       _moo_worksheet_history_next          (MooWorksheet   *ws);
+void       _moo_worksheet_history_prev          (MooWorksheet   *ws);
+gboolean   _moo_worksheet_commit_input          (MooWorksheet   *ws);
+gboolean   _moo_worksheet_get_allow_multiline   (MooWorksheet   *ws);
 
 
 G_END_DECLS

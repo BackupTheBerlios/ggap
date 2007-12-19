@@ -48,6 +48,8 @@ ws_sources =				\
 	gapworksheet.h			\
 	gapwscompletion.c		\
 	gapwscompletion.h		\
+	gapwsview.c			\
+	gapwsview.h			\
 	gapwswindow.c			\
 	gapwswindow.h
 
@@ -111,7 +113,6 @@ EXTRA_DIST =		\
     pipehelper_res.rc.in\
     ggap-ui.xml		\
     gapwswindow-ui.xml	\
-    ggap.opag		\
     gapparser-yacc.y	\
     glade/gapprefs.glade\
     glade/usermenu.glade\
@@ -141,9 +142,6 @@ gapwswindow-ui.h: gapwswindow-ui.xml $(XML2H)
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h
-
-ggap.c: ggap.opag
-	opag -f _ggap_parse_options -O _ggap_opt_ -A _ggap_arg_ $(srcdir)/ggap.opag $(srcdir)/ggap.c
 
 
 packagesdir = $(mimedir)/packages

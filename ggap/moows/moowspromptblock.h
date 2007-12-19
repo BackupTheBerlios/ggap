@@ -14,7 +14,7 @@
 #ifndef MOO_WS_PROMPT_BLOCK_H
 #define MOO_WS_PROMPT_BLOCK_H
 
-#include "moows/moowsblock.h"
+#include <moows/moowsblock.h>
 
 G_BEGIN_DECLS
 
@@ -26,17 +26,17 @@ G_BEGIN_DECLS
 #define MOO_IS_WS_PROMPT_BLOCK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), MOO_TYPE_WS_PROMPT_BLOCK))
 #define MOO_WS_PROMPT_BLOCK_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), MOO_TYPE_WS_PROMPT_BLOCK, MooWsPromptBlockClass))
 
-typedef struct _MooWsPromptBlock MooWsPromptBlock;
-typedef struct _MooWsPromptBlockPrivate MooWsPromptBlockPrivate;
-typedef struct _MooWsPromptBlockClass MooWsPromptBlockClass;
+typedef struct MooWsPromptBlock MooWsPromptBlock;
+typedef struct MooWsPromptBlockPrivate MooWsPromptBlockPrivate;
+typedef struct MooWsPromptBlockClass MooWsPromptBlockClass;
 
-struct _MooWsPromptBlock
+struct MooWsPromptBlock
 {
     MooWsBlock base;
     MooWsPromptBlockPrivate *priv;
 };
 
-struct _MooWsPromptBlockClass
+struct MooWsPromptBlockClass
 {
     MooWsBlockClass base_class;
 };
