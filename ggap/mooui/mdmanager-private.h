@@ -32,5 +32,7 @@ void         _md_manager_action_open_files      (MdManager      *mgr,
                                                  MdWindow       *window,
                                                  MdFileInfo    **files);
 
+void         _md_manager_apply_prefs            (MdManager      *mgr);
+
 
 #endif /* MOO_DOCUMENT_MANAGER_PRIVATE_H */

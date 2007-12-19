@@ -24,7 +24,8 @@ AM_CFLAGS =				\
     $(MOO_CFLAGS)			\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
-    -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"
+    -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"	\
+    -DDISABLE_OLD_STUFF
 AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 
 testparser_LDADD = $(MOO_LIBS) $(MOO_OBJC_LIBS) $(READLINE_LIBS)

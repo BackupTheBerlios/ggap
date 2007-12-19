@@ -21,7 +21,6 @@
 
 struct GapWsWindowPrivate {
     GtkStatusbar *statusbar;
-//     GapWorksheet *ws;
 };
 
 G_DEFINE_TYPE (GapWsWindow, gap_ws_window, MD_TYPE_WINDOW)
@@ -34,11 +33,10 @@ static void
 gap_ws_window_class_init (GapWsWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
-//     MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
 
     object_class->constructor = gap_ws_window_constructor;
 
-    moo_window_class_set_id (MOO_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
+    md_app_window_class_set_id (MD_APP_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
     g_type_class_add_private (klass, sizeof (GapWsWindowPrivate));
 }
 
@@ -53,7 +51,7 @@ gap_ws_window_init (GapWsWindow *window)
                   "toolbar-ui-name", "Worksheet/Toolbar",
                   NULL);
 
-    moo_window_set_global_accels (MOO_WINDOW (window), FALSE);
+    md_app_window_set_global_accels (MD_APP_WINDOW (window), FALSE);
 }
 
 
@@ -130,7 +128,7 @@ gap_ws_window_constructor (GType type,
     window = GAP_WS_WINDOW (object);
 
 //     swin = gtk_scrolled_window_new (NULL, NULL);
-//     gtk_box_pack_start (GTK_BOX (MOO_WINDOW(window)->vbox), swin, TRUE, TRUE, 0);
+//     gtk_box_pack_start (GTK_BOX (MD_APP_WINDOW(window)->vbox), swin, TRUE, TRUE, 0);
 //     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (swin),
 //                                     GTK_POLICY_AUTOMATIC,
 //                                     GTK_POLICY_ALWAYS);
@@ -147,10 +145,10 @@ gap_ws_window_constructor (GType type,
 
     statusbar = gtk_statusbar_new ();
     gtk_statusbar_set_has_resize_grip (GTK_STATUSBAR (statusbar), TRUE);
-    gtk_box_pack_start (GTK_BOX (MOO_WINDOW (window)->vbox), statusbar, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (MD_APP_WINDOW (window)->vbox), statusbar, FALSE, FALSE, 0);
     window->priv->statusbar = GTK_STATUSBAR (statusbar);
 
-    gtk_widget_show_all (MOO_WINDOW(window)->vbox);
+    gtk_widget_show_all (MD_APP_WINDOW (window)->vbox);
 
 //     g_signal_connect (ws, "notify::gap-state",
 //                       G_CALLBACK (gap_state_changed),

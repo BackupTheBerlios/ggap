@@ -2,7 +2,7 @@
 #define MD_WINDOW_H
 
 #include <mooui/mdview.h>
-#include <mooutils/moowindow.h>
+#include <mooui/mdappwindow.h>
 
 
 #define MD_TYPE_WINDOW              (md_window_get_type ())
@@ -16,13 +16,13 @@ typedef struct MdWindowClass MdWindowClass;
 typedef struct MdWindowPrivate MdWindowPrivate;
 
 struct MdWindow {
-    MooWindow base;
+    MdAppWindow base;
     MdWindowPrivate *priv;
     GtkWidget *notebook;
 };
 
 struct MdWindowClass {
-    MooWindowClass base_class;
+    MdAppWindowClass base_class;
 
     void    (*active_view_changed)  (MdWindow   *window);
     void    (*insert_view)          (MdWindow   *window,

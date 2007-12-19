@@ -32,5 +32,5 @@ AM_CFLAGS =				\
     $(MOO_CFLAGS)			\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
-    -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"
+    -DDISABLE_OLD_STUFF
 AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)

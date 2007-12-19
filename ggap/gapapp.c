@@ -100,7 +100,7 @@ gap_app_class_init (GapAppClass *klass)
 //     edit_class = g_type_class_ref (GAP_TYPE_EDIT_WINDOW);
 //     term_class = g_type_class_ref (GAP_TYPE_WINDOW);
 
-//     moo_window_class_new_action (edit_class, "ExecuteSelection", NULL,
+//     md_app_window_class_new_action (edit_class, "ExecuteSelection", NULL,
 //                                  "display-name", "Execute Selection",
 //                                  "label", "_Execute Selection",
 //                                  "tooltip", "Execute Selection",
@@ -110,7 +110,7 @@ gap_app_class_init (GapAppClass *klass)
 //                                  NULL);
 
 #if 0
-    moo_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapDoc", NULL,
+    md_app_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapDoc", NULL,
                                  "display-name", _("GAP Documentation"),
                                  "label", _("_GAP Documentation"),
                                  "stock-id", GTK_STOCK_HELP,
@@ -119,16 +119,16 @@ gap_app_class_init (GapAppClass *klass)
 #endif
 
 #ifdef __WIN32__
-    moo_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapManual", NULL,
-                                 "display-name", _("GAP Manual"),
-                                 "label", _("GAP Manual"),
-                                 "stock-id", GTK_STOCK_HELP,
-                                 "accel", "F1",
-                                 "closure-callback", open_gap_manual,
-                                 NULL);
+    md_app_window_class_new_action (g_type_class_peek (MOO_TYPE_WINDOW), "GapManual", NULL,
+                                    "display-name", _("GAP Manual"),
+                                    "label", _("GAP Manual"),
+                                    "stock-id", GTK_STOCK_HELP,
+                                    "accel", "F1",
+                                    "closure-callback", open_gap_manual,
+                                    NULL);
 #endif
 
-//     moo_window_class_new_action (term_class, "NewEditor", NULL,
+//     md_app_window_class_new_action (term_class, "NewEditor", NULL,
 //                                  "display-name", "New Editor",
 //                                  "label", "_New Editor",
 //                                  "tooltip", "New Editor",
@@ -138,7 +138,7 @@ gap_app_class_init (GapAppClass *klass)
 //                                  "closure-proxy-func", moo_app_get_instance,
 //                                  NULL);
 //
-//     moo_window_class_new_action (term_class, "OpenInEditor", NULL,
+//     md_app_window_class_new_action (term_class, "OpenInEditor", NULL,
 //                                  "display-name", "Open In Editor",
 //                                  "label", "_Open In Editor",
 //                                  "tooltip", "Open In Editor",
@@ -287,7 +287,7 @@ gap_app_run (MdApp  *md_app,
 //                                           "ui-xml", moo_app_get_ui_xml (MOO_APP (app)),
                                           NULL);
         gtk_widget_show (app->priv->window);
-        md_app_set_main_window (md_app, MOO_WINDOW (app->priv->window));
+        md_app_set_main_window (md_app, MD_APP_WINDOW (app->priv->window));
     }
 
     return MD_APP_CLASS (gap_app_parent_class)->run (md_app, argc, argv);

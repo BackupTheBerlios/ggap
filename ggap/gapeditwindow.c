@@ -37,40 +37,40 @@ G_DEFINE_TYPE (GapEditWindow, gap_edit_window, MOO_TYPE_EDIT_WINDOW)
 static void
 gap_edit_window_class_init (GapEditWindowClass *klass)
 {
-    MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
+    MdAppWindowClass *window_class = MD_APP_WINDOW_CLASS (klass);
     MooEditWindowClass *edit_window_class = MOO_EDIT_WINDOW_CLASS (klass);
 
     tmp_to_real = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
     real_to_tmp = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-    moo_window_class_set_id (window_class, "Editor", "Editor");
+    md_app_window_class_set_id (window_class, "Editor", "Editor");
 
     edit_window_class->close_doc = gap_edit_window_close_doc;
 
-    moo_window_class_new_action (window_class, "SendFile", NULL,
-                                 "display-name", _("Send File"),
-                                 "label", _("Send File"),
-                                 "tooltip", _("Send file"),
-                                 "stock-id", GTK_STOCK_EXECUTE,
-                                 "closure-callback", gap_edit_window_send_file,
-                                 "condition::sensitive", "has-open-document",
-                                 NULL);
-    moo_window_class_new_action (window_class, "SendSelection", NULL,
-                                 "display-name", _("Send Selection"),
-                                 "label", _("Send Selection"),
-                                 "tooltip", _("Send selection"),
-                                 "stock-id", GTK_STOCK_JUMP_TO,
-                                 "closure-callback", gap_edit_window_send_selection,
-                                 "condition::sensitive", "has-open-document",
-                                 "accel", "<ctrl>Return",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "SendFile", NULL,
+                                    "display-name", _("Send File"),
+                                    "label", _("Send File"),
+                                    "tooltip", _("Send file"),
+                                    "stock-id", GTK_STOCK_EXECUTE,
+                                    "closure-callback", gap_edit_window_send_file,
+                                    "condition::sensitive", "has-open-document",
+                                    NULL);
+    md_app_window_class_new_action (window_class, "SendSelection", NULL,
+                                    "display-name", _("Send Selection"),
+                                    "label", _("Send Selection"),
+                                    "tooltip", _("Send selection"),
+                                    "stock-id", GTK_STOCK_JUMP_TO,
+                                    "closure-callback", gap_edit_window_send_selection,
+                                    "condition::sensitive", "has-open-document",
+                                    "accel", "<ctrl>Return",
+                                    NULL);
 }
 
 
 static void
 gap_edit_window_init (GapEditWindow *window)
 {
-    moo_window_set_global_accels (MOO_WINDOW (window), TRUE);
+    md_app_window_set_global_accels (MD_APP_WINDOW (window), TRUE);
 }
 
 

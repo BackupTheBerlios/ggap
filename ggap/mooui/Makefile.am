@@ -4,6 +4,8 @@ noinst_PROGRAMS = testui
 libmooui_la_SOURCES =			\
 	mdapp.c				\
 	mdapp.h				\
+	mdappwindow.c			\
+	mdappwindow.h			\
 	mdasyncop.c			\
 	mdasyncop.h			\
 	mddialogs.c			\
@@ -19,15 +21,16 @@ libmooui_la_SOURCES =			\
 	mdview.c			\
 	mdview.h			\
 	mdview-private.h		\
+	mdmanager.c			\
+	mdmanager.h			\
 	mdwindow.c			\
 	mdwindow.h			\
-	mdwindow-private.h		\
-	mdmanager.c			\
-	mdmanager.h
+	mdwindow-private.h
 
 mdview-private.lo: mdview.lo
 mddocument-private.lo: mddocument.lo
 mdwindow-private.lo: mdwindow.lo
+mdappwindow-private.lo: mdappwindow.lo
 mdmanager-private.lo: mdmanager.lo
 
 testui_LDADD = libmooui.la $(MOO_LIBS)
@@ -39,7 +42,7 @@ AM_CFLAGS =				\
     $(MOO_CFLAGS)			\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
-    -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"
+    -DDISABLE_OLD_STUFF
 AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 
 EXTRA_DIST = marshals.list
@@ -66,6 +69,7 @@ marshals.h: marshals.list
 
 mdenums_headers =			\
 	mdapp.h				\
+	mdappwindow.h			\
 	mdasyncop.h			\
 	mddialogs.h			\
 	mddocument.h			\

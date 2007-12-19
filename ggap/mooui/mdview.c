@@ -63,6 +63,14 @@ md_view_class_init (MdViewIface *iface)
                   G_TYPE_NONE, 1,
                   MD_TYPE_DOCUMENT);
 
+    g_signal_new ("apply-prefs",
+                  MD_TYPE_VIEW,
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (MdViewIface, apply_prefs),
+                  NULL, NULL,
+                  _moo_ui_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+
     g_signal_new ("attach-async-op",
                   MD_TYPE_VIEW,
                   G_SIGNAL_RUN_LAST,
@@ -305,6 +313,14 @@ md_view_set_document_real (MdView     *view,
 
     md_view_update_tab_label (view);
     g_object_notify (G_OBJECT (view), "md-document");
+}
+
+
+void
+_md_view_apply_prefs (MdView *view)
+{
+    g_return_if_fail (MD_IS_VIEW (view));
+    g_signal_emit_by_name (view, "apply-prefs");
 }
 
 

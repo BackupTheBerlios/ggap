@@ -20,6 +20,7 @@
 #include <mooutils/mooaction.h>
 #include <mooutils/moomenuaction.h>
 #include <mooutils/mooutils-misc.h>
+#include <mooutils/mooutils-gobject.h>
 #include <mooutils/moonotebook.h>
 #include <mooutils/moostock.h>
 #include <gtk/gtk.h>
@@ -87,7 +88,7 @@ static void         md_window_get_property          (GObject            *object,
                                                      GValue             *value,
                                                      GParamSpec         *pspec);
 
-static gboolean     md_window_close                 (MooWindow  *window);
+static gboolean     md_window_close                 (MdAppWindow *window);
 
 static void         md_window_active_view_changed   (MdWindow   *window);
 static void         md_window_insert_view_real      (MdWindow   *window,
@@ -160,7 +161,7 @@ static void action_print_pdf        (MdWindow   *window);
 
 
 /* MD_TYPE_WINDOW */
-G_DEFINE_TYPE (MdWindow, md_window, MOO_TYPE_WINDOW)
+G_DEFINE_TYPE (MdWindow, md_window, MD_TYPE_APP_WINDOW)
 
 enum {
     PROP_0,
@@ -186,7 +187,7 @@ md_window_class_init (MdWindowClass *klass)
 {
     guint i;
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-    MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
+    MdAppWindowClass *window_class = MD_APP_WINDOW_CLASS (klass);
 
     gobject_class->constructor = md_window_constructor;
     gobject_class->dispose = md_window_dispose;
@@ -253,196 +254,196 @@ md_window_class_init (MdWindowClass *klass)
     INSTALL_BOOL_PROP (PROP_MD_CAN_UNDO, "md-can-undo");
     INSTALL_BOOL_PROP (PROP_MD_CAN_REDO, "md-can-redo");
 
-    moo_window_class_new_action (window_class, "NewDoc", NULL,
-                                 "display-name", GTK_STOCK_NEW,
-                                 "label", GTK_STOCK_NEW,
-                                 "tooltip", _("Create new document"),
-                                 "stock-id", GTK_STOCK_NEW,
-                                 "accel", "<ctrl>N",
-                                 "closure-callback", action_new_doc,
-                                 NULL);
+    md_app_window_class_new_action (window_class, "NewDoc", NULL,
+                                    "display-name", GTK_STOCK_NEW,
+                                    "label", GTK_STOCK_NEW,
+                                    "tooltip", _("Create new document"),
+                                    "stock-id", GTK_STOCK_NEW,
+                                    "accel", "<ctrl>N",
+                                    "closure-callback", action_new_doc,
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "NewWindow", NULL,
-                                 "display-name", MOO_STOCK_NEW_WINDOW,
-                                 "label", MOO_STOCK_NEW_WINDOW,
-                                 "tooltip", _("Open new window"),
-                                 "stock-id", MOO_STOCK_NEW_WINDOW,
-                                 "accel", "<shift><ctrl>N",
-                                 "closure-callback", action_new_window,
-                                 NULL);
+    md_app_window_class_new_action (window_class, "NewWindow", NULL,
+                                    "display-name", MOO_STOCK_NEW_WINDOW,
+                                    "label", MOO_STOCK_NEW_WINDOW,
+                                    "tooltip", _("Open new window"),
+                                    "stock-id", MOO_STOCK_NEW_WINDOW,
+                                    "accel", "<shift><ctrl>N",
+                                    "closure-callback", action_new_window,
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Open", NULL,
-                                 "display-name", GTK_STOCK_OPEN,
-                                 "label", _("_Open..."),
-                                 "tooltip", _("Open..."),
-                                 "stock-id", GTK_STOCK_OPEN,
-                                 "accel", "<ctrl>O",
-                                 "closure-callback", action_open,
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Open", NULL,
+                                    "display-name", GTK_STOCK_OPEN,
+                                    "label", _("_Open..."),
+                                    "tooltip", _("Open..."),
+                                    "stock-id", GTK_STOCK_OPEN,
+                                    "accel", "<ctrl>O",
+                                    "closure-callback", action_open,
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Reload", NULL,
-                                 "display-name", _("Reload"),
-                                 "label", _("_Reload"),
-                                 "tooltip", _("Reload document"),
-                                 "stock-id", GTK_STOCK_REFRESH,
-                                 "accel", "F5",
-                                 "closure-callback", action_reload,
-                                 "condition::sensitive", "md-can-reload",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Reload", NULL,
+                                    "display-name", _("Reload"),
+                                    "label", _("_Reload"),
+                                    "tooltip", _("Reload document"),
+                                    "stock-id", GTK_STOCK_REFRESH,
+                                    "accel", "F5",
+                                    "closure-callback", action_reload,
+                                    "condition::sensitive", "md-can-reload",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Save", NULL,
-                                 "display-name", GTK_STOCK_SAVE,
-                                 "label", GTK_STOCK_SAVE,
-                                 "tooltip", GTK_STOCK_SAVE,
-                                 "stock-id", GTK_STOCK_SAVE,
-                                 "accel", "<ctrl>S",
-                                 "closure-callback", action_save,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Save", NULL,
+                                    "display-name", GTK_STOCK_SAVE,
+                                    "label", GTK_STOCK_SAVE,
+                                    "tooltip", GTK_STOCK_SAVE,
+                                    "stock-id", GTK_STOCK_SAVE,
+                                    "accel", "<ctrl>S",
+                                    "closure-callback", action_save,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "SaveAs", NULL,
-                                 "display-name", GTK_STOCK_SAVE_AS,
-                                 "label", _("Save _As..."),
-                                 "tooltip", _("Save as..."),
-                                 "stock-id", GTK_STOCK_SAVE_AS,
-                                 "accel", "<ctrl><shift>S",
-                                 "closure-callback", action_save_as,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "SaveAs", NULL,
+                                    "display-name", GTK_STOCK_SAVE_AS,
+                                    "label", _("Save _As..."),
+                                    "tooltip", _("Save as..."),
+                                    "stock-id", GTK_STOCK_SAVE_AS,
+                                    "accel", "<ctrl><shift>S",
+                                    "closure-callback", action_save_as,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Close", NULL,
-                                 "display-name", GTK_STOCK_CLOSE,
-                                 "label", GTK_STOCK_CLOSE,
-                                 "tooltip", _("Close document"),
-                                 "stock-id", GTK_STOCK_CLOSE,
-                                 "accel", "<ctrl>W",
-                                 "closure-callback", action_close_tab,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Close", NULL,
+                                    "display-name", GTK_STOCK_CLOSE,
+                                    "label", GTK_STOCK_CLOSE,
+                                    "tooltip", _("Close document"),
+                                    "stock-id", GTK_STOCK_CLOSE,
+                                    "accel", "<ctrl>W",
+                                    "closure-callback", action_close_tab,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "CloseAll", NULL,
-                                 "display-name", _("Close All"),
-                                 "label", _("Close A_ll"),
-                                 "tooltip", _("Close all documents"),
-                                 "accel", "<shift><ctrl>W",
-                                 "closure-callback", action_close_all,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "CloseAll", NULL,
+                                    "display-name", _("Close All"),
+                                    "label", _("Close A_ll"),
+                                    "tooltip", _("Close all documents"),
+                                    "accel", "<shift><ctrl>W",
+                                    "closure-callback", action_close_all,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Undo", NULL,
-                                 "display-name", GTK_STOCK_UNDO,
-                                 "label", GTK_STOCK_UNDO,
-                                 "tooltip", GTK_STOCK_UNDO,
-                                 "stock-id", GTK_STOCK_UNDO,
-                                 "accel", "<ctrl>Z",
-                                 "closure-signal", "undo",
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::visible", "md-has-undo",
-                                 "condition::sensitive", "md-can-undo",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Undo", NULL,
+                                    "display-name", GTK_STOCK_UNDO,
+                                    "label", GTK_STOCK_UNDO,
+                                    "tooltip", GTK_STOCK_UNDO,
+                                    "stock-id", GTK_STOCK_UNDO,
+                                    "accel", "<ctrl>Z",
+                                    "closure-signal", "undo",
+                                    "closure-proxy-func", md_window_get_active_doc,
+                                    "condition::visible", "md-has-undo",
+                                    "condition::sensitive", "md-can-undo",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Redo", NULL,
-                                 "display-name", GTK_STOCK_REDO,
-                                 "label", GTK_STOCK_REDO,
-                                 "tooltip", GTK_STOCK_REDO,
-                                 "stock-id", GTK_STOCK_REDO,
-                                 "accel", "<shift><ctrl>Z",
-                                 "closure-signal", "redo",
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::visible", "md-has-undo",
-                                 "condition::sensitive", "md-can-redo",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Redo", NULL,
+                                    "display-name", GTK_STOCK_REDO,
+                                    "label", GTK_STOCK_REDO,
+                                    "tooltip", GTK_STOCK_REDO,
+                                    "stock-id", GTK_STOCK_REDO,
+                                    "accel", "<shift><ctrl>Z",
+                                    "closure-signal", "redo",
+                                    "closure-proxy-func", md_window_get_active_doc,
+                                    "condition::visible", "md-has-undo",
+                                    "condition::sensitive", "md-can-redo",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "PreviousTab", NULL,
-                                 "display-name", _("Previous Tab"),
-                                 "label", _("_Previous Tab"),
-                                 "tooltip", _("Previous tab"),
-                                 "stock-id", GTK_STOCK_GO_BACK,
-                                 "accel", "<alt>Left",
-                                 "closure-callback", action_previous_tab,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "PreviousTab", NULL,
+                                    "display-name", _("Previous Tab"),
+                                    "label", _("_Previous Tab"),
+                                    "tooltip", _("Previous tab"),
+                                    "stock-id", GTK_STOCK_GO_BACK,
+                                    "accel", "<alt>Left",
+                                    "closure-callback", action_previous_tab,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "NextTab", NULL,
-                                 "display-name", _("Next Tab"),
-                                 "label", _("_Next Tab"),
-                                 "tooltip", _("Next tab"),
-                                 "stock-id", GTK_STOCK_GO_FORWARD,
-                                 "accel", "<alt>Right",
-                                 "closure-callback", action_next_tab,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "NextTab", NULL,
+                                    "display-name", _("Next Tab"),
+                                    "label", _("_Next Tab"),
+                                    "tooltip", _("Next tab"),
+                                    "stock-id", GTK_STOCK_GO_FORWARD,
+                                    "accel", "<alt>Right",
+                                    "closure-callback", action_next_tab,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "FocusDoc", NULL,
-                                 "display-name", _("Focus Document"),
-                                 "label", _("_Focus Document"),
-                                 "accel", "<alt>C",
-                                 "closure-callback", gtk_widget_grab_focus,
-                                 "closure-proxy-func", md_window_get_active_doc,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "FocusDoc", NULL,
+                                    "display-name", _("Focus Document"),
+                                    "label", _("_Focus Document"),
+                                    "accel", "<alt>C",
+                                    "closure-callback", gtk_widget_grab_focus,
+                                    "closure-proxy-func", md_window_get_active_doc,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
     for (i = 1; i < 10; ++i)
     {
         char *action_id = g_strdup_printf ("SwitchToTab%u", i);
         char *accel = g_strdup_printf ("<Alt>%u", i);
-        _moo_window_class_new_action_callback (window_class, action_id, NULL,
-                                               G_CALLBACK (action_switch_to_tab),
-                                               _moo_ui_marshal_VOID__UINT,
-                                               G_TYPE_NONE, 1,
-                                               G_TYPE_UINT, i - 1,
-                                               "accel", accel,
-                                               "connect-accel", TRUE,
-                                               "accel-editable", FALSE,
-                                               NULL);
+        _md_app_window_class_new_action_callback (window_class, action_id, NULL,
+                                                  G_CALLBACK (action_switch_to_tab),
+                                                  _moo_ui_marshal_VOID__UINT,
+                                                  G_TYPE_NONE, 1,
+                                                  G_TYPE_UINT, i - 1,
+                                                  "accel", accel,
+                                                  "connect-accel", TRUE,
+                                                  "accel-editable", FALSE,
+                                                  NULL);
         g_free (accel);
         g_free (action_id);
     }
 
-    moo_window_class_new_action (window_class, "NoDocuments", NULL,
-                                 /* Insensitive menu item which appears in Window menu with no documents open */
-                                 "label", _("No Documents"),
-                                 "no-accel", TRUE,
-                                 "sensitive", FALSE,
-                                 "condition::visible", "!md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "NoDocuments", NULL,
+                                    /* Insensitive menu item which appears in Window menu with no documents open */
+                                    "label", _("No Documents"),
+                                    "no-accel", TRUE,
+                                    "sensitive", FALSE,
+                                    "condition::visible", "!md-has-open-document",
+                                    NULL);
 
 #ifdef ENABLE_PRINTING
-    moo_window_class_new_action (window_class, "PageSetup", NULL,
-                                 "display-name", _("Page Setup"),
-                                 "label", _("Page S_etup..."),
-                                 "tooltip", _("Page Setup..."),
-                                 "accel", "<ctrl><shift>P",
-                                 "closure-callback", action_page_setup,
-                                 NULL);
+    md_app_window_class_new_action (window_class, "PageSetup", NULL,
+                                    "display-name", _("Page Setup"),
+                                    "label", _("Page S_etup..."),
+                                    "tooltip", _("Page Setup..."),
+                                    "accel", "<ctrl><shift>P",
+                                    "closure-callback", action_page_setup,
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "PrintPreview", NULL,
-                                 "display-name", GTK_STOCK_PRINT_PREVIEW,
-                                 "label", GTK_STOCK_PRINT_PREVIEW,
-                                 "tooltip", GTK_STOCK_PRINT_PREVIEW,
-                                 "stock-id", GTK_STOCK_PRINT_PREVIEW,
-                                 "closure-callback", action_print_preview,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "PrintPreview", NULL,
+                                    "display-name", GTK_STOCK_PRINT_PREVIEW,
+                                    "label", GTK_STOCK_PRINT_PREVIEW,
+                                    "tooltip", GTK_STOCK_PRINT_PREVIEW,
+                                    "stock-id", GTK_STOCK_PRINT_PREVIEW,
+                                    "closure-callback", action_print_preview,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "Print", NULL,
-                                 "display-name", GTK_STOCK_PRINT,
-                                 "label", _("Print..."),
-                                 "tooltip", _("Print..."),
-                                 "accel", "<ctrl>P",
-                                 "stock-id", GTK_STOCK_PRINT,
-                                 "closure-callback", action_print,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "Print", NULL,
+                                    "display-name", GTK_STOCK_PRINT,
+                                    "label", _("Print..."),
+                                    "tooltip", _("Print..."),
+                                    "accel", "<ctrl>P",
+                                    "stock-id", GTK_STOCK_PRINT,
+                                    "closure-callback", action_print,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 
-    moo_window_class_new_action (window_class, "PrintPdf", NULL,
-                                 "display-name", _("Export as PDF"),
-                                 "label", _("E_xport as PDF..."),
-                                 "tooltip", _("Export as PDF..."),
-                                 "stock-id", GTK_STOCK_PRINT,
-                                 "closure-callback", action_print_pdf,
-                                 "condition::sensitive", "md-has-open-document",
-                                 NULL);
+    md_app_window_class_new_action (window_class, "PrintPdf", NULL,
+                                    "display-name", _("Export as PDF"),
+                                    "label", _("E_xport as PDF..."),
+                                    "tooltip", _("Export as PDF..."),
+                                    "stock-id", GTK_STOCK_PRINT,
+                                    "closure-callback", action_print_pdf,
+                                    "condition::sensitive", "md-has-open-document",
+                                    NULL);
 #endif
 }
 
@@ -586,7 +587,7 @@ md_window_constructor (GType                  type,
     window = MD_WINDOW (object);
     g_return_val_if_fail (window->priv->mgr != NULL, object);
 
-    gtk_box_pack_start (GTK_BOX (MOO_WINDOW (window)->vbox), window->notebook, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (MD_APP_WINDOW (window)->vbox), window->notebook, TRUE, TRUE, 0);
 
     group = gtk_window_group_new ();
     gtk_window_group_add_window (group, GTK_WINDOW (window));
@@ -783,7 +784,7 @@ set_title_format (MdWindow   *window,
 
 
 static gboolean
-md_window_close (MooWindow *window)
+md_window_close (MdAppWindow *window)
 {
     MdWindow *doc_window = MD_WINDOW (window);
     _md_manager_action_close_window (doc_window->priv->mgr, doc_window);
@@ -1498,7 +1499,7 @@ md_window_remove_view_real (MdWindow *window,
 
     if (action)
     {
-        moo_action_collection_remove_action (moo_window_get_actions (MOO_WINDOW (window)), action);
+        moo_action_collection_remove_action (md_app_window_get_actions (MD_APP_WINDOW (window)), action);
         g_object_set_data (G_OBJECT (view), "md-view-list-action", NULL);
     }
 
@@ -1809,7 +1810,7 @@ do_update_doc_list (MdWindow *window)
 
     active_view = ACTIVE_VIEW (window);
 
-    xml = moo_window_get_ui_xml (MOO_WINDOW (window));
+    xml = md_app_window_get_ui_xml (MD_APP_WINDOW (window));
     g_return_val_if_fail (xml != NULL, FALSE);
 
     if (xml != window->priv->xml)
@@ -1870,7 +1871,7 @@ do_update_doc_list (MdWindow *window)
             g_object_set_data (G_OBJECT (action), "md-document-view", view);
             moo_action_set_no_accel (GTK_ACTION (action), TRUE);
             g_signal_connect (action, "toggled", G_CALLBACK (doc_list_action_toggled), window);
-            action_group = moo_action_collection_get_group (moo_window_get_actions (MOO_WINDOW (window)), NULL);
+            action_group = moo_action_collection_get_group (md_app_window_get_actions (MD_APP_WINDOW (window)), NULL);
             gtk_action_group_add_action (action_group, GTK_ACTION (action));
             g_free (name);
         }

@@ -24,6 +24,7 @@ struct MdManagerPrivate {
 
     gboolean handling_quit;
 
+    char *name;
     MooUIXML *xml;
 };
 
@@ -32,14 +33,19 @@ static GObject *md_manager_constructor          (GType           type,
                                                  guint           n_props,
                                                  GObjectConstructParam *props);
 static void     md_manager_dispose              (GObject        *object);
-// static void     md_manager_set_property   (GObject        *object,
-//                                                      guint           property_id,
-//                                                      const GValue   *value,
-//                                                      GParamSpec     *pspec);
-// static void     md_manager_get_property   (GObject        *object,
-//                                                      guint           property_id,
-//                                                      GValue         *value,
-//                                                      GParamSpec     *pspec);
+static void     md_manager_set_property         (GObject        *object,
+                                                 guint           property_id,
+                                                 const GValue   *value,
+                                                 GParamSpec     *pspec);
+static void     md_manager_get_property         (GObject        *object,
+                                                 guint           property_id,
+                                                 GValue         *value,
+                                                 GParamSpec     *pspec);
+
+static void     md_manager_set_name             (MdManager      *mgr,
+                                                 const char     *name);
+
+static void     handler_apply_prefs             (MdManager      *mgr);
 
 static void     handler_close_doc               (MdManager      *mgr,
                                                  MdDocument     *doc);
@@ -106,6 +112,11 @@ static void         app_quit                    (MdManager      *mgr);
 G_DEFINE_TYPE (MdManager, md_manager, G_TYPE_OBJECT)
 
 enum {
+    PROP_0,
+    PROP_NAME
+};
+
+enum {
     NEW_DOC,
     NEW_VIEW,
     NEW_WINDOW,
@@ -117,6 +128,7 @@ enum {
     ACTION_CLOSE_VIEWS,
     ACTION_CLOSE_WINDOWS,
     ACTION_OPEN_FILES,
+    APPLY_PREFS,
     N_SIGNALS
 };
 
@@ -129,8 +141,8 @@ md_manager_class_init (MdManagerClass *klass)
 
     g_type_class_add_private (klass, sizeof (MdManagerPrivate));
 
-//     object_class->set_property = md_manager_set_property;
-//     object_class->get_property = md_manager_get_property;
+    object_class->set_property = md_manager_set_property;
+    object_class->get_property = md_manager_get_property;
     object_class->constructor = md_manager_constructor;
     object_class->dispose = md_manager_dispose;
 
@@ -144,6 +156,12 @@ md_manager_class_init (MdManagerClass *klass)
     klass->action_close_views = handler_action_close_views;
     klass->action_close_windows = handler_action_close_windows;
     klass->action_open_files = handler_action_open_files;
+
+    klass->apply_prefs = handler_apply_prefs;
+
+    g_object_class_install_property (object_class, PROP_NAME,
+        g_param_spec_string ("name", "name", "name",
+                             "MdManager", G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
     signals[NEW_DOC] =
         g_signal_new ("new-doc",
@@ -255,6 +273,15 @@ md_manager_class_init (MdManagerClass *klass)
                       _moo_ui_marshal_BOXED__OBJECT,
                       MD_TYPE_FILE_INFO, 1,
                       MD_TYPE_VIEW);
+
+    signals[APPLY_PREFS] =
+        g_signal_new ("apply-prefs",
+                      MD_TYPE_MANAGER,
+                      G_SIGNAL_RUN_LAST,
+                      G_STRUCT_OFFSET (MdManagerClass, apply_prefs),
+                      NULL, NULL,
+                      _moo_ui_marshal_VOID__VOID,
+                      G_TYPE_NONE, 0);
 }
 
 static void
@@ -263,6 +290,7 @@ md_manager_init (MdManager *mgr)
     mgr->priv = G_TYPE_INSTANCE_GET_PRIVATE (mgr, MD_TYPE_MANAGER, MdManagerPrivate);
     mgr->priv->untitled = g_ptr_array_new ();
     mgr->priv->default_ext = g_strdup ("");
+    mgr->priv->name = g_strdup ("MdManager");
     mgr->priv->window_type = MD_TYPE_WINDOW;
     mgr->priv->doc_type = 0;
     mgr->priv->view_type = 0;
@@ -306,6 +334,7 @@ md_manager_dispose (GObject *object)
             g_signal_handlers_disconnect_by_func (app, (gpointer) app_quit, mgr);
         }
 
+        g_free (mgr->priv->name);
         g_free (mgr->priv->app_name);
         g_ptr_array_free (mgr->priv->untitled, TRUE);
         g_free (mgr->priv->default_ext);
@@ -315,46 +344,85 @@ md_manager_dispose (GObject *object)
     G_OBJECT_CLASS (md_manager_parent_class)->dispose (object);
 }
 
-// static void
-// md_manager_set_property (GObject      *object,
-//                                    guint         prop_id,
-//                                    const GValue *value,
-//                                    GParamSpec   *pspec)
-// {
-//     MdManager *manager = MD_MANAGER (manager);
-//
-//     switch (prop_id)
-//     {
-// //         case PROP_ALLOW_MULTILINE:
-// //             ws->priv->allow_multiline = g_value_get_boolean (value);
-// //             g_object_notify (object, "allow-multiline");
-// //             break;
-//
-//         default:
-//             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-//             break;
-//     }
-// }
+static void
+md_manager_set_property (GObject      *object,
+                         guint         prop_id,
+                         const GValue *value,
+                         GParamSpec   *pspec)
+{
+    MdManager *mgr = MD_MANAGER (object);
 
-// static void
-// md_manager_get_property (GObject    *object,
-//                                    guint       prop_id,
-//                                    GValue     *value,
-//                                    GParamSpec *pspec)
-// {
-//     MdManager *manager = MD_MANAGER (manager);
-//
-//     switch (prop_id)
-//     {
-// //         case PROP_GAP_STATE:
-// //             g_value_set_enum (value, ws->priv->gap_state);
-// //             break;
-//
-//         default:
-//             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-//             break;
-//     }
-// }
+    switch (prop_id)
+    {
+        case PROP_NAME:
+            md_manager_set_name (mgr, g_value_get_string (value));
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
+}
+
+static void
+md_manager_get_property (GObject    *object,
+                         guint       prop_id,
+                         GValue     *value,
+                         GParamSpec *pspec)
+{
+    MdManager *mgr = MD_MANAGER (object);
+
+    switch (prop_id)
+    {
+        case PROP_NAME:
+            g_value_set_string (value, mgr->priv->name);
+            break;
+
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
+    }
+}
+
+
+static void
+md_manager_set_name (MdManager  *mgr,
+                     const char *name)
+{
+    g_return_if_fail (MD_IS_MANAGER (mgr));
+    g_return_if_fail (name && name[0]);
+    MOO_ASSIGN_STRING (mgr->priv->name, name);
+    g_object_notify (G_OBJECT (mgr), "name");
+}
+
+const char *
+md_manager_setting (MdManager  *mgr,
+                    const char *setting)
+{
+#define N_STRINGS 8
+    static GString *stack[N_STRINGS];
+    static guint p;
+
+    g_return_val_if_fail (MD_IS_MANAGER (mgr), NULL);
+    g_return_val_if_fail (mgr->priv->name != NULL, NULL);
+    g_return_val_if_fail (setting != NULL, NULL);
+
+    if (!stack[0])
+    {
+        for (p = 0; p < N_STRINGS; ++p)
+            stack[p] = g_string_new ("");
+        p = N_STRINGS - 1;
+    }
+
+    if (p == N_STRINGS - 1)
+        p = 0;
+    else
+        p++;
+
+    g_string_printf (stack[p], "%s/%s", mgr->priv->name, setting);
+    return stack[p]->str;
+#undef N_STRINGS
+}
 
 
 const char *
@@ -1461,4 +1529,28 @@ md_manager_get_active_window (MdManager *mgr)
 
     g_slist_free (list);
     return MD_WINDOW (window);
+}
+
+
+/****************************************************************************/
+/* Preferences
+ */
+
+void
+_md_manager_apply_prefs (MdManager *mgr)
+{
+    g_return_if_fail (MD_IS_MANAGER (mgr));
+    g_signal_emit (mgr, signals[APPLY_PREFS], 0);
+}
+
+static void
+handler_apply_prefs (MdManager *mgr)
+{
+    GSList *l;
+
+//     for (l = mgr->priv->windows; l != NULL; l = l->next)
+//         _md_window_apply_prefs (l->data);
+
+    for (l = mgr->priv->windowless; l != NULL; l = l->next)
+        _md_view_apply_prefs (l->data);
 }

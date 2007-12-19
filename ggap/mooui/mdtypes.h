@@ -6,6 +6,7 @@
 
 typedef struct MdView MdView;
 typedef struct MdDocument MdDocument;
+typedef struct MdAppWindow MdAppWindow;
 typedef struct MdWindow MdWindow;
 typedef struct MdManager MdManager;
 typedef struct MdHasUndo MdHasUndo;

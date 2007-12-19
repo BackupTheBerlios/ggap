@@ -49,6 +49,7 @@ struct MdManagerClass {
                                              MdView     *view);
 
     MdCloseAllResult (*close_all)           (MdManager  *mgr);
+    void         (*apply_prefs)             (MdManager  *mgr);
 
     /* Action signals, may safely be emitted and stopped */
     void         (*action_close_views)      (MdManager  *mgr,
@@ -76,6 +77,9 @@ void        md_manager_set_ui_xml           (MdManager  *mgr,
 void        md_manager_set_active_window    (MdManager  *mgr,
                                              MdWindow   *window);
 MdWindow   *md_manager_get_active_window    (MdManager  *mgr);
+
+const char *md_manager_setting              (MdManager  *mgr,
+                                             const char *setting_name);
 
 
 #endif /* MD_MANAGER_H */

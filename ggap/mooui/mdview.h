@@ -21,6 +21,8 @@ struct MdViewIface {
                              MdAsyncOp  *op);
     void (*detach_async_op) (MdView     *view,
                              MdAsyncOp  *op);
+
+    void (*apply_prefs)     (MdView     *view);
 };
 
 

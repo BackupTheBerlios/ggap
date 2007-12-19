@@ -40,7 +40,7 @@ struct MdAppPrivate {
     gboolean need_ui;
     gboolean need_run;
 
-    MooWindow *main_window;
+    MdAppWindow *main_window;
     MdManager *md_mgr;
 
     gboolean running;
@@ -476,11 +476,11 @@ main_window_close (MdApp *app)
 }
 
 void
-md_app_set_main_window (MdApp     *app,
-                        MooWindow *window)
+md_app_set_main_window (MdApp       *app,
+                        MdAppWindow *window)
 {
     g_return_if_fail (MD_IS_APP (app));
-    g_return_if_fail (!window || MOO_IS_WINDOW (window));
+    g_return_if_fail (!window || MD_IS_APP_WINDOW (window));
 
     if (app->priv->main_window == window)
         return;
@@ -792,7 +792,7 @@ md_app_quit (MdApp *app)
 
     if (app->priv->main_window)
     {
-        if (!moo_window_close (app->priv->main_window))
+        if (!md_app_window_close (app->priv->main_window))
             return FALSE;
         g_assert (app->priv->main_window == NULL);
     }

@@ -59,7 +59,7 @@ void            md_app_open_files           (MdApp          *app,
                                              guint32         stamp);
 
 void            md_app_set_main_window      (MdApp          *app,
-                                             MooWindow      *window);
+                                             MdAppWindow    *window);
 void            md_app_set_document_manager (MdApp          *app,
                                              MdManager      *mgr);
 

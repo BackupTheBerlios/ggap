@@ -12,6 +12,7 @@ void        _md_view_set_window         (MdView     *view,
 
 GtkWidget  *_md_view_create_tab_label   (MdView     *view,
                                          GtkWidget **icon_evbox);
+void        _md_view_apply_prefs        (MdView     *view);
 
 
 #endif /* MD_VIEW_PRIVATE_H */
