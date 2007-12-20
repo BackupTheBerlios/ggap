@@ -1,4 +1,4 @@
-SUBDIRS = gap moows mooui .
+SUBDIRS = gap moows .
 
 EXTRA_PROGRAMS = ggap pipehelper
 bin_PROGRAMS =
@@ -30,7 +30,7 @@ AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 
 testparser_LDADD = $(MOO_LIBS) $(MOO_OBJC_LIBS) $(READLINE_LIBS)
 
-ggap_LDADD = moows/libmoows.la mooui/libmooui.la ../moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(ZLIB)
+ggap_LDADD = moows/libmoows.la ../moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(ZLIB)
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
 
 if MOO_OS_MINGW

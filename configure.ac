@@ -116,7 +116,6 @@ ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
 ggap/moows/Makefile
-ggap/mooui/Makefile
 po/Makefile.in
 wininstaller/ggap.iss
 ])
