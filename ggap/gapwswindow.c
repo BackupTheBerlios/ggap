@@ -20,24 +20,35 @@
 #include <gtk/gtk.h>
 
 struct GapWsWindowPrivate {
-    GtkStatusbar *statusbar;
+    int dummy;
 };
 
 G_DEFINE_TYPE (GapWsWindow, gap_ws_window, MD_TYPE_WINDOW)
 
-static GObject *gap_ws_window_constructor   (GType   type,
-                                             guint   n_props,
-                                             GObjectConstructParam *props);
+static GObject *gap_ws_window_constructor           (GType               type,
+                                                     guint               n_props,
+                                                     GObjectConstructParam *props);
+static void     gap_ws_window_active_view_changed   (MdWindow           *window);
+static void     gap_ws_window_insert_view           (MdWindow           *window,
+                                                     MdView             *view);
+static void     gap_ws_window_remove_view           (MdWindow           *window,
+                                                     MdView             *view);
+
 
 static void
 gap_ws_window_class_init (GapWsWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-    object_class->constructor = gap_ws_window_constructor;
+    MdWindowClass *doc_window_class = MD_WINDOW_CLASS (klass);
 
     md_app_window_class_set_id (MD_APP_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
     g_type_class_add_private (klass, sizeof (GapWsWindowPrivate));
+
+    object_class->constructor = gap_ws_window_constructor;
+
+    doc_window_class->active_view_changed = gap_ws_window_active_view_changed;
+    doc_window_class->insert_view = gap_ws_window_insert_view;
+    doc_window_class->remove_view = gap_ws_window_remove_view;
 }
 
 
@@ -55,251 +66,83 @@ gap_ws_window_init (GapWsWindow *window)
 }
 
 
-static void
-set_statusbar_text (GapWsWindow *window,
-                    const char  *text)
-{
-    gtk_statusbar_pop (window->priv->statusbar, 0);
-    if (text && text[0])
-        gtk_statusbar_push (window->priv->statusbar, 0, text);
-}
-
-static void
-gap_state_changed (GapWorksheet *ws,
-                   G_GNUC_UNUSED GParamSpec *pspec,
-                   GapWsWindow  *window)
-{
-    GapState state;
-
-    g_object_get (ws, "gap-state", &state, NULL);
-
-    switch (state)
-    {
-        case GAP_BUSY:
-        case GAP_BUSY_INTERNAL:
-            set_statusbar_text (window, "Busy");
-            break;
-
-        case GAP_DEAD:
-        case GAP_IN_PROMPT:
-            set_statusbar_text (window, NULL);
-            break;
-
-        case GAP_LOADING:
-            set_statusbar_text (window, "Loading");
-            break;
-    }
-}
-
-// static void
-// filename_changed (GapWorksheet *ws,
-//                   G_GNUC_UNUSED GParamSpec *pspec,
-//                   GapWsWindow  *window)
-// {
-//     const char *filename;
-//     char *display_name;
-//     char *title;
-//
-//     filename = gap_worksheet_get_filename (ws);
-//     display_name = filename ? g_filename_display_name (filename) : g_strdup ("Untitled");
-//
-//     if (gap_worksheet_get_modified (ws))
-//         title = g_strdup_printf ("ggap - %s [modified]", display_name);
-//     else
-//         title = g_strdup_printf ("ggap - %s", display_name);
-//
-//     gtk_window_set_title (GTK_WINDOW (window), title);
-//
-//     g_free (title);
-//     g_free (display_name);
-// }
-
 static GObject *
 gap_ws_window_constructor (GType type,
                            guint n_props,
                            GObjectConstructParam *props)
 {
     GapWsWindow *window;
-    GtkWidget *statusbar;
-//     GtkWidget *swin;
-//     GapWorksheet *ws;
 
     GObject *object = G_OBJECT_CLASS(gap_ws_window_parent_class)->constructor (type, n_props, props);
     window = GAP_WS_WINDOW (object);
-
-//     swin = gtk_scrolled_window_new (NULL, NULL);
-//     gtk_box_pack_start (GTK_BOX (MD_APP_WINDOW(window)->vbox), swin, TRUE, TRUE, 0);
-//     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (swin),
-//                                     GTK_POLICY_AUTOMATIC,
-//                                     GTK_POLICY_ALWAYS);
-//     gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (swin),
-//                                          GTK_SHADOW_ETCHED_OUT);
-
-//     window->priv->ws = ws = g_object_new (GAP_TYPE_WORKSHEET, NULL);
-
-//     gtk_container_add (GTK_CONTAINER (swin), GTK_WIDGET (ws));
-//     GTK_WIDGET_SET_FLAGS (GTK_WIDGET (ws), GTK_CAN_FOCUS);
-//     GTK_WIDGET_SET_FLAGS (GTK_WIDGET (ws), GTK_CAN_DEFAULT);
-//     gtk_widget_grab_focus (GTK_WIDGET (ws));
-//     gtk_widget_grab_default (GTK_WIDGET (ws));
-
-    statusbar = gtk_statusbar_new ();
-    gtk_statusbar_set_has_resize_grip (GTK_STATUSBAR (statusbar), TRUE);
-    gtk_box_pack_start (GTK_BOX (MD_APP_WINDOW (window)->vbox), statusbar, FALSE, FALSE, 0);
-    window->priv->statusbar = GTK_STATUSBAR (statusbar);
-
-    gtk_widget_show_all (MD_APP_WINDOW (window)->vbox);
-
-//     g_signal_connect (ws, "notify::gap-state",
-//                       G_CALLBACK (gap_state_changed),
-//                       window);
-//     g_signal_connect (ws, "notify::filename",
-//                       G_CALLBACK (filename_changed),
-//                       window);
-//     g_signal_connect (ws, "notify::modified",
-//                       G_CALLBACK (filename_changed),
-//                       window);
-//
-//     filename_changed (ws, NULL, window);
-//     gap_state_changed (ws, NULL, window);
 
     return object;
 }
 
 
-#define FILENAME "/tmp/ggap-file.gws"
-#define BINFILENAME "/tmp/ggap-file-binary"
+static void
+gap_state_changed (MdDocument   *doc,
+                   G_GNUC_UNUSED GParamSpec *pspec,
+                   GapWsWindow  *window)
+{
+    GapState state;
 
-// static gboolean
-// save_worksheet (GapWsWindow  *window,
-//                 GapWorksheet *ws,
-//                 const char   *filename)
-// {
-//     GError *error = NULL;
-//
-//     if (!filename)
-//         filename = moo_file_dialogp (GTK_WIDGET (window),
-//                                      MOO_FILE_DIALOG_SAVE,
-//                                      "untitled.gws",
-//                                      "Choose Filename",
-//                                      GGAP_PREFS_PREFIX "/worksheet",
-//                                      NULL);
-//
-//     if (!filename)
-//         return FALSE;
-//
-//     if (!gap_worksheet_save (ws, filename, TRUE, &error))
-//     {
-//         char *text = g_strdup_printf ("Could not save file %s", filename);
-//         moo_error_dialog (GTK_WIDGET (window), text, error ? error->message : "failed");
-//         g_free (text);
-//         g_error_free (error);
-//         return FALSE;
-//     }
-//
-//     return TRUE;
-// }
+    if (doc != md_window_get_active_doc (MD_WINDOW (window)))
+        return;
 
-// static gboolean
-// ask_close_worksheet (GapWsWindow  *window,
-//                      GapWorksheet *ws)
-// {
-//     MooSaveChangesDialogResponse response;
-//     const char *filename;
-//     char *display_name;
-//
-//     if (!gap_worksheet_get_modified (ws))
-//         return TRUE;
-//
-//     filename = gap_worksheet_get_filename (ws);
-//     display_name = filename ? g_filename_display_basename (filename) : NULL;
-//     response = moo_save_changes_dialog (display_name, GTK_WIDGET (window));
-//     g_free (display_name);
-//
-//     if (response == MOO_SAVE_CHANGES_RESPONSE_SAVE)
-//         return save_worksheet (window, ws, filename);
-//     else if (response == MOO_SAVE_CHANGES_RESPONSE_CANCEL)
-//         return FALSE;
-//     else
-//         return TRUE;
-// }
+    g_object_get (doc, "gap-state", &state, NULL);
 
-// static void
-// set_worksheet (GapWsWindow  *window,
-//                GapWorksheet *ws)
-// {
-//     GtkWidget *swin;
-//
-//     g_signal_handlers_disconnect_by_func (window->priv->ws, (gpointer) gap_state_changed, window);
-//     g_signal_handlers_disconnect_by_func (window->priv->ws, (gpointer) filename_changed, window);
-//
-//     swin = GTK_WIDGET (window->priv->ws)->parent;
-//     gtk_container_remove (GTK_CONTAINER (swin), GTK_WIDGET (window->priv->ws));
-//     gtk_container_add (GTK_CONTAINER (swin), GTK_WIDGET (ws));
-//     window->priv->ws = ws;
-//
-//     g_signal_connect (ws, "notify::gap-state",
-//                       G_CALLBACK (gap_state_changed),
-//                       window);
-//     g_signal_connect (ws, "notify::filename",
-//                       G_CALLBACK (filename_changed),
-//                       window);
-//     g_signal_connect (ws, "notify::modified",
-//                       G_CALLBACK (filename_changed),
-//                       window);
-//
-//     gtk_widget_grab_focus (GTK_WIDGET (ws));
-//     gtk_widget_show (GTK_WIDGET (ws));
-//     filename_changed (ws, NULL, window);
-// }
+    switch (state)
+    {
+        case GAP_BUSY:
+        case GAP_BUSY_INTERNAL:
+            md_app_window_message (MD_APP_WINDOW (window), "Busy");
+            break;
 
-// static void
-// action_open_worksheet (GapWsWindow *window)
-// {
-//     const char *filename;
-//     gboolean do_close;
-//     GError *error = NULL;
-//
-//     if (!gap_worksheet_get_empty (window->priv->ws))
-//     {
-//         if (!ask_close_worksheet (window, window->priv->ws))
-//             return;
-//         do_close = TRUE;
-//     }
-//
-//     filename = moo_file_dialogp (GTK_WIDGET (window),
-//                                  MOO_FILE_DIALOG_OPEN,
-//                                  NULL,
-//                                  "Choose Worksheet",
-//                                  GGAP_PREFS_PREFIX "/worksheet",
-//                                  NULL);
-//
-//     if (!filename)
-//         return;
-//
-//     if (do_close)
-//     {
-//         GapWorksheet *ws = g_object_new (GAP_TYPE_WORKSHEET, NULL);
-//         set_worksheet (window, ws);
-//     }
-//
-//     if (!gap_worksheet_load (window->priv->ws, filename, &error))
-//     {
-//         char *text = g_strdup_printf ("Could not open file %s", filename);
-//         moo_error_dialog (GTK_WIDGET (window), text, error ? error->message : "failed");
-//         g_free (text);
-//     }
-// }
+        case GAP_DEAD:
+        case GAP_IN_PROMPT:
+            md_app_window_message (MD_APP_WINDOW (window), NULL);
+            break;
 
-// static void
-// action_save_worksheet (GapWsWindow *window)
-// {
-//     save_worksheet (window, window->priv->ws,
-//                     gap_worksheet_get_filename (window->priv->ws));
-// }
-//
-// static void
-// action_save_worksheet_as (GapWsWindow *window)
-// {
-//     save_worksheet (window, window->priv->ws, NULL);
-// }
+        case GAP_LOADING:
+            md_app_window_message (MD_APP_WINDOW (window), "Loading");
+            break;
+    }
+}
+
+static void
+gap_ws_window_active_view_changed (MdWindow *window)
+{
+    MD_WINDOW_CLASS (gap_ws_window_parent_class)->active_view_changed (window);
+    md_app_window_message (MD_APP_WINDOW (window), NULL);
+}
+
+static void
+gap_ws_window_insert_view (MdWindow *window,
+                           MdView   *view)
+{
+    GapWorksheet *ws;
+
+    ws = GAP_WORKSHEET (md_view_get_doc (view));
+
+    g_signal_connect (ws, "notify::gap-state",
+                      G_CALLBACK (gap_state_changed),
+                      window);
+
+    MD_WINDOW_CLASS (gap_ws_window_parent_class)->insert_view (window, view);
+
+    gap_state_changed (MD_DOCUMENT (ws), NULL, GAP_WS_WINDOW (window));
+}
+
+static void
+gap_ws_window_remove_view (MdWindow *window,
+                           MdView   *view)
+{
+    GapWorksheet *ws;
+
+    ws = GAP_WORKSHEET (md_view_get_doc (view));
+
+    g_signal_handlers_disconnect_by_func (ws, (gpointer) gap_state_changed, window);
+
+    MD_WINDOW_CLASS (gap_ws_window_parent_class)->remove_view (window, view);
+}

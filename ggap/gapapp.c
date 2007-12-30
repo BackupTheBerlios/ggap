@@ -26,6 +26,7 @@
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
 #include <mooutils/mooutils-misc.h>
+#include <mooutils/mooprefs.h>
 #include <mooutils/mooutils-fs.h>
 #include <mooterm/mooterm-prefs.h>
 #include <mooterm/mootermpt.h>
@@ -269,7 +270,7 @@ gap_app_run (MdApp  *md_app,
     {
         MooUIXML *xml;
 
-        app->priv->gd_mgr = g_object_new (MD_TYPE_MANAGER, NULL);
+        app->priv->gd_mgr = g_object_new (MD_TYPE_MANAGER, "name", "GAP", NULL);
         md_manager_set_doc_type (app->priv->gd_mgr, GAP_TYPE_WORKSHEET);
         md_manager_set_view_type (app->priv->gd_mgr, GAP_TYPE_WS_VIEW);
         md_manager_set_window_type (app->priv->gd_mgr, GAP_TYPE_WS_WINDOW);

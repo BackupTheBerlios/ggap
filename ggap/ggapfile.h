@@ -32,9 +32,9 @@ GQuark      ggap_file_error_quark   (void) G_GNUC_CONST;
 
 gboolean    ggap_file_pack          (const char *text,
                                      const char *binary_file,
-                                     const char *filename,
+                                     int        *fd,
                                      GError    **error);
-gboolean    ggap_file_unpack        (const char *filename,
+gboolean    ggap_file_unpack        (int        *fd,
                                      char      **text,
                                      gsize      *text_len,
                                      char      **binary_file,

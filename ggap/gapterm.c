@@ -17,6 +17,7 @@
 #include "gapeditwindow.h"
 #include "mooterm/mooterm-text.h"
 #include "mooutils/mooutils-misc.h"
+#include "mooutils/mooprefs.h"
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -352,7 +353,7 @@ gap_term_button_press (GtkWidget      *widget,
 
         if (err)
         {
-            gap_edit_window_open_file (err->file, err->line, widget);
+//             gap_edit_window_open_file (err->file, err->line, widget);
             return TRUE;
         }
     }

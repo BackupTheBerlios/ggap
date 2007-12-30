@@ -17,14 +17,15 @@
 #include "gap.h"
 #include "gaptermwindow.h"
 #include "gapterm.h"
+#include "mooui/mdapp.h"
 #include "mooutils/moofiledialog.h"
 #include "mooutils/moocompat.h"
 #include "mooutils/mooutils-misc.h"
+#include "mooutils/mooprefs.h"
 #include "mooutils/mooeditops.h"
 #include "mooutils/moostock.h"
 #include "mooterm/mooterm-prefs.h"
 #include "mooterm/mooterm-text.h"
-#include "mooapp/mooapp.h"
 #include <gtk/gtk.h>
 #include <string.h>
 #include <errno.h>
@@ -48,14 +49,14 @@ static void     prefs_notify                    (const char     *key,
                                                  const GValue   *newval,
                                                  GapTermWindow  *window);
 
-static void     action_switch_to_editor         (void);
+// static void     action_switch_to_editor         (void);
 static void     action_read_file                (GapTermWindow  *window);
 static void     action_open_workspace           (GapTermWindow  *window);
 static void     action_restart_gap              (GapTermWindow  *window);
 static void     action_send_intr                (GapTermWindow  *window);
 
 
-G_DEFINE_TYPE (GapTermWindow, gap_term_window, MOO_TYPE_WINDOW)
+G_DEFINE_TYPE (GapTermWindow, gap_term_window, MD_TYPE_APP_WINDOW)
 
 
 static void
@@ -72,13 +73,13 @@ gap_term_window_class_init (GapTermWindowClass *klass)
 
     g_type_class_add_private (klass, sizeof (GapTermWindowPrivate));
 
-    md_app_window_class_new_action (window_class, "SwitchToEditor", NULL,
-                                    "display-name", _("Switch to Editor"),
-                                    "label", _("Switch to Editor"),
-                                    "tooltip", _("Switch to editor"),
-                                    "stock-id", GTK_STOCK_EDIT,
-                                    "closure-callback", action_switch_to_editor,
-                                    NULL);
+//     md_app_window_class_new_action (window_class, "SwitchToEditor", NULL,
+//                                     "display-name", _("Switch to Editor"),
+//                                     "label", _("Switch to Editor"),
+//                                     "tooltip", _("Switch to editor"),
+//                                     "stock-id", GTK_STOCK_EDIT,
+//                                     "closure-callback", action_switch_to_editor,
+//                                     NULL);
 
     md_app_window_class_new_action (window_class, "GAPRead", NULL,
                                     "display-name", _("Read File"),
@@ -220,12 +221,12 @@ gap_term_window_feed_gap (GapTermWindow *window,
 }
 
 
-static void
-action_switch_to_editor (void)
-{
-    MooEditor *editor = moo_editor_instance ();
-    moo_editor_present (editor, 0);
-}
+// static void
+// action_switch_to_editor (void)
+// {
+//     MooEditor *editor = moo_editor_instance ();
+//     moo_editor_present (editor, 0);
+// }
 
 static void
 action_read_file (GapTermWindow *window)

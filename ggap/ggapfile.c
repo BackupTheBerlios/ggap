@@ -41,57 +41,46 @@
  */
 
 static gzFile
-open_file_w (const char *filename,
-             GError    **error)
+open_file_w (int     *fd,
+             GError **error)
 {
     gzFile file;
-    int fd;
-
-    fd = g_open (filename, O_WRONLY | O_CREAT | O_TRUNC,
-                 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-
-    if (fd == -1)
-    {
-        int err = errno;
-        g_set_error (error, G_FILE_ERROR,
-                     g_file_error_from_errno (err),
-                     "could not open file %s for writing",
-                     filename);
-        return NULL;
-    }
 
     /* XXX */
-    if (write (fd, GGAP_FILE_HEADER, GGAP_FILE_HEADER_LEN) != GGAP_FILE_HEADER_LEN)
+    if (write (*fd, GGAP_FILE_HEADER, GGAP_FILE_HEADER_LEN) != GGAP_FILE_HEADER_LEN)
     {
         g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_FAILED,
                      "could not write magic");
-        close (fd);
+        close (*fd);
+        *fd = -1;
         return NULL;
     }
 
-    file = gzdopen (fd, "ab1");
+    file = gzdopen (*fd, "ab1");
 
     if (!file)
     {
-        g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_NOMEM,
-                     "gzdopen failed for %s", filename);
-        close (fd);
-        g_unlink (filename);
+        g_set_error (error, GGAP_FILE_ERROR,
+                     GGAP_FILE_ERROR_NOMEM,
+                     "gzdopen failed");
+        close (*fd);
+        *fd = -1;
         return NULL;
     }
 
+    *fd = -1;
     return file;
 }
 
 static gzFile
-gap_file_open_w (const char *filename,
+gap_file_open_w (int        *fd,
                  guint       n_files,
                  GError    **error)
 {
     gzFile file;
     guint32 n_files_be;
 
-    if (!(file = open_file_w (filename, error)))
+    if (!(file = open_file_w (fd, error)))
         return NULL;
 
     n_files_be = GUINT32_TO_BE ((guint32) n_files);
@@ -106,11 +95,7 @@ gap_file_open_w (const char *filename,
     return file;
 
 error:
-    if (error && !*error)
-        g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_FAILED,
-                     "could not save file %s", filename);
     gzclose (file);
-    g_unlink (filename);
     return NULL;
 }
 
@@ -148,7 +133,7 @@ gap_file_write (gzFile      file,
 gboolean
 ggap_file_pack (const char *text,
                 const char *binary_file,
-                const char *filename,
+                int        *fd,
                 GError    **error)
 {
     gzFile file;
@@ -156,11 +141,11 @@ ggap_file_pack (const char *text,
     guint n_files;
 
     g_return_val_if_fail (text != NULL, FALSE);
-    g_return_val_if_fail (filename != NULL, FALSE);
+    g_return_val_if_fail (fd != NULL && *fd != -1, FALSE);
 
     n_files = binary_file ? 2 : 1;
 
-    if (!(file = gap_file_open_w (filename, n_files, error)))
+    if (!(file = gap_file_open_w (fd, n_files, error)))
         return FALSE;
 
     if (!gap_file_write (file, text, strlen (text), error))
@@ -190,13 +175,10 @@ ggap_file_pack (const char *text,
     return TRUE;
 
 error:
-    g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_FAILED,
-                 "could not save file %s", filename);
     if (file)
         gzclose (file);
     if (mfile)
         g_mapped_file_free (mfile);
-    g_unlink (filename);
     return FALSE;
 }
 
@@ -465,32 +447,20 @@ error:
 
 
 static gzFile
-open_file_r (const char *filename,
-             GError    **error)
+open_file_r (int     *fd,
+             GError **error)
 {
     gzFile file;
-    int fd;
     char buf[GGAP_FILE_HEADER_LEN];
 
-    fd = g_open (filename, O_RDONLY, 0);
-
-    if (fd == -1)
-    {
-        int err = errno;
-        g_set_error (error, G_FILE_ERROR,
-                     g_file_error_from_errno (err),
-                     "could not open file %s for reading",
-                     filename);
-        return NULL;
-    }
-
-    if (read (fd, buf, GGAP_FILE_HEADER_LEN) != GGAP_FILE_HEADER_LEN)
+    if (read (*fd, buf, GGAP_FILE_HEADER_LEN) != GGAP_FILE_HEADER_LEN)
     {
         int err = errno;
         g_set_error (error, G_FILE_ERROR,
                      g_file_error_from_errno (err),
                      "could not read magic");
-        close (fd);
+        close (*fd);
+        *fd = -1;
         return NULL;
     }
 
@@ -509,32 +479,35 @@ open_file_r (const char *filename,
                          "bad magic");
         }
 
-        close (fd);
+        close (*fd);
+        *fd = -1;
         return NULL;
     }
 
-    file = gzdopen (fd, "rb");
+    file = gzdopen (*fd, "rb");
 
     if (!file)
     {
         g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_NOMEM,
-                     "could not open file %s", filename);
-        close (fd);
+                     "gzdopen failed");
+        close (*fd);
+        *fd = -1;
         return NULL;
     }
 
+    *fd = -1;
     return file;
 }
 
 static gzFile
-gap_file_open_r (const char *filename,
+gap_file_open_r (int        *fd,
                  guint      *n_files,
                  GError    **error)
 {
     gzFile file;
     guint32 n_files_be;
 
-    if (!(file = open_file_r (filename, error)))
+    if (!(file = open_file_r (fd, error)))
         return NULL;
 
     if (gzread (file, &n_files_be, 4) != 4)
@@ -545,7 +518,7 @@ gap_file_open_r (const char *filename,
 
 error:
     g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_FAILED,
-                 "could not load file %s", filename);
+                 "could not load file");
     gzclose (file);
     return NULL;
 }
@@ -638,7 +611,7 @@ gap_file_eof (gzFile file)
 }
 
 gboolean
-ggap_file_unpack (const char *filename,
+ggap_file_unpack (int        *fd,
                   char      **text_p,
                   gsize      *text_len_p,
                   char      **binary_file_p,
@@ -650,7 +623,7 @@ ggap_file_unpack (const char *filename,
     gsize text_len;
     guint n_files;
 
-    g_return_val_if_fail (filename != NULL, FALSE);
+    g_return_val_if_fail (fd != NULL && *fd != -1, FALSE);
     g_return_val_if_fail (text_p != NULL, FALSE);
     g_return_val_if_fail (text_len_p != NULL, FALSE);
     g_return_val_if_fail (binary_file_p != NULL, FALSE);
@@ -659,7 +632,7 @@ ggap_file_unpack (const char *filename,
     *text_len_p = 0;
     *binary_file_p = NULL;
 
-    if (!(file = gap_file_open_r (filename, &n_files, error)))
+    if (!(file = gap_file_open_r (fd, &n_files, error)))
         return FALSE;
 
     if (n_files != 1 && n_files != 2)
@@ -682,8 +655,9 @@ ggap_file_unpack (const char *filename,
     return TRUE;
 
 error:
-    g_set_error (error, GGAP_FILE_ERROR, GGAP_FILE_ERROR_FAILED,
-                 "could not load file %s", filename);
+    g_set_error (error, GGAP_FILE_ERROR,
+                 GGAP_FILE_ERROR_FAILED,
+                 "could not load file");
     if (file)
         gzclose (file);
     if (binary_file)

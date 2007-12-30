@@ -54,6 +54,10 @@ ws_sources =				\
 	gapwswindow.c			\
 	gapwswindow.h
 
+editor_sources =			\
+	gapeditwindow.c			\
+	gapeditwindow.h
+
 ggap_SOURCES =				\
 	$(ws_sources)			\
 	ggap-ui.h			\
@@ -73,8 +77,6 @@ ggap_SOURCES =				\
 	gapparser-priv.h		\
 	gapparser-yacc.c		\
 	gapparser-yacc.h		\
-	gapeditwindow.c			\
-	gapeditwindow.h			\
 	gapoutput.c			\
 	gapoutput.h			\
 	gapterm.c			\

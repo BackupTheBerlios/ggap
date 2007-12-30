@@ -48,31 +48,6 @@
 
 
 static void
-push_appdir_to_path (void)
-{
-#ifdef __WIN32__
-    char *appdir;
-    const char *path;
-    char *new_path;
-
-    appdir = moo_win32_get_app_dir ();
-    g_return_if_fail (appdir != NULL);
-
-    path = g_getenv ("Path");
-
-    if (path)
-        new_path = g_strdup_printf ("%s;%s", appdir, path);
-    else
-        new_path = g_strdup (appdir);
-
-    g_setenv ("Path", new_path, TRUE);
-
-    g_free (new_path);
-    g_free (appdir);
-#endif
-}
-
-static void
 extract_file (const char *filename)
 {
     GError *error = NULL;
@@ -140,15 +115,17 @@ int main (int argc, char *argv[])
     gdk_threads_enter ();
     g_type_init ();
 
-    push_appdir_to_path ();
-
     app = g_object_new (GAP_TYPE_APP,
                         "short-name", "ggap",
                         "full-name", "GGAP",
-                        "version", VERSION,
                         "description", "GGAP is a front end for GAP",
                         "icon-name", "ggap",
                         "credits", THANKS,
+                        "authors-markup", "Yevgen Muntyan <a href=\"mailto://muntyan@tamu.edu\">"
+                                          "&lt;muntyan@tamu.edu&gt;</a>",
+                        "authors", "Yevgen Muntyan <muntyan@tamu.edu>",
+                        "copyright", "\302\251 2004-2007 Yevgen Muntyan",
+                        "version", VERSION,
                         NULL);
 
     if (!app)

@@ -97,13 +97,15 @@ static gboolean gap_worksheet_child_alive       (GapWorksheet   *ws);
 static void     stop_running_command_loop       (GapCommandInfo *ci);
 static gboolean has_running_command_loop        (GapWorksheet   *ws);
 
-static gboolean gap_worksheet_load_local        (MdDocument     *doc,
+static gboolean gap_worksheet_load_file         (MdDocument     *doc,
                                                  MdFileInfo     *file_info,
-                                                 const char     *filename,
+                                                 int            *fd,
+                                                 MdFileOpInfo   *op_info,
                                                  GError        **error);
-static gboolean gap_worksheet_save_local        (MdDocument     *doc,
+static gboolean gap_worksheet_save_file         (MdDocument     *doc,
                                                  MdFileInfo     *file_info,
-                                                 const char     *filename,
+                                                 int            *fd,
+                                                 MdFileOpInfo   *op_info,
                                                  GError        **error);
 
 static void     gap_worksheet_free_completion   (GapWorksheet   *ws);
@@ -125,6 +127,8 @@ enum {
     PROP_0,
     PROP_GAP_STATE,
     PROP_MD_DOC_STATUS,
+    PROP_MD_DOC_STATE,
+    PROP_MD_DOC_READONLY,
     PROP_MD_DOC_FILE_INFO
 };
 
@@ -144,6 +148,12 @@ gap_worksheet_set_property (GObject      *object,
 
         case PROP_MD_DOC_STATUS:
             md_document_set_status (MD_DOCUMENT (ws), g_value_get_flags (value));
+            break;
+        case PROP_MD_DOC_STATE:
+            md_document_set_state (MD_DOCUMENT (ws), g_value_get_enum (value));
+            break;
+        case PROP_MD_DOC_READONLY:
+            md_document_set_readonly (MD_DOCUMENT (ws), g_value_get_boolean (value));
             break;
 
         default:
@@ -172,6 +182,12 @@ gap_worksheet_get_property (GObject    *object,
 
         case PROP_MD_DOC_STATUS:
             g_value_set_flags (value, md_document_get_status (MD_DOCUMENT (ws)));
+            break;
+        case PROP_MD_DOC_STATE:
+            g_value_set_enum (value, md_document_get_state (MD_DOCUMENT (ws)));
+            break;
+        case PROP_MD_DOC_READONLY:
+            g_value_set_boolean (value, md_document_get_readonly (MD_DOCUMENT (ws)));
             break;
 
         default:
@@ -211,6 +227,8 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
                                                         G_PARAM_READABLE));
 
     g_object_class_override_property (object_class, PROP_MD_DOC_STATUS, "md-doc-status");
+    g_object_class_override_property (object_class, PROP_MD_DOC_READONLY, "md-doc-readonly");
+    g_object_class_override_property (object_class, PROP_MD_DOC_STATE, "md-doc-state");
     g_object_class_override_property (object_class, PROP_MD_DOC_FILE_INFO, "md-doc-file-info");
 
     g_type_class_add_private (klass, sizeof (GapWorksheetPrivate));
@@ -303,13 +321,6 @@ gap_worksheet_modified_changed (GtkTextBuffer *buffer)
                               gtk_text_buffer_get_modified (buffer));
 }
 
-static void
-doc_status_changed (MdDocument *doc)
-{
-    gtk_text_buffer_set_modified (GTK_TEXT_BUFFER (doc),
-                                  md_document_get_modified (doc));
-}
-
 static GObject *
 gap_worksheet_constructor (GType           type,
                            guint           n_props,
@@ -324,10 +335,6 @@ gap_worksheet_constructor (GType           type,
     moo_worksheet_set_accepting_input (MOO_WORKSHEET (object), FALSE);
 
     md_document_set_modified (MD_DOCUMENT (object), FALSE);
-    gtk_text_buffer_set_modified (GTK_TEXT_BUFFER (object), FALSE);
-
-    g_signal_connect (object, "notify::md-doc-status",
-                      G_CALLBACK (doc_status_changed), NULL);
 
     return object;
 }
@@ -359,6 +366,15 @@ gap_worksheet_get_icon (G_GNUC_UNUSED MdDocument *doc,
 }
 
 static void
+gap_worksheet_set_doc_status (MdDocument       *doc,
+                              MdDocumentStatus  status)
+{
+    gap_worksheet_doc_parent_iface->set_status (doc, status);
+    gtk_text_buffer_set_modified (GTK_TEXT_BUFFER (doc),
+                                  (status & MD_DOCUMENT_MODIFIED) != 0);
+}
+
+static void
 doc_iface_init (MdDocumentIface *iface)
 {
     gap_worksheet_doc_parent_iface =
@@ -366,8 +382,9 @@ doc_iface_init (MdDocumentIface *iface)
 
     iface->close = gap_worksheet_close;
     iface->get_icon = gap_worksheet_get_icon;
-    iface->load_local = gap_worksheet_load_local;
-    iface->save_local = gap_worksheet_save_local;
+    iface->load_file = gap_worksheet_load_file;
+    iface->save_file = gap_worksheet_save_file;
+    iface->set_status = gap_worksheet_set_doc_status;
 }
 
 static void
@@ -980,17 +997,18 @@ _gap_worksheet_set_size (GapWorksheet *ws,
 
 
 static gboolean
-gap_worksheet_load_local (MdDocument  *doc,
-                          G_GNUC_UNUSED MdFileInfo *file_info,
-                          const char  *filename,
-                          GError     **error)
+gap_worksheet_load_file (MdDocument  *doc,
+                         G_GNUC_UNUSED MdFileInfo *file_info,
+                         int          *fd,
+                         G_GNUC_UNUSED MdFileOpInfo *op_info,
+                         GError     **error)
 {
     char *text;
     gsize text_len;
     char *workspace_file;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
-    if (!ggap_file_unpack (filename, &text, &text_len, &workspace_file, error))
+    if (!ggap_file_unpack (fd, &text, &text_len, &workspace_file, error))
         return FALSE;
 
     g_print ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
@@ -1183,10 +1201,11 @@ gap_worksheet_save_workspace (GapWorksheet  *ws,
 }
 
 static gboolean
-gap_worksheet_save_local (MdDocument  *doc,
-                          G_GNUC_UNUSED MdFileInfo *file_info,
-                          const char  *filename,
-                          GError     **error)
+gap_worksheet_save_file (MdDocument   *doc,
+                         G_GNUC_UNUSED MdFileInfo *file_info,
+                         int          *fd,
+                         G_GNUC_UNUSED MdFileOpInfo *op_info,
+                         GError      **error)
 {
     char *markup;
     char *workspace = NULL;
@@ -1203,7 +1222,7 @@ gap_worksheet_save_local (MdDocument  *doc,
 
     markup = moo_worksheet_format (MOO_WORKSHEET (ws));
 
-    result = ggap_file_pack (markup, workspace, filename, error);
+    result = ggap_file_pack (markup, workspace, fd, error);
 
     g_free (markup);
     return result;
