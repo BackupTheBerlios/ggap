@@ -56,6 +56,7 @@ struct _GapWorksheetPrivate {
     MooTermPt *pt;
     gboolean in_stderr;
     GapState gap_state;
+    gboolean allow_error_break;
 
     GString *input_buf;
     GString *input_buf2;
@@ -126,6 +127,7 @@ static MdDocumentIface *gap_worksheet_doc_parent_iface;
 enum {
     PROP_0,
     PROP_GAP_STATE,
+    PROP_ALLOW_ERROR_BREAK,
     PROP_MD_DOC_STATUS,
     PROP_MD_DOC_STATE,
     PROP_MD_DOC_READONLY,
@@ -142,6 +144,11 @@ gap_worksheet_set_property (GObject      *object,
 
     switch (prop_id)
     {
+        case PROP_ALLOW_ERROR_BREAK:
+            ws->priv->allow_error_break = g_value_get_boolean (value);
+            g_object_notify (G_OBJECT (ws), "allow-error-break");
+            break;
+
         case PROP_MD_DOC_FILE_INFO:
             md_document_set_file_info (MD_DOCUMENT (ws), g_value_get_boxed (value));
             break;
@@ -172,6 +179,10 @@ gap_worksheet_get_property (GObject    *object,
 
     switch (prop_id)
     {
+        case PROP_ALLOW_ERROR_BREAK:
+            g_value_set_boolean (value, ws->priv->allow_error_break);
+            break;
+
         case PROP_GAP_STATE:
             g_value_set_enum (value, ws->priv->gap_state);
             break;
@@ -217,14 +228,13 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
 
-    g_object_class_install_property (object_class,
-                                     PROP_GAP_STATE,
-                                     g_param_spec_enum ("gap-state",
-                                                        "gap-state",
-                                                        "gap-state",
-                                                        GAP_TYPE_STATE,
-                                                        GAP_DEAD,
-                                                        G_PARAM_READABLE));
+    g_object_class_install_property (object_class, PROP_ALLOW_ERROR_BREAK,
+        g_param_spec_boolean ("allow-error-break", "allow-error-break", "allow-error-break",
+                              FALSE, G_PARAM_READWRITE));
+
+    g_object_class_install_property (object_class, PROP_GAP_STATE,
+        g_param_spec_enum ("gap-state", "gap-state", "gap-state",
+                           GAP_TYPE_STATE, GAP_DEAD, G_PARAM_READABLE));
 
     g_object_class_override_property (object_class, PROP_MD_DOC_STATUS, "md-doc-status");
     g_object_class_override_property (object_class, PROP_MD_DOC_READONLY, "md-doc-readonly");
@@ -273,8 +283,14 @@ gap_worksheet_start_gap (GapWorksheet *ws,
 {
     GError *error = NULL;
     char *cmd_line;
+    const char *args;
 
-    cmd_line = gap_make_cmd_line (workspace, "-n", TRUE, 0);
+    if (ws->priv->allow_error_break)
+        args = "-n";
+    else
+        args = "-n -T";
+
+    cmd_line = gap_make_cmd_line (workspace, args, TRUE, 0);
     g_return_val_if_fail (cmd_line != NULL, FALSE);
 
 //     moo_worksheet_reset (MOO_WORKSHEET (view));
