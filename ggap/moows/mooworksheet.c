@@ -651,6 +651,9 @@ _moo_worksheet_history_prev (MooWorksheet *ws)
 #define ELM_INPUT       "input"
 #define ELM_OUTPUT      "output"
 
+#define PROP_VERSION    "version"
+#define PROP_VERSION_VALUE "1.0"
+
 #define PROP_PS         "ps"
 #define PROP_PS2        "ps2"
 #define PROP_TYPE       "type"
@@ -713,6 +716,7 @@ moo_worksheet_load (MooWorksheet   *ws,
 {
     MooMarkupDoc *doc;
     MooMarkupNode *root, *elm, *child;
+    const char *version;
 
     g_return_val_if_fail (MOO_IS_WORKSHEET (ws), FALSE);
     g_return_val_if_fail (text != NULL, FALSE);
@@ -725,6 +729,15 @@ moo_worksheet_load (MooWorksheet   *ws,
         g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
                      MOO_WORKSHEET_FILE_ERROR_FORMAT,
                      "%s element missing", ELM_WORKSHEET);
+        goto error;
+    }
+
+    version = moo_markup_get_prop (root, PROP_VERSION);
+    if (!version || strcmp (version, PROP_VERSION_VALUE) != 0)
+    {
+        g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
+                     MOO_WORKSHEET_FILE_ERROR_FORMAT,
+                     "bad version '%s'", version ? version : "");
         goto error;
     }
 
@@ -774,6 +787,7 @@ moo_worksheet_format (MooWorksheet *ws)
 
     doc = moo_markup_doc_new ("moo-worksheet");
     root = moo_markup_create_root_element (doc, ELM_WORKSHEET);
+    moo_markup_set_prop (root, PROP_VERSION, PROP_VERSION_VALUE);
     content = moo_markup_create_element (root, ELM_CONTENT);
 
     for (block = _moo_ws_buffer_get_first_block (MOO_WS_BUFFER (ws));
