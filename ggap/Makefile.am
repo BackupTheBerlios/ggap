@@ -62,7 +62,6 @@ ggap_SOURCES =				\
 	$(ws_sources)			\
 	ggap-ui.h			\
 	gapwswindow-ui.h		\
-	ggap-mod.h			\
 	gap.c				\
 	gap.h				\
 	ggap-i18n.h			\
@@ -112,6 +111,7 @@ pipehelper_res.res:
 endif ! MOO_OS_MINGW
 
 EXTRA_DIST =		\
+    $(editor_sources)	\
     ggap_res.rc.in	\
     pipehelper_res.rc.in\
     ggap-ui.xml		\
