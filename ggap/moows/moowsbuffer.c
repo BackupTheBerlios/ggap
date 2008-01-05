@@ -358,20 +358,6 @@ moo_ws_buffer_delete_range (GtkTextBuffer *text_buffer,
         }
         else
         {
-            if (delete_to_end)
-            {
-                if (gtk_text_iter_starts_line (start))
-                {
-                    gtk_text_iter_backward_line (start);
-                    if (!gtk_text_iter_ends_line (start))
-                        gtk_text_iter_forward_to_line_end (start);
-                }
-
-                gtk_text_iter_backward_line (end);
-                if (!gtk_text_iter_ends_line (end))
-                    gtk_text_iter_forward_to_line_end (end);
-            }
-
             if (start_block != buffer->priv->last_edited)
                 clear_undo (buffer);
 
