@@ -582,7 +582,8 @@ do_output (GapWorksheet *ws,
     }
     else
     {
-        g_critical ("%s: output: %.*s", G_STRLOC, data_len, data);
+        g_critical ("%s: output: %.*s",
+                    G_STRLOC, (int) data_len, data);
     }
 }
 
@@ -601,7 +602,8 @@ do_data (GapWorksheet *ws,
         gap_worksheet_delete_globals (ws, data + strlen ("globals-deleted:"), data_len - strlen ("globals-deleted:"));
     else
     {
-        g_critical ("%s: got unknown data: '%.*s'", G_STRLOC, data_len, data);
+        g_critical ("%s: got unknown data: '%.*s'",
+                    G_STRLOC, (int) data_len, data);
     }
 }
 
