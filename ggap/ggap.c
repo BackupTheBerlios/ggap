@@ -13,8 +13,6 @@
 
 #include "config.h"
 #include "gapapp.h"
-#include "ggap-ui.h"
-#include "ggap-credits.h"
 #include "ggap-i18n.h"
 #include "ggapfile.h"
 #include "mooutils/mooutils-fs.h"
@@ -99,10 +97,6 @@ extract_files (char **files)
 
 int main (int argc, char *argv[])
 {
-    MdApp *app;
-    GError *error = NULL;
-    GOptionContext *context;
-
 #ifdef ENABLE_NLS
     bindtextdomain (GETTEXT_PACKAGE, moo_get_locale_dir ());
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
@@ -110,38 +104,8 @@ int main (int argc, char *argv[])
 #endif
 #endif
 
-    g_thread_init (NULL);
-    gdk_threads_init ();
-    gdk_threads_enter ();
-    g_type_init ();
-
-    app = g_object_new (GAP_TYPE_APP,
-                        "short-name", "ggap",
-                        "full-name", "GGAP",
-                        "description", "GGAP is a front end for GAP",
-                        "icon-name", "ggap",
-                        "credits", THANKS,
-                        "authors-markup", "Yevgen Muntyan <a href=\"mailto://muntyan@tamu.edu\">"
-                                          "&lt;muntyan@tamu.edu&gt;</a>",
-                        "authors", "Yevgen Muntyan <muntyan@tamu.edu>",
-                        "copyright", "\302\251 2004-2007 Yevgen Muntyan",
-                        "version", VERSION,
-                        NULL);
-
-    if (!app)
-        return EXIT_FAILURE;
-
-    context = g_option_context_new (NULL);
-    md_app_setup_option_context (app, context);
-    g_option_context_add_group (context, gtk_get_option_group (FALSE));
-
-    if (!g_option_context_parse (context, &argc, &argv, &error))
-    {
-        g_printerr ("%s\n", error->message);
-        exit (EXIT_FAILURE);
-    }
-
-    md_app_run (app, argc, argv);
+    md_lib_init ();
+    md_app_run (GAP_TYPE_APP, argc, argv);
 
     /* never reached */
     return EXIT_SUCCESS;

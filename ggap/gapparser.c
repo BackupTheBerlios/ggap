@@ -1,7 +1,7 @@
 /*
  *   gapparser.c
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -591,13 +591,13 @@ _gap_parser_yyerror (YYLTYPE    *locp,
 //     return g_strndup (string, le);
 // }
 
-static void
-print_error (const char *message,
-             YYLTYPE    *locp)
-{
-    g_print ("On line %d, chars %d-%d: %s\n", locp->first_line + 1,
-             locp->first_column + 1, locp->last_column + 1, message);
-}
+// static void
+// print_error (const char *message,
+//              YYLTYPE    *locp)
+// {
+//     g_print ("On line %d, chars %d-%d: %s\n", locp->first_line + 1,
+//              locp->first_column + 1, locp->last_column + 1, message);
+// }
 
 static void
 gap_parser_add_error (GapParser   *parser,
@@ -607,6 +607,6 @@ gap_parser_add_error (GapParser   *parser,
     parser->result = GAP_PARSE_ERROR;
     parser->errors = g_slist_prepend (parser->errors,
                                       gap_parse_error_new (message, location));
-
-    print_error (message, location);
+//
+//     print_error (message, location);
 }

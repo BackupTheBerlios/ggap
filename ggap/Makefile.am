@@ -1,15 +1,11 @@
 SUBDIRS = gap moows .
 
-EXTRA_PROGRAMS = ggap pipehelper
+EXTRA_PROGRAMS = ggap
 bin_PROGRAMS =
 noinst_PROGRAMS = testparser
 
 if !MOO_OS_CYGWIN
 bin_PROGRAMS += ggap
-endif
-
-if MOO_OS_MINGW
-bin_PROGRAMS += pipehelper
 endif
 
 if !GLIB_2_14
@@ -60,8 +56,8 @@ editor_sources =			\
 
 ggap_SOURCES =				\
 	$(ws_sources)			\
-	ggap-ui.h			\
 	gapwswindow-ui.h		\
+	gaptermwindow-ui.h		\
 	gap.c				\
 	gap.h				\
 	ggap-i18n.h			\
@@ -76,8 +72,6 @@ ggap_SOURCES =				\
 	gapparser-priv.h		\
 	gapparser-yacc.c		\
 	gapparser-yacc.h		\
-	gapoutput.c			\
-	gapoutput.h			\
 	gapterm.c			\
 	gapterm.h			\
 	gaptermwindow.c			\
@@ -91,43 +85,35 @@ gapparser-yacc.c: gapparser-yacc.y
 	bison -v -o $(srcdir)/gapparser-yacc.c -d $(srcdir)/gapparser-yacc.y
 
 nodist_ggap_SOURCES = ggap_res.res
-nodist_pipehelper_SOURCES = pipehelper_res.res
-CLEANFILES = ggap_res.res pipehelper_res.res
+CLEANFILES = ggap_res.res
 
 if MOO_OS_MINGW
 ggap_res.res: ggap_res.rc
 	$(WINDRES) -i ggap_res.rc --input-format=rc -o ggap_res.res -O coff
-pipehelper_res.res: pipehelper_res.rc
-	$(WINDRES) -i pipehelper_res.rc --input-format=rc -o pipehelper_res.res -O coff
 ggap_SOURCES += ggap_res.res
 ggap_LDADD += ggap_res.res
-pipehelper_SOURCES = pipehelper.c pipehelper.h pipehelper_res.res
-pipehelper_LDADD = pipehelper_res.res
 else ! MOO_OS_MINGW
 ggap_res.res:
 	echo dummy > ggap_res.res
-pipehelper_res.res:
-	echo dummy > pipehelper_res.res
 endif ! MOO_OS_MINGW
 
 EXTRA_DIST =		\
     $(editor_sources)	\
     ggap_res.rc.in	\
-    pipehelper_res.rc.in\
-    ggap-ui.xml		\
+    gaptermwindow-ui.xml\
     gapwswindow-ui.xml	\
     gapparser-yacc.y	\
     glade/gapprefs.glade\
     glade/usermenu.glade\
     ggap.xml.in
 
-BUILT_SOURCES =		\
-	gapparser-yacc.c\
-	gapparser-yacc.h\
-	ggap-ui.h	\
-	gapwswindow-ui.h\
-	gapprefs-glade.h\
-	ggap.c		\
+BUILT_SOURCES =			\
+	gapparser-yacc.c	\
+	gapparser-yacc.h	\
+	gaptermwindow-ui.h	\
+	gapwswindow-ui.h	\
+	gapprefs-glade.h	\
+	ggap.c			\
 	ggap-credits.h
 
 XML2H = $(top_srcdir)/moo/moo/mooutils/xml2h.sh
@@ -136,12 +122,12 @@ PY2H = $(top_srcdir)/moo/moo/mooutils/py2h.sh
 ggap-credits.h: ../THANKS $(XML2H)
 	$(SHELL) $(XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h.tmp && \
 	mv ggap-credits.h.tmp ggap-credits.h
-ggap-ui.h: ggap-ui.xml $(XML2H)
-	sh $(XML2H) GGAP_UI $(srcdir)/ggap-ui.xml > ggap-ui.h.tmp && \
-	mv ggap-ui.h.tmp ggap-ui.h
 gapwswindow-ui.h: gapwswindow-ui.xml $(XML2H)
 	sh $(XML2H) GAP_WS_WINDOW_UI $(srcdir)/gapwswindow-ui.xml > gapwswindow-ui.h.tmp && \
 	mv gapwswindow-ui.h.tmp gapwswindow-ui.h
+gaptermwindow-ui.h: gaptermwindow-ui.xml $(XML2H)
+	sh $(XML2H) GAP_TERM_WINDOW_UI $(srcdir)/gaptermwindow-ui.xml > gaptermwindow-ui.h.tmp && \
+	mv gaptermwindow-ui.h.tmp gaptermwindow-ui.h
 
 gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
 	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h

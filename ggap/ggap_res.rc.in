@@ -19,7 +19,7 @@ VS_VERSION_INFO VERSIONINFO
 	VALUE "FileDescription", "GGAP"
 	VALUE "FileVersion", "@GGAP_VERSION_UNQUOTED@.0"
 	VALUE "InternalName", "ggap-@GGAP_VERSION_UNQUOTED@"
-	VALUE "LegalCopyright", "(C) 2004-2007 Yevgen Muntyan <muntyan@math.tamu.edu>"
+	VALUE "LegalCopyright", "(C) 2004-2008 Yevgen Muntyan <muntyan@tamu.edu>"
 	VALUE "OriginalFilename", "ggap.exe"
 	VALUE "ProductName", "GGAP"
 	VALUE "ProductVersion", @GGAP_VERSION@

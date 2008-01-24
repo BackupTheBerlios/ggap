@@ -1,2 +1,0 @@
-$GGAP_GLOBALS_INIT := [
-];

@@ -20,8 +20,9 @@
 #include "gapwswindow.h"
 #include "gapwsview.h"
 #include "gapprefs-glade.h"
-#include "gapoutput.h"
 #include "gapwswindow-ui.h"
+#include "gaptermwindow-ui.h"
+#include "ggap-credits.h"
 #include <mooui/mdmanager.h>
 #include <mooutils/moostock.h>
 #include <mooutils/mooprefsdialog.h>
@@ -37,8 +38,6 @@
 
 
 struct GapAppPrivate {
-//     GapView *terminal;
-//     GapWindow *gap_window;
     GtkWidget *window;
     MdManager *gd_mgr;
     gboolean fancy;
@@ -53,9 +52,7 @@ static void         gap_app_set_property            (GObject        *object,
                                                      const GValue   *value,
                                                      GParamSpec     *pspec);
 static gboolean     gap_app_initialize              (MdApp          *app);
-static int          gap_app_run                     (MdApp          *app,
-                                                     int             argc,
-                                                     char          **argv);
+static int          gap_app_run                     (MdApp          *app);
 static void         gap_app_quit                    (MdApp          *app);
 static void         gap_app_setup_option_context    (MdApp          *app,
                                                      GOptionContext *ctx);
@@ -197,10 +194,22 @@ gap_app_init (GapApp *app)
 #else
     moo_prefs_new_key_string (GGAP_PREFS_GAP_COMMAND, "gap");
 #endif
-    moo_prefs_new_key_bool (GGAP_PREFS_GAP_INIT_PKG, TRUE); /* XXX */
     moo_prefs_new_key_string (GGAP_PREFS_GAP_WORKING_DIR, NULL);
     moo_prefs_new_key_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE, TRUE);
     moo_prefs_new_key_bool (GGAP_PREFS_GAP_CLEAR_TERMINAL, TRUE);
+
+    g_object_set (app,
+                  "short-name", "ggap",
+                  "full-name", "GGAP",
+                  "description", "GGAP is a front end for GAP",
+                  "icon-name", "ggap",
+                  "credits", THANKS,
+                  "authors-markup", "Yevgen Muntyan <a href=\"mailto://muntyan@tamu.edu\">"
+                                    "&lt;muntyan@tamu.edu&gt;</a>",
+                  "authors", "Yevgen Muntyan <muntyan@tamu.edu>",
+                  "copyright", "\302\251 2004-2008 Yevgen Muntyan",
+                  "version", VERSION,
+                  NULL);
 }
 
 
@@ -257,14 +266,11 @@ gap_app_setup_option_context (MdApp          *md_app,
 
 
 static int
-gap_app_run (MdApp  *md_app,
-             int     argc,
-             char  **argv)
+gap_app_run (MdApp *md_app)
 {
     GapApp *app;
 
     app = GAP_APP (md_app);
-    gap_app_output_start ();
 
     if (app->priv->fancy)
     {
@@ -284,21 +290,26 @@ gap_app_run (MdApp  *md_app,
     }
     else
     {
+        MooUIXML *xml;
+
+        xml = moo_ui_xml_new ();
+        moo_ui_xml_add_ui_from_string (xml, GAP_TERM_WINDOW_UI, -1);
+
         app->priv->window = g_object_new (GAP_TYPE_TERM_WINDOW,
-//                                           "ui-xml", moo_app_get_ui_xml (MOO_APP (app)),
-                                          NULL);
+                                          "ui-xml", xml, NULL);
         gtk_widget_show (app->priv->window);
         md_app_set_main_window (md_app, MD_APP_WINDOW (app->priv->window));
+
+        g_object_unref (xml);
     }
 
-    return MD_APP_CLASS (gap_app_parent_class)->run (md_app, argc, argv);
+    return MD_APP_CLASS (gap_app_parent_class)->run (md_app);
 }
 
 
 static void
 gap_app_quit (MdApp *app)
 {
-    gap_app_output_shutdown ();
     MD_APP_CLASS (gap_app_parent_class)->quit (app);
 }
 

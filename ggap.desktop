@@ -1,5 +1,4 @@
 [Desktop Entry]
-Encoding=UTF-8
 Name=GGAP
 Comment=GAP Front End
 Exec=ggap %F
@@ -7,5 +6,5 @@ Terminal=false
 Type=Application
 StartupNotify=true
 MimeType=application/x-ggap;
-Icon=ggap.png
+Icon=ggap
 Categories=Math;Science;

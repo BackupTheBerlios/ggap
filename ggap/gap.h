@@ -1,7 +1,7 @@
 /*
  *   gap.h
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@math.tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,6 @@
 G_BEGIN_DECLS
 
 
-const char  *gap_init_file          (const char *workspace,
-                                     gboolean    init_pkg,
-                                     guint       session_id,
-                                     gboolean    fancy);
-
 char        *gap_read_file_string   (const char *filename);
 char        *gap_reread_file_string (const char *filename);
 
@@ -35,10 +30,7 @@ gboolean     gap_parse_cmd_line     (const char *command_line,
 
 char        *gap_make_cmd_line      (const char *workspace,
                                      const char *flags,
-                                     gboolean    fancy,
-                                     guint       session_id);
-
-char        *gap_saved_workspace_filename   (void);
+                                     gboolean    fancy);
 
 char        *gap_escape_filename    (const char *filename);
 

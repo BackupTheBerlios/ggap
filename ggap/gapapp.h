@@ -21,11 +21,11 @@ G_BEGIN_DECLS
 
 #define GGAP_PREFS_PREFIX               "ggap"
 #define GGAP_PREFS_GAP_COMMAND          GGAP_PREFS_PREFIX "/command"
-#define GGAP_PREFS_GAP_INIT_PKG         GGAP_PREFS_PREFIX "/init_pkg"
 #define GGAP_PREFS_GAP_WORKING_DIR      GGAP_PREFS_PREFIX "/working_dir"
 #define GGAP_PREFS_GAP_SAVE_WORKSPACE   GGAP_PREFS_PREFIX "/save_workspace"
 #define GGAP_PREFS_GAP_CLEAR_TERMINAL   GGAP_PREFS_PREFIX "/clear_terminal"
-#define GGAP_WORKSPACE_FILE             "workspace"
+#define GGAP_WORKSPACE_FILE_BARE        "workspace"
+#define GGAP_WORKSPACE_FILE_FANCY       "workspace-ggap"
 
 #define GAP_TYPE_APP                (gap_app_get_type ())
 #define GAP_APP(object)             (G_TYPE_CHECK_INSTANCE_CAST ((object), GAP_TYPE_APP, GapApp))

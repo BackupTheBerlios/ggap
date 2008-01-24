@@ -13,7 +13,6 @@
 
 #include "gap.h"
 #include "gapapp.h"
-#include "gapoutput.h"
 #include "mooutils/mooutils-fs.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooprefs.h"
@@ -28,11 +27,6 @@ gap_escape_filename (const char *filename)
     return g_strescape (filename, NULL);
 }
 
-
-#define INIT_PKG                                        \
-"if IsBoundGlobal(\"$GGAP_INIT\") then\n"               \
-"  $GGAP_INIT(\"%s\", \"%s\", %d, \"%s\", %s);\n"       \
-"fi;\n"
 
 #define SAVE_WORKSPACE                                  \
 "SaveWorkspace(\"%s\");\n"
@@ -71,16 +65,29 @@ gap_cmd_save_workspace (const char *filename)
 }
 
 
-const char *
+#define INIT_PKG                            \
+"if IsBoundGlobal(\"$GGAP_INIT\") then\n"   \
+"  $GGAP_INIT(%s);\n"                       \
+"fi;\n"
+
+#undef NEED_INIT_PKG
+#if 1
+#define NEED_INIT_PKG
+#endif
+
+static const char *
 gap_init_file (const char *workspace,
-               gboolean    init_pkg,
-               guint       session_id,
                gboolean    fancy)
 {
     GString *contents;
     GError *error = NULL;
+    gboolean init_pkg = fancy;
 
     static char *filename;
+
+#ifdef NEED_INIT_PKG
+    init_pkg = TRUE;
+#endif
 
     if (filename)
     {
@@ -102,35 +109,7 @@ gap_init_file (const char *workspace,
     contents = g_string_new (NULL);
 
     if (init_pkg)
-    {
-        const char *in_name, *out_name;
-        char *in_escaped, *out_escaped;
-        char *appdir = NULL, *ph = NULL, *ph_escaped;
-
-//         in_name = moo_app_get_input_pipe_name ();
-        in_name = NULL;
-        out_name = gap_app_output_get_name ();
-
-#ifdef __WIN32__
-        appdir = moo_win32_get_app_dir ();
-        ph = g_build_filename (appdir, "pipehelper.exe", NULL);
-#endif
-
-        ph_escaped = gap_escape_filename (ph ? ph : "");
-
-        in_escaped = gap_escape_filename (in_name ? in_name : "");
-        out_escaped = gap_escape_filename (out_name ? out_name : "");
-
-        g_string_append_printf (contents, INIT_PKG, in_escaped,
-                                out_escaped, session_id, ph_escaped,
-                                fancy ? "true" : "false");
-
-        g_free (appdir);
-        g_free (ph);
-        g_free (ph_escaped);
-        g_free (in_escaped);
-        g_free (out_escaped);
-    }
+        g_string_append_printf (contents, INIT_PKG, fancy ? "true" : "false");
 
     /* FIRST load package, then save workspace */
     if (workspace)
@@ -243,10 +222,13 @@ gap_parse_cmd_line (const char *command_line,
 #endif
 
 
-char *
-gap_saved_workspace_filename (void)
+static char *
+gap_saved_workspace_filename (gboolean fancy)
 {
-    return moo_get_user_data_file (GGAP_WORKSPACE_FILE);
+    if (fancy)
+        return moo_get_user_data_file (GGAP_WORKSPACE_FILE_FANCY);
+    else
+        return moo_get_user_data_file (GGAP_WORKSPACE_FILE_BARE);
 }
 
 
@@ -254,16 +236,19 @@ static GString *
 make_command_line (const char *cmd_base,
                    const char *flags,
                    const char *custom_wsp,
-                   guint       session_id,
                    gboolean    fancy)
 {
-    gboolean init_pkg, save_workspace;
+    gboolean save_workspace;
     gboolean wsp_already_saved = FALSE;
     char *wsp_file = NULL;
     const char *init_file = NULL;
+    gboolean init_pkg = fancy;
     GString *cmd;
 
-    init_pkg = moo_prefs_get_bool (GGAP_PREFS_GAP_INIT_PKG);
+#ifdef NEED_INIT_PKG
+    init_pkg = TRUE;
+#endif
+
     save_workspace = moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE);
 
     cmd = g_string_new (cmd_base);
@@ -273,7 +258,7 @@ make_command_line (const char *cmd_base,
 
     if (!custom_wsp && save_workspace)
     {
-        wsp_file = gap_saved_workspace_filename ();
+        wsp_file = gap_saved_workspace_filename (fancy);
 
         g_return_val_if_fail (wsp_file != NULL, cmd);
 
@@ -300,12 +285,11 @@ make_command_line (const char *cmd_base,
             g_critical ("%s: could not create user data dir", G_STRLOC);
 
         if (!wsp_already_saved || init_pkg)
-            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file,
-                                       init_pkg, session_id, fancy);
+            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file, fancy);
     }
 
     if (init_pkg && !init_file)
-        init_file = gap_init_file (NULL, TRUE, session_id, fancy);
+        init_file = gap_init_file (NULL, fancy);
 
     if (init_pkg)
     {
@@ -330,8 +314,7 @@ make_command_line (const char *cmd_base,
 char *
 gap_make_cmd_line (const char *workspace,
                    const char *flags,
-                   gboolean    fancy,
-                   guint       session_id)
+                   gboolean    fancy)
 {
     const char *cmd_base;
     GString *cmd;
@@ -380,6 +363,6 @@ gap_make_cmd_line (const char *workspace,
     }
 #endif
 
-    cmd = make_command_line (cmd_base, flags, workspace, session_id, fancy);
+    cmd = make_command_line (cmd_base, flags, workspace, fancy);
     return g_string_free (cmd, FALSE);
 }

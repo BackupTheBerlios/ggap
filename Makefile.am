@@ -37,12 +37,6 @@ BUILT_SOURCES = po-subdirs-stamp
 
 ACLOCAL_AMFLAGS = -I moo/m4 $(ACLOCAL_FLAGS)
 
-ui.xml.example: ggap/ggap-ui.xml
-	cp $(srcdir)/ggap/ggap-ui.xml ui.xml.example
-
-ggapdir = $(GGAP_DATA_DIR)
-ggap_DATA = ui.xml.example
-
 DISTCLEANFILES =		\
 	configargs.h		\
 	intltool-extract	\

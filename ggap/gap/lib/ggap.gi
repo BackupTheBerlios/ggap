@@ -17,7 +17,6 @@
 ##
 BindGlobal("$GGAP_DATA",
 rec(init := false,              # ggap package is initialized
-    session_id := 0,            # GAP session id in ggap
     debug := false,
     original_funcs := rec(),
     original_funcs_stored := false,
@@ -111,30 +110,24 @@ end);
 
 BindGlobal("$GGAP_SEND_GLOBALS_FIRST_TIME",
 function()
-  local current, added, deleted;
-
+  local func;
   $GGAP_DATA.globals_sent := true;
-
-  current := NamesGVars();
-  added := Difference(current, $GGAP_GLOBALS_INIT);
-  deleted := Difference($GGAP_GLOBALS_INIT, current);
-  $GGAP_SEND_ADDED_DELETED(added, deleted);
-
-  UnbindGlobal("$GGAP_GLOBALS_INIT");
-
-  $GGAP_DATA.globals := List(NamesUserGVars());
+  $GGAP_SEND_ADDED_DELETED(NamesGVars(), []);
+  func := ValueGlobal("NamesUserGVars");
+  $GGAP_DATA.globals := List(func());
 end);
 
 BindGlobal("$GGAP_SEND_GLOBALS",
 function()
-  local current, added, deleted;
+  local func, current, added, deleted;
 
   if not $GGAP_DATA.globals_sent then
     $GGAP_SEND_GLOBALS_FIRST_TIME();
     return;
   fi;
 
-  current := NamesUserGVars();
+  func := ValueGlobal("NamesUserGVars");
+  current := func();
   added := Difference(current, $GGAP_DATA.globals);
   deleted := Difference($GGAP_DATA.globals, current);
   $GGAP_SEND_ADDED_DELETED(added, deleted);
@@ -253,19 +246,16 @@ end);
 ##  $GGAP_INIT()
 ##
 BindGlobal("$GGAP_INIT",
-function(out_pipe, in_pipe, session_id, pipehelper, fancy)
-  local reset_data, create_input_pipe, create_output_pipe;
+function(fancy)
+  local reset_data;
 
   reset_data := function()
     $GGAP_DATA.init := false;
     $GGAP_DATA.fancy := false;
-    $GGAP_DATA.session_id := 0;
     $GGAP_DATA.next_prompt := [];
+    $GGAP_DATA.globals := [];
+    $GGAP_DATA.globals_sent := false;
   end;
-
-  if not IsInt(session_id) or session_id < 0 or session_id > 255 then
-    Error("invalid session id ", session_id);
-  fi;
 
   if $GGAP_DATA.init then
     Info(InfoGGAP, 3, "GGAP package initialized, assuming loaded workspace");
@@ -277,9 +267,6 @@ function(out_pipe, in_pipe, session_id, pipehelper, fancy)
   $GGAP_INIT_FANCY(fancy);
   $GGAP_DATA.fancy := fancy;
   Info(InfoGGAP, 3, "# fancy: ", fancy);
-
-  $GGAP_DATA.session_id := session_id;
-  Info(InfoGGAP, 3, "GGAP session id ", session_id);
 
   $GGAP_DATA.init := true;
 end);

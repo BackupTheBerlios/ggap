@@ -3,6 +3,7 @@ ggap/gapapp.c
 ggap/gapeditwindow.c
 ggap/gaptermwindow.c
 ggap/gapwswindow-ui.xml
+ggap/gaptermwindow-ui.xml
 ggap/ggap.xml.in
 ggap/glade/gapdoc.glade
 ggap/glade/gapprefs.glade

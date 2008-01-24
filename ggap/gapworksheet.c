@@ -1,7 +1,7 @@
 /*
  *   gapworksheet.c
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 #include "gap.h"
 #include "gapwscompletion.h"
 #include "mooui/mdview.h"
+#include "mooui/mdfileops.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mootype-macros.h"
@@ -98,16 +99,12 @@ static gboolean gap_worksheet_child_alive       (GapWorksheet   *ws);
 static void     stop_running_command_loop       (GapCommandInfo *ci);
 static gboolean has_running_command_loop        (GapWorksheet   *ws);
 
-static gboolean gap_worksheet_load_file         (MdDocument     *doc,
+static void     gap_worksheet_load_file         (MdDocument     *doc,
                                                  MdFileInfo     *file_info,
-                                                 int            *fd,
-                                                 MdFileOpInfo   *op_info,
-                                                 GError        **error);
-static gboolean gap_worksheet_save_file         (MdDocument     *doc,
+                                                 MdFileOpInfo   *op_info);
+static void     gap_worksheet_save_file         (MdDocument     *doc,
                                                  MdFileInfo     *file_info,
-                                                 int            *fd,
-                                                 MdFileOpInfo   *op_info,
-                                                 GError        **error);
+                                                 MdFileOpInfo   *op_info);
 
 static void     gap_worksheet_free_completion   (GapWorksheet   *ws);
 static void     gap_worksheet_add_globals       (GapWorksheet   *ws,
@@ -131,7 +128,8 @@ enum {
     PROP_MD_DOC_STATUS,
     PROP_MD_DOC_STATE,
     PROP_MD_DOC_READONLY,
-    PROP_MD_DOC_FILE_INFO
+    PROP_MD_DOC_FILE_INFO,
+    PROP_MD_DOC_URI
 };
 
 static void
@@ -190,6 +188,9 @@ gap_worksheet_get_property (GObject    *object,
         case PROP_MD_DOC_FILE_INFO:
             g_value_set_boxed (value, md_document_get_file_info (MD_DOCUMENT (ws)));
             break;
+        case PROP_MD_DOC_URI:
+            g_value_take_string (value, md_document_get_uri (MD_DOCUMENT (ws)));
+            break;
 
         case PROP_MD_DOC_STATUS:
             g_value_set_flags (value, md_document_get_status (MD_DOCUMENT (ws)));
@@ -240,6 +241,7 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
     g_object_class_override_property (object_class, PROP_MD_DOC_READONLY, "md-doc-readonly");
     g_object_class_override_property (object_class, PROP_MD_DOC_STATE, "md-doc-state");
     g_object_class_override_property (object_class, PROP_MD_DOC_FILE_INFO, "md-doc-file-info");
+    g_object_class_override_property (object_class, PROP_MD_DOC_URI, "md-doc-uri");
 
     g_type_class_add_private (klass, sizeof (GapWorksheetPrivate));
 }
@@ -290,7 +292,7 @@ gap_worksheet_start_gap (GapWorksheet *ws,
     else
         args = "-n -T";
 
-    cmd_line = gap_make_cmd_line (workspace, args, TRUE, 0);
+    cmd_line = gap_make_cmd_line (workspace, args, TRUE);
     g_return_val_if_fail (cmd_line != NULL, FALSE);
 
 //     moo_worksheet_reset (MOO_WORKSHEET (view));
@@ -403,6 +405,72 @@ doc_iface_init (MdDocumentIface *iface)
     iface->set_status = gap_worksheet_set_doc_status;
 }
 
+#if 0
+static void
+write_log (const char *text,
+           int         len,
+           gboolean    in)
+{
+    static int last = -1;
+
+    if (last != in)
+    {
+        if (last != -1)
+            g_print ("\n");
+
+        if (!in)
+            g_print ("<-- ");
+        else
+            g_print ("--> ");
+    }
+
+    last = in;
+
+    if (len < 0)
+        len = strlen (text);
+
+    while (len)
+    {
+        int i;
+
+        for (i = 0; i < len && text[i] != '\n'; ++i) ;
+
+        g_print ("%.*s", (int) i, text);
+
+        if (i != len)
+        {
+            if (!in)
+                g_print ("\n<-- ");
+            else
+                g_print ("\n--> ");
+        }
+
+        if (i < len)
+        {
+            len -= i + 1;
+            text += i + 1;
+        }
+        else
+        {
+            len = 0;
+            text += len;
+        }
+    }
+
+    fflush (stdout);
+}
+#else
+#define write_log(text,len,in)
+#endif
+
+static void
+write_child (GapWorksheet *ws,
+             const char   *text)
+{
+    moo_term_pt_write (ws->priv->pt, text, -1);
+    write_log (text, -1, FALSE);
+}
+
 static void
 write_input (GapWorksheet  *ws,
              char         **lines,
@@ -413,15 +481,15 @@ write_input (GapWorksheet  *ws,
     if (lines[1])
     {
         char *string = g_strjoinv (" ", lines);
-        moo_term_pt_write (ws->priv->pt, string, -1);
+        write_child (ws, string);
         g_free (string);
     }
     else
     {
-        moo_term_pt_write (ws->priv->pt, lines[0], -1);
+        write_child (ws, lines[0]);
     }
 
-    moo_term_pt_write (ws->priv->pt, "\n", -1);
+    write_child (ws, "\n");
     moo_worksheet_add_history (MOO_WORKSHEET (ws), text);
     set_state (ws, GAP_BUSY);
 }
@@ -914,6 +982,8 @@ io_func (const char *buf,
 
     g_return_if_fail (len > 0);
 
+    write_log (buf, len, TRUE);
+
     g_object_ref (ws);
 
     while (len != 0 && ws->priv != NULL)
@@ -1014,33 +1084,50 @@ _gap_worksheet_set_size (GapWorksheet *ws,
 }
 
 
-static gboolean
-gap_worksheet_load_file (MdDocument  *doc,
-                         G_GNUC_UNUSED MdFileInfo *file_info,
-                         int          *fd,
-                         G_GNUC_UNUSED MdFileOpInfo *op_info,
-                         GError     **error)
+static void
+gap_worksheet_load_file (MdDocument   *doc,
+                         MdFileInfo   *file_info,
+                         MdFileOpInfo *op_info)
 {
     char *text;
     gsize text_len;
     char *workspace_file;
+    GError *error = NULL;
+    char *filename;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
-    if (!ggap_file_unpack (fd, &text, &text_len, &workspace_file, error))
-        return FALSE;
+    if (!(filename = md_file_info_get_filename (file_info)))
+    {
+        md_file_op_info_set_error (op_info, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
+                                   "Not a local file");
+        return;
+    }
+
+    if (!ggap_file_unpack (filename, &text, &text_len, &workspace_file, &error))
+    {
+        g_free (filename);
+        md_file_op_info_take_error (op_info, error);
+        return;
+    }
 
     g_print ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
     g_print ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
 
-    if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, error))
-        return FALSE;
+    if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, &error))
+    {
+        g_free (filename);
+        md_file_op_info_take_error (op_info, error);
+        return;
+    }
 
     gap_worksheet_kill_child (ws);
     gap_worksheet_start_gap (ws, workspace_file);
 
+    op_info->status = MD_FILE_OP_STATUS_SUCCESS;
+
     g_free (text);
     g_free (workspace_file);
-    return TRUE;
+    g_free (filename);
 }
 
 
@@ -1084,10 +1171,10 @@ gap_worksheet_run_command (GapWorksheet *ws,
 
     stamp = ++ws->priv->last_stamp;
     string = ggap_pkg_exec_command (stamp, command, args);
-    moo_term_pt_write (ws->priv->pt, string, -1);
+    write_child (ws, string);
 
     if (gap_cmd_line)
-        moo_term_pt_write (ws->priv->pt, gap_cmd_line, -1);
+        write_child (ws, gap_cmd_line);
 
     g_object_ref (ws);
 
@@ -1218,32 +1305,50 @@ gap_worksheet_save_workspace (GapWorksheet  *ws,
     return result;
 }
 
-static gboolean
+static void
 gap_worksheet_save_file (MdDocument   *doc,
-                         G_GNUC_UNUSED MdFileInfo *file_info,
-                         int          *fd,
-                         G_GNUC_UNUSED MdFileOpInfo *op_info,
-                         GError      **error)
+                         MdFileInfo   *file_info,
+                         MdFileOpInfo *op_info)
 {
     char *markup;
     char *workspace = NULL;
-    gboolean result;
     gboolean save_workspace = TRUE;
+    GError *error = NULL;
+    char *filename;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
-    g_return_val_if_fail (ws->priv->gap_state == GAP_DEAD ||
-                          ws->priv->gap_state == GAP_IN_PROMPT, FALSE);
+    if (!(ws->priv->gap_state == GAP_DEAD || ws->priv->gap_state == GAP_IN_PROMPT))
+    {
+        md_file_op_info_set_error (op_info, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
+                                   "Failed");
+        g_return_if_fail (ws->priv->gap_state == GAP_DEAD ||
+                          ws->priv->gap_state == GAP_IN_PROMPT);
+    }
 
-    if (save_workspace)
-        if (ws->priv->gap_state != GAP_DEAD && !gap_worksheet_save_workspace (ws, &workspace, error))
-            return FALSE;
+
+    if (save_workspace && ws->priv->gap_state != GAP_DEAD &&
+        !gap_worksheet_save_workspace (ws, &workspace, &error))
+    {
+        md_file_op_info_take_error (op_info, error);
+        return;
+    }
+
+    if (!(filename = md_file_info_get_filename (file_info)))
+    {
+        md_file_op_info_set_error (op_info, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
+                                   "Failed");
+        g_return_if_fail (filename != NULL);
+    }
 
     markup = moo_worksheet_format (MOO_WORKSHEET (ws));
 
-    result = ggap_file_pack (markup, workspace, fd, error);
+    if (!ggap_file_pack (markup, workspace, filename, &error))
+        md_file_op_info_take_error (op_info, error);
+    else
+        op_info->status = MD_FILE_OP_STATUS_SUCCESS;
 
     g_free (markup);
-    return result;
+    g_free (filename);
 }
 
 
@@ -1287,7 +1392,7 @@ static GList *
 parse_words (const char *data,
              gsize       data_len)
 {
-    GQueue words = G_QUEUE_INIT;
+    GQueue words = {0};
     gsize start, end;
 
     for (start = 0, end = 0; end < data_len; end++)
@@ -1309,10 +1414,7 @@ gap_worksheet_add_globals (GapWorksheet *ws,
                            gsize         data_len)
 {
     MooCompletionGroup *group = gap_worksheet_ensure_completion (ws);
-    GTimer *timer = g_timer_new ();
     GList *words = parse_words (data, data_len);
-    g_print ("%f\n", g_timer_elapsed (timer, NULL));
-    g_timer_destroy (timer);
     moo_completion_group_add_data (group, words);
 }
 
@@ -1343,7 +1445,7 @@ _gap_worksheet_ask_for_completions (GapWorksheet *ws)
 
     stamp = ++ws->priv->last_stamp;
     string = ggap_pkg_exec_command (stamp, "get-globals", NULL);
-    moo_term_pt_write (ws->priv->pt, string, -1);
+    write_child (ws, string);
 
     g_free (string);
 }

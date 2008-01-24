@@ -468,7 +468,7 @@ gap_term_start_gap (GapTerm    *term,
     if (moo_prefs_get_bool (GGAP_PREFS_GAP_CLEAR_TERMINAL))
         moo_term_reset (MOO_TERM (term));
 
-    cmd_line = gap_make_cmd_line (workspace, NULL, FALSE, 0);
+    cmd_line = gap_make_cmd_line (workspace, NULL, FALSE);
     moo_term_fork_command_line (MOO_TERM (term), cmd_line,
                                 NULL, NULL, NULL);
 
