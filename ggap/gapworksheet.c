@@ -22,12 +22,15 @@
 #include "mooui/mdfileops.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
+#include "mooutils/mooutils-debug.h"
 #include "mooutils/mootype-macros.h"
 #include "moows/moowsblock.h"
 #include <glib/gregex.h>
 #include <gdk/gdkkeysyms.h>
 #include <errno.h>
 #include <stdlib.h>
+
+MOO_DEBUG_INIT(gap, FALSE)
 
 typedef struct {
     guint stamp;
@@ -405,12 +408,12 @@ doc_iface_init (MdDocumentIface *iface)
     iface->set_status = gap_worksheet_set_doc_status;
 }
 
-#if 0
 static void
 write_log (const char *text,
            int         len,
            gboolean    in)
 {
+MOO_DEBUG({
     static int last = -1;
 
     if (last != in)
@@ -458,10 +461,8 @@ write_log (const char *text,
     }
 
     fflush (stdout);
+}); /* MOO_DEBUG */
 }
-#else
-#define write_log(text,len,in)
-#endif
 
 static void
 write_child (GapWorksheet *ws,
@@ -1110,8 +1111,8 @@ gap_worksheet_load_file (MdDocument   *doc,
         return;
     }
 
-    g_print ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
-    g_print ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+    moo_dprint ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
+    moo_dprint ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
 
     if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, &error))
     {

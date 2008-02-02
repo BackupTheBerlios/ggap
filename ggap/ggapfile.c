@@ -21,6 +21,9 @@
 #include <string.h>
 #include <glib/gstdio.h>
 #include <mooutils/mooutils-misc.h>
+#include <mooutils/mooutils-debug.h>
+
+MOO_DEBUG_INIT (gap-file, FALSE)
 
 #define GGAP_FILE_VERSION       "0001"
 #define GGAP_FILE_VERSION_LEN   4
