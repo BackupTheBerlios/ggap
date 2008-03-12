@@ -224,10 +224,11 @@ scroll_insert_onscreen (MooWorksheet *ws)
 }
 
 
-static MooWsBlock *
-create_ws_prompt_block (const char *ps,
-                        const char *ps2,
-                        const char *text)
+MooWsBlock *
+moo_worksheet_create_prompt_block (MooWorksheet *ws,
+                                   const char   *ps,
+                                   const char   *ps2,
+                                   const char   *text)
 {
     MooWsBlock *block;
 
@@ -282,7 +283,7 @@ moo_worksheet_start_input (MooWorksheet   *ws,
 
     if (!block)
     {
-        block = create_ws_prompt_block (ps, ps2, NULL);
+        block = moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
 
         if (ws->priv->output)
             moo_ws_buffer_insert_block (MOO_WS_BUFFER (ws), block,
@@ -676,7 +677,7 @@ load_input (MooWorksheet  *ws,
     if (!ps2)
         g_critical ("%s: %s property missing", G_STRLOC, PROP_PS2);
 
-    block = create_ws_prompt_block (ps, ps2, moo_markup_get_content (elm));
+    block = moo_worksheet_create_prompt_block (ws, ps, ps2, moo_markup_get_content (elm));
     g_return_if_fail (block != NULL);
 
     moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
@@ -709,10 +710,10 @@ load_output (MooWorksheet  *ws,
 }
 
 gboolean
-moo_worksheet_load (MooWorksheet   *ws,
-                    const char     *text,
-                    gsize           text_len,
-                    GError        **error)
+moo_worksheet_load_xml (MooWorksheet   *ws,
+                        const char     *text,
+                        gsize           text_len,
+                        GError        **error)
 {
     MooMarkupDoc *doc;
     MooMarkupNode *root, *elm, *child;
@@ -834,4 +835,34 @@ moo_worksheet_format (MooWorksheet *ws)
     markup = moo_markup_format_pretty (doc, 2);
     moo_markup_doc_unref (doc);
     return markup;
+}
+
+char *
+moo_worksheet_get_input_text (MooWorksheet *ws)
+{
+    MooWsBlock *block;
+    GString *text;
+
+    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
+
+    text = g_string_new (NULL);
+
+    for (block = _moo_ws_buffer_get_first_block (MOO_WS_BUFFER (ws));
+         block != NULL; block = block->next)
+    {
+        char *block_text;
+
+        if (!MOO_IS_WS_PROMPT_BLOCK (block))
+            continue;
+
+        block_text = moo_ws_prompt_block_get_text (MOO_WS_PROMPT_BLOCK (block));
+
+        if (text->len)
+            g_string_append (text, "\n");
+
+        g_string_append (text, block_text);
+        g_free (block_text);
+    }
+
+    return g_string_free (text, FALSE);
 }

@@ -14,7 +14,7 @@
 #ifndef GAP_FILE_H
 #define GAP_FILE_H
 
-#include <glib.h>
+#include "gapworksheet.h"
 
 G_BEGIN_DECLS
 
@@ -30,15 +30,16 @@ enum {
 
 GQuark      ggap_file_error_quark   (void) G_GNUC_CONST;
 
-gboolean    ggap_file_pack          (const char *text,
-                                     const char *binary_file,
-                                     const char *filename,
-                                     GError    **error);
-gboolean    ggap_file_unpack        (const char *filename,
-                                     char      **text,
-                                     gsize      *text_len,
-                                     char      **binary_file,
-                                     GError    **error);
+gboolean    ggap_file_save_xml      (const char     *text,
+                                     const char     *binary_file,
+                                     const char     *filename,
+                                     GError        **error);
+gboolean    ggap_file_load          (const char     *filename,
+                                     GapFileType    *type,
+                                     char          **text,
+                                     gsize          *text_len,
+                                     char          **binary_file,
+                                     GError        **error);
 
 
 G_END_DECLS

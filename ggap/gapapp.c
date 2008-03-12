@@ -1,7 +1,7 @@
 /*
  *   gapapp.c
  *
- *   Copyright (C) 2004-2006 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@
 struct GapAppPrivate {
     GtkWidget *window;
     MdManager *gd_mgr;
+    MooEditor *editor;
     gboolean fancy;
 };
 
@@ -56,7 +57,8 @@ static int          gap_app_run                     (MdApp          *app);
 static void         gap_app_quit                    (MdApp          *app);
 static void         gap_app_setup_option_context    (MdApp          *app,
                                                      GOptionContext *ctx);
-// static GtkWidget   *gap_app_prefs_dialog    (MdApp      *app);
+static void         gap_app_setup_prefs_dialog      (MdApp          *app,
+                                                     GtkWidget      *dialog);
 
 // static void         new_editor_action       (MooApp     *app);
 // static void         open_in_editor_action   (GapTermWindow *term_window);
@@ -87,7 +89,7 @@ gap_app_class_init (GapAppClass *klass)
     app_class->run = gap_app_run;
     app_class->quit = gap_app_quit;
     app_class->setup_option_context = gap_app_setup_option_context;
-//     app_class->prefs_dialog = gap_app_prefs_dialog;
+    app_class->setup_prefs_dialog = gap_app_setup_prefs_dialog;
 
     g_type_class_add_private (klass, sizeof (GapAppPrivate));
 
@@ -218,7 +220,7 @@ gap_app_initialize (MdApp *app)
 {
 //     MooEditor *editor;
 
-    /* this should be before MdApp::initialize since that reads rc file */
+    /* this should be before MdApp::initialize because that reads rc file */
     moo_prefs_new_key_string (moo_edit_setting (MOO_EDIT_PREFS_DEFAULT_LANG), "gap");
 
     if (!MD_APP_CLASS (gap_app_parent_class)->initialize (app))
@@ -232,12 +234,6 @@ gap_app_initialize (MdApp *app)
     }
 #endif /* __WIN32__ */
 
-//     editor = moo_app_get_editor (app);
-//     moo_editor_set_window_type (editor, GAP_TYPE_EDIT_WINDOW);
-//     g_object_set (editor, "allow-empty-window", TRUE, NULL);
-//     g_signal_connect_swapped (editor, "all-windows-closed",
-//                               G_CALLBACK (editor_windows_closed), app);
-
     return TRUE;
 }
 
@@ -250,7 +246,7 @@ gap_app_setup_option_context (MdApp          *md_app,
     GOptionGroup *group;
     GOptionEntry entries[] = {
         { "fancy", 0, G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_IN_MAIN,
-            G_OPTION_ARG_NONE, NULL, "Show version and exit", NULL },
+            G_OPTION_ARG_NONE, NULL, "Run in worksheet mode", NULL },
         { NULL }
     };
 
@@ -265,6 +261,73 @@ gap_app_setup_option_context (MdApp          *md_app,
 }
 
 
+enum {
+    FILE_WORKSHEET,
+    FILE_TEXT
+};
+
+static char *
+check_name_func (G_GNUC_UNUSED MooFileDialog *dialog,
+                 const char    *uri,
+                 gpointer       data)
+{
+    GtkComboBox *combo = data;
+
+    if (gtk_combo_box_get_active (combo) == FILE_WORKSHEET &&
+        !g_str_has_suffix (uri, ".gws"))
+            return g_strdup_printf ("%s.gws", uri);
+    else
+        return g_strdup (uri);
+}
+
+static MdFileInfo *
+run_save_dialog (G_GNUC_UNUSED MdManager *mgr,
+                 MdView        *view,
+                 MooFileDialog *dialog)
+{
+    GapWorksheet *ws;
+    MdFileInfo *ret;
+    const char *uri;
+    GtkWidget *hbox, *label, *combo;
+
+    hbox = gtk_hbox_new (FALSE, 0);
+    label = gtk_label_new ("File type:");
+    gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
+    combo = gtk_combo_box_new_text ();
+    gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, FALSE, 0);
+    gtk_widget_show_all (hbox);
+    moo_file_dialog_set_extra_widget (dialog, hbox);
+    moo_file_dialog_set_check_name_func (dialog, check_name_func, combo, NULL);
+
+    gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "GGAP Worksheet (*.gws)");
+    gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "Text File");
+    gtk_combo_box_set_active (GTK_COMBO_BOX (combo), FILE_WORKSHEET);
+
+    ws = GAP_WORKSHEET (md_view_get_doc (view));
+    if (gap_worksheet_get_file_type (ws) == GAP_FILE_WORKSHEET)
+        gtk_combo_box_set_active (GTK_COMBO_BOX (combo), FILE_WORKSHEET);
+    else
+        gtk_combo_box_set_active (GTK_COMBO_BOX (combo), FILE_TEXT);
+
+    g_object_ref (combo);
+
+    if (!moo_file_dialog_run (dialog))
+    {
+        g_object_unref (combo);
+        return NULL;
+    }
+
+    uri = moo_file_dialog_get_uri (dialog);
+    g_return_val_if_fail (uri != NULL, NULL);
+
+    ret = md_file_info_new (uri);
+    if (gtk_combo_box_get_active (GTK_COMBO_BOX (combo)) == FILE_TEXT)
+        gap_file_info_set_file_type (ret, GAP_FILE_TEXT);
+
+    g_object_unref (combo);
+    return ret;
+}
+
 static int
 gap_app_run (MdApp *md_app)
 {
@@ -275,11 +338,20 @@ gap_app_run (MdApp *md_app)
     if (app->priv->fancy)
     {
         MooUIXML *xml;
+        MooFilterMgr *filter_mgr;
 
         app->priv->gd_mgr = g_object_new (MD_TYPE_MANAGER, "name", "GAP", NULL);
         md_manager_set_doc_type (app->priv->gd_mgr, GAP_TYPE_WORKSHEET);
         md_manager_set_view_type (app->priv->gd_mgr, GAP_TYPE_WS_VIEW);
         md_manager_set_window_type (app->priv->gd_mgr, GAP_TYPE_WS_WINDOW);
+        g_signal_connect (app->priv->gd_mgr, "run-save-dialog",
+                          G_CALLBACK (run_save_dialog), NULL);
+
+        filter_mgr = md_manager_get_filter_mgr (app->priv->gd_mgr);
+        moo_filter_mgr_new_builtin_filter (filter_mgr, "GAP Source Files (*.g,*.gd,*.gi)",
+                                           "*.g;*.gd;*.gi", "GAP", -1);
+        moo_filter_mgr_new_builtin_filter (filter_mgr, "GGAP Worksheets (*.gws)",
+                                           "*.gws", "GAP", -1);
 
         xml = moo_ui_xml_new ();
         moo_ui_xml_add_ui_from_string (xml, GAP_WS_WINDOW_UI, -1);
@@ -299,6 +371,13 @@ gap_app_run (MdApp *md_app)
                                           "ui-xml", xml, NULL);
         gtk_widget_show (app->priv->window);
         md_app_set_main_window (md_app, MD_APP_WINDOW (app->priv->window));
+
+        app->priv->editor = g_object_new (MOO_TYPE_EDITOR, NULL);
+        md_manager_set_window_type (MD_MANAGER (app->priv->editor),
+                                    GAP_TYPE_EDIT_WINDOW);
+//         g_object_set (editor, "allow-empty-window", TRUE, NULL);
+//         g_signal_connect_swapped (editor, "all-windows-closed",
+//                                   G_CALLBACK (editor_windows_closed), app);
 
         g_object_unref (xml);
     }
@@ -371,70 +450,69 @@ open_gap_manual (void)
 // }
 
 
-// static void
-// remove_saved_workspace (void)
-// {
-//     char *wsp, *gzipped;
-//
-//     wsp = gap_saved_workspace_filename ();
-//     g_return_if_fail (wsp != NULL);
-//     gzipped = g_strdup_printf ("%s.gz", wsp);
-//
-//     if (g_file_test (wsp, G_FILE_TEST_EXISTS))
-//         _moo_unlink (wsp);
-//     if (g_file_test (gzipped, G_FILE_TEST_EXISTS))
-//         _moo_unlink (gzipped);
-//
-//     g_free (wsp);
-//     g_free (gzipped);
-// }
+static void
+remove_saved_workspace (void)
+{
+    char *wsp, *gzipped;
 
-// static void
-// prefs_page_apply (void)
-// {
-//     if (!moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE))
-//         remove_saved_workspace ();
-// }
-//
-// static GtkWidget *
-// gap_prefs_page_new (void)
-// {
-//     MooPrefsDialogPage *page;
-//     GtkWidget *button;
-//
-//     page = moo_prefs_dialog_page_new_from_xml ("GAP", "gap", NULL,
-//                                                GAP_PREFS_GLADE_UI,
-//                                                "page", GGAP_PREFS_PREFIX);
-//
-//     button = moo_glade_xml_get_widget (page->xml, "clear_workspace");
-//     g_signal_connect (button, "clicked", G_CALLBACK (remove_saved_workspace), NULL);
-//     g_signal_connect (page, "apply", G_CALLBACK (prefs_page_apply), NULL);
-//
-//     return GTK_WIDGET (page);
-// }
+    wsp = gap_saved_workspace_filename (FALSE);
+    g_return_if_fail (wsp != NULL);
+    gzipped = g_strdup_printf ("%s.gz", wsp);
+
+    if (g_file_test (wsp, G_FILE_TEST_EXISTS))
+        _moo_unlink (wsp);
+    if (g_file_test (gzipped, G_FILE_TEST_EXISTS))
+        _moo_unlink (gzipped);
+
+    g_free (gzipped);
+    g_free (wsp);
+}
+
+static void
+prefs_page_apply (void)
+{
+    if (!moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE))
+        remove_saved_workspace ();
+}
+
+static GtkWidget *
+gap_prefs_page_new (void)
+{
+    MooPrefsDialogPage *page;
+    GtkWidget *button;
+
+    page = moo_prefs_dialog_page_new_from_xml ("GAP", "gap", NULL,
+                                               GAP_PREFS_GLADE_UI,
+                                               "page", GGAP_PREFS_PREFIX);
+
+    button = moo_glade_xml_get_widget (page->xml, "clear_workspace");
+    g_signal_connect (button, "clicked", G_CALLBACK (remove_saved_workspace), NULL);
+    g_signal_connect (page, "apply", G_CALLBACK (prefs_page_apply), NULL);
+
+    return GTK_WIDGET (page);
+}
 
 
-// static GtkWidget*
-// gap_app_prefs_dialog (MdApp *app)
-// {
-//     char *title;
-//     const MooAppInfo *info;
-//     MooPrefsDialog *dialog;
-//
-//     info = moo_app_get_info (app);
-//     title = g_strdup_printf ("%s Preferences", info->full_name);
-//     dialog = MOO_PREFS_DIALOG (moo_prefs_dialog_new (title));
-//     g_free (title);
-//
-//     moo_prefs_dialog_append_page (dialog, gap_prefs_page_new ());
-//     moo_prefs_dialog_append_page (dialog, moo_term_prefs_page_new ());
-//
-//     moo_prefs_dialog_append_page (dialog, moo_edit_prefs_page_new (moo_app_get_editor (app)));
-//     moo_prefs_dialog_append_page (dialog, moo_user_tools_prefs_page_new ());
-//     moo_plugin_attach_prefs (GTK_WIDGET (dialog));
-//
-//     return GTK_WIDGET (dialog);
-// }
+static void
+gap_app_setup_prefs_dialog (MdApp     *mdapp,
+                            GtkWidget *dialog)
+{
+    GapApp *app = GAP_APP (mdapp);
+
+    if (app->priv->fancy)
+    {
+    }
+    else
+    {
+        moo_prefs_dialog_append_page (MOO_PREFS_DIALOG (dialog), gap_prefs_page_new ());
+        moo_prefs_dialog_append_page (MOO_PREFS_DIALOG (dialog), moo_term_prefs_page_new ());
+
+        moo_prefs_dialog_append_page (MOO_PREFS_DIALOG (dialog),
+                                      moo_edit_prefs_page_new (app->priv->editor));
+        moo_prefs_dialog_append_page (MOO_PREFS_DIALOG (dialog), moo_user_tools_prefs_page_new ());
+        moo_plugin_attach_prefs (GTK_WIDGET (dialog));
+    }
+}
 
 
 void

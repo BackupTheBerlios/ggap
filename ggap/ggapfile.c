@@ -136,10 +136,10 @@ gap_file_write (gzFile      file,
 }
 
 gboolean
-ggap_file_pack (const char *text,
-                const char *binary_file,
-                const char *filename,
-                GError    **error)
+ggap_file_save_xml (const char *text,
+                    const char *binary_file,
+                    const char *filename,
+                    GError    **error)
 {
     gzFile file;
     GMappedFile *mfile = NULL;
@@ -453,40 +453,31 @@ error:
 
 static gzFile
 open_file_r (const char  *filename,
+             gboolean    *is_gws,
              GError     **error)
 {
     gzFile file;
     char buf[GGAP_FILE_HEADER_LEN];
     int fd;
 
+    *is_gws = TRUE;
+
     if ((fd = md_open_file_for_reading (filename, error)) == -1)
         return NULL;
 
-    if (read (fd, buf, GGAP_FILE_HEADER_LEN) != GGAP_FILE_HEADER_LEN)
+    if (read (fd, buf, GGAP_FILE_HEADER_LEN) != GGAP_FILE_HEADER_LEN ||
+        memcmp (buf, GGAP_FILE_MAGIC, GGAP_FILE_MAGIC_LEN) != 0)
     {
-        int err = errno;
-        g_set_error (error, G_FILE_ERROR,
-                     g_file_error_from_errno (err),
-                     "could not read magic");
+        *is_gws = FALSE;
         close (fd);
         return NULL;
     }
 
     if (memcmp (buf, GGAP_FILE_HEADER, GGAP_FILE_HEADER_LEN) != 0)
     {
-        if (memcmp (buf, GGAP_FILE_MAGIC, GGAP_FILE_MAGIC_LEN) == 0)
-        {
-            g_set_error (error, GGAP_FILE_ERROR,
-                         GGAP_FILE_ERROR_BAD_VERSION,
-                         "bad version");
-        }
-        else
-        {
-            g_set_error (error, GGAP_FILE_ERROR,
-                         GGAP_FILE_ERROR_BAD_DATA,
-                         "bad magic");
-        }
-
+        g_set_error (error, GGAP_FILE_ERROR,
+                     GGAP_FILE_ERROR_BAD_VERSION,
+                     "bad version");
         close (fd);
         return NULL;
     }
@@ -507,12 +498,13 @@ open_file_r (const char  *filename,
 static gzFile
 gap_file_open_r (const char *filename,
                  guint      *n_files,
+                 gboolean   *is_gws,
                  GError    **error)
 {
     gzFile file;
     guint32 n_files_be;
 
-    if (!(file = open_file_r (filename, error)))
+    if (!(file = open_file_r (filename, is_gws, error)))
         return NULL;
 
     if (gzread (file, &n_files_be, 4) != 4)
@@ -615,30 +607,68 @@ gap_file_eof (gzFile file)
     return FALSE;
 }
 
+static gboolean
+gap_file_load_text (const char  *filename,
+                    char       **text_p,
+                    gsize       *text_len_p,
+                    GError     **error)
+{
+    char *text;
+    gsize text_len;
+
+    g_return_val_if_fail (!error || !*error, FALSE);
+
+    if (!g_file_get_contents (filename, &text, &text_len, error))
+        return FALSE;
+
+    if (!g_utf8_validate (text, text_len, NULL))
+    {
+        g_set_error (error, GGAP_FILE_ERROR,
+                     GGAP_FILE_ERROR_BAD_DATA,
+                     "Invalid UTF-8");
+        return FALSE;
+    }
+
+    *text_p = text;
+    *text_len_p = text_len;
+    return TRUE;
+}
+
 gboolean
-ggap_file_unpack (const char *filename,
-                  char      **text_p,
-                  gsize      *text_len_p,
-                  char      **binary_file_p,
-                  GError    **error)
+ggap_file_load (const char  *filename,
+                GapFileType *type,
+                char       **text_p,
+                gsize       *text_len_p,
+                char       **binary_file_p,
+                GError     **error)
 {
     gzFile file;
     char *binary_file = NULL;
     char *text = NULL;
     gsize text_len;
     guint n_files;
+    gboolean is_gws;
 
     g_return_val_if_fail (filename != NULL, FALSE);
     g_return_val_if_fail (text_p != NULL, FALSE);
     g_return_val_if_fail (text_len_p != NULL, FALSE);
     g_return_val_if_fail (binary_file_p != NULL, FALSE);
+    g_return_val_if_fail (!error || !*error, FALSE);
 
     *text_p = NULL;
     *text_len_p = 0;
     *binary_file_p = NULL;
+    *type = GAP_FILE_WORKSHEET;
 
-    if (!(file = gap_file_open_r (filename, &n_files, error)))
-        return FALSE;
+    if (!(file = gap_file_open_r (filename, &n_files, &is_gws, error)))
+    {
+        if (is_gws)
+            return FALSE;
+        if (!gap_file_load_text (filename, text_p, text_len_p, error))
+            return FALSE;
+        *type = GAP_FILE_TEXT;
+        return TRUE;
+    }
 
     if (n_files != 1 && n_files != 2)
         goto error;

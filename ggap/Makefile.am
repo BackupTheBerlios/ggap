@@ -56,6 +56,7 @@ editor_sources =			\
 
 ggap_SOURCES =				\
 	$(ws_sources)			\
+	$(editor_sources)		\
 	gapwswindow-ui.h		\
 	gaptermwindow-ui.h		\
 	gap.c				\
@@ -76,7 +77,6 @@ ggap_SOURCES =				\
 	gapterm.h			\
 	gaptermwindow.c			\
 	gaptermwindow.h			\
-	gapprefs-glade.h		\
 	ggap-credits.h
 
 gapparser-yacc.h: gapparser-yacc.c
@@ -97,14 +97,13 @@ ggap_res.res:
 	echo dummy > ggap_res.res
 endif ! MOO_OS_MINGW
 
-EXTRA_DIST =		\
-    $(editor_sources)	\
-    ggap_res.rc.in	\
-    gaptermwindow-ui.xml\
-    gapwswindow-ui.xml	\
-    gapparser-yacc.y	\
-    glade/gapprefs.glade\
-    glade/usermenu.glade\
+EXTRA_DIST =			\
+    $(editor_sources)		\
+    ggap_res.rc.in		\
+    gaptermwindow-ui.xml	\
+    gapwswindow-ui.xml		\
+    gapparser-yacc.y		\
+    glade/usermenu.glade	\
     ggap.xml.in
 
 BUILT_SOURCES =			\
@@ -112,7 +111,6 @@ BUILT_SOURCES =			\
 	gapparser-yacc.h	\
 	gaptermwindow-ui.h	\
 	gapwswindow-ui.h	\
-	gapprefs-glade.h	\
 	ggap.c			\
 	ggap-credits.h
 
@@ -129,9 +127,15 @@ gaptermwindow-ui.h: gaptermwindow-ui.xml $(XML2H)
 	sh $(XML2H) GAP_TERM_WINDOW_UI $(srcdir)/gaptermwindow-ui.xml > gaptermwindow-ui.h.tmp && \
 	mv gaptermwindow-ui.h.tmp gaptermwindow-ui.h
 
-gapprefs-glade.h: glade/gapprefs.glade $(XML2H)
-	sh $(XML2H) GAP_PREFS_GLADE_UI $(srcdir)/glade/gapprefs.glade > gapprefs-glade.h
-
+%-glade.h: glade/%.glade $(XML2H)
+	$(SHELL) $(XML2H) `basename "$*" | sed -e "s/-/_/"`_glade_xml $< > $@.tmp && mv $@.tmp $@
+glade_files =				\
+	glade/gapprefs.glade
+glade_sources = $(patsubst glade/%.glade,%-glade.h,$(glade_files))
+ggap_SOURCES += $(glade_sources)
+BUILT_SOURCES += $(glade_sources)
+CLEANFILES += $(glade_sources)
+EXTRA_DIST += $(glade_files)
 
 packagesdir = $(mimedir)/packages
 packages_DATA = ggap.xml

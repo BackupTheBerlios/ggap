@@ -74,16 +74,22 @@ void        moo_worksheet_write_error_len       (MooWorksheet   *ws,
                                                  const char     *string,
                                                  gssize          len);
 
-gboolean    moo_worksheet_load                  (MooWorksheet   *ws,
+gboolean    moo_worksheet_load_xml              (MooWorksheet   *ws,
                                                  const char     *text,
                                                  gsize           text_len,
                                                  GError        **error);
 char       *moo_worksheet_format                (MooWorksheet   *ws);
+char       *moo_worksheet_get_input_text        (MooWorksheet   *ws);
 
 void       _moo_worksheet_history_next          (MooWorksheet   *ws);
 void       _moo_worksheet_history_prev          (MooWorksheet   *ws);
 gboolean   _moo_worksheet_commit_input          (MooWorksheet   *ws);
 gboolean   _moo_worksheet_get_allow_multiline   (MooWorksheet   *ws);
+
+MooWsBlock *moo_worksheet_create_prompt_block   (MooWorksheet   *ws,
+                                                 const char     *ps,
+                                                 const char     *ps2,
+                                                 const char     *text);
 
 
 G_END_DECLS

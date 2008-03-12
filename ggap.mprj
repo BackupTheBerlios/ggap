@@ -42,10 +42,11 @@
   </optimized>
  </configurations>
  <run>
-  <args>--fancy</args>
+  <args/>
   <exe>ggap/ggap</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
+   <var name="MOO_DEBUG">gap</var>
   </vars>
  </run>
 </medit-project>

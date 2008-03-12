@@ -1,7 +1,7 @@
 /*
  *   gap.c
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -222,7 +222,7 @@ gap_parse_cmd_line (const char *command_line,
 #endif
 
 
-static char *
+char *
 gap_saved_workspace_filename (gboolean fancy)
 {
     if (fancy)

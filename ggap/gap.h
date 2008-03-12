@@ -1,7 +1,7 @@
 /*
  *   gap.h
  *
- *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -41,6 +41,8 @@ char        *ggap_pkg_exec_command  (guint       stamp,
                                      const char *args);
 
 char        *gap_cmd_save_workspace (const char *filename);
+
+char        *gap_saved_workspace_filename (gboolean fancy);
 
 
 #define GGAP_DTC_FIXED      'f'

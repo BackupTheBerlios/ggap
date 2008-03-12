@@ -77,8 +77,7 @@ struct _GapWorksheetPrivate {
     GapCommandInfo *cmd_info;
 
     gboolean loaded;
-    MdDocumentStatus status;
-    MdFileInfo *file_info;
+    GapFileType file_type;
 };
 
 
@@ -329,6 +328,8 @@ gap_worksheet_init (GapWorksheet *ws)
     ws->priv->in_stderr = FALSE;
     ws->priv->width = -1;
     ws->priv->height = -1;
+
+    ws->priv->file_type = GAP_FILE_WORKSHEET;
 
     md_document_set_capabilities (MD_DOCUMENT (ws),
                                   MD_DOCUMENT_SUPPORTS_SAVE);
@@ -1085,6 +1086,54 @@ _gap_worksheet_set_size (GapWorksheet *ws,
 }
 
 
+static gboolean
+gap_worksheet_load_text (GapWorksheet *ws,
+                         const char   *text,
+                         gsize         text_len)
+{
+    MooWsBlock *block;
+    GString *buf;
+    MooLineReader lr;
+    const char *line;
+    gsize line_len;
+
+    buf = g_string_new (NULL);
+
+    for (moo_line_reader_init (&lr, text, text_len);
+         (line = moo_line_reader_get_line (&lr, &line_len, NULL)); )
+    {
+        guint i;
+        struct {const char *str; gsize len;} pr[] = {{"gap> ", 5}, {"> ", 2}};
+
+        while (line_len)
+        {
+            gboolean got_prompt = FALSE;
+
+            for (i = 0; i < G_N_ELEMENTS (pr); ++i)
+                if (line_len >= pr[i].len && strncmp (text, pr[i].str, pr[i].len) == 0)
+                {
+                    line_len -= pr[i].len;
+                    line += pr[i].len;
+                    got_prompt = TRUE;
+                }
+
+            if (!got_prompt)
+                break;
+        }
+
+        if (buf->len)
+            g_string_append_c (buf, '\n');
+        g_string_append_len (buf, line, line_len);
+    }
+
+    moo_worksheet_reset (MOO_WORKSHEET (ws));
+    block = moo_worksheet_create_prompt_block (MOO_WORKSHEET (ws), "gap> ", "> ", buf->str);
+    moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
+
+    g_string_free (buf, TRUE);
+    return TRUE;
+}
+
 static void
 gap_worksheet_load_file (MdDocument   *doc,
                          MdFileInfo   *file_info,
@@ -1095,6 +1144,8 @@ gap_worksheet_load_file (MdDocument   *doc,
     char *workspace_file;
     GError *error = NULL;
     char *filename;
+    GapFileType type;
+    gboolean result;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
     if (!(filename = md_file_info_get_filename (file_info)))
@@ -1104,22 +1155,37 @@ gap_worksheet_load_file (MdDocument   *doc,
         return;
     }
 
-    if (!ggap_file_unpack (filename, &text, &text_len, &workspace_file, &error))
+    if (!ggap_file_load (filename, &type, &text, &text_len, &workspace_file, &error))
     {
         g_free (filename);
         md_file_op_info_take_error (op_info, error);
         return;
     }
 
-    moo_dprint ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
-    moo_dprint ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+    if (type == GAP_FILE_WORKSHEET)
+    {
+        moo_dprint ("xml: %d\n%.*s\n", (int) text_len, (int) text_len, text);
+        moo_dprint ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+    }
+    else
+    {
+        moo_dprint ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
+    }
 
-    if (!moo_worksheet_load (MOO_WORKSHEET (ws), text, text_len, &error))
+    if (type == GAP_FILE_WORKSHEET)
+        result = moo_worksheet_load_xml (MOO_WORKSHEET (ws), text, text_len, &error);
+    else
+        result = gap_worksheet_load_text (ws, text, text_len);
+
+    if (!result)
     {
         g_free (filename);
         md_file_op_info_take_error (op_info, error);
         return;
     }
+
+    gap_file_info_set_file_type (file_info, type);
+    ws->priv->file_type = type;
 
     gap_worksheet_kill_child (ws);
     gap_worksheet_start_gap (ws, workspace_file);
@@ -1129,6 +1195,43 @@ gap_worksheet_load_file (MdDocument   *doc,
     g_free (text);
     g_free (workspace_file);
     g_free (filename);
+}
+
+
+GapFileType
+gap_worksheet_get_file_type (GapWorksheet *ws)
+{
+    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), 0);
+    return ws->priv->file_type;
+}
+
+GapFileType
+gap_file_info_get_file_type (MdFileInfo *file_info,
+                             GapFileType dflt)
+{
+    const char *s;
+
+    g_return_val_if_fail (file_info != NULL, 0);
+
+    if (!(s = md_file_info_get (file_info, "gap-file-type")))
+        return dflt;
+    else if (strcmp (s, "text") == 0)
+        return GAP_FILE_TEXT;
+    else if (strcmp (s, "worksheet") == 0)
+        return GAP_FILE_TEXT;
+
+    g_warning ("%s: invalid file type string '%s'", G_STRFUNC, s);
+    return dflt;
+}
+
+void
+gap_file_info_set_file_type (MdFileInfo *file_info,
+                             GapFileType type)
+{
+    if (type == GAP_FILE_TEXT)
+        md_file_info_set (file_info, "gap-file-type", "text");
+    else
+        md_file_info_set (file_info, "gap-file-type", NULL);
 }
 
 
@@ -1307,6 +1410,34 @@ gap_worksheet_save_workspace (GapWorksheet  *ws,
 }
 
 static void
+gap_worksheet_save_text (GapWorksheet *ws,
+                         MdFileInfo   *file_info,
+                         MdFileOpInfo *op_info)
+{
+    char *filename;
+    char *text;
+    GError *error = NULL;
+
+    if (!(filename = md_file_info_get_filename (file_info)))
+    {
+        md_file_op_info_set_error (op_info, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
+                                   "Failed");
+        g_return_if_fail (filename != NULL);
+    }
+
+    gap_file_info_get_file_type (file_info, GAP_FILE_TEXT);
+    text = moo_worksheet_get_input_text (MOO_WORKSHEET (ws));
+
+    if (!g_file_set_contents (filename, text, -1, &error))
+        md_file_op_info_take_error (op_info, error);
+    else
+        op_info->status = MD_FILE_OP_STATUS_SUCCESS;
+
+    g_free (text);
+    g_free (filename);
+}
+
+static void
 gap_worksheet_save_file (MdDocument   *doc,
                          MdFileInfo   *file_info,
                          MdFileOpInfo *op_info)
@@ -1318,20 +1449,18 @@ gap_worksheet_save_file (MdDocument   *doc,
     char *filename;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
+    if (gap_file_info_get_file_type (file_info, ws->priv->file_type) == GAP_FILE_TEXT)
+    {
+        gap_worksheet_save_text (ws, file_info, op_info);
+        return;
+    }
+
     if (!(ws->priv->gap_state == GAP_DEAD || ws->priv->gap_state == GAP_IN_PROMPT))
     {
         md_file_op_info_set_error (op_info, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
                                    "Failed");
         g_return_if_fail (ws->priv->gap_state == GAP_DEAD ||
                           ws->priv->gap_state == GAP_IN_PROMPT);
-    }
-
-
-    if (save_workspace && ws->priv->gap_state != GAP_DEAD &&
-        !gap_worksheet_save_workspace (ws, &workspace, &error))
-    {
-        md_file_op_info_take_error (op_info, error);
-        return;
     }
 
     if (!(filename = md_file_info_get_filename (file_info)))
@@ -1341,9 +1470,18 @@ gap_worksheet_save_file (MdDocument   *doc,
         g_return_if_fail (filename != NULL);
     }
 
+    if (save_workspace && ws->priv->gap_state != GAP_DEAD &&
+        !gap_worksheet_save_workspace (ws, &workspace, &error))
+    {
+        md_file_op_info_take_error (op_info, error);
+        g_free (filename);
+        return;
+    }
+
+    gap_file_info_get_file_type (file_info, GAP_FILE_WORKSHEET);
     markup = moo_worksheet_format (MOO_WORKSHEET (ws));
 
-    if (!ggap_file_pack (markup, workspace, filename, &error))
+    if (!ggap_file_save_xml (markup, workspace, filename, &error))
         md_file_op_info_take_error (op_info, error);
     else
         op_info->status = MD_FILE_OP_STATUS_SUCCESS;

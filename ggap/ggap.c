@@ -52,6 +52,7 @@ extract_file (const char *filename)
     char *text = NULL;
     gsize text_len = 0;
     char *workspace = NULL;
+    GapFileType type;
 
     if (g_file_test ("worksheet.xml", G_FILE_TEST_EXISTS))
     {
@@ -65,12 +66,18 @@ extract_file (const char *filename)
         exit (EXIT_FAILURE);
     }
 
-    if (!ggap_file_unpack (filename, &text, &text_len, &workspace, &error))
+    if (!ggap_file_load (filename, &type, &text, &text_len, &workspace, &error))
     {
         if (error)
             g_printerr ("%s\n", error->message);
         else
             g_printerr ("Failed\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (type != GAP_FILE_WORKSHEET)
+    {
+        g_printerr ("A text file\n");
         exit (EXIT_FAILURE);
     }
 

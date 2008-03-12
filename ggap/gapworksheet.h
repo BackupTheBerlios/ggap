@@ -15,6 +15,7 @@
 #define GAP_WORKSHEET_H
 
 #include "moows/mooworksheet.h"
+#include <mooui/mddocument.h>
 
 G_BEGIN_DECLS
 
@@ -40,6 +41,11 @@ typedef enum {
     GAP_BUSY_INTERNAL
 } GapState;
 
+typedef enum {
+    GAP_FILE_WORKSHEET,
+    GAP_FILE_TEXT
+} GapFileType;
+
 struct _GapWorksheet
 {
     MooWorksheet base;
@@ -54,6 +60,13 @@ struct _GapWorksheetClass
 
 GType       gap_worksheet_get_type              (void) G_GNUC_CONST;
 GType       gap_state_get_type                  (void) G_GNUC_CONST;
+
+GapFileType gap_worksheet_get_file_type         (GapWorksheet   *ws);
+
+void        gap_file_info_set_file_type         (MdFileInfo     *file_info,
+                                                 GapFileType     type);
+GapFileType gap_file_info_get_file_type         (MdFileInfo     *file_info,
+                                                 GapFileType     dflt);
 
 void       _gap_worksheet_set_size              (GapWorksheet   *ws,
                                                  int             width,
