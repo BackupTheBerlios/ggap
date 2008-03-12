@@ -15,6 +15,7 @@
 #define MOO_WORKSHEET_H
 
 #include <moows/moowsbuffer.h>
+#include <mooutils/mooutils-file.h>
 
 G_BEGIN_DECLS
 
@@ -78,7 +79,8 @@ gboolean    moo_worksheet_load_xml              (MooWorksheet   *ws,
                                                  const char     *text,
                                                  gsize           text_len,
                                                  GError        **error);
-char       *moo_worksheet_format                (MooWorksheet   *ws);
+gboolean    moo_worksheet_format                (MooWorksheet   *ws,
+                                                 MooFileWriter  *writer);
 char       *moo_worksheet_get_input_text        (MooWorksheet   *ws);
 
 void       _moo_worksheet_history_next          (MooWorksheet   *ws);

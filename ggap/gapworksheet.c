@@ -1442,7 +1442,7 @@ gap_worksheet_save_file (MdDocument   *doc,
                          MdFileInfo   *file_info,
                          MdFileOpInfo *op_info)
 {
-    char *markup;
+    MooFileWriter *writer;
     char *workspace = NULL;
     gboolean save_workspace = TRUE;
     GError *error = NULL;
@@ -1479,14 +1479,16 @@ gap_worksheet_save_file (MdDocument   *doc,
     }
 
     gap_file_info_get_file_type (file_info, GAP_FILE_WORKSHEET);
-    markup = moo_worksheet_format (MOO_WORKSHEET (ws));
+    writer = moo_string_writer_new ();
+    moo_worksheet_format (MOO_WORKSHEET (ws), writer);
 
-    if (!ggap_file_save_xml (markup, workspace, filename, &error))
+    if (!ggap_file_save_xml (moo_string_writer_get_string (writer, NULL),
+                             workspace, filename, &error))
         md_file_op_info_take_error (op_info, error);
     else
         op_info->status = MD_FILE_OP_STATUS_SUCCESS;
 
-    g_free (markup);
+    g_object_unref (writer);
     g_free (filename);
 }
 

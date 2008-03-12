@@ -11,7 +11,7 @@
   <debug>
    <build_dir>build/debug</build_dir>
    <configure>
-    <args>--enable-debug --enable-all-warnings</args>
+    <args>--enable-debug --enable-all-warnings --prefix=/home/muntyan/soft</args>
     <vars>
      <var name="CFLAGS">-g</var>
      <var name="OBJCFLAGS">-g</var>
@@ -42,11 +42,11 @@
   </optimized>
  </configurations>
  <run>
-  <args/>
+  <args>--fancy</args>
   <exe>ggap/ggap</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
-   <var name="MOO_DEBUG">gap</var>
+   <var name="MOO_DEBUGG">misc,gap,gap-file</var>
   </vars>
  </run>
 </medit-project>

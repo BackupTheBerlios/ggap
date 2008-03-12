@@ -776,15 +776,16 @@ error:
 }
 
 
-char *
-moo_worksheet_format (MooWorksheet *ws)
+gboolean
+moo_worksheet_format (MooWorksheet  *ws,
+                      MooFileWriter *writer)
 {
     MooMarkupDoc *doc;
     MooMarkupNode *root, *content;
     MooWsBlock *block;
-    char *markup;
+    gboolean retval;
 
-    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
+    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), FALSE);
 
     doc = moo_markup_doc_new ("moo-worksheet");
     root = moo_markup_create_root_element (doc, ELM_WORKSHEET);
@@ -832,9 +833,9 @@ moo_worksheet_format (MooWorksheet *ws)
         }
     }
 
-    markup = moo_markup_format_pretty (doc, 2);
+    retval = moo_markup_write_pretty (doc, writer, 2);
     moo_markup_doc_unref (doc);
-    return markup;
+    return retval;
 }
 
 char *
