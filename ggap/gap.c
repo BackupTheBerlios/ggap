@@ -71,11 +71,6 @@ gap_cmd_save_workspace (const char *filename)
 "  $GGAP_INIT(\"%s\");\n"                   \
 "fi;\n"
 
-#undef NEED_INIT_PKG
-#if 1
-#define NEED_INIT_PKG
-#endif
-
 static const char *
 gap_init_file (const char *workspace,
                gboolean    fancy)
@@ -85,10 +80,6 @@ gap_init_file (const char *workspace,
     gboolean init_pkg = fancy;
 
     static char *filename;
-
-#ifdef NEED_INIT_PKG
-    init_pkg = TRUE;
-#endif
 
     if (filename)
     {
