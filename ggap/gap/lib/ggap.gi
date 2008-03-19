@@ -246,8 +246,15 @@ end);
 ##  $GGAP_INIT()
 ##
 BindGlobal("$GGAP_INIT",
-function(fancy)
-  local reset_data;
+function(arg)
+  local reset_data, version, this_version;
+
+  version := arg[1];
+  this_version := PackageInfo("ggap")[1].Version;
+
+  if version <> this_version then
+    # XXX what then?
+  fi;
 
   reset_data := function()
     $GGAP_DATA.init := false;
@@ -264,9 +271,8 @@ function(fancy)
     Info(InfoGGAP, 3, "Initializing GGAP package");
   fi;
 
-  $GGAP_INIT_FANCY(fancy);
-  $GGAP_DATA.fancy := fancy;
-  Info(InfoGGAP, 3, "# fancy: ", fancy);
+  $GGAP_INIT_FANCY(true);
+  $GGAP_DATA.fancy := true;
 
   $GGAP_DATA.init := true;
 end);

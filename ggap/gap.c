@@ -11,6 +11,7 @@
  *   See COPYING file that comes with this distribution.
  */
 
+#include "config.h"
 #include "gap.h"
 #include "gapapp.h"
 #include "mooutils/mooutils-fs.h"
@@ -67,7 +68,7 @@ gap_cmd_save_workspace (const char *filename)
 
 #define INIT_PKG                            \
 "if IsBoundGlobal(\"$GGAP_INIT\") then\n"   \
-"  $GGAP_INIT(%s);\n"                       \
+"  $GGAP_INIT(\"%s\");\n"                   \
 "fi;\n"
 
 #undef NEED_INIT_PKG
@@ -91,7 +92,7 @@ gap_init_file (const char *workspace,
 
     if (filename)
     {
-        if (_moo_unlink (filename))
+        if (_moo_unlink (filename) != 0)
         {
             int err = errno;
             g_warning ("%s: %s", G_STRLOC, g_strerror (err));
@@ -109,7 +110,7 @@ gap_init_file (const char *workspace,
     contents = g_string_new (NULL);
 
     if (init_pkg)
-        g_string_append_printf (contents, INIT_PKG, fancy ? "true" : "false");
+        g_string_append_printf (contents, INIT_PKG, GGAP_VERSION);
 
     /* FIRST load package, then save workspace */
     if (workspace)
