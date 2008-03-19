@@ -9,208 +9,259 @@
 %parse-param    {GapParser *parser}
 %locations
 
-%token TOK_REC
-%token TOK_LOCAL TOK_FUNCTION TOK_END TOK_MAPTO
-%token TOK_FOR TOK_IN TOK_DO TOK_OD TOK_WHILE TOK_REPEAT TOK_UNTIL
-%token TOK_IF TOK_THEN TOK_ELSE TOK_ELIF TOK_FI
-%token TOK_RETURN TOK_BREAK TOK_QUIT TOK_QUIT_CAP
-%token TOK_FALSE TOK_TRUE
+%token TOK_REC              "rec"
+%token TOK_LOCAL            "local"
+%token TOK_FUNCTION         "function"
+%token TOK_END              "end"
+%token TOK_MAPTO            "->"
+%token TOK_FOR              "for"
+%token TOK_IN               "in"
+%token TOK_DO               "do"
+%token TOK_OD               "od"
+%token TOK_WHILE            "while"
+%token TOK_REPEAT           "repeat"
+%token TOK_UNTIL            "until"
+%token TOK_IF               "if"
+%token TOK_THEN             "then"
+%token TOK_ELSE             "else"
+%token TOK_ELIF             "elif"
+%token TOK_FI               "fi"
+%token TOK_RETURN           "return"
+%token TOK_BREAK            "break"
+%token TOK_QUIT             "quit"
+%token TOK_QUIT_CAP         "QUIT"
+%token TOK_FALSE            "false"
+%token TOK_TRUE             "true"
 
-%token TOK_IDENTIFIER
+%token TOK_SAVE_WORKSPACE   "SaveWorkspace"
 
-%token TOK_CHAR_LITERAL     // 'a'
-%token TOK_STRING_LITERAL   // "wefwef"
-%token TOK_INTEGER
+%token TOK_IDENTIFIER       "identifier"
+%token TOK_CHAR_LITERAL     "character" // 'a'
+%token TOK_STRING_LITERAL   "string"    // "wefwef"
+%token TOK_INTEGER          "integer"
 
-%token TOK_ASSIGN           // :=
-%token TOK_REP_REC_ELM      // !.
-%token TOK_REP_LIST_ELM     // ![]
-%token TOK_TWO_DOTS         // ..
+%token TOK_ASSIGN           ":="
+%token TOK_REP_REC_ELM      "!."
+%token TOK_REP_LIST_ELM     "!["
+%token TOK_TWO_DOTS         ".."
 
-%token TOK_LEQ              // <=
-%token TOK_GEQ              // >=
-%token TOK_NEQ              // <>
-%token TOK_MOD
+%token TOK_LEQ              "<="
+%token TOK_GEQ              ">="
+%token TOK_NEQ              "<>"
+%token TOK_MOD              "mod"
 
-%token TOK_NOT
-%token TOK_AND
-%token TOK_OR
+%token TOK_NOT              "not"
+%token TOK_AND              "and"
+%token TOK_OR               "or"
 
 %%
 
-Program:        /* empty */
-        |       non_empty_program
-;
-non_empty_program:
-                ';'
-        |       non_empty_program ';'
-        |       non_empty_program Statement ';'
-        |       Statement ';'
-;
-Statement:      Expression
-        |       Assignment
-        |       Loop
-        |       Conditional
- 	| 	TOK_RETURN
-        |       TOK_RETURN Expression
-	| 	TOK_BREAK
-	| 	TOK_QUIT
-	| 	TOK_QUIT_CAP
-        |       error
-;
+Program
+        : /* empty */
+        | non_empty_program
+        ;
+non_empty_program
+        : ';'
+        | non_empty_program ';'
+        | non_empty_program statement ';'
+        | statement ';'
+        ;
+statement
+        : expression
+        | Assignment
+        | Loop
+        | Conditional
+ 	| "return"
+        | "return" expression
+	| "break"
+	| "quit"
+	| "QUIT"
+        | error
+        | save_workspace
+        ;
 
-ShortFunction:  TOK_IDENTIFIER TOK_MAPTO Expression
-;
-Function:       TOK_FUNCTION '(' funcdef_args ')'
-                    funcdef_local
-                    Program
-                TOK_END
-;
-funcdef_local:  /* empty */
-        |       TOK_LOCAL funcdef_arglist ';'
-;
-funcdef_args:   /* empty */
-        |       funcdef_arglist
-;
-funcdef_arglist:
-                TOK_IDENTIFIER
-        |       funcdef_arglist ',' TOK_IDENTIFIER
-;
+ShortFunction
+        : TOK_IDENTIFIER "->" expression
+        ;
+Function
+        : "function" '(' funcdef_args ')'
+            funcdef_local
+            Program
+          "end"
+        ;
+funcdef_local
+        : /* empty */
+        | "local" funcdef_arglist ';'
+        ;
+funcdef_args
+        : /* empty */
+        | funcdef_arglist
+        ;
+funcdef_arglist
+        : TOK_IDENTIFIER
+        | funcdef_arglist ',' TOK_IDENTIFIER
+        ;
 
-Loop:           TOK_FOR Lvalue TOK_IN Expression TOK_DO Program TOK_OD
-        |       TOK_WHILE Expression TOK_DO Program TOK_OD
-        |       TOK_REPEAT Program TOK_UNTIL Expression
-;
+Loop
+        : "for" Lvalue "in" expression "do" Program "od"
+        | "while" expression "do" Program "od"
+        | "repeat" Program "until" expression
+        ;
 
-Conditional:
-                TOK_IF Expression TOK_THEN Program TOK_FI
-        |       TOK_IF Expression TOK_THEN Program TOK_ELSE Program TOK_FI
-        |       TOK_IF Expression TOK_THEN Program elif_block TOK_FI
-        |       TOK_IF Expression TOK_THEN Program elif_block TOK_ELSE Program TOK_FI
-;
-elif_block:
-                TOK_ELIF Expression TOK_THEN Program
-        |       elif_block TOK_ELIF Expression TOK_THEN Program
-;
+Conditional
+        : "if" expression "then" Program "fi"
+        | "if" expression "then" Program "else" Program "fi"
+        | "if" expression "then" Program elif_block "fi"
+        | "if" expression "then" Program elif_block "else" Program "fi"
+        ;
+elif_block
+        : "elif" expression "then" Program
+        | elif_block "elif" expression "then" Program
+        ;
 
-Assignment:     Lvalue TOK_ASSIGN Expression
-;
+Assignment
+        : Lvalue ":=" expression
+        ;
 
-Lvalue:         '~'
-        |       TOK_IDENTIFIER
-	|       Lvalue '.' TOK_IDENTIFIER
-	|       Lvalue '.' TOK_INTEGER
-	|       Lvalue '.' '(' Expression ')'
-	|       Lvalue '[' Expression ']'
-	|       Lvalue '{' Expression '}'
-        |       FunctionCall
-	|       Lvalue TOK_REP_REC_ELM TOK_IDENTIFIER
-	|       Lvalue TOK_REP_REC_ELM '(' Expression ')'
-	|       Lvalue TOK_REP_LIST_ELM Expression ']'
-;
+Lvalue
+        : '~'
+        | TOK_IDENTIFIER
+	| Lvalue '.' TOK_IDENTIFIER
+	| Lvalue '.' TOK_INTEGER
+	| Lvalue '.' '(' expression ')'
+	| Lvalue '[' expression ']'
+	| Lvalue '{' expression '}'
+        | FunctionCall
+	| Lvalue "!." TOK_IDENTIFIER
+	| Lvalue "!." '(' expression ')'
+	| Lvalue "![" expression ']'
+        ;
 
-FunctionCall:   Lvalue '(' expr_list ')'
-        |       Lvalue '(' expr_list ':' func_opt_list ')'
-;
-func_opt_list:  TOK_IDENTIFIER
-        |       TOK_IDENTIFIER TOK_ASSIGN Expression
-        |       func_opt_list ',' TOK_IDENTIFIER
-        |       func_opt_list ',' TOK_IDENTIFIER TOK_ASSIGN Expression
-;
+FunctionCall
+        : Lvalue '(' expr_list ')'
+        | Lvalue '(' expr_list ':' func_opt_list ')'
+        ;
+func_opt_list
+        : TOK_IDENTIFIER
+        | TOK_IDENTIFIER ":=" expression
+        | func_opt_list ',' TOK_IDENTIFIER
+        | func_opt_list ',' TOK_IDENTIFIER ":=" expression
+        ;
 
-Expression:     ShortFunction
-        |       Logical
-;
+save_workspace
+        : "SaveWorkspace" '(' expression ')'
+        ;
 
-Logical:        And
-        |       Logical TOK_OR And
-;
+expression
+        : ShortFunction
+        | Logical
+        ;
 
-And:            Rel
-        |       And TOK_AND Rel
-;
+Logical
+        : And
+        | Logical "or" And
+        ;
 
-Rel:            Sum
-        |       Sum RelOp Sum
-        |       TOK_NOT Rel
-;
-RelOp: '=' | TOK_NEQ | '<' | '>' | TOK_LEQ | TOK_GEQ | TOK_IN;
+And
+        : Rel
+        | And "and" Rel
+        ;
 
-Sum:            Product
-        |       Sum SumOp Product
-;
+Rel
+        : Sum
+        | Sum RelOp Sum
+        | "not" Rel
+        ;
+RelOp: '=' | "<>" | '<' | '>' | "<=" | ">=" | "in";
+
+Sum
+        : Product
+        | Sum SumOp Product
+        ;
 SumOp: '+' | '-';
 
-Product:        Power
-        |       Product ProductOp Power
-;
-ProductOp: '*' | '/' | TOK_MOD;
+Product
+        : Power
+        | Product ProductOp Power
+        ;
+ProductOp: '*' | '/' | "mod";
 
-Power:          power_operand
-        |       power_operand '^' power_operand
-;
-power_operand:  Atom
-        |       '+' power_operand
-        |       '-' power_operand
-;
+Power
+        : power_operand
+        | power_operand '^' power_operand
+        ;
+power_operand
+        : Atom
+        | '+' power_operand
+        | '-' power_operand
+        ;
 
-Atom:           TOK_INTEGER
-	| 	Lvalue
-	| 	'(' Expression ')'
-	| 	Permutation
-	| 	TOK_CHAR_LITERAL
-	| 	TOK_STRING_LITERAL
-	| 	Function
-	| 	List
-	| 	Record
-        |       TOK_TRUE
-        |       TOK_FALSE
-;
+Atom
+        : TOK_INTEGER
+	| Lvalue
+	| '(' expression ')'
+	| Permutation
+	| TOK_CHAR_LITERAL
+	| TOK_STRING_LITERAL
+	| Function
+	| List
+	| Record
+        | "true"
+        | "false"
+        ;
 
 /* () and (1,2) are permutations, while (1) is an expression in parentheses */
-Permutation:    '(' perm_elms ')'
-        |       Permutation '(' perm_elms ')'
-;
-perm_elms:      /* empty */
-        |       Expression ',' non_empty_expr_list
-;
+Permutation
+        : '(' perm_elms ')'
+        | Permutation '(' perm_elms ')'
+        ;
+perm_elms
+        : /* empty */
+        | expression ',' non_empty_expr_list
+        ;
 
-List:           '[' Expression TOK_TWO_DOTS Expression ']'
-        |       '[' Expression ',' Expression TOK_TWO_DOTS Expression ']'
-        |       '[' ',' list_elms ']'
-        |       '[' Expression ',' ',' list_elms ']'
-        |       '[' Expression ',' Expression ',' list_elms ']'
-        |       '[' Expression ',' Expression ']'
-        |       '[' Expression ']'
-        |       '[' Expression ',' ']'
-        |       '[' ']'
-;
-list_elms:      expr_or_empty
-        |       list_elms ',' expr_or_empty
-;
-expr_or_empty:  /* empty */
-        |       Expression
-;
+List
+        : '[' expression ".." expression ']'
+        | '[' expression ',' expression TOK_TWO_DOTS expression ']'
+        | '[' ',' list_elms ']'
+        | '[' expression ',' ',' list_elms ']'
+        | '[' expression ',' expression ',' list_elms ']'
+        | '[' expression ',' expression ']'
+        | '[' expression ']'
+        | '[' expression ',' ']'
+        | '[' ']'
+        ;
+list_elms
+        : maybe_expression
+        | list_elms ',' maybe_expression
+        ;
+maybe_expression
+        : /* empty */
+        | expression
+        ;
 
-expr_list:      /* empty */
-        |       non_empty_expr_list
-;
-non_empty_expr_list:
-                Expression
-        |       non_empty_expr_list ',' Expression
-;
+expr_list
+        : /* empty */
+        | non_empty_expr_list
+        ;
+non_empty_expr_list
+        : expression
+        | non_empty_expr_list ',' expression
+        ;
 
-Record:         TOK_REC '(' rec_elms ')'
-;
-rec_elms:       /* empty */
-        |       non_empty_rec_elms
-        |       non_empty_rec_elms ','
-;
-non_empty_rec_elms:
-                ',' TOK_IDENTIFIER TOK_ASSIGN Expression
-        |       TOK_IDENTIFIER TOK_ASSIGN Expression
-        |       non_empty_rec_elms ',' TOK_IDENTIFIER TOK_ASSIGN Expression
-        |       non_empty_rec_elms ',' ',' TOK_IDENTIFIER TOK_ASSIGN Expression
+Record
+        : "rec" '(' rec_elms ')'
+        ;
+rec_elms
+        : /* empty */
+        | non_empty_rec_elms
+        | non_empty_rec_elms ','
+        ;
+non_empty_rec_elms
+        : ',' TOK_IDENTIFIER ":=" expression
+        | TOK_IDENTIFIER ":=" expression
+        | non_empty_rec_elms ',' TOK_IDENTIFIER ":=" expression
+        | non_empty_rec_elms ',' ',' TOK_IDENTIFIER ":=" expression
 ;
 
 %%

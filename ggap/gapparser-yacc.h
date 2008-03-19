@@ -62,21 +62,22 @@
      TOK_QUIT_CAP = 278,
      TOK_FALSE = 279,
      TOK_TRUE = 280,
-     TOK_IDENTIFIER = 281,
-     TOK_CHAR_LITERAL = 282,
-     TOK_STRING_LITERAL = 283,
-     TOK_INTEGER = 284,
-     TOK_ASSIGN = 285,
-     TOK_REP_REC_ELM = 286,
-     TOK_REP_LIST_ELM = 287,
-     TOK_TWO_DOTS = 288,
-     TOK_LEQ = 289,
-     TOK_GEQ = 290,
-     TOK_NEQ = 291,
-     TOK_MOD = 292,
-     TOK_NOT = 293,
-     TOK_AND = 294,
-     TOK_OR = 295
+     TOK_SAVE_WORKSPACE = 281,
+     TOK_IDENTIFIER = 282,
+     TOK_CHAR_LITERAL = 283,
+     TOK_STRING_LITERAL = 284,
+     TOK_INTEGER = 285,
+     TOK_ASSIGN = 286,
+     TOK_REP_REC_ELM = 287,
+     TOK_REP_LIST_ELM = 288,
+     TOK_TWO_DOTS = 289,
+     TOK_LEQ = 290,
+     TOK_GEQ = 291,
+     TOK_NEQ = 292,
+     TOK_MOD = 293,
+     TOK_NOT = 294,
+     TOK_AND = 295,
+     TOK_OR = 296
    };
 #endif
 /* Tokens.  */
@@ -103,21 +104,22 @@
 #define TOK_QUIT_CAP 278
 #define TOK_FALSE 279
 #define TOK_TRUE 280
-#define TOK_IDENTIFIER 281
-#define TOK_CHAR_LITERAL 282
-#define TOK_STRING_LITERAL 283
-#define TOK_INTEGER 284
-#define TOK_ASSIGN 285
-#define TOK_REP_REC_ELM 286
-#define TOK_REP_LIST_ELM 287
-#define TOK_TWO_DOTS 288
-#define TOK_LEQ 289
-#define TOK_GEQ 290
-#define TOK_NEQ 291
-#define TOK_MOD 292
-#define TOK_NOT 293
-#define TOK_AND 294
-#define TOK_OR 295
+#define TOK_SAVE_WORKSPACE 281
+#define TOK_IDENTIFIER 282
+#define TOK_CHAR_LITERAL 283
+#define TOK_STRING_LITERAL 284
+#define TOK_INTEGER 285
+#define TOK_ASSIGN 286
+#define TOK_REP_REC_ELM 287
+#define TOK_REP_LIST_ELM 288
+#define TOK_TWO_DOTS 289
+#define TOK_LEQ 290
+#define TOK_GEQ 291
+#define TOK_NEQ 292
+#define TOK_MOD 293
+#define TOK_NOT 294
+#define TOK_AND 295
+#define TOK_OR 296
 
 
 
