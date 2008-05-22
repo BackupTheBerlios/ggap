@@ -18,7 +18,6 @@
 #include "ggapfile.h"
 #include "gap.h"
 #include "gapwscompletion.h"
-#include "mooui/mdview.h"
 #include "mooui/mdfileops.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
@@ -56,7 +55,7 @@ typedef enum {
     INPUT_DATA_OUTPUT
 } InputDataType;
 
-struct _GapWorksheetPrivate {
+struct GapWorksheetPrivate {
     MooTermPt *pt;
     gboolean in_stderr;
     GapState gap_state;
@@ -380,11 +379,10 @@ gap_worksheet_close (MdDocument *doc)
 
 
 static GdkPixbuf *
-gap_worksheet_get_icon (G_GNUC_UNUSED MdDocument *doc,
-                        GtkWidget   *widget,
+gap_worksheet_get_icon (MdDocument  *doc,
                         GtkIconSize  size)
 {
-    return gtk_widget_render_icon (widget, GTK_STOCK_FILE, size, NULL);
+    return gtk_widget_render_icon (GTK_WIDGET (doc), GTK_STOCK_FILE, size, NULL);
 }
 
 static void

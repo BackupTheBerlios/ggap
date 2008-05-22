@@ -22,6 +22,7 @@ Makefile$
 ggap/.*\.example$
 \.orig$
 \.ggap\.mprj
+zmooui
 ^ggap/gap/doc/\.manual-stamp
 ^ggap/gap/doc/\.pdf-stamp$
 ^ggap/gap/doc/manual\.idx$

@@ -11,10 +11,9 @@
   <debug>
    <build_dir>build/debug</build_dir>
    <configure>
-    <args>--enable-debug --enable-all-warnings --prefix=/home/muntyan/soft</args>
+    <args>--enable-debug --enable-all-warnings --enable-unit-tests --prefix=$PREFIX</args>
     <vars>
      <var name="CFLAGS">-g</var>
-     <var name="OBJCFLAGS">-g</var>
     </vars>
    </configure>
   </debug>

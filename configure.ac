@@ -2,7 +2,7 @@
 # ggap/configure.ac
 #
 
-m4_define([ggap_version], [0.8.2])
+m4_define([ggap_version], [0.9.0])
 
 AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
 AM_INIT_AUTOMAKE
@@ -18,8 +18,6 @@ AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 MOO_AC_PROGS
-
-MOO_INTLTOOL_MERGE='$(top_srcdir)/moo/moo/mooutils/moo-intltool-merge'
 MOO_AC_I18N(ggap)
 
 ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
@@ -30,6 +28,10 @@ AC_SUBST(READLINE_LIBS)
 
 # remove this
 MOO_AC_FUNCS
+
+GETTEXT_PACKAGE=ggap
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Name of the gettext package.])
 
 zlib_missing=true
 AC_CHECK_HEADER([zlib.h],[
@@ -44,6 +46,7 @@ fi
 MOO_AC_CHECK_OS
 _MOO_AC_CONFIGARGS_H
 MOO_AC_DEBUG
+MOO_AC_TOOLS(moo/moo)
 
 MOO_PKG_CHECK_GTK_VERSIONS
 
@@ -109,13 +112,13 @@ AM_CONDITIONAL(USE_MOO_SUBDIR,[$USE_MOO_SUBDIR])
 AC_CONFIG_FILES([
 Makefile
 config.py
+moo-newdoc/mooui/Makefile
 ggap/Makefile
 ggap/ggap_res.rc
 ggap/gap/PackageInfo.g
 ggap/gap/init.g
 ggap/gap/Makefile
 ggap/moows/Makefile
-po/Makefile.in
 wininstaller/ggap.iss
 ])
 AC_OUTPUT

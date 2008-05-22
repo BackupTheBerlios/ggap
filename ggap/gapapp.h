@@ -14,7 +14,7 @@
 #ifndef GAP_APP_H
 #define GAP_APP_H
 
-#include <mooui/mdapp.h>
+#include <mooui/mooapp.h>
 
 G_BEGIN_DECLS
 
@@ -41,17 +41,17 @@ typedef struct GapAppClass   GapAppClass;
 
 struct GapApp
 {
-    MdApp base;
+    MooApp base;
     GapAppPrivate *priv;
 };
 
 struct GapAppClass
 {
-    MdAppClass base_class;
+    MooAppClass base_class;
 };
 
 
-#define GAP_APP_INSTANCE (GAP_APP (md_app_instance ()))
+#define GAP_APP_INSTANCE (GAP_APP (moo_app_instance ()))
 
 GType       gap_app_get_type                (void) G_GNUC_CONST;
 

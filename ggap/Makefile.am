@@ -16,11 +16,11 @@ AM_CFLAGS =				\
     -I$(top_builddir)			\
     -I$(top_builddir)/ggap		\
     -I$(top_srcdir)/ggap		\
+    -I$(top_srcdir)/moo-newdoc		\
     $(regex_cflags)			\
     $(MOO_CFLAGS)			\
     $(MOO_DEBUG_CFLAGS)			\
     $(GTK_CFLAGS)			\
-    -DGGAP_LOCALE_DIR=\"$(datadir)/locale\"	\
     -DDISABLE_OLD_STUFF
 AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
 

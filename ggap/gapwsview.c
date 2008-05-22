@@ -17,7 +17,6 @@
 #include "gapparser.h"
 #include "ggapfile.h"
 #include "gap.h"
-#include "mooui/mdview.h"
 #include "mooedit/mootextcompletion.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
@@ -35,8 +34,6 @@ struct GapWsViewPrivate {
     MooTextCompletion *completion;
 };
 
-
-static void     view_iface_init             (MdViewIface    *iface);
 
 static void     gap_ws_view_destroy         (GtkObject      *object);
 

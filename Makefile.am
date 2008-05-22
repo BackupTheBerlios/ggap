@@ -5,16 +5,13 @@ if USE_MOO_SUBDIR
 moo += moo
 endif USE_MOO_SUBDIR
 
-DIST_SUBDIRS = $(moo) ggap po
+DIST_SUBDIRS = $(moo) moo-newdoc/mooui ggap
 SUBDIRS = $(moo) .
+# SUBDIRS = .
 
 if !MOO_OS_CYGWIN
-SUBDIRS += ggap
+SUBDIRS += moo-newdoc/mooui ggap
 endif
-
-# if MOO_ENABLE_NLS
-# SUBDIRS += po
-# endif
 
 # if GGAP_BUILD_DOCS
 # if !MOO_OS_CYGWIN
@@ -32,17 +29,9 @@ EXTRA_DIST =            \
     scripts/ggap-full.sh\
     scripts/ggap.sh
 
-@MOO_PO_SUBDIRS_RULE@
-BUILT_SOURCES = po-subdirs-stamp
-
 ACLOCAL_AMFLAGS = -I moo/m4 $(ACLOCAL_FLAGS)
 
-DISTCLEANFILES =		\
-	configargs.h		\
-	intltool-extract	\
-	intltool-merge		\
-	intltool-update		\
-	po-subdirs-stamp
+DISTCLEANFILES = configargs.h
 
 desktopdir = $(datadir)/applications
 desktop_DATA = ggap.desktop

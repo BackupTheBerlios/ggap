@@ -29,9 +29,9 @@ G_BEGIN_DECLS
 
 #define GAP_TYPE_STATE                 (gap_state_get_type ())
 
-typedef struct _GapWorksheet        GapWorksheet;
-typedef struct _GapWorksheetPrivate GapWorksheetPrivate;
-typedef struct _GapWorksheetClass   GapWorksheetClass;
+typedef struct GapWorksheet        GapWorksheet;
+typedef struct GapWorksheetPrivate GapWorksheetPrivate;
+typedef struct GapWorksheetClass   GapWorksheetClass;
 
 typedef enum {
     GAP_DEAD = 0,
@@ -46,13 +46,13 @@ typedef enum {
     GAP_FILE_TEXT
 } GapFileType;
 
-struct _GapWorksheet
+struct GapWorksheet
 {
     MooWorksheet base;
     GapWorksheetPrivate *priv;
 };
 
-struct _GapWorksheetClass
+struct GapWorksheetClass
 {
     MooWorksheetClass base_class;
 };
