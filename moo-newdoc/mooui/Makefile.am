@@ -11,6 +11,8 @@ libmooui_la_SOURCES =		\
 	mddocument-private.h	\
 	mdenums.c		\
 	mdenums.h		\
+	mdfileops.c		\
+	mdfileops.h		\
 	mdmanager.c		\
 	mdmanager.h		\
 	mdmanager-private.h	\
@@ -41,6 +43,7 @@ enum_headers =			\
 	mdasyncop.h		\
 	mddialogs.h		\
 	mddocument.h		\
+	mdfileops.h		\
 	mdmanager.h		\
 	mdtypes.h		\
 	mdwindow.h
@@ -54,5 +57,17 @@ BUILT_SOURCES =
 CLEANFILES =
 EXTRA_DIST =
 include ../../moo/mk/enums.mk
-include ../../moo/mk/marshals.mk
 include ../../moo/mk/glade.mk
+
+# include ../../moo/mk/marshals.mk
+BUILT_SOURCES += marshals.c marshals.h
+nodist_libmooui_la_SOURCES = marshals.c marshals.h
+CLEANFILES += marshals.c marshals.h
+EXTRA_DIST += marshals.list
+marshals.c: marshals.list
+	glib-genmarshal --prefix=_moo_ui_marshal --header $(srcdir)/marshals.list > $@.tmp && \
+	glib-genmarshal --prefix=_moo_ui_marshal --body $(srcdir)/marshals.list >> $@.tmp && \
+	mv $@.tmp $@
+marshals.h: marshals.list
+	glib-genmarshal --prefix=_moo_ui_marshal --header $(srcdir)/marshals.list > $@.tmp && \
+	mv $@.tmp $@

@@ -28,9 +28,6 @@ void         _md_manager_remove_untitled        (MdManager      *mgr,
 
 void         _md_manager_action_close_window    (MdManager      *mgr,
                                                  MdWindow       *window);
-void         _md_manager_action_new_doc         (MdManager      *mgr,
-                                                 MdWindow       *window);
-void         _md_manager_action_new_window      (MdManager      *mgr);
 void         _md_manager_action_open            (MdManager      *mgr,
                                                  MdWindow       *window);
 void         _md_manager_action_open_uri        (MdManager      *mgr,

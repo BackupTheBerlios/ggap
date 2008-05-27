@@ -45,3 +45,6 @@ zmooui
 ^mkinstalldirs$
 ^po/(ggap\.pot|dist|pot)$
 ^moo$
+^xcode/ggap.xcodeproj/.*\.(pbxuser|mode1)$
+\.DS_Store
+-old/

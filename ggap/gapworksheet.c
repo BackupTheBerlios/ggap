@@ -13,11 +13,13 @@
 
 #include "ggap-i18n.h"
 #include "gapworksheet.h"
+#include "gapprocess.h"
 #include "gapapp.h"
 #include "gapparser.h"
 #include "ggapfile.h"
 #include "gap.h"
 #include "gapwscompletion.h"
+#include "ggap-enums.h"
 #include "mooui/mdfileops.h"
 #include "mooterm/mootermpt.h"
 #include "mooutils/mooutils-misc.h"
@@ -31,52 +33,18 @@
 
 MOO_DEBUG_INIT(gap, FALSE)
 
-typedef struct {
-    guint stamp;
-    GMainLoop *loop;
-    gboolean success;
-    gboolean destroyed;
-    char *output;
-    gboolean finished;
-} GapCommandInfo;
-
-typedef enum {
-    INPUT_NORMAL,
-    INPUT_MAYBE_MAGIC,
-    INPUT_DATA_TYPE,
-    INPUT_DATA_FIXED_LEN,
-    INPUT_DATA_FIXED,
-    INPUT_DATA_VAR,
-    INPUT_MAYBE_DATA_END
-} InputState;
-
-typedef enum {
-    INPUT_DATA_COMMAND,
-    INPUT_DATA_OUTPUT
-} InputDataType;
-
 struct GapWorksheetPrivate {
-    MooTermPt *pt;
-    gboolean in_stderr;
-    GapState gap_state;
+    GapProcess *proc;
     gboolean allow_error_break;
-
-    GString *input_buf;
-    GString *input_buf2;
-    gsize input_data_len;
-    InputState input_state;
-
-    int width;
-    int height;
 
     MooTextCompletion *completion;
     MooCompletionGroup *cmpl_group;
 
-    guint last_stamp;
-    GapCommandInfo *cmd_info;
-
-    gboolean loaded;
     GapFileType file_type;
+
+    int width;
+    int height;
+    guint resize_idle;
 };
 
 
@@ -86,7 +54,16 @@ static void     gap_worksheet_close             (MdDocument     *doc);
 static GObject *gap_worksheet_constructor       (GType           type,
                                                  guint           n_props,
                                                  GObjectConstructParam *props);
-static void     gap_worksheet_modified_changed  (GtkTextBuffer  *buffer);
+static void     gap_worksheet_dispose           (GObject        *object);
+static void     gap_worksheet_modified_changed  (GapWorksheet   *ws);
+
+static void     gap_worksheet_size_allocate     (GtkWidget      *widget,
+                                                 GtkAllocation  *allocation);
+static void     gap_worksheet_style_set         (GtkWidget      *widget,
+                                                 GtkStyle       *old_style);
+static void     gap_worksheet_realize           (GtkWidget      *widget);
+static gboolean gap_worksheet_key_press         (GtkWidget      *widget,
+                                                 GdkEventKey    *event);
 
 static void     gap_worksheet_process_input     (MooWorksheet   *mws,
                                                  char          **lines);
@@ -95,10 +72,6 @@ static gboolean gap_worksheet_fork_command      (GapWorksheet   *ws,
                                                  const char     *cmd_line,
                                                  GError        **error);
 static void     gap_worksheet_kill_child        (GapWorksheet   *ws);
-static gboolean gap_worksheet_child_alive       (GapWorksheet   *ws);
-
-static void     stop_running_command_loop       (GapCommandInfo *ci);
-static gboolean has_running_command_loop        (GapWorksheet   *ws);
 
 static void     gap_worksheet_load_file         (MdDocument     *doc,
                                                  MdFileInfo     *file_info,
@@ -108,12 +81,10 @@ static void     gap_worksheet_save_file         (MdDocument     *doc,
                                                  MdFileOpInfo   *op_info);
 
 static void     gap_worksheet_free_completion   (GapWorksheet   *ws);
-static void     gap_worksheet_add_globals       (GapWorksheet   *ws,
+static void     gap_globals_changed             (GapWorksheet   *ws,
                                                  const char     *data,
-                                                 gsize           data_len);
-static void     gap_worksheet_delete_globals    (GapWorksheet   *ws,
-                                                 const char     *data,
-                                                 gsize           data_len);
+                                                 guint           data_len,
+                                                 gboolean        added);
 
 
 /* GAP_TYPE_WORKSHEET */
@@ -183,7 +154,10 @@ gap_worksheet_get_property (GObject    *object,
             break;
 
         case PROP_GAP_STATE:
-            g_value_set_enum (value, ws->priv->gap_state);
+            if (ws->priv->proc)
+                g_value_set_enum (value, gap_process_get_state (ws->priv->proc));
+            else
+                g_value_set_enum (value, GAP_DEAD);
             break;
 
         case PROP_MD_DOC_FILE_INFO:
@@ -213,14 +187,19 @@ static void
 gap_worksheet_class_init (GapWorksheetClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
-    GtkTextBufferClass *buffer_class = GTK_TEXT_BUFFER_CLASS (klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
     MooWorksheetClass *ws_class = MOO_WORKSHEET_CLASS (klass);
 
     object_class->constructor = gap_worksheet_constructor;
     object_class->get_property = gap_worksheet_get_property;
     object_class->set_property = gap_worksheet_set_property;
+    object_class->dispose = gap_worksheet_dispose;
 
-    buffer_class->modified_changed = gap_worksheet_modified_changed;
+    widget_class->size_allocate = gap_worksheet_size_allocate;
+    widget_class->style_set = gap_worksheet_style_set;
+    widget_class->realize = gap_worksheet_realize;
+    widget_class->key_press_event = gap_worksheet_key_press;
+
     ws_class->process_input = gap_worksheet_process_input;
 
     g_signal_new ("gap-exited",
@@ -247,36 +226,11 @@ gap_worksheet_class_init (GapWorksheetClass *klass)
     g_type_class_add_private (klass, sizeof (GapWorksheetPrivate));
 }
 
-GType
-gap_state_get_type (void)
-{
-    static GType type;
-
-    if (G_UNLIKELY (!type))
-    {
-        static GEnumValue values[] = {
-            { GAP_DEAD, "GAP_DEAD", "dead" },
-            { GAP_IN_PROMPT, "GAP_IN_PROMPT", "in-prompt" },
-            { GAP_LOADING, "GAP_LOADING", "loading" },
-            { GAP_BUSY, "GAP_BUSY", "busy" },
-            { 0, NULL, NULL },
-        };
-        type = g_enum_register_static ("GapState", values);
-    }
-
-    return type;
-}
-
 
 static void
-set_state (GapWorksheet *ws,
-           GapState      state)
+gap_state_notify (GapWorksheet *ws)
 {
-    if (ws->priv && ws->priv->gap_state != state)
-    {
-        ws->priv->gap_state = state;
-        g_object_notify (G_OBJECT (ws), "gap-state");
-    }
+    g_object_notify (G_OBJECT (ws), "gap-state");
 }
 
 
@@ -297,7 +251,6 @@ gap_worksheet_start_gap (GapWorksheet *ws,
     g_return_val_if_fail (cmd_line != NULL, FALSE);
 
 //     moo_worksheet_reset (MOO_WORKSHEET (view));
-    ws->priv->loaded = FALSE;
 
     if (!gap_worksheet_fork_command (ws, cmd_line, &error))
     {
@@ -306,25 +259,29 @@ gap_worksheet_start_gap (GapWorksheet *ws,
         return FALSE;
     }
 
-    set_state (ws, GAP_LOADING);
-
     g_free (cmd_line);
     return TRUE;
 }
 
 
 static void
+gap_worksheet_dispose (GObject *object)
+{
+    GapWorksheet *ws = GAP_WORKSHEET (object);
+
+    if (ws->priv->resize_idle)
+        g_source_remove (ws->priv->resize_idle);
+    ws->priv->resize_idle = 0;
+
+    G_OBJECT_CLASS (gap_worksheet_parent_class)->dispose (object);
+}
+
+static void
 gap_worksheet_init (GapWorksheet *ws)
 {
     ws->priv = G_TYPE_INSTANCE_GET_PRIVATE (ws, GAP_TYPE_WORKSHEET, GapWorksheetPrivate);
 
-    ws->priv->input_buf = NULL;
-    ws->priv->input_buf2 = NULL;
-    ws->priv->input_data_len = 0;
-    ws->priv->input_state = INPUT_NORMAL;
-
-    ws->priv->pt = NULL;
-    ws->priv->in_stderr = FALSE;
+    ws->priv->proc = NULL;
     ws->priv->width = -1;
     ws->priv->height = -1;
 
@@ -336,10 +293,10 @@ gap_worksheet_init (GapWorksheet *ws)
 
 
 static void
-gap_worksheet_modified_changed (GtkTextBuffer *buffer)
+gap_worksheet_modified_changed (GapWorksheet *ws)
 {
-    md_document_set_modified (MD_DOCUMENT (buffer),
-                              gtk_text_buffer_get_modified (buffer));
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws));
+    md_document_set_modified (MD_DOCUMENT (ws), gtk_text_buffer_get_modified (buffer));
 }
 
 static GObject *
@@ -357,6 +314,10 @@ gap_worksheet_constructor (GType           type,
 
     md_document_set_modified (MD_DOCUMENT (object), FALSE);
 
+    g_signal_connect_swapped (gtk_text_view_get_buffer (GTK_TEXT_VIEW (object)),
+                              "modified-changed", G_CALLBACK (gap_worksheet_modified_changed),
+                              object);
+
     return object;
 }
 
@@ -366,31 +327,88 @@ gap_worksheet_close (MdDocument *doc)
 {
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
-    if (gap_worksheet_child_alive (ws))
+    if (ws->priv->proc)
         gap_worksheet_kill_child (ws);
-    if (ws->priv->input_buf)
-        g_string_free (ws->priv->input_buf, TRUE);
-    if (ws->priv->input_buf2)
-        g_string_free (ws->priv->input_buf2, TRUE);
+
     gap_worksheet_free_completion (ws);
 
     gap_worksheet_doc_parent_iface->close (doc);
 }
 
 
-static GdkPixbuf *
-gap_worksheet_get_icon (MdDocument  *doc,
-                        GtkIconSize  size)
+static gboolean
+resize_idle (GapWorksheet *ws)
 {
-    return gtk_widget_render_icon (GTK_WIDGET (doc), GTK_STOCK_FILE, size, NULL);
+    GtkAllocation *allocation = &GTK_WIDGET(ws)->allocation;
+
+    if (!GTK_WIDGET_REALIZED (ws) || allocation->width <= 1 || allocation->height <= 1)
+    {
+        ws->priv->width = -1;
+        ws->priv->height = -1;
+    }
+    else
+    {
+        PangoLayout *layout;
+        int width, height;
+
+        layout = gtk_widget_create_pango_layout (GTK_WIDGET (ws), " ");
+        pango_layout_get_pixel_size (layout, &width, &height);
+
+#define HOW_MANY(x__,y__) (((x__) + (y__) - 1) / (y__))
+        ws->priv->width = HOW_MANY (allocation->width, width);
+        ws->priv->height = HOW_MANY (allocation->height, height);
+#undef HOW_MANY
+
+        /* leave one char to make sure horizontal scrollbar won't appear */
+        ws->priv->width = MAX (ws->priv->width - 1, 10);
+        ws->priv->height = MAX (ws->priv->height, 10);
+        g_object_unref (layout);
+    }
+
+    if (ws->priv->proc)
+        gap_process_set_size (ws->priv->proc, ws->priv->width, ws->priv->height);
+
+    ws->priv->resize_idle = 0;
+    return FALSE;
 }
+
+static void
+queue_resize (GapWorksheet *ws)
+{
+    if (!ws->priv->resize_idle)
+        ws->priv->resize_idle = g_idle_add ((GSourceFunc) resize_idle, ws);
+}
+
+static void
+gap_worksheet_size_allocate (GtkWidget     *widget,
+                             GtkAllocation *allocation)
+{
+    GTK_WIDGET_CLASS (gap_worksheet_parent_class)->size_allocate (widget, allocation);
+    queue_resize (GAP_WORKSHEET (widget));
+}
+
+static void
+gap_worksheet_style_set (GtkWidget *widget,
+                         GtkStyle  *prev_style)
+{
+    GTK_WIDGET_CLASS (gap_worksheet_parent_class)->style_set (widget, prev_style);
+    queue_resize (GAP_WORKSHEET (widget));
+}
+
+static void
+gap_worksheet_realize (GtkWidget *widget)
+{
+    GTK_WIDGET_CLASS (gap_worksheet_parent_class)->realize (widget);
+    queue_resize (GAP_WORKSHEET (widget));
+}
+
 
 static void
 gap_worksheet_set_doc_status (MdDocument       *doc,
                               MdDocumentStatus  status)
 {
     gap_worksheet_doc_parent_iface->set_status (doc, status);
-    gtk_text_buffer_set_modified (GTK_TEXT_BUFFER (doc),
+    gtk_text_buffer_set_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (doc)),
                                   (status & MD_DOCUMENT_MODIFIED) != 0);
 }
 
@@ -401,75 +419,18 @@ doc_iface_init (MdDocumentIface *iface)
         md_document_interface_peek_parent (iface);
 
     iface->close = gap_worksheet_close;
-    iface->get_icon = gap_worksheet_get_icon;
     iface->load_file = gap_worksheet_load_file;
     iface->save_file = gap_worksheet_save_file;
     iface->set_status = gap_worksheet_set_doc_status;
 }
 
-static void
-write_log (const char *text,
-           int         len,
-           gboolean    in)
-{
-MOO_DEBUG({
-    static int last = -1;
-
-    if (last != in)
-    {
-        if (last != -1)
-            g_print ("\n");
-
-        if (!in)
-            g_print ("<-- ");
-        else
-            g_print ("--> ");
-    }
-
-    last = in;
-
-    if (len < 0)
-        len = strlen (text);
-
-    while (len)
-    {
-        int i;
-
-        for (i = 0; i < len && text[i] != '\n'; ++i) ;
-
-        g_print ("%.*s", (int) i, text);
-
-        if (i != len)
-        {
-            if (!in)
-                g_print ("\n<-- ");
-            else
-                g_print ("\n--> ");
-        }
-
-        if (i < len)
-        {
-            len -= i + 1;
-            text += i + 1;
-        }
-        else
-        {
-            len = 0;
-            text += len;
-        }
-    }
-
-    fflush (stdout);
-}); /* MOO_DEBUG */
-}
-
-static void
-write_child (GapWorksheet *ws,
-             const char   *text)
-{
-    moo_term_pt_write (ws->priv->pt, text, -1);
-    write_log (text, -1, FALSE);
-}
+// static void
+// write_child (GapWorksheet *ws,
+//              const char   *text)
+// {
+//     moo_term_pt_write (ws->priv->pt, text, -1);
+//     write_log (text, -1, FALSE);
+// }
 
 static void
 write_input (GapWorksheet  *ws,
@@ -477,21 +438,8 @@ write_input (GapWorksheet  *ws,
              const char    *text)
 {
     g_return_if_fail (lines && *lines);
-
-    if (lines[1])
-    {
-        char *string = g_strjoinv (" ", lines);
-        write_child (ws, string);
-        g_free (string);
-    }
-    else
-    {
-        write_child (ws, lines[0]);
-    }
-
-    write_child (ws, "\n");
+    gap_process_write_input (ws->priv->proc, lines);
     moo_worksheet_add_history (MOO_WORKSHEET (ws), text);
-    set_state (ws, GAP_BUSY);
 }
 
 static void
@@ -530,7 +478,6 @@ write_errors (MooWorksheet *mws,
     }
 
     moo_worksheet_resume_input (mws, line, column);
-    set_state (GAP_WORKSHEET (mws), GAP_IN_PROMPT);
 }
 
 static void
@@ -541,7 +488,7 @@ gap_worksheet_process_input (MooWorksheet   *mws,
     GapParser *parser;
     char *text;
 
-    g_return_if_fail (ws->priv->gap_state == GAP_IN_PROMPT);
+    g_return_if_fail (gap_process_get_state (ws->priv->proc) == GAP_IN_PROMPT);
 
     moo_worksheet_reset_history (mws);
 
@@ -569,51 +516,35 @@ gap_worksheet_process_input (MooWorksheet   *mws,
 
 
 static void
-child_died (GapWorksheet *ws)
+gap_died (GapWorksheet *ws)
 {
-    g_object_unref (ws->priv->pt);
-    ws->priv->pt = NULL;
+    g_object_unref (ws->priv->proc);
+    ws->priv->proc = NULL;
     g_signal_emit_by_name (ws, "gap-exited");
-    set_state (ws, GAP_DEAD);
-}
-
-
-static void
-do_normal_text (GapWorksheet *ws,
-                const char   *data,
-                gsize         data_len)
-{
-    MooWorksheet *mws = MOO_WORKSHEET (ws);
-
-    if (has_running_command_loop (ws))
-    {
-        g_critical ("%s: oops", G_STRLOC);
-        stop_running_command_loop (ws->priv->cmd_info);
-    }
-
-    if (ws->priv->loaded)
-    {
-        if (ws->priv->in_stderr)
-            moo_worksheet_write_error_len (mws, data, data_len);
-        else
-            moo_worksheet_write_output (mws, data, data_len);
-    }
+    gap_state_notify (ws);
 }
 
 static void
-do_prompt (GapWorksheet *ws,
-           const char   *string,
-           gsize         len)
+gap_output (GapWorksheet *ws,
+            const char   *data,
+            guint         data_len,
+            gboolean      is_stderr)
+{
+    if (is_stderr)
+        moo_worksheet_write_error_len (MOO_WORKSHEET (ws), data, data_len);
+    else
+        moo_worksheet_write_output (MOO_WORKSHEET (ws), data, data_len);
+}
+
+static void
+gap_prompt (GapWorksheet *ws,
+            const char   *string,
+            guint         len,
+            gboolean      first_time)
 {
     MooWorksheet *mws = MOO_WORKSHEET (ws);
 
-    if (has_running_command_loop (ws))
-    {
-        g_critical ("%s: oops", G_STRLOC);
-        stop_running_command_loop (ws->priv->cmd_info);
-    }
-
-    if (ws->priv->loaded)
+    if (!first_time)
     {
         gboolean continue_input = (len == 2 && strncmp (string, "> ", 2) == 0);
 
@@ -632,455 +563,45 @@ do_prompt (GapWorksheet *ws,
     {
         moo_worksheet_set_accepting_input (mws, TRUE);
     }
-
-    ws->priv->loaded = TRUE;
-    set_state (ws, GAP_IN_PROMPT);
 }
-
-static void
-do_output (GapWorksheet *ws,
-           const char   *data,
-           gsize         data_len)
-{
-    if (has_running_command_loop (ws))
-    {
-        ws->priv->cmd_info->output = g_strndup (data, data_len);
-        ws->priv->cmd_info->success = TRUE;
-        stop_running_command_loop (ws->priv->cmd_info);
-    }
-    else
-    {
-        g_critical ("%s: output: %.*s",
-                    G_STRLOC, (int) data_len, data);
-    }
-}
-
-static void
-do_data (GapWorksheet *ws,
-         const char   *data,
-         gsize         data_len)
-{
-    if (data_len >= strlen ("prompt:") && strncmp (data, "prompt:", strlen ("prompt:")) == 0)
-        do_prompt (ws, data + strlen ("prompt:"), data_len - strlen ("prompt:"));
-    else if (data_len >= strlen ("output:") && strncmp (data, "output:", strlen ("output:")) == 0)
-        do_output (ws, data + strlen ("output:"), data_len - strlen ("output:"));
-    else if (data_len >= strlen ("globals-added:") && strncmp (data, "globals-added:", strlen ("globals-added:")) == 0)
-        gap_worksheet_add_globals (ws, data + strlen ("globals-added:"), data_len - strlen ("globals-added:"));
-    else if (data_len >= strlen ("globals-deleted:") && strncmp (data, "globals-deleted:", strlen ("globals-deleted:")) == 0)
-        gap_worksheet_delete_globals (ws, data + strlen ("globals-deleted:"), data_len - strlen ("globals-deleted:"));
-    else
-    {
-        g_critical ("%s: got unknown data: '%.*s'",
-                    G_STRLOC, (int) data_len, data);
-    }
-}
-
-#define MAGIC       "@GGAP@"
-#define MAGIC_LEN   6
-#define LENGTH_LEN  8
-
-static void
-read_chars_normal (GapWorksheet  *ws,
-                   char const   **data_p,
-                   gsize         *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-    gsize i;
-
-    g_assert (!ws->priv->input_buf);
-
-    for (i = 0; i < data_len; ++i)
-    {
-        if (data[i] == '@')
-        {
-            gsize n = MIN (MAGIC_LEN, data_len - i);
-
-            if (!n || strncmp (data + i, MAGIC, n) == 0)
-            {
-                if (i > 0)
-                    do_normal_text (ws, data, i);
-
-                if (n == MAGIC_LEN)
-                {
-                    ws->priv->input_state = INPUT_DATA_TYPE;
-                }
-                else
-                {
-                    ws->priv->input_state = INPUT_MAYBE_MAGIC;
-                    ws->priv->input_buf = g_string_new_len (data + i, n);
-                }
-
-                *data_p = data + i + n;
-                *data_len_p = data_len - i - n;
-
-                return;
-            }
-        }
-    }
-
-    do_normal_text (ws, data, data_len);
-    *data_p = data + data_len;
-    *data_len_p = 0;
-}
-
-static void
-read_chars_maybe_magic (GapWorksheet *ws,
-                        char const  **data_p,
-                        gsize        *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-    gsize n;
-
-    n = MIN (data_len, MAGIC_LEN - ws->priv->input_buf->len);
-    g_string_append_len (ws->priv->input_buf, data, n);
-    *data_p = data + n;
-    *data_len_p = data_len - n;
-
-    if (strncmp (ws->priv->input_buf->str, MAGIC, ws->priv->input_buf->len) != 0)
-    {
-        GString *tmp = ws->priv->input_buf;
-        ws->priv->input_buf = NULL;
-        ws->priv->input_state = INPUT_NORMAL;
-        do_normal_text (ws, tmp->str, tmp->len);
-    }
-    else if (ws->priv->input_buf->len == MAGIC_LEN)
-    {
-        g_string_free (ws->priv->input_buf, TRUE);
-        ws->priv->input_buf = NULL;
-        ws->priv->input_state = INPUT_DATA_TYPE;
-    }
-}
-
-static void
-read_chars_data_type (GapWorksheet *ws,
-                      char const  **data_p,
-                      gsize        *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-
-    g_assert (ws->priv->input_state == INPUT_DATA_TYPE);
-    g_assert (ws->priv->input_buf == 0);
-
-    g_return_if_fail (data_len != 0);
-
-    *data_p = data + 1;
-    *data_len_p = data_len - 1;
-
-    switch (data[0])
-    {
-        case GGAP_DTC_FIXED:
-            ws->priv->input_state = INPUT_DATA_FIXED_LEN;
-            ws->priv->input_buf = g_string_new (NULL);
-            break;
-        case GGAP_DTC_VARIABLE:
-            ws->priv->input_state = INPUT_DATA_VAR;
-            ws->priv->input_buf = g_string_new (NULL);
-            break;
-        default:
-            g_critical ("%s: unknown data type '%c'", G_STRLOC, data[0]);
-            ws->priv->input_state = INPUT_NORMAL;
-            break;
-    }
-}
-
-static gsize
-get_length (const char *str)
-{
-    gulong n;
-    char *end;
-
-    errno = 0;
-    n = strtoul (str, &end, 16);
-
-    if (errno != 0 || end == NULL || *end != 0)
-    {
-        g_critical ("%s: could not convert '%s' to a number", G_STRLOC, str);
-        return 0;
-    }
-
-    return n;
-}
-
-static void
-read_chars_data_fixed_len (GapWorksheet *ws,
-                           char const  **data_p,
-                           gsize        *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-    gsize n;
-
-    n = MIN (data_len, LENGTH_LEN - ws->priv->input_buf->len);
-    g_string_append_len (ws->priv->input_buf, data, n);
-    *data_p = data + n;
-    *data_len_p = data_len - n;
-
-    if (ws->priv->input_buf->len == LENGTH_LEN)
-    {
-        gsize input_data_len = get_length (ws->priv->input_buf->str);
-
-        if (input_data_len == 0)
-        {
-            ws->priv->input_state = INPUT_NORMAL;
-            g_string_free (ws->priv->input_buf, TRUE);
-            ws->priv->input_buf = NULL;
-        }
-        else
-        {
-            ws->priv->input_state = INPUT_DATA_FIXED;
-            g_string_truncate (ws->priv->input_buf, 0);
-            ws->priv->input_data_len = input_data_len;
-        }
-    }
-}
-
-static void
-read_chars_data_fixed (GapWorksheet *ws,
-                       char const  **data_p,
-                       gsize        *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-    gsize remain = ws->priv->input_data_len - ws->priv->input_buf->len;
-    gsize n;
-
-    n = MIN (remain, data_len);
-    g_string_append_len (ws->priv->input_buf, data, n);
-    *data_p = data + n;
-    *data_len_p = data_len - n;
-
-    if (ws->priv->input_buf->len == ws->priv->input_data_len)
-    {
-        GString *tmp = ws->priv->input_buf;
-        ws->priv->input_buf = NULL;
-        ws->priv->input_data_len = 0;
-        ws->priv->input_state = INPUT_NORMAL;
-        do_data (ws, tmp->str, tmp->len);
-        g_string_free (tmp, TRUE);
-    }
-}
-
-static void
-read_chars_data_inf (GapWorksheet *ws,
-                     char const  **data_p,
-                     gsize        *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-    gsize i;
-
-    g_assert (ws->priv->input_buf != NULL);
-    g_assert (ws->priv->input_buf2 == NULL);
-
-    for (i = 0; i < data_len; ++i)
-    {
-        if (data[i] == '@')
-        {
-            gsize n = MIN (MAGIC_LEN, data_len - i);
-
-            if (!n || strncmp (data + i, MAGIC, n) == 0)
-            {
-                if (i > 0)
-                    g_string_append_len (ws->priv->input_buf, data, i);
-
-                ws->priv->input_state = INPUT_MAYBE_DATA_END;
-                ws->priv->input_buf2 = g_string_new_len (data + i, n);
-
-                *data_p = data + i + n;
-                *data_len_p = data_len - i - n;
-
-                return;
-            }
-        }
-    }
-
-    g_string_append_len (ws->priv->input_buf, data, data_len);
-    *data_p = data + data_len;
-    *data_len_p = 0;
-}
-
-static void
-read_chars_maybe_data_end (GapWorksheet *ws,
-                           char const  **data_p,
-                           gsize        *data_len_p)
-{
-    const char *data = *data_p;
-    gsize data_len = *data_len_p;
-
-    g_assert (ws->priv->input_buf != NULL);
-    g_assert (ws->priv->input_buf2 != NULL);
-
-    if (ws->priv->input_buf2->len < MAGIC_LEN)
-    {
-        gsize n = MIN (data_len, MAGIC_LEN - ws->priv->input_buf2->len);
-
-        g_string_append_len (ws->priv->input_buf2, data, n);
-        data += n;
-        data_len -= n;
-        *data_p = data;
-        *data_len_p = data_len;
-
-        if (ws->priv->input_buf2->len < MAGIC_LEN)
-            return;
-
-        if (strncmp (ws->priv->input_buf2->str, MAGIC, ws->priv->input_buf2->len) != 0)
-        {
-            g_string_append_len (ws->priv->input_buf,
-                                 ws->priv->input_buf2->str,
-                                 ws->priv->input_buf2->len);
-            g_string_free (ws->priv->input_buf2, TRUE);
-            ws->priv->input_buf2 = NULL;
-            ws->priv->input_state = INPUT_DATA_VAR;
-            return;
-        }
-    }
-
-    if (data_len == 0)
-        return;
-
-    *data_p = data + 1;
-    *data_len_p = data_len - 1;
-
-    if (data[0] == GGAP_DTC_END)
-    {
-        GString *tmp;
-
-        g_string_free (ws->priv->input_buf2, TRUE);
-        ws->priv->input_buf2 = NULL;
-        tmp = ws->priv->input_buf;
-        ws->priv->input_buf = NULL;
-        ws->priv->input_state = INPUT_NORMAL;
-
-        do_data (ws, tmp->str, tmp->len);
-        g_string_free (tmp, TRUE);
-    }
-    else
-    {
-        g_message ("%s: got '%c', expecting '%c'",
-                   G_STRLOC, data[0], GGAP_DTC_END);
-        g_string_append_len (ws->priv->input_buf,
-                             ws->priv->input_buf2->str,
-                             ws->priv->input_buf2->len);
-        g_string_append_c (ws->priv->input_buf, data[0]);
-
-        ws->priv->input_state = INPUT_DATA_VAR;
-
-        g_string_free (ws->priv->input_buf2, TRUE);
-        ws->priv->input_buf2 = NULL;
-    }
-}
-
-static void
-io_func (const char *buf,
-         gsize       len,
-         gpointer    data)
-{
-    GapWorksheet *ws = data;
-
-    g_return_if_fail (len > 0);
-
-    write_log (buf, len, TRUE);
-
-    g_object_ref (ws);
-
-    while (len != 0 && ws->priv != NULL)
-    {
-        switch (ws->priv->input_state)
-        {
-            case INPUT_NORMAL:
-                read_chars_normal (ws, &buf, &len);
-                break;
-
-            case INPUT_MAYBE_MAGIC:
-                read_chars_maybe_magic (ws, &buf, &len);
-                break;
-            case INPUT_DATA_TYPE:
-                read_chars_data_type (ws, &buf, &len);
-                break;
-
-            case INPUT_DATA_FIXED_LEN:
-                read_chars_data_fixed_len (ws, &buf, &len);
-                break;
-            case INPUT_DATA_FIXED:
-                read_chars_data_fixed (ws, &buf, &len);
-                break;
-
-            case INPUT_DATA_VAR:
-                read_chars_data_inf (ws, &buf, &len);
-                break;
-            case INPUT_MAYBE_DATA_END:
-                read_chars_maybe_data_end (ws, &buf, &len);
-                break;
-        }
-    }
-
-    g_object_unref (ws);
-}
-
 
 static gboolean
 gap_worksheet_fork_command (GapWorksheet   *ws,
                             const char     *cmd_line,
                             GError        **error)
 {
-    MooTermPt *pt;
-    MooTermCommand *cmd;
-
-    g_return_val_if_fail (ws->priv->pt == NULL, FALSE);
+    g_return_val_if_fail (ws->priv->proc == NULL, FALSE);
     g_return_val_if_fail (cmd_line != NULL, FALSE);
 
-    pt = moo_term_pt_new (io_func, ws);
-    moo_term_pt_set_echo_input (pt, FALSE);
-    moo_term_pt_set_priority (pt, G_PRIORITY_HIGH);
+    if (!(ws->priv->proc = gap_process_start (cmd_line,
+                                              ws->priv->width,
+                                              ws->priv->height,
+                                              error)))
+        return FALSE;
 
-    if (ws->priv->width > 0 && ws->priv->height > 0)
-        moo_term_pt_set_size (pt, ws->priv->width, ws->priv->height);
+    g_signal_connect_swapped (ws->priv->proc, "gap-output",
+                              G_CALLBACK (gap_output), ws);
+    g_signal_connect_swapped (ws->priv->proc, "gap-prompt",
+                              G_CALLBACK (gap_prompt), ws);
+    g_signal_connect_swapped (ws->priv->proc, "gap-globals-changed",
+                              G_CALLBACK (gap_globals_changed), ws);
+    g_signal_connect_swapped (ws->priv->proc, "gap-died",
+                              G_CALLBACK (gap_died), ws);
+    g_signal_connect_swapped (ws->priv->proc, "notify::gap-state",
+                              G_CALLBACK (gap_state_notify), ws);
+    gap_state_notify (ws);
 
-    cmd = moo_term_command_new_command_line (cmd_line, NULL, NULL);
-
-    if (moo_term_pt_fork_command (pt, cmd, error))
-    {
-        g_signal_connect_swapped (pt, "child-died", G_CALLBACK (child_died), ws);
-        ws->priv->pt = g_object_ref (pt);
-    }
-
-    set_state (ws, GAP_LOADING);
-
-    moo_term_command_free (cmd);
-    g_object_unref (pt);
     return TRUE;
 }
-
 
 static void
 gap_worksheet_kill_child (GapWorksheet *ws)
 {
-    g_return_if_fail (ws->priv && ws->priv->pt);
-    moo_term_pt_kill_child (ws->priv->pt);
-}
-
-
-static gboolean
-gap_worksheet_child_alive (GapWorksheet *ws)
-{
-    return ws->priv && ws->priv->pt &&
-           moo_term_pt_child_alive (ws->priv->pt);
-}
-
-
-void
-_gap_worksheet_set_size (GapWorksheet *ws,
-                         int           width,
-                         int           height)
-{
-    ws->priv->width = width;
-    ws->priv->height = height;
-
-    if (ws->priv->pt)
-        moo_term_pt_set_size (ws->priv->pt, ws->priv->width, ws->priv->height);
+    g_return_if_fail (ws->priv && ws->priv->proc);
+    g_signal_handlers_disconnect_matched (ws->priv->proc, G_SIGNAL_MATCH_DATA,
+					  0, 0, NULL, NULL, ws);
+    gap_process_die (ws->priv->proc);
+    gap_died (ws);
 }
 
 
@@ -1126,7 +647,7 @@ gap_worksheet_load_text (GapWorksheet *ws,
 
     moo_worksheet_reset (MOO_WORKSHEET (ws));
     block = moo_worksheet_create_prompt_block (MOO_WORKSHEET (ws), "gap> ", "> ", buf->str);
-    moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
+    moo_ws_buffer_append_block (MOO_WS_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws))), block);
 
     g_string_free (buf, TRUE);
     return TRUE;
@@ -1233,87 +754,6 @@ gap_file_info_set_file_type (MdFileInfo *file_info,
 }
 
 
-static void
-stop_running_command_loop (GapCommandInfo *ci)
-{
-    if (g_main_loop_is_running (ci->loop))
-        g_main_loop_quit (ci->loop);
-}
-
-static gboolean
-has_running_command_loop (GapWorksheet *ws)
-{
-    return ws->priv && ws->priv->cmd_info &&
-            ws->priv->cmd_info->loop &&
-            g_main_loop_is_running (ws->priv->cmd_info->loop);
-}
-
-static void
-run_command_destroy (G_GNUC_UNUSED GapWorksheet *ws,
-                     GapCommandInfo *ci)
-{
-    ci->destroyed = TRUE;
-    stop_running_command_loop (ci);
-}
-
-static gboolean
-gap_worksheet_run_command (GapWorksheet *ws,
-                           const char   *command,
-                           const char   *args,
-                           const char   *gap_cmd_line,
-                           char        **output)
-{
-    char *string;
-    GapCommandInfo ci;
-    gulong destroy_cb_id;
-    guint stamp;
-
-    g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
-    g_return_val_if_fail (command != NULL, FALSE);
-
-    stamp = ++ws->priv->last_stamp;
-    string = ggap_pkg_exec_command (stamp, command, args);
-    write_child (ws, string);
-
-    if (gap_cmd_line)
-        write_child (ws, gap_cmd_line);
-
-    g_object_ref (ws);
-
-    ws->priv->cmd_info = &ci;
-    ci.success = FALSE;
-    ci.loop = NULL;
-    ci.destroyed = FALSE;
-    ci.stamp = stamp;
-    ci.output = NULL;
-
-    destroy_cb_id = g_signal_connect (ws, "close",
-                                      G_CALLBACK (run_command_destroy),
-                                      &ci);
-
-    ci.loop = g_main_loop_new (NULL, FALSE);
-
-    gdk_threads_leave ();
-    g_main_loop_run (ci.loop);
-    gdk_threads_enter ();
-
-    g_main_loop_unref (ci.loop);
-    ci.loop = NULL;
-
-    if (!ci.destroyed)
-        g_signal_handler_disconnect (ws, destroy_cb_id);
-
-    if (ci.destroyed)
-        ci.success = FALSE;
-
-    *output = ci.output;
-    ws->priv->cmd_info = NULL;
-
-    g_object_unref (ws);
-    return ci.success;
-}
-
-
 static gboolean
 parse_save_workspace_output (const char  *output,
                              GError     **error)
@@ -1377,12 +817,12 @@ gap_worksheet_save_workspace (GapWorksheet  *ws,
     char *output = NULL;
     gboolean result;
 
-    g_return_val_if_fail (ws->priv->cmd_info == NULL, FALSE);
+    g_return_val_if_fail (ws->priv->proc != NULL, FALSE);
 
     filename = moo_tempnam ();
     cmd = gap_cmd_save_workspace (filename);
 
-    result = gap_worksheet_run_command (ws, GGAP_CMD_RUN_COMMAND, NULL, cmd, &output);
+    result = gap_process_run_command (ws->priv->proc, GGAP_CMD_RUN_COMMAND, NULL, cmd, &output);
 
     if (!result)
     {
@@ -1446,6 +886,7 @@ gap_worksheet_save_file (MdDocument   *doc,
     GError *error = NULL;
     char *filename;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
+    GapState gap_state;
 
     if (gap_file_info_get_file_type (file_info, ws->priv->file_type) == GAP_FILE_TEXT)
     {
@@ -1453,12 +894,13 @@ gap_worksheet_save_file (MdDocument   *doc,
         return;
     }
 
-    if (!(ws->priv->gap_state == GAP_DEAD || ws->priv->gap_state == GAP_IN_PROMPT))
+    gap_state = ws->priv->proc ? gap_process_get_state (ws->priv->proc) : GAP_DEAD;
+
+    if (!(gap_state == GAP_DEAD || gap_state == GAP_IN_PROMPT))
     {
         md_file_op_info_set_error (op_info, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
                                    "Failed");
-        g_return_if_fail (ws->priv->gap_state == GAP_DEAD ||
-                          ws->priv->gap_state == GAP_IN_PROMPT);
+        g_return_if_fail (gap_state == GAP_DEAD || gap_state == GAP_IN_PROMPT);
     }
 
     if (!(filename = md_file_info_get_filename (file_info)))
@@ -1468,7 +910,7 @@ gap_worksheet_save_file (MdDocument   *doc,
         g_return_if_fail (filename != NULL);
     }
 
-    if (save_workspace && ws->priv->gap_state != GAP_DEAD &&
+    if (save_workspace && gap_state != GAP_DEAD &&
         !gap_worksheet_save_workspace (ws, &workspace, &error))
     {
         md_file_op_info_take_error (op_info, error);
@@ -1495,6 +937,46 @@ gap_worksheet_save_file (MdDocument   *doc,
 /* Completion
  */
 
+static MooCompletionGroup *
+gap_worksheet_ensure_completion (GapWorksheet *ws)
+{
+    if (!ws->priv->completion)
+    {
+        ws->priv->completion = g_object_new (GAP_TYPE_WS_COMPLETION, NULL);
+        ws->priv->cmpl_group = moo_completion_simple_new_group (MOO_COMPLETION_SIMPLE (ws->priv->completion), NULL);
+        moo_completion_group_set_pattern (ws->priv->cmpl_group, "[A-Za-z0-9_]*", NULL, 0);
+        moo_text_completion_set_doc (ws->priv->completion, GTK_TEXT_VIEW (ws));
+    }
+
+    return ws->priv->cmpl_group;
+}
+
+
+static void
+gap_worksheet_complete (GapWorksheet *ws)
+{
+    gap_worksheet_ensure_completion (ws);
+
+    if (ws->priv->proc)
+        gap_process_ask_completions (ws->priv->proc);
+
+    moo_text_completion_try_complete (ws->priv->completion, FALSE);
+}
+
+static gboolean
+gap_worksheet_key_press (GtkWidget   *widget,
+                         GdkEventKey *event)
+{
+    if (event->keyval == GDK_Tab)
+    {
+        gap_worksheet_complete (GAP_WORKSHEET (widget));
+        return TRUE;
+    }
+
+    return GTK_WIDGET_CLASS(gap_worksheet_parent_class)->key_press_event (widget, event);
+}
+
+
 static void
 gap_worksheet_free_completion (GapWorksheet *ws)
 {
@@ -1506,26 +988,6 @@ gap_worksheet_free_completion (GapWorksheet *ws)
     }
 }
 
-static MooCompletionGroup *
-gap_worksheet_ensure_completion (GapWorksheet *ws)
-{
-    if (!ws->priv->completion)
-    {
-        ws->priv->completion = g_object_new (GAP_TYPE_WS_COMPLETION, NULL);
-        ws->priv->cmpl_group = moo_completion_simple_new_group (MOO_COMPLETION_SIMPLE (ws->priv->completion), NULL);
-        moo_completion_group_set_pattern (ws->priv->cmpl_group, "[A-Za-z0-9_]*", NULL, 0);
-    }
-
-    return ws->priv->cmpl_group;
-}
-
-gpointer
-_gap_worksheet_get_completion (GapWorksheet *ws)
-{
-    g_return_val_if_fail (GAP_IS_WORKSHEET (ws), NULL);
-    gap_worksheet_ensure_completion (ws);
-    return ws->priv->completion;
-}
 
 static GList *
 parse_words (const char *data,
@@ -1548,43 +1010,26 @@ parse_words (const char *data,
 }
 
 static void
-gap_worksheet_add_globals (GapWorksheet *ws,
-                           const char   *data,
-                           gsize         data_len)
+gap_globals_changed (GapWorksheet *ws,
+                     const char   *data,
+                     guint         data_len,
+                     gboolean      added)
 {
     MooCompletionGroup *group = gap_worksheet_ensure_completion (ws);
-    GList *words = parse_words (data, data_len);
-    moo_completion_group_add_data (group, words);
-}
 
-static void
-gap_worksheet_delete_globals (GapWorksheet *ws,
-                              const char   *data,
-                              gsize         data_len)
-{
-    GList *words;
-    MooCompletionGroup *group;
+    if (added)
+    {
+        GList *words = parse_words (data, data_len);
+        moo_completion_group_add_data (group, words);
+    }
+    else
+    {
+        GList *words;
 
-    group = gap_worksheet_ensure_completion (ws);
-    words = parse_words (data, data_len);
-    moo_completion_group_remove_data (group, words);
+        words = parse_words (data, data_len);
+        moo_completion_group_remove_data (group, words);
 
-    g_list_foreach (words, (GFunc) g_free, NULL);
-    g_list_free (words);
-}
-
-void
-_gap_worksheet_ask_for_completions (GapWorksheet *ws)
-{
-    char *string;
-    guint stamp;
-
-    if (ws->priv->gap_state != GAP_IN_PROMPT)
-        return;
-
-    stamp = ++ws->priv->last_stamp;
-    string = ggap_pkg_exec_command (stamp, "get-globals", NULL);
-    write_child (ws, string);
-
-    g_free (string);
+        g_list_foreach (words, (GFunc) g_free, NULL);
+        g_list_free (words);
+    }
 }

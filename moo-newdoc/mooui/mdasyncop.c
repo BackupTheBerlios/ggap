@@ -56,7 +56,7 @@ md_async_op_class_init (MdAsyncOpClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdAsyncOpClass, start),
                       NULL, NULL,
-                      _moo_marshal_VOID__VOID,
+                      _moo_ui_marshal_VOID__VOID,
                       G_TYPE_NONE, 0);
 
     signals[ABORT] =
@@ -65,7 +65,7 @@ md_async_op_class_init (MdAsyncOpClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdAsyncOpClass, abort),
                       NULL, NULL,
-                      _moo_marshal_VOID__VOID,
+                      _moo_ui_marshal_VOID__VOID,
                       G_TYPE_NONE, 0);
 
     signals[CANCEL] =
@@ -74,7 +74,7 @@ md_async_op_class_init (MdAsyncOpClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdAsyncOpClass, cancel),
                       g_signal_accumulator_true_handled, NULL,
-                      _moo_marshal_BOOL__VOID,
+                      _moo_ui_marshal_BOOL__VOID,
                       G_TYPE_BOOLEAN, 0);
 
     signals[PROGRESS] =
@@ -83,7 +83,7 @@ md_async_op_class_init (MdAsyncOpClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdAsyncOpClass, progress),
                       NULL, NULL,
-                      _moo_marshal_VOID__STRING_DOUBLE,
+                      _moo_ui_marshal_VOID__STRING_DOUBLE,
                       G_TYPE_NONE, 2,
                       G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                       G_TYPE_DOUBLE);
@@ -94,7 +94,7 @@ md_async_op_class_init (MdAsyncOpClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdAsyncOpClass, finished),
                       NULL, NULL,
-                      _moo_marshal_VOID__VOID,
+                      _moo_ui_marshal_VOID__VOID,
                       G_TYPE_NONE, 0);
 }
 

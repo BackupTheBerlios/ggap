@@ -13,7 +13,7 @@
    <configure>
     <args>--enable-debug --enable-all-warnings --enable-unit-tests --prefix=$PREFIX</args>
     <vars>
-     <var name="CFLAGS">-g</var>
+     <var name="CFLAGS">${CFLAGS:--g}</var>
     </vars>
    </configure>
   </debug>
@@ -45,7 +45,7 @@
   <exe>ggap/ggap</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
-   <var name="MOO_DEBUGG">misc,gap,gap-file</var>
+   <var name="MOO_DEBUG">misc,gap,gap-file</var>
   </vars>
  </run>
 </medit-project>

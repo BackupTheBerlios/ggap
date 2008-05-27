@@ -1,13 +1,8 @@
-AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip foreign nostdinc
+AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip
 
-moo =
-if USE_MOO_SUBDIR
-moo += moo
-endif USE_MOO_SUBDIR
-
-DIST_SUBDIRS = $(moo) moo-newdoc/mooui ggap
-SUBDIRS = $(moo) .
-# SUBDIRS = .
+DIST_SUBDIRS = moo moo-newdoc/mooui ggap
+# SUBDIRS = moo .
+SUBDIRS = .
 
 if !MOO_OS_CYGWIN
 SUBDIRS += moo-newdoc/mooui ggap
@@ -22,9 +17,6 @@ endif
 EXTRA_DIST =            \
     INSTALL             \
     autogen.sh          \
-    intltool-extract.in	\
-    intltool-merge.in	\
-    intltool-update.in	\
     THANKS		\
     scripts/ggap-full.sh\
     scripts/ggap.sh
@@ -35,22 +27,11 @@ DISTCLEANFILES = configargs.h
 
 desktopdir = $(datadir)/applications
 desktop_DATA = ggap.desktop
-appicondir = $(datadir)/pixmaps
-appicon_DATA = ggap.png
-hicolor = $(datadir)/icons/hicolor
-iconthemedir = $(hicolor)/48x48/apps
-icontheme_DATA = ggap.png gap.png
 
-update_icon_cache = gtk-update-icon-cache -f -t $(DESTDIR)$(hicolor)
-install-data-hook:
-	if echo "Updating icon cache" && $(update_icon_cache); then		\
-		echo "Done.";							\
-	else									\
-		echo "*** GTK icon cache not updated. After install, run this:";\
-		echo $(update_icon_cache);					\
-	fi
-uninstall-hook:
-	echo "Updating icon cache" && $(update_icon_cache) && echo "Done."
+pixmaps_files = ggap.png
+theme_files = ggap.png gap.png
+include ../moo/mk/icon.mk
+
 distuninstallcheck_listfiles = find . -type f -print | grep -v share/mime/ | grep -v share/icons/hicolor
 
 EXTRA_DIST +=		\
@@ -60,10 +41,7 @@ EXTRA_DIST +=		\
 	ggap.ico	\
 	gap.png
 
-generated =			\
-	ggap/gap/PackageInfo.g	\
-	ggap/gap/init.g		\
-	wininstaller/ggap.iss
+generated = wininstaller/ggap.iss
 
 all-am: $(generated)
 

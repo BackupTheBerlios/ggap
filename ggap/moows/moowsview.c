@@ -52,7 +52,7 @@ static void
 moo_ws_view_init (MooWsView *view)
 {
     view->priv = G_TYPE_INSTANCE_GET_PRIVATE (view, MOO_TYPE_WS_VIEW, MooWsViewPrivate);
-    moo_text_view_set_buffer_type (MOO_TEXT_VIEW (view), MOO_TYPE_WORKSHEET);
+    moo_text_view_set_buffer_type (MOO_TEXT_VIEW (view), MOO_TYPE_WS_BUFFER);
     moo_text_view_set_font_from_string (MOO_TEXT_VIEW (view), "Monospace");
 }
 
@@ -71,7 +71,7 @@ get_ws_buffer (MooWsView *view)
 static MooWorksheet *
 get_worksheet (MooWsView *view)
 {
-    return MOO_WORKSHEET (get_buffer (view));
+    return MOO_WORKSHEET (view); // XXX XXX XXX !!!
 }
 
 static GObject *
@@ -90,9 +90,6 @@ moo_ws_view_constructor (GType                  type,
     g_object_set_data (G_OBJECT (buffer), "moo-ws-view", view);
     g_signal_connect_swapped (buffer, "beep",
                               G_CALLBACK (_moo_ws_view_beep),
-                              view);
-    g_signal_connect_swapped (buffer, "scroll-insert-onscreen",
-                              G_CALLBACK (scroll_insert_onscreen),
                               view);
 
     return object;

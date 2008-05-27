@@ -106,6 +106,10 @@ MdDocument *md_manager_get_doc              (MdManager  *mgr,
 void        md_manager_present_doc          (MdManager  *mgr,
                                              MdDocument *doc);
 
+MdWindow   *md_manager_ui_new_window        (MdManager  *mgr);
+MdDocument *md_manager_ui_new_doc           (MdManager  *mgr,
+                                             MdWindow   *window);
+
 MdDocument *md_manager_ui_new_file          (MdManager  *mgr,
                                              MdFileInfo *file_info,
                                              MdWindow   *window);

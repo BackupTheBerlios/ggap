@@ -15,6 +15,7 @@
 #include "mooui/marshals.h"
 #include "mooui/mdenums.h"
 #include "mooui/mdutils.h"
+#include "moofileview/moofile.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-fs.h"
 #include <gtk/gtk.h>
@@ -29,6 +30,7 @@
 typedef struct {
     MdDocument *doc;
     MdManager *mgr;
+    MdWindow *window;
     MdDocumentCapabilities caps;
     MdDocumentStatus status;
     MdDocumentState state;
@@ -40,6 +42,10 @@ typedef struct {
 
 //     MdAsyncOp *async_op;
 
+    GtkWidget *label;
+    GtkWidget *icon;
+    GtkWidget *icon_evbox;
+
     guint file_monitor_id;
     guint modified_on_disk : 1;
     guint deleted_from_disk : 1;
@@ -49,16 +55,21 @@ typedef struct {
 
 static GQuark md_document_data_quark;
 
-static MdDocumentData   *md_document_get_data           (MdDocument     *doc);
+static MdDocumentData *md_document_get_data     (MdDocument     *doc);
 
-static void              md_document_close_default      (MdDocument     *doc);
-static void              md_document_set_status_default (MdDocument     *doc,
-                                                         MdDocumentStatus status);
-static void              md_document_set_state_default  (MdDocument     *doc,
-                                                         MdDocumentState state);
+static void         md_document_close_default       (MdDocument     *doc);
+static void         md_document_set_status_default  (MdDocument     *doc,
+                                                     MdDocumentStatus status);
+static void         md_document_set_state_default   (MdDocument     *doc,
+                                                     MdDocumentState state);
+static GdkPixbuf   *md_document_get_icon_default    (MdDocument     *doc,
+                                                     GtkIconSize     size);
 
-static void              md_document_start_file_watch   (MdDocument     *doc);
-static void              md_document_stop_file_watch    (MdDocument     *doc);
+static void         md_document_start_file_watch    (MdDocument     *doc);
+static void         md_document_stop_file_watch     (MdDocument     *doc);
+
+static void         md_document_detach_tab_label    (MdDocument     *doc);
+static void         md_document_update_tab_label    (MdDocument     *doc);
 
 
 static void
@@ -67,6 +78,7 @@ md_document_base_init (MdDocumentIface *iface)
     iface->set_status = md_document_set_status_default;
     iface->set_state = md_document_set_state_default;
     iface->close = md_document_close_default;
+    iface->get_icon = md_document_get_icon_default;
 }
 
 static void
@@ -99,7 +111,7 @@ md_document_class_init (MdDocumentIface *iface)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (MdDocumentIface, load_before),
                   NULL, NULL,
-                  _moo_marshal_VOID__BOXED_BOXED,
+                  _moo_ui_marshal_VOID__BOXED_BOXED,
                   G_TYPE_NONE, 2,
                   MD_TYPE_FILE_INFO | G_SIGNAL_TYPE_STATIC_SCOPE,
                   MD_TYPE_FILE_OP_INFO | G_SIGNAL_TYPE_STATIC_SCOPE);
@@ -109,7 +121,7 @@ md_document_class_init (MdDocumentIface *iface)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (MdDocumentIface, load_after),
                   NULL, NULL,
-                  _moo_marshal_VOID__BOXED_BOXED,
+                  _moo_ui_marshal_VOID__BOXED_BOXED,
                   G_TYPE_NONE, 2,
                   MD_TYPE_FILE_INFO | G_SIGNAL_TYPE_STATIC_SCOPE,
                   MD_TYPE_FILE_OP_INFO | G_SIGNAL_TYPE_STATIC_SCOPE);
@@ -119,7 +131,7 @@ md_document_class_init (MdDocumentIface *iface)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (MdDocumentIface, save_before),
                   NULL, NULL,
-                  _moo_marshal_VOID__BOXED_BOXED,
+                  _moo_ui_marshal_VOID__BOXED_BOXED,
                   G_TYPE_NONE, 2,
                   MD_TYPE_FILE_INFO | G_SIGNAL_TYPE_STATIC_SCOPE,
                   MD_TYPE_FILE_OP_INFO | G_SIGNAL_TYPE_STATIC_SCOPE);
@@ -129,7 +141,7 @@ md_document_class_init (MdDocumentIface *iface)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (MdDocumentIface, save_after),
                   NULL, NULL,
-                  _moo_marshal_VOID__BOXED_BOXED,
+                  _moo_ui_marshal_VOID__BOXED_BOXED,
                   G_TYPE_NONE, 2,
                   MD_TYPE_FILE_INFO | G_SIGNAL_TYPE_STATIC_SCOPE,
                   MD_TYPE_FILE_OP_INFO | G_SIGNAL_TYPE_STATIC_SCOPE);
@@ -139,7 +151,7 @@ md_document_class_init (MdDocumentIface *iface)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (MdDocumentIface, close),
                   NULL, NULL,
-                  _moo_marshal_VOID__VOID,
+                  _moo_ui_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
 }
 
@@ -204,10 +216,6 @@ static void
 md_document_check_iface (MdDocument *doc)
 {
     MdDocumentIface *iface = MD_DOCUMENT_GET_IFACE (doc);
-
-    if (!iface->get_icon)
-        g_critical ("type '%s' does not provide MdDocumentIface:get_icon() method",
-                    g_type_name (G_OBJECT_TYPE (doc)));
 
     if (!iface->load_file)
         g_critical ("type '%s' can't load files", g_type_name (G_OBJECT_TYPE (doc)));
@@ -297,6 +305,8 @@ md_document_set_readonly (MdDocument *doc,
     {
         data->readonly = readonly != 0;
         g_object_notify (G_OBJECT (doc), "md-doc-readonly");
+
+        md_document_update_tab_label (doc);
     }
 }
 
@@ -337,6 +347,8 @@ md_document_set_status_default (MdDocument       *doc,
 
     data->status = status;
     g_object_notify (G_OBJECT (doc), "md-doc-status");
+
+    md_document_update_tab_label (doc);
 }
 
 MdDocumentStatus
@@ -408,6 +420,8 @@ md_document_set_state_default (MdDocument      *doc,
 
     data->state = state;
     g_object_notify (G_OBJECT (doc), "md-doc-state");
+
+    md_document_update_tab_label (doc);
 }
 
 MdDocumentState
@@ -477,6 +491,39 @@ md_document_get_manager (MdDocument *doc)
     return data->mgr;
 }
 
+void
+_md_document_set_window (MdDocument *doc,
+                         MdWindow   *window)
+{
+    MdDocumentData *data;
+
+    g_return_if_fail (MD_IS_DOCUMENT (doc));
+    g_return_if_fail (!window || MD_IS_WINDOW (window));
+
+    data = md_document_get_data (doc);
+    g_return_if_fail (data != NULL);
+
+    if (data->window != window)
+    {
+        g_return_if_fail (!window || !data->window);
+        md_document_detach_tab_label (doc);
+        data->window = window;
+    }
+}
+
+MdWindow *
+md_document_get_window (MdDocument *doc)
+{
+    MdDocumentData *data;
+
+    g_return_val_if_fail (MD_IS_DOCUMENT (doc), NULL);
+
+    data = md_document_get_data (doc);
+    g_return_val_if_fail (data != NULL, NULL);
+
+    return data->window;
+}
+
 
 void
 _md_document_close (MdDocument *doc)
@@ -536,6 +583,8 @@ md_document_set_file_info (MdDocument *doc,
     if (uri_changed)
         g_object_notify (G_OBJECT (doc), "md-doc-uri");
     g_object_thaw_notify (G_OBJECT (doc));
+
+    md_document_update_tab_label (doc);
 
     md_file_info_free (old_info);
 }
@@ -657,6 +706,15 @@ _md_document_get_icon (MdDocument  *doc,
     g_return_val_if_fail (MD_IS_DOCUMENT (doc), NULL);
     g_return_val_if_fail (MD_DOCUMENT_GET_IFACE (doc)->get_icon != NULL, NULL);
     return MD_DOCUMENT_GET_IFACE (doc)->get_icon (doc, size);
+}
+
+void
+_md_document_apply_prefs (MdDocument *doc)
+{
+    g_return_if_fail (MD_IS_DOCUMENT (doc));
+
+    if (MD_DOCUMENT_GET_IFACE (doc)->apply_prefs)
+        MD_DOCUMENT_GET_IFACE (doc)->apply_prefs (doc);
 }
 
 
@@ -1676,4 +1734,126 @@ md_document_stop_file_watch (MdDocument *doc)
 //         g_signal_handler_disconnect (edit, edit->priv->focus_in_handler_id);
 //         edit->priv->focus_in_handler_id = 0;
 //     }
+}
+
+
+/***************************************************************************/
+/* Tab label
+ */
+
+static GdkPixbuf *
+md_document_get_icon_default (MdDocument  *doc,
+                              GtkIconSize  size)
+{
+    /* XXX non-local */
+    char *filename = md_document_get_filename (doc);
+    GdkPixbuf *pixbuf = _moo_get_icon_for_path (filename, GTK_WIDGET (doc), size);
+    g_free (filename);
+    return pixbuf ? g_object_ref (pixbuf) : NULL;
+}
+
+
+GtkWidget *
+_md_document_create_tab_label (MdDocument  *doc,
+                               GtkWidget  **icon_evbox)
+{
+    MdDocumentData *data;
+    GtkWidget *hbox, *icon, *label, *evbox;
+    GtkSizeGroup *group;
+
+    g_return_val_if_fail (MD_IS_DOCUMENT (doc), NULL);
+    g_return_val_if_fail (icon_evbox != NULL, NULL);
+
+    data = md_document_get_data (doc);
+    g_return_val_if_fail (data != NULL, NULL);
+    g_return_val_if_fail (data->label == NULL, NULL);
+
+    group = gtk_size_group_new (GTK_SIZE_GROUP_VERTICAL);
+
+    hbox = gtk_hbox_new (FALSE, 3);
+    gtk_widget_show (hbox);
+
+    *icon_evbox = evbox = gtk_event_box_new ();
+    gtk_event_box_set_visible_window (GTK_EVENT_BOX (evbox), FALSE);
+    gtk_box_pack_start (GTK_BOX (hbox), evbox, FALSE, FALSE, 0);
+
+    icon = gtk_image_new ();
+    gtk_container_add (GTK_CONTAINER (evbox), icon);
+    gtk_widget_show_all (evbox);
+
+    label = gtk_label_new (NULL);
+    gtk_label_set_single_line_mode (GTK_LABEL (label), TRUE);
+    gtk_widget_show (label);
+    gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
+
+    gtk_size_group_add_widget (group, evbox);
+    gtk_size_group_add_widget (group, label);
+
+    data->label = label;
+    data->icon = icon;
+    data->icon_evbox = evbox;
+
+    md_document_update_tab_label (doc);
+
+    g_object_unref (group);
+
+    return hbox;
+}
+
+static void
+md_document_detach_tab_label (MdDocument *doc)
+{
+    MdDocumentData *data;
+
+    data = md_document_get_data (doc);
+
+    data->label = NULL;
+    data->icon = NULL;
+    data->icon_evbox = NULL;
+}
+
+static void
+md_document_update_tab_label (MdDocument *doc)
+{
+    MdDocumentData *data;
+    MdDocumentStatus status;
+    char *label_text;
+    gboolean modified, deleted;
+    char *display_basename;
+
+    g_return_if_fail (MD_IS_DOCUMENT (doc));
+
+    data = md_document_get_data (doc);
+
+    if (!data->label)
+        return;
+
+    status = md_document_get_status (doc);
+
+    deleted = (status & (MD_DOCUMENT_DELETED | MD_DOCUMENT_MODIFIED_ON_DISK)) != 0;
+    modified = (status & MD_DOCUMENT_MODIFIED) != 0;
+
+    display_basename = md_document_get_display_basename (doc);
+    label_text = g_strdup_printf ("%s%s%s",
+                                  deleted ? "!" : "",
+                                  modified ? "*" : "",
+                                  display_basename);
+    gtk_label_set_text (GTK_LABEL (data->label), label_text);
+
+    if (!MD_DOCUMENT_IS_BUSY (doc) ||
+        !_md_image_attach_throbber (GTK_IMAGE (data->icon), GTK_ICON_SIZE_MENU))
+    {
+        GdkPixbuf *pixbuf;
+
+        pixbuf = _md_document_get_icon (doc, GTK_ICON_SIZE_MENU);
+
+        if (pixbuf)
+        {
+            gtk_image_set_from_pixbuf (GTK_IMAGE (data->icon), pixbuf);
+            g_object_unref (pixbuf);
+        }
+    }
+
+    g_free (label_text);
+    g_free (display_basename);
 }

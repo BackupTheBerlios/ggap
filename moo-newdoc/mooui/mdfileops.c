@@ -33,7 +33,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_GIO
+
+#if GLIB_CHECK_VERSION(2,16,0)
+#define HAVE_GIO
 #include <gio/gio.h>
 #endif
 
@@ -1430,7 +1432,6 @@ handle_overwrite_open (const char    *filename,
 
   if (create_backup)
     {
-      struct stat tmp_statbuf;
       char *backup_filename;
       int bfd;
 
@@ -1461,30 +1462,34 @@ handle_overwrite_open (const char    *filename,
        * bits for the group same as the protection bits for
        * others. */
 #if defined(HAVE_FCHOWN) && defined(HAVE_FCHMOD)
-      if (fstat (bfd, &tmp_statbuf) != 0)
-	{
-	  g_set_error (error, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
-		       _("Backup file creation failed"));
-	  g_unlink (backup_filename);
-	  g_free (backup_filename);
-	  goto err_out;
-	}
+      {
+        struct stat tmp_statbuf;
 
-      if ((original_stat.st_gid != tmp_statbuf.st_gid)  &&
-	  fchown (bfd, (uid_t) -1, original_stat.st_gid) != 0)
-	{
-	  if (fchmod (bfd,
-		      (original_stat.st_mode & 0707) |
-		      ((original_stat.st_mode & 07) << 3)) != 0)
-	    {
-	      g_set_error (error, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
-			   _("Backup file creation failed"));
-	      g_unlink (backup_filename);
-	      close (bfd);
-	      g_free (backup_filename);
-	      goto err_out;
-	    }
-	}
+        if (fstat (bfd, &tmp_statbuf) != 0)
+          {
+            g_set_error (error, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
+                         _("Backup file creation failed"));
+            g_unlink (backup_filename);
+            g_free (backup_filename);
+            goto err_out;
+          }
+
+        if ((original_stat.st_gid != tmp_statbuf.st_gid)  &&
+            fchown (bfd, (uid_t) -1, original_stat.st_gid) != 0)
+          {
+            if (fchmod (bfd,
+                        (original_stat.st_mode & 0707) |
+                        ((original_stat.st_mode & 07) << 3)) != 0)
+              {
+                g_set_error (error, MD_FILE_ERROR, MD_FILE_ERROR_FAILED,
+                             _("Backup file creation failed"));
+                g_unlink (backup_filename);
+                close (bfd);
+                g_free (backup_filename);
+                goto err_out;
+              }
+          }
+      }
 #endif
 
       if (!copy_file_data (fd, bfd, NULL))
@@ -1701,7 +1706,7 @@ md_file_saver_remote_cleanup (MdFileSaverRemote *saver)
 
     if (saver->out_stream)
     {
-        cancel_and_close_stream (saver->out_stream);
+//         cancel_and_close_stream (saver->out_stream);
         g_object_unref (saver->out_stream);
         saver->out_stream = NULL;
     }

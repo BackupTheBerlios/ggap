@@ -96,6 +96,40 @@ md_file_op_type_get_type (void)
     return etype;
 }
 
+#include "mdfileops.h"
+
+GType
+md_file_error_get_type (void)
+{
+    static GType etype;
+    if (G_UNLIKELY (!etype))
+    {
+        static const GEnumValue values[] = {
+            { MD_FILE_ERROR_INVAL, (char*) "MD_FILE_ERROR_INVAL", (char*) "inval" },
+            { MD_FILE_ERROR_UNSUPPORTED, (char*) "MD_FILE_ERROR_UNSUPPORTED", (char*) "unsupported" },
+            { MD_FILE_ERROR_FAILED, (char*) "MD_FILE_ERROR_FAILED", (char*) "failed" },
+            { 0, NULL, NULL }
+        };
+        etype = g_enum_register_static ("MdFileError", values);
+    }
+    return etype;
+}
+
+GType
+md_file_saver_flags_get_type (void)
+{
+    static GType etype;
+    if (G_UNLIKELY (!etype))
+    {
+        static const GFlagsValue values[] = {
+            { MD_FILE_SAVER_CREATE_BACKUP, (char*) "MD_FILE_SAVER_CREATE_BACKUP", (char*) "backup" },
+            { 0, NULL, NULL }
+        };
+        etype = g_flags_register_static ("MdFileSaverFlags", values);
+    }
+    return etype;
+}
+
 #include "mdmanager.h"
 
 GType

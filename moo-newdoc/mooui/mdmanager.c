@@ -204,7 +204,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, new_doc),
                       NULL, NULL,
-                      _moo_marshal_VOID__OBJECT,
+                      _moo_ui_marshal_VOID__OBJECT,
                       G_TYPE_NONE, 1,
                       MD_TYPE_DOCUMENT);
 
@@ -214,7 +214,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, new_window),
                       NULL, NULL,
-                      _moo_marshal_VOID__OBJECT,
+                      _moo_ui_marshal_VOID__OBJECT,
                       G_TYPE_NONE, 1,
                       MD_TYPE_WINDOW);
 
@@ -224,7 +224,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, close_doc),
                       NULL, NULL,
-                      _moo_marshal_VOID__OBJECT,
+                      _moo_ui_marshal_VOID__OBJECT,
                       G_TYPE_NONE, 1,
                       MD_TYPE_DOCUMENT);
 
@@ -234,7 +234,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, close_window),
                       NULL, NULL,
-                      _moo_marshal_VOID__OBJECT,
+                      _moo_ui_marshal_VOID__OBJECT,
                       G_TYPE_NONE, 1,
                       MD_TYPE_WINDOW);
 
@@ -244,7 +244,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, action_close_docs),
                       NULL, NULL,
-                      _moo_marshal_VOID__POINTER,
+                      _moo_ui_marshal_VOID__POINTER,
                       G_TYPE_NONE, 1,
                       G_TYPE_POINTER);
 
@@ -254,7 +254,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, action_close_windows),
                       NULL, NULL,
-                      _moo_marshal_VOID__POINTER,
+                      _moo_ui_marshal_VOID__POINTER,
                       G_TYPE_NONE, 1,
                       G_TYPE_POINTER);
 
@@ -264,7 +264,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, ask_open),
                       NULL, NULL,
-                      _moo_marshal_BOXED__OBJECT,
+                      _moo_ui_marshal_BOXED__OBJECT,
                       MD_TYPE_FILE_INFO_ARRAY, 1,
                       MD_TYPE_WINDOW);
 
@@ -274,7 +274,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, run_open_dialog),
                       accumulator_invoke_once, NULL,
-                      _moo_marshal_BOXED__OBJECT,
+                      _moo_ui_marshal_BOXED__OBJECT,
                       MD_TYPE_FILE_INFO_ARRAY, 1,
                       MOO_TYPE_FILE_DIALOG);
 
@@ -284,7 +284,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, ask_open_uri),
                       NULL, NULL,
-                      _moo_marshal_BOXED__OBJECT,
+                      _moo_ui_marshal_BOXED__OBJECT,
                       MD_TYPE_FILE_INFO_ARRAY, 1,
                       MD_TYPE_WINDOW);
 
@@ -294,7 +294,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, ask_save_as),
                       NULL, NULL,
-                      _moo_marshal_BOXED__OBJECT,
+                      _moo_ui_marshal_BOXED__OBJECT,
                       MD_TYPE_FILE_INFO, 1,
                       MD_TYPE_DOCUMENT);
 
@@ -304,7 +304,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, run_save_dialog),
                       accumulator_invoke_once, NULL,
-                      _moo_marshal_BOXED__OBJECT_OBJECT,
+                      _moo_ui_marshal_BOXED__OBJECT_OBJECT,
                       MD_TYPE_FILE_INFO, 2,
                       MD_TYPE_DOCUMENT,
                       MOO_TYPE_FILE_DIALOG);
@@ -315,7 +315,7 @@ md_manager_class_init (MdManagerClass *klass)
                       G_SIGNAL_RUN_LAST,
                       G_STRUCT_OFFSET (MdManagerClass, apply_prefs),
                       NULL, NULL,
-                      _moo_marshal_VOID__VOID,
+                      _moo_ui_marshal_VOID__VOID,
                       G_TYPE_NONE, 0);
 }
 
@@ -345,9 +345,9 @@ md_manager_constructor (GType                  type,
 
     if ((app = moo_app_instance ()))
     {
-        g_signal_connect_swapped (app, "quit-requested", G_CALLBACK (app_quit_requested), mgr);
-        g_signal_connect_swapped (app, "quit-cancelled", G_CALLBACK (app_quit_cancelled), mgr);
-        g_signal_connect_swapped (app, "quit", G_CALLBACK (app_quit), mgr);
+//         g_signal_connect_swapped (app, "quit-requested", G_CALLBACK (app_quit_requested), mgr);
+//         g_signal_connect_swapped (app, "quit-cancelled", G_CALLBACK (app_quit_cancelled), mgr);
+//         g_signal_connect_swapped (app, "quit", G_CALLBACK (app_quit), mgr);
     }
 
     return object;
@@ -713,15 +713,15 @@ emit_close_window (MdManager *mgr,
 }
 
 
-void
-_md_manager_action_new_doc (MdManager *mgr,
-                            MdWindow  *window)
+MdDocument *
+md_manager_ui_new_doc (MdManager *mgr,
+                       MdWindow  *window)
 {
     MdDocument *doc;
 
-    g_return_if_fail (MD_IS_MANAGER (mgr));
-    g_return_if_fail (!window || MD_IS_WINDOW (window));
-    g_return_if_fail (!window || md_window_get_manager (window) == mgr);
+    g_return_val_if_fail (MD_IS_MANAGER (mgr), NULL);
+    g_return_val_if_fail (!window || MD_IS_WINDOW (window), NULL);
+    g_return_val_if_fail (!window || md_window_get_manager (window) == mgr, NULL);
 
     if (!window)
         window = create_window (mgr);
@@ -731,13 +731,15 @@ _md_manager_action_new_doc (MdManager *mgr,
     _md_manager_move_doc (mgr, doc, window);
     md_window_set_active_doc (window, doc);
     gtk_widget_grab_focus (GTK_WIDGET (doc));
+
+    return doc;
 }
 
-void
-_md_manager_action_new_window (MdManager *mgr)
+MdWindow *
+md_manager_ui_new_window (MdManager *mgr)
 {
-    g_return_if_fail (MD_IS_MANAGER (mgr));
-    create_window (mgr);
+    g_return_val_if_fail (MD_IS_MANAGER (mgr), NULL);
+    return create_window (mgr);
 }
 
 void
@@ -1127,7 +1129,8 @@ handler_close_doc (MdManager  *mgr,
     if (!mgr->priv->windows && !mgr->priv->windowless && mgr->priv->handling_quit)
     {
         mgr->priv->handling_quit = FALSE;
-        moo_app_resume_quit (moo_app_instance ());
+        g_critical ("%s: oopsie", G_STRLOC);
+//         moo_app_resume_quit (moo_app_instance ());
     }
 
     g_object_unref (doc);
@@ -1140,7 +1143,8 @@ cancel_quit (MdManager *mgr)
     if (mgr->priv->handling_quit)
     {
         mgr->priv->handling_quit = FALSE;
-        moo_app_cancel_quit (moo_app_instance ());
+        g_critical ("%s: oopsie", G_STRLOC);
+//         moo_app_cancel_quit (moo_app_instance ());
     }
 }
 
@@ -1200,7 +1204,7 @@ schedule_close_window (MdWindow *window)
                        "md-window-need-close",
                        GINT_TO_POINTER (TRUE));
 }
-
+//
 static void
 cancel_close_window (MdManager *mgr,
                      MdWindow  *window)
@@ -1220,15 +1224,17 @@ app_quit_requested (MdManager *mgr,
         return;
 
     mgr->priv->handling_quit = TRUE;
-    moo_app_delay_quit (app);
+    g_critical ("%s: oopsie", G_STRLOC);
+//     moo_app_delay_quit (app);
 
     result = MD_MANAGER_GET_CLASS (mgr)->close_all (mgr);
 
     switch (result)
     {
         case MD_CLOSE_ALL_DONE:
+            g_critical ("%s: oopsie", G_STRLOC);
             mgr->priv->handling_quit = FALSE;
-            moo_app_resume_quit (app);
+//             moo_app_resume_quit (app);
             break;
         case MD_CLOSE_ALL_CANCELLED:
             cancel_quit (mgr);

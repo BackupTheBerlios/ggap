@@ -26,6 +26,13 @@ GType md_document_state_get_type (void) G_GNUC_CONST;
 GType md_file_op_type_get_type (void) G_GNUC_CONST;
 #define MD_TYPE_FILE_OP_TYPE (md_file_op_type_get_type())
 
+/* enumerations from mdfileops.h */
+GType md_file_error_get_type (void) G_GNUC_CONST;
+#define MD_TYPE_FILE_ERROR (md_file_error_get_type())
+
+GType md_file_saver_flags_get_type (void) G_GNUC_CONST;
+#define MD_TYPE_FILE_SAVER_FLAGS (md_file_saver_flags_get_type())
+
 /* enumerations from mdmanager.h */
 GType md_close_all_result_get_type (void) G_GNUC_CONST;
 #define MD_TYPE_CLOSE_ALL_RESULT (md_close_all_result_get_type())

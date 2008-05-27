@@ -16,24 +16,26 @@
 #include "mddocument.h"
 
 
-gboolean    _md_document_need_save      (MdDocument     *doc);
+gboolean    _md_document_need_save          (MdDocument     *doc);
 
-void        _md_document_set_manager    (MdDocument     *doc,
-                                         MdManager      *mgr);
-void        _md_document_set_window     (MdDocument     *doc,
-                                         MdWindow       *window);
-void        _md_document_close          (MdDocument     *doc);
+void        _md_document_set_manager        (MdDocument     *doc,
+                                             MdManager      *mgr);
+void        _md_document_set_window         (MdDocument     *doc,
+                                             MdWindow       *window);
+void        _md_document_close              (MdDocument     *doc);
 
-GdkPixbuf  *_md_document_get_icon       (MdDocument     *doc,
-                                         GtkIconSize     size);
-void        _md_document_apply_prefs    (MdDocument     *doc);
+GdkPixbuf  *_md_document_get_icon           (MdDocument     *doc,
+                                             GtkIconSize     size);
+void        _md_document_apply_prefs        (MdDocument     *doc);
+GtkWidget  *_md_document_create_tab_label   (MdDocument     *doc,
+                                             GtkWidget     **icon_evbox);
 
-void        _md_document_load_file      (MdDocument     *doc,
-                                         MdFileInfo     *file_info,
-                                         MdFileOpInfo   *op_info);
-void        _md_document_save_file      (MdDocument     *doc,
-                                         MdFileInfo     *file_info,
-                                         MdFileOpInfo   *op_info);
+void        _md_document_load_file          (MdDocument     *doc,
+                                             MdFileInfo     *file_info,
+                                             MdFileOpInfo   *op_info);
+void        _md_document_save_file          (MdDocument     *doc,
+                                             MdFileInfo     *file_info,
+                                             MdFileOpInfo   *op_info);
 
 
 #endif /* MD_DOCUMENT_PRIVATE_H */

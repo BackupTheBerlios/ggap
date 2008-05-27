@@ -1,4 +1,4 @@
-SUBDIRS = gap moows .
+SUBDIRS = moows .
 
 EXTRA_PROGRAMS = ggap
 bin_PROGRAMS =
@@ -8,155 +8,115 @@ if !MOO_OS_CYGWIN
 bin_PROGRAMS += ggap
 endif
 
-if !GLIB_2_14
-regex_cflags = -I$(srcdir)/../moo/moo/mooutils/newgtk/glib-2.14
-endif
-
 AM_CFLAGS =				\
-    -I$(top_builddir)			\
-    -I$(top_builddir)/ggap		\
-    -I$(top_srcdir)/ggap		\
     -I$(top_srcdir)/moo-newdoc		\
-    $(regex_cflags)			\
     $(MOO_CFLAGS)			\
-    $(MOO_DEBUG_CFLAGS)			\
-    $(GTK_CFLAGS)			\
-    -DDISABLE_OLD_STUFF
-AM_OBJCFLAGS = $(AM_CFLAGS) $(MOO_OBJCFLAGS)
+    $(MOO_DEBUG_CFLAGS)
 
-testparser_LDADD = $(MOO_LIBS) $(MOO_OBJC_LIBS) $(READLINE_LIBS)
+testparser_LDADD = ../moo/moo/libmoo.la $(READLINE_LIBS)
 
-ggap_LDADD = moows/libmoows.la ../moo/moo/libmoo.la $(MOO_OBJC_LIBS) $(ZLIB)
+ggap_LDADD = moows/libmoows.la ../moo-newdoc/mooui/libmooui.la ../moo/moo/libmoo.la $(ZLIB)
 ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
+
+CLEANFILES =
+EXTRA_DIST =
+BUILT_SOURCES =
+nodist_ggap_SOURCES =
 
 if MOO_OS_MINGW
 ggap_LDFLAGS += -mwindows
+rc_in_files = ggap_res.rc.in
+nodist_ggap_SOURCES += ggap_res.res
+include ../moo/mk/rc.mk
 endif MOO_OS_MINGW
 
-testparser_SOURCES =			\
-	testparser.c			\
-	gapparser.c			\
-	gapparser.h			\
-	gapparser-yacc.c		\
+testparser_SOURCES =		\
+	testparser.c		\
+	gapparser.c		\
+	gapparser.h		\
+	gapparser-yacc.c	\
 	gapparser-yacc.h
 
-ws_sources =				\
-	gapworksheet.c			\
-	gapworksheet.h			\
-	gapwscompletion.c		\
-	gapwscompletion.h		\
-	gapwsview.c			\
-	gapwsview.h			\
-	gapwswindow.c			\
-	gapwswindow.h
-
-editor_sources =			\
-	gapeditwindow.c			\
-	gapeditwindow.h
-
-ggap_SOURCES =				\
-	$(ws_sources)			\
-	$(editor_sources)		\
-	gapwswindow-ui.h		\
-	gaptermwindow-ui.h		\
-	gap.c				\
-	gap.h				\
-	ggap-i18n.h			\
-	ggap-i18n.c			\
-	ggap.c				\
-	ggapfile.h			\
-	ggapfile.c			\
-	gapapp.c			\
-	gapapp.h			\
-	gapparser.c			\
-	gapparser.h			\
-	gapparser-priv.h		\
-	gapparser-yacc.c		\
-	gapparser-yacc.h		\
-	gapterm.c			\
-	gapterm.h			\
-	gaptermwindow.c			\
-	gaptermwindow.h			\
-	ggap-credits.h
-
-gapparser-yacc.h: gapparser-yacc.c
-	touch $(srcdir)/gapparser-yacc.h
-gapparser-yacc.c: gapparser-yacc.y
-	bison -v -o $(srcdir)/gapparser-yacc.c -d $(srcdir)/gapparser-yacc.y
-
-nodist_ggap_SOURCES = ggap_res.res
-CLEANFILES = ggap_res.res
-
-if MOO_OS_MINGW
-ggap_res.res: ggap_res.rc
-	$(WINDRES) -i ggap_res.rc --input-format=rc -o ggap_res.res -O coff
-ggap_SOURCES += ggap_res.res
-ggap_LDADD += ggap_res.res
-else ! MOO_OS_MINGW
-ggap_res.res:
-	echo dummy > ggap_res.res
-endif ! MOO_OS_MINGW
-
-EXTRA_DIST =			\
-    $(editor_sources)		\
-    ggap_res.rc.in		\
-    gaptermwindow-ui.xml	\
-    gapwswindow-ui.xml		\
-    gapparser-yacc.y		\
-    glade/usermenu.glade	\
-    ggap.xml.in
-
-BUILT_SOURCES =			\
+ggap_SOURCES =			\
+	gap.c			\
+	gap.h			\
+	gapapp.c		\
+	gapapp.h		\
+	gapeditwindow.c		\
+	gapeditwindow.h		\
+	gapparser-priv.h	\
 	gapparser-yacc.c	\
 	gapparser-yacc.h	\
+	gapparser.c		\
+	gapparser.h		\
+	gapprocess.c		\
+	gapprocess.h		\
+	gapterm.c		\
+	gapterm.h		\
 	gaptermwindow-ui.h	\
+	gaptermwindow.c		\
+	gaptermwindow.h		\
+	gapworksheet.c		\
+	gapworksheet.h		\
+	gapwscompletion.c	\
+	gapwscompletion.h	\
 	gapwswindow-ui.h	\
-	ggap.c			\
-	ggap-credits.h
+	gapwswindow.c		\
+	gapwswindow.h		\
+	ggap-credits.h		\
+	ggap-enums.c		\
+	ggap-enums.h		\
+	ggap-i18n.c		\
+	ggap-i18n.h		\
+	ggapfile.c		\
+	ggapfile.h		\
+	main.c
 
-XML2H = $(top_srcdir)/moo/moo/mooutils/xml2h.sh
-PY2H = $(top_srcdir)/moo/moo/mooutils/py2h.sh
-
-ggap-credits.h: ../THANKS $(XML2H)
-	$(SHELL) $(XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h.tmp && \
+BUILT_SOURCES += ggap-credits.h
+ggap-credits.h: ../THANKS $(MOO_XML2H)
+	$(SHELL) $(MOO_XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h.tmp && \
 	mv ggap-credits.h.tmp ggap-credits.h
-gapwswindow-ui.h: gapwswindow-ui.xml $(XML2H)
-	sh $(XML2H) GAP_WS_WINDOW_UI $(srcdir)/gapwswindow-ui.xml > gapwswindow-ui.h.tmp && \
-	mv gapwswindow-ui.h.tmp gapwswindow-ui.h
-gaptermwindow-ui.h: gaptermwindow-ui.xml $(XML2H)
-	sh $(XML2H) GAP_TERM_WINDOW_UI $(srcdir)/gaptermwindow-ui.xml > gaptermwindow-ui.h.tmp && \
-	mv gaptermwindow-ui.h.tmp gaptermwindow-ui.h
 
-%-glade.h: glade/%.glade $(XML2H)
-	$(SHELL) $(XML2H) `basename "$*" | sed -e "s/-/_/"`_glade_xml $< > $@.tmp && mv $@.tmp $@
-glade_files =				\
-	glade/gapprefs.glade
-glade_sources = $(patsubst glade/%.glade,%-glade.h,$(glade_files))
-ggap_SOURCES += $(glade_sources)
-BUILT_SOURCES += $(glade_sources)
-CLEANFILES += $(glade_sources)
-EXTRA_DIST += $(glade_files)
+enum_file = ggap-enums
+enum_prefix = GAP
+enum_headers =			\
+	gap.h			\
+	gapapp.h		\
+	gapeditwindow.h		\
+	gapparser.h		\
+	gapprocess.h		\
+	gapterm.h		\
+	gaptermwindow.h		\
+	gapworksheet.h		\
+	gapwscompletion.h	\
+	gapwswindow.h		\
+	ggapfile.h
+include ../../moo/mk/enums.mk
 
-packagesdir = $(mimedir)/packages
-packages_DATA = ggap.xml
-CLEANFILES += ggap.xml
-update_mime = update-mime-database $(DESTDIR)${mimedir}
-@MOO_INTLTOOL_XML_RULE@
+yacc_files = gapparser-yacc.y
+include ../moo/mk/yacc.mk
 
-if !MOO_OS_MINGW
-install-data-hook:
-	if echo "Updating mime database... " && $(update_mime); then		\
-		echo "Done.";							\
-	else									\
-		echo "*** ";							\
-		echo "*** Mime database not updated. After install, run this:";	\
-		echo $(update_mime);						\
-		echo "*** ";							\
-	fi
-uninstall-hook:
-	echo "Updating mime database" && $(update_mime) && echo "Done."
-else MOO_OS_MINGW
-install-data-hook:
-	cp /usr/share/mime/packages/freedesktop.org.xml $(DESTDIR)${mimedir}/packages/ && \
-	$(update_mime)
-endif
+ui_files = gapwswindow.xml gaptermwindow.xml
+include ../moo/mk/ui.mk
+
+glade_files = glade/gapprefs.glade
+include ../moo/mk/glade.mk
+
+mime_in_files = ggap.xml.in
+include ../moo/mk/mime.mk
+
+include gap/Makefile.incl
+
+
+# include ../../moo/mk/marshals.mk
+BUILT_SOURCES += marshals.c marshals.h
+nodist_ggap_SOURCES += marshals.c marshals.h
+CLEANFILES += marshals.c marshals.h
+EXTRA_DIST += marshals.list
+marshals.c: marshals.list
+	glib-genmarshal --prefix=_ggap_marshal --header $(srcdir)/marshals.list > $@.tmp && \
+	glib-genmarshal --prefix=_ggap_marshal --body $(srcdir)/marshals.list >> $@.tmp && \
+	mv $@.tmp $@
+marshals.h: marshals.list
+	glib-genmarshal --prefix=_ggap_marshal --header $(srcdir)/marshals.list > $@.tmp && \
+	mv $@.tmp $@

@@ -224,7 +224,7 @@ md_window_class_init (MdWindowClass *klass)
                           G_SIGNAL_RUN_LAST,
                           G_STRUCT_OFFSET (MdWindowClass, active_doc_changed),
                           NULL, NULL,
-                          _moo_marshal_VOID__VOID,
+                          _moo_ui_marshal_VOID__VOID,
                           G_TYPE_NONE, 0);
 
     signals[INSERT_DOC] =
@@ -233,7 +233,7 @@ md_window_class_init (MdWindowClass *klass)
                           G_SIGNAL_RUN_LAST,
                           G_STRUCT_OFFSET (MdWindowClass, insert_doc),
                           NULL, NULL,
-                          _moo_marshal_VOID__OBJECT,
+                          _moo_ui_marshal_VOID__OBJECT,
                           G_TYPE_NONE, 1,
                           MD_TYPE_DOCUMENT);
 
@@ -243,7 +243,7 @@ md_window_class_init (MdWindowClass *klass)
                           G_SIGNAL_RUN_LAST,
                           G_STRUCT_OFFSET (MdWindowClass, remove_doc),
                           NULL, NULL,
-                          _moo_marshal_VOID__OBJECT,
+                          _moo_ui_marshal_VOID__OBJECT,
                           G_TYPE_NONE, 1,
                           MD_TYPE_DOCUMENT);
 
@@ -366,7 +366,7 @@ md_window_class_init (MdWindowClass *klass)
         char *accel = g_strdup_printf (MD_ACCEL_SWITCH_TO_TAB "%u", i);
         _moo_window_class_new_action_callback (window_class, action_id, NULL,
                                                G_CALLBACK (action_switch_to_tab),
-                                               _moo_marshal_VOID__UINT,
+                                               _moo_ui_marshal_VOID__UINT,
                                                G_TYPE_NONE, 1,
                                                G_TYPE_UINT, i - 1,
                                                "accel", accel,
@@ -813,13 +813,13 @@ md_window_apply_prefs (MooWindow *window)
 static void
 action_new_doc (MdWindow *window)
 {
-    _md_manager_action_new_doc (window->priv->mgr, window);
+    md_manager_ui_new_doc (window->priv->mgr, window);
 }
 
 static void
 action_new_window (MdWindow *window)
 {
-    _md_manager_action_new_window (window->priv->mgr);
+    md_manager_ui_new_window (window->priv->mgr);
 }
 
 static void
