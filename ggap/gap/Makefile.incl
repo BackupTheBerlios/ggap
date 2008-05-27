@@ -1,0 +1,17 @@
+gapdir = $(datadir)/ggap/gap
+gap_DATA = gap/ggap-init.g
+
+EXTRA_DIST += gap/ggap-init.g.in gap/ggap-restore.g
+BUILT_SOURCES += gap-files-stamp
+CLEANFILES += gap-files-stamp gap/ggap-init.g ggap-restore-g.h
+
+gap-files-stamp: gap/ggap-init.g.in gap/ggap-restore.g $(top_builddir)/config.status $(MOO_XML2H)
+	$(MAKE) gap-files-stamp-dep && echo stamp > gap-files-stamp
+gap-files-stamp-dep: gap/ggap-init.g ggap-restore.h
+	@true
+
+gap/ggap-init.g: gap/ggap-init.g.in $(top_builddir)/config.status
+	cd $(top_builddir) && $(SHELL) ./config.status --file=$(subdir)/$@
+
+ggap-restore.h: gap/ggap-restore.g $(MOO_XML2H)
+	$(SHELL) $(MOO_XML2H) --define GGAP_RESTORE $< > $@.tmp && (cmp -s $@.tmp $@ || mv $@.tmp $@) && rm -f $@.tmp
