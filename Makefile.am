@@ -17,9 +17,6 @@ endif
 EXTRA_DIST =            \
     INSTALL             \
     autogen.sh          \
-    intltool-extract.in	\
-    intltool-merge.in	\
-    intltool-update.in	\
     THANKS		\
     scripts/ggap-full.sh\
     scripts/ggap.sh

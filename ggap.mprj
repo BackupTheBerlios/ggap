@@ -45,7 +45,7 @@
   <exe>ggap/ggap</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
-   <var name="MOO_DEBUGG">misc,gap,gap-file</var>
+   <var name="MOO_DEBUG">misc,gap,gap-file</var>
   </vars>
  </run>
 </medit-project>
