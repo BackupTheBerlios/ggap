@@ -3,24 +3,6 @@
 
 #include "ggap-enums.h"
 
-#include "gapworksheet.h"
-
-GType
-gap_file_type_get_type (void)
-{
-    static GType etype;
-    if (G_UNLIKELY (!etype))
-    {
-        static const GEnumValue values[] = {
-            { GAP_FILE_WORKSHEET, (char*) "GAP_FILE_WORKSHEET", (char*) "worksheet" },
-            { GAP_FILE_TEXT, (char*) "GAP_FILE_TEXT", (char*) "text" },
-            { 0, NULL, NULL }
-        };
-        etype = g_enum_register_static ("GapFileType", values);
-    }
-    return etype;
-}
-
 #include "gapparser.h"
 
 GType
@@ -57,6 +39,24 @@ gap_state_get_type (void)
             { 0, NULL, NULL }
         };
         etype = g_enum_register_static ("GapState", values);
+    }
+    return etype;
+}
+
+#include "gapworksheet.h"
+
+GType
+gap_file_type_get_type (void)
+{
+    static GType etype;
+    if (G_UNLIKELY (!etype))
+    {
+        static const GEnumValue values[] = {
+            { GAP_FILE_WORKSHEET, (char*) "GAP_FILE_WORKSHEET", (char*) "worksheet" },
+            { GAP_FILE_TEXT, (char*) "GAP_FILE_TEXT", (char*) "text" },
+            { 0, NULL, NULL }
+        };
+        etype = g_enum_register_static ("GapFileType", values);
     }
     return etype;
 }

@@ -57,9 +57,6 @@ void        gap_file_info_set_file_type         (MdFileInfo     *file_info,
 GapFileType gap_file_info_get_file_type         (MdFileInfo     *file_info,
                                                  GapFileType     dflt);
 
-void       _gap_worksheet_ask_for_completions   (GapWorksheet   *ws);
-gpointer   _gap_worksheet_get_completion        (GapWorksheet   *ws);
-
 
 G_END_DECLS
 

@@ -47,18 +47,45 @@ struct GapProcess
 struct GapProcessClass
 {
     GObjectClass base_class;
+
+    void (*gap_died)            (GapProcess *proc);
+    void (*gap_output)          (GapProcess *proc,
+                                 const char *data,
+                                 guint       data_len,
+                                 gboolean    is_stderr);
+    void (*gap_prompt)          (GapProcess *proc,
+                                 const char *string,
+                                 guint       len,
+                                 gboolean    first_time);
+    void (*gap_globals_changed) (GapProcess *proc,
+                                 const char *data,
+                                 guint       data_len,
+                                 gboolean    added);
 };
 
 
-GType       gap_process_get_type    (void) G_GNUC_CONST;
+GType       gap_process_get_type        (void) G_GNUC_CONST;
 
-GapProcess *gap_process_start       (const char     *cmd_line,
-                                     GError        **error);
+GapProcess *gap_process_start           (const char     *cmd_line,
+                                         int             width,
+                                         int             height,
+                                         GError        **error);
 
-GapState    gap_process_get_state   (GapProcess     *proc);
-void        gap_process_set_size    (GapProcess     *proc,
-                                     int             width,
-                                     int             height);
+GapState    gap_process_get_state       (GapProcess     *proc);
+void        gap_process_set_size        (GapProcess     *proc,
+                                         int             width,
+                                         int             height);
+
+void        gap_process_write_input     (GapProcess     *proc,
+                                         char          **lines);
+gboolean    gap_process_run_command     (GapProcess     *proc,
+                                         const char     *command,
+                                         const char     *args,
+                                         const char     *gap_cmd_line,
+                                         char          **output);
+void        gap_process_ask_completions (GapProcess     *proc);
+
+void        gap_process_die             (GapProcess     *proc);
 
 
 G_END_DECLS
