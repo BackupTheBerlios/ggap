@@ -1,10 +1,10 @@
-noinst_PROGRAMS = testws
+# noinst_PROGRAMS = testws
 noinst_LTLIBRARIES = libmoows.la
 
-testws_LDADD = libmoows.la $(MOO_LIBS) $(MOO_OBJC_LIBS)
+# testws_LDADD = libmoows.la $(MOO_LIBS) $(MOO_OBJC_LIBS)
 
-testws_SOURCES =		\
-	testws.c
+# testws_SOURCES =		\
+# 	testws.c
 
 libmoows_la_SOURCES =		\
 	mooworksheet.c		\

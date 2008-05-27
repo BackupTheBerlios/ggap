@@ -16,12 +16,13 @@
 
 #include <config.h>
 #include <glib/gstrfuncs.h>
-#include <libintl.h>
 
 G_BEGIN_DECLS
 
 
 #ifdef ENABLE_NLS
+
+#include <libintl.h>
 
 #define _(String) _ggap_gettext (String)
 #define Q_(String) _ggap_Q_gettext (String)

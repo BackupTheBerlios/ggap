@@ -36,13 +36,12 @@ char        *gap_escape_filename    (const char *filename);
 
 #define GGAP_CMD_RUN_COMMAND "run-command"
 
-char        *ggap_pkg_exec_command  (guint       stamp,
-                                     const char *cmdname,
+char        *ggap_pkg_exec_command  (const char *cmdname,
                                      const char *args);
 
 char        *gap_cmd_save_workspace (const char *filename);
 
-char        *gap_saved_workspace_filename (gboolean fancy);
+char        *gap_saved_workspace_filename (void);
 
 
 #define GGAP_DTC_FIXED      'f'

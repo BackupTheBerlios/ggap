@@ -27,39 +27,28 @@ G_BEGIN_DECLS
 #define GAP_IS_WORKSHEET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GAP_TYPE_WORKSHEET))
 #define GAP_WORKSHEET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GAP_TYPE_WORKSHEET, GapWorksheetClass))
 
-#define GAP_TYPE_STATE                 (gap_state_get_type ())
-
-typedef struct _GapWorksheet        GapWorksheet;
-typedef struct _GapWorksheetPrivate GapWorksheetPrivate;
-typedef struct _GapWorksheetClass   GapWorksheetClass;
-
-typedef enum {
-    GAP_DEAD = 0,
-    GAP_IN_PROMPT,
-    GAP_LOADING,
-    GAP_BUSY,
-    GAP_BUSY_INTERNAL
-} GapState;
+typedef struct GapWorksheet        GapWorksheet;
+typedef struct GapWorksheetPrivate GapWorksheetPrivate;
+typedef struct GapWorksheetClass   GapWorksheetClass;
 
 typedef enum {
     GAP_FILE_WORKSHEET,
     GAP_FILE_TEXT
 } GapFileType;
 
-struct _GapWorksheet
+struct GapWorksheet
 {
     MooWorksheet base;
     GapWorksheetPrivate *priv;
 };
 
-struct _GapWorksheetClass
+struct GapWorksheetClass
 {
     MooWorksheetClass base_class;
 };
 
 
 GType       gap_worksheet_get_type              (void) G_GNUC_CONST;
-GType       gap_state_get_type                  (void) G_GNUC_CONST;
 
 GapFileType gap_worksheet_get_file_type         (GapWorksheet   *ws);
 
@@ -68,9 +57,6 @@ void        gap_file_info_set_file_type         (MdFileInfo     *file_info,
 GapFileType gap_file_info_get_file_type         (MdFileInfo     *file_info,
                                                  GapFileType     dflt);
 
-void       _gap_worksheet_set_size              (GapWorksheet   *ws,
-                                                 int             width,
-                                                 int             height);
 void       _gap_worksheet_ask_for_completions   (GapWorksheet   *ws);
 gpointer   _gap_worksheet_get_completion        (GapWorksheet   *ws);
 

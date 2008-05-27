@@ -14,6 +14,7 @@
 #include "gapwswindow.h"
 #include "gapworksheet.h"
 #include "gapapp.h"
+#include "gapprocess.h"
 #include "ggap-i18n.h"
 #include "mooutils/moodialogs.h"
 #include "mooutils/moofiledialog.h"
@@ -28,11 +29,11 @@ G_DEFINE_TYPE (GapWsWindow, gap_ws_window, MD_TYPE_WINDOW)
 static GObject *gap_ws_window_constructor           (GType               type,
                                                      guint               n_props,
                                                      GObjectConstructParam *props);
-static void     gap_ws_window_active_view_changed   (MdWindow           *window);
-static void     gap_ws_window_insert_view           (MdWindow           *window,
-                                                     MdView             *view);
-static void     gap_ws_window_remove_view           (MdWindow           *window,
-                                                     MdView             *view);
+static void     gap_ws_window_active_doc_changed    (MdWindow           *window);
+static void     gap_ws_window_insert_doc            (MdWindow           *window,
+                                                     MdDocument         *doc);
+static void     gap_ws_window_remove_doc            (MdWindow           *window,
+                                                     MdDocument         *doc);
 
 
 static void
@@ -41,14 +42,14 @@ gap_ws_window_class_init (GapWsWindowClass *klass)
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     MdWindowClass *doc_window_class = MD_WINDOW_CLASS (klass);
 
-    md_app_window_class_set_id (MD_APP_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
+    moo_window_class_set_id (MOO_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
     g_type_class_add_private (klass, sizeof (GapWsWindowPrivate));
 
     object_class->constructor = gap_ws_window_constructor;
 
-    doc_window_class->active_view_changed = gap_ws_window_active_view_changed;
-    doc_window_class->insert_view = gap_ws_window_insert_view;
-    doc_window_class->remove_view = gap_ws_window_remove_view;
+    doc_window_class->active_doc_changed = gap_ws_window_active_doc_changed;
+    doc_window_class->insert_doc = gap_ws_window_insert_doc;
+    doc_window_class->remove_doc = gap_ws_window_remove_doc;
 }
 
 
@@ -62,7 +63,7 @@ gap_ws_window_init (GapWsWindow *window)
                   "toolbar-ui-name", "Worksheet/Toolbar",
                   NULL);
 
-    md_app_window_set_global_accels (MD_APP_WINDOW (window), FALSE);
+    moo_window_set_global_accels (MOO_WINDOW (window), FALSE);
 }
 
 
@@ -96,53 +97,53 @@ gap_state_changed (MdDocument   *doc,
     {
         case GAP_BUSY:
         case GAP_BUSY_INTERNAL:
-            md_app_window_message (MD_APP_WINDOW (window), "Busy");
+            moo_window_message (MOO_WINDOW (window), "Busy");
             break;
 
         case GAP_DEAD:
         case GAP_IN_PROMPT:
-            md_app_window_message (MD_APP_WINDOW (window), NULL);
+            moo_window_message (MOO_WINDOW (window), NULL);
             break;
 
         case GAP_LOADING:
-            md_app_window_message (MD_APP_WINDOW (window), "Loading");
+            moo_window_message (MOO_WINDOW (window), "Loading");
             break;
     }
 }
 
 static void
-gap_ws_window_active_view_changed (MdWindow *window)
+gap_ws_window_active_doc_changed (MdWindow *window)
 {
-    MD_WINDOW_CLASS (gap_ws_window_parent_class)->active_view_changed (window);
-    md_app_window_message (MD_APP_WINDOW (window), NULL);
+    MD_WINDOW_CLASS (gap_ws_window_parent_class)->active_doc_changed (window);
+    moo_window_message (MOO_WINDOW (window), NULL);
 }
 
 static void
-gap_ws_window_insert_view (MdWindow *window,
-                           MdView   *view)
+gap_ws_window_insert_doc (MdWindow   *window,
+                          MdDocument *doc)
 {
     GapWorksheet *ws;
 
-    ws = GAP_WORKSHEET (md_view_get_doc (view));
+    ws = GAP_WORKSHEET (doc);
 
     g_signal_connect (ws, "notify::gap-state",
                       G_CALLBACK (gap_state_changed),
                       window);
 
-    MD_WINDOW_CLASS (gap_ws_window_parent_class)->insert_view (window, view);
+    MD_WINDOW_CLASS (gap_ws_window_parent_class)->insert_doc (window, doc);
 
     gap_state_changed (MD_DOCUMENT (ws), NULL, GAP_WS_WINDOW (window));
 }
 
 static void
-gap_ws_window_remove_view (MdWindow *window,
-                           MdView   *view)
+gap_ws_window_remove_doc (MdWindow   *window,
+                          MdDocument *doc)
 {
     GapWorksheet *ws;
 
-    ws = GAP_WORKSHEET (md_view_get_doc (view));
+    ws = GAP_WORKSHEET (doc);
 
     g_signal_handlers_disconnect_by_func (ws, (gpointer) gap_state_changed, window);
 
-    MD_WINDOW_CLASS (gap_ws_window_parent_class)->remove_view (window, view);
+    MD_WINDOW_CLASS (gap_ws_window_parent_class)->remove_doc (window, doc);
 }

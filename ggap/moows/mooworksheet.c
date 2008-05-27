@@ -1,7 +1,7 @@
 /*
  *   mooworksheet.c
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include <string.h>
 
 
-G_DEFINE_TYPE (MooWorksheet, moo_worksheet, MOO_TYPE_WS_BUFFER)
+G_DEFINE_TYPE (MooWorksheet, moo_worksheet, MOO_TYPE_WS_VIEW)
 
 
 typedef enum {
@@ -45,7 +45,6 @@ struct MooWorksheetPrivate {
 
 enum {
     PROCESS_INPUT,
-    SCROLL_INSERT_ONSCREEN,
     N_SIGNALS
 };
 
@@ -164,14 +163,6 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
                       G_TYPE_NONE, 1,
                       G_TYPE_STRV | G_SIGNAL_TYPE_STATIC_SCOPE);
 
-    signals[SCROLL_INSERT_ONSCREEN] =
-        g_signal_new ("scroll-insert-onscreen",
-                      G_OBJECT_CLASS_TYPE (klass),
-                      G_SIGNAL_RUN_LAST,
-                      0, NULL, NULL,
-                      g_cclosure_marshal_VOID__VOID,
-                      G_TYPE_NONE, 0);
-
     g_type_class_add_private (klass, sizeof (MooWorksheetPrivate));
 }
 
@@ -194,15 +185,25 @@ moo_worksheet_set_accepting_input (MooWorksheet *ws,
 }
 
 
+static MooWsBuffer *
+get_buffer (MooWorksheet *ws)
+{
+    return MOO_WS_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)));
+}
+
+
 void
 moo_worksheet_reset (MooWorksheet *ws)
 {
     MooWsBlock *block;
+    MooWsBuffer *buffer;
 
     g_return_if_fail (MOO_IS_WORKSHEET (ws));
 
-    while ((block = _moo_ws_buffer_get_first_block (MOO_WS_BUFFER (ws))))
-        moo_ws_buffer_delete_block (MOO_WS_BUFFER (ws), block);
+    buffer = get_buffer (ws);
+
+    while ((block = _moo_ws_buffer_get_first_block (buffer)))
+        moo_ws_buffer_delete_block (buffer, block);
 
     ws->priv->input = NULL;
     ws->priv->output = NULL;
@@ -220,7 +221,8 @@ moo_worksheet_get_accepting_input (MooWorksheet *ws)
 static void
 scroll_insert_onscreen (MooWorksheet *ws)
 {
-    g_signal_emit (ws, signals[SCROLL_INSERT_ONSCREEN], 0);
+    gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW (ws),
+        gtk_text_buffer_get_insert (GTK_TEXT_BUFFER (get_buffer (ws))));
 }
 
 
@@ -260,9 +262,12 @@ moo_worksheet_start_input (MooWorksheet   *ws,
                            const char     *ps2)
 {
     MooWsBlock *block = NULL;
+    MooWsBuffer *buffer;
 
     g_return_if_fail (MOO_IS_WORKSHEET (ws));
     g_return_if_fail (!ws->priv->in_input);
+
+    buffer = get_buffer (ws);
 
     if (ws->priv->output)
     {
@@ -286,13 +291,11 @@ moo_worksheet_start_input (MooWorksheet   *ws,
         block = moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
 
         if (ws->priv->output)
-            moo_ws_buffer_insert_block (MOO_WS_BUFFER (ws), block,
-                                        MOO_WS_BLOCK (ws->priv->output));
+            moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->output));
         else if (ws->priv->input)
-            moo_ws_buffer_insert_block (MOO_WS_BUFFER (ws), block,
-                                        MOO_WS_BLOCK (ws->priv->input));
+            moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->input));
         else
-            moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
+            moo_ws_buffer_append_block (buffer, block);
     }
 
     moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (block), 0, 0);
@@ -311,7 +314,7 @@ moo_worksheet_continue_input (MooWorksheet *ws)
 
     moo_ws_prompt_block_new_line (ws->priv->input);
     _moo_ws_block_get_end_iter (MOO_WS_BLOCK (ws->priv->input), &iter);
-    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (ws), &iter);
+    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (get_buffer (ws)), &iter);
     scroll_insert_onscreen (ws);
 
     moo_worksheet_set_accepting_input (ws, TRUE);
@@ -338,8 +341,8 @@ static void
 moo_worksheet_get_cursor (MooWorksheet *ws,
                           GtkTextIter  *iter)
 {
-    gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (ws), iter,
-        gtk_text_buffer_get_insert (GTK_TEXT_BUFFER (ws)));
+    GtkTextBuffer *buffer = GTK_TEXT_BUFFER (get_buffer (ws));
+    gtk_text_buffer_get_iter_at_mark (buffer, iter, gtk_text_buffer_get_insert (buffer));
 }
 
 
@@ -354,7 +357,7 @@ _moo_worksheet_commit_input (MooWorksheet *ws)
 
     if (!ws->priv->in_input)
     {
-        _moo_ws_buffer_beep (MOO_WS_BUFFER (ws));
+        _moo_ws_view_beep (MOO_WS_VIEW (ws));
         return TRUE;
     }
 
@@ -369,7 +372,7 @@ _moo_worksheet_commit_input (MooWorksheet *ws)
     ws->priv->input = MOO_WS_PROMPT_BLOCK (block);
     ws->priv->output = NULL;
     while (block->next && !MOO_IS_WS_PROMPT_BLOCK (block->next))
-        moo_ws_buffer_delete_block (MOO_WS_BUFFER (ws), block->next);
+        moo_ws_buffer_delete_block (get_buffer (ws), block->next);
 
     lines = moo_ws_prompt_block_get_lines (MOO_WS_PROMPT_BLOCK (block));
     g_signal_emit (ws, signals[PROCESS_INPUT], 0, lines);
@@ -434,18 +437,17 @@ create_output (MooWorksheet *ws,
                OutputType    out_type)
 {
     MooWsBlock *block;
+    MooWsBuffer *buffer = get_buffer (ws);
 
     block = create_output_block (out_type);
     g_return_val_if_fail (block != NULL, NULL);
 
     if (ws->priv->output)
-        moo_ws_buffer_insert_block (MOO_WS_BUFFER (ws), block,
-                                    MOO_WS_BLOCK (ws->priv->output));
+        moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->output));
     else if (ws->priv->input)
-        moo_ws_buffer_insert_block (MOO_WS_BUFFER (ws), block,
-                                    MOO_WS_BLOCK (ws->priv->input));
+        moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->input));
     else
-        moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
+        moo_ws_buffer_append_block (buffer, block);
 
     ws->priv->output = MOO_WS_TEXT_BLOCK (block);
     ws->priv->output_newline = FALSE;
@@ -496,7 +498,7 @@ moo_worksheet_write_output_real (MooWorksheet *ws,
     }
 
     _moo_ws_block_get_end_iter (MOO_WS_BLOCK (output), &iter);
-    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (ws), &iter);
+    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (get_buffer (ws)), &iter);
     scroll_insert_onscreen (ws);
 
     g_strfreev (lines);
@@ -622,7 +624,7 @@ history_go (MooWorksheet *ws,
     return;
 
 beep_and_return:
-    _moo_ws_buffer_beep (MOO_WS_BUFFER (ws));
+    _moo_ws_view_beep (MOO_WS_VIEW (ws));
 }
 
 void
@@ -680,7 +682,7 @@ load_input (MooWorksheet  *ws,
     block = moo_worksheet_create_prompt_block (ws, ps, ps2, moo_markup_get_content (elm));
     g_return_if_fail (block != NULL);
 
-    moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
+    moo_ws_buffer_append_block (get_buffer (ws), block);
 }
 
 static void
@@ -706,7 +708,7 @@ load_output (MooWorksheet  *ws,
 
     moo_ws_text_block_set_text (MOO_WS_TEXT_BLOCK (block),
                                 moo_markup_get_content (elm));
-    moo_ws_buffer_append_block (MOO_WS_BUFFER (ws), block);
+    moo_ws_buffer_append_block (get_buffer (ws), block);
 }
 
 gboolean
@@ -792,7 +794,7 @@ moo_worksheet_format (MooWorksheet  *ws,
     moo_markup_set_prop (root, PROP_VERSION, PROP_VERSION_VALUE);
     content = moo_markup_create_element (root, ELM_CONTENT);
 
-    for (block = _moo_ws_buffer_get_first_block (MOO_WS_BUFFER (ws));
+    for (block = _moo_ws_buffer_get_first_block (get_buffer (ws));
          block != NULL; block = block->next)
     {
         MooMarkupNode *elm;
@@ -848,7 +850,7 @@ moo_worksheet_get_input_text (MooWorksheet *ws)
 
     text = g_string_new (NULL);
 
-    for (block = _moo_ws_buffer_get_first_block (MOO_WS_BUFFER (ws));
+    for (block = _moo_ws_buffer_get_first_block (get_buffer (ws));
          block != NULL; block = block->next)
     {
         char *block_text;

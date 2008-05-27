@@ -1,7 +1,7 @@
 /*
  *   mooworksheet.h
  *
- *   Copyright (C) 2004-2007 by Yevgen Muntyan <muntyan@math.tamu.edu>
+ *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 #ifndef MOO_WORKSHEET_H
 #define MOO_WORKSHEET_H
 
-#include <moows/moowsbuffer.h>
+#include <moows/moowsview.h>
 #include <mooutils/mooutils-file.h>
 
 G_BEGIN_DECLS
@@ -33,13 +33,13 @@ typedef struct MooWorksheetClass MooWorksheetClass;
 
 struct MooWorksheet
 {
-    MooWsBuffer base;
+    MooWsView base;
     MooWorksheetPrivate *priv;
 };
 
 struct MooWorksheetClass
 {
-    MooWsBufferClass base_class;
+    MooWsViewClass base_class;
 
     void (*process_input) (MooWorksheet  *sheet,
                            char         **lines);

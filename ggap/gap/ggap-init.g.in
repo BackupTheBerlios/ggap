@@ -1,0 +1,284 @@
+$GGAP_VERSION := @GGAP_VERSION@;
+$GGAP_API_VERSION := @GGAP_API_VERSION@;
+
+
+#############################################################################
+##
+#V  $GGAP_DATA
+##
+$GGAP_DATA := rec(
+  debug := false,
+  original_funcs := rec(),
+  next_prompt := [],
+  globals := [],
+  globals_sent := false,
+  api := ["$GGAP_VERSION", "$GGAP_API_VERSION", "$GGAP_RESET", "$GGAP_DATA"],
+);
+
+
+#############################################################################
+##
+#V  InfoGGAP
+##
+if not IsBoundGlobal("InfoGGAP") then
+  InfoGGAP := NewInfoClass("InfoGGAP");
+  SetInfoLevel(InfoGGAP, 10);
+fi;
+
+
+# #############################################################################
+# ##
+# ##  $GGAP_FORMAT_INT
+# ##
+# $GGAP_FORMAT_INT :=
+# function(num)
+#   local num_s;
+#   num_s := HexStringInt(num);
+#   return Concatenation(List([1 .. 8-Length(num_s)], i->'0'), num_s);
+# end;
+# Add($GGAP_DATA.api, "$GGAP_FORMAT_INT");
+
+
+#############################################################################
+##
+#F  $GGAP_SEND_DATA()
+##
+$GGAP_SEND_DATA :=
+function(arg)
+  Print("@GGAP@v");
+  Perform(arg, Print);
+  Print("@GGAP@e\c");
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_DATA");
+
+
+#############################################################################
+##
+#F  $GGAP_SEND_RESULT_ERROR(message)
+##
+$GGAP_SEND_RESULT_ERROR :=
+function(message)
+  $GGAP_SEND_DATA("result-error:", message);
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_RESULT_ERROR");
+
+# #############################################################################
+# ##
+# #F  $GGAP_SEND_RESULT(stamp, ...)
+# ##
+# BindGlobal("$GGAP_SEND_RESULT",
+# function(arg)
+#   local list;
+#   list := Concatenation(["result:", $GGAP_FORMAT_INT(arg[1])],
+#                         arg{2..Length(arg)});
+#   CallFuncList($GGAP_SEND_DATA, list);
+# end);
+# Add($GGAP_DATA.api, "$GGAP_SEND_RESULT");
+
+$GGAP_SEND_ADDED_DELETED :=
+function(added, deleted)
+  local w;
+
+  if not IsEmpty(added) then
+    Print("@GGAP@vglobals-added:");
+    for w in added do
+      Print(w, "\n");
+    od;
+    Print("@GGAP@e\c");
+  fi;
+
+  if not IsEmpty(deleted) then
+    Print("@GGAP@vglobals-deleted:");
+    for w in deleted do
+      Print(w, "\n");
+    od;
+    Print("@GGAP@e\c");
+  fi;
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_ADDED_DELETED");
+
+$GGAP_SEND_GLOBALS_FIRST_TIME :=
+function()
+  local func;
+  $GGAP_DATA.globals_sent := true;
+  $GGAP_SEND_ADDED_DELETED(NamesGVars(), []);
+  func := ValueGlobal("NamesUserGVars");
+  $GGAP_DATA.globals := List(func());
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_GLOBALS_FIRST_TIME");
+
+$GGAP_SEND_GLOBALS :=
+function()
+  local func, current, added, deleted;
+
+  if not $GGAP_DATA.globals_sent then
+    $GGAP_SEND_GLOBALS_FIRST_TIME();
+    return;
+  fi;
+
+  func := ValueGlobal("NamesUserGVars");
+  current := func();
+  added := Difference(current, $GGAP_DATA.globals);
+  deleted := Difference($GGAP_DATA.globals, current);
+  $GGAP_SEND_ADDED_DELETED(added, deleted);
+
+  $GGAP_DATA.globals := List(current);
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_GLOBALS");
+
+$GGAP_RESEND_GLOBALS :=
+function()
+  $GGAP_DATA.globals_sent := false;
+  $GGAP_SEND_GLOBALS();
+end;
+Add($GGAP_DATA.api, "$GGAP_RESEND_GLOBALS");
+
+
+#############################################################################
+##
+#F  $GGAP_EXEC_COMMAND(cmdname, ...)
+##
+$GGAP_EXEC_COMMAND :=
+function(arg)
+  local cmd;
+
+  if IsEmpty(arg) then
+    $GGAP_SEND_RESULT_ERROR(0, "bad arguments");
+    $GGAP_DATA.next_prompt := [""];
+    return;
+  fi;
+
+  cmd := arg[1];
+
+  if cmd = "run-command" then
+    if Length(arg) <> 1 then
+      $GGAP_SEND_RESULT_ERROR("bad arguments for run-command");
+      $GGAP_DATA.next_prompt := [""];
+    else
+      $GGAP_DATA.next_prompt := ["@GGAP@voutput:\c", "@GGAP@e\c"];
+    fi;
+  elif cmd = "get-globals" then
+    $GGAP_SEND_GLOBALS();
+    $GGAP_DATA.next_prompt := [""];
+  else
+    $GGAP_SEND_RESULT_ERROR(Concatenation("bad command '", String(cmd), "'"));
+    $GGAP_DATA.next_prompt := [""];
+  fi;
+end;
+Add($GGAP_DATA.api, "$GGAP_EXEC_COMMAND");
+
+
+$GGAP_BIND_NAMES := function(bind)
+  local bind_global, unbind_global, store_global, restore_global;
+
+  Info(InfoGGAP, 3, "$GGAP_INIT");
+
+  unbind_global := function(name)
+    if IsBoundGlobal(name) then
+      if IsReadOnlyGlobal(name) then
+        MakeReadWriteGlobal(name);
+      fi;
+      UnbindGlobal(name);
+    fi;
+  end;
+
+  bind_global := function(name, value)
+    unbind_global(name);
+    BindGlobal(name, value);
+  end;
+
+  store_global := function(name)
+    if IsBoundGlobal(name) then
+      $GGAP_DATA.original_funcs.(name) := ValueGlobal(name);
+    fi;
+  end;
+
+  restore_global := function(name)
+    unbind_global(name);
+    if IsBound($GGAP_DATA.original_funcs.(name)) then
+      BindGlobal(name, $GGAP_DATA.original_funcs.(name));
+    fi;
+  end;
+
+  if bind then
+#     store_global("InfoDoPrint");
+#     bind_global("InfoDoPrint",
+#     function(arglist)
+#       Print("@GGAP-INFO@");
+#       CallFuncList(Print, arglist);
+#       Print("\n@GGAP-INFO-END@\c");
+#     end);
+
+    bind_global("PrintPromptHook",
+    function()
+      if not IsEmpty($GGAP_DATA.next_prompt) then
+        Print($GGAP_DATA.next_prompt[1]);
+        Remove($GGAP_DATA.next_prompt, 1);
+      else
+        $GGAP_SEND_DATA("prompt:", CPROMPT());
+      fi;
+    end);
+
+    store_global("ColorPrompt");
+    bind_global("ColorPrompt", function(setting)
+      if setting = true then
+        Print("# ColorPrompt() ignored\n");
+      fi;
+    end);
+  else
+    unbind_global("PrintPromptHook");
+
+    restore_global("ColorPrompt");
+  fi;
+end;
+Add($GGAP_DATA.api, "$GGAP_BIND_NAMES");
+
+
+#############################################################################
+##
+#F  $GGAP_INIT()
+##
+BindGlobal("$GGAP_INIT",
+function()
+  Info(InfoGGAP, 3, "$GGAP_INIT");
+  $GGAP_BIND_NAMES(true);
+#   $GGAP_SEND_GLOBALS();
+end);
+Add($GGAP_DATA.api, "$GGAP_INIT");
+
+#############################################################################
+##
+#F  $GGAP_DEINIT()
+##
+##  Undo stuff done in $GGAP_INIT
+##
+$GGAP_DEINIT := function()
+  $GGAP_BIND_NAMES(false);
+  Info(InfoGGAP, 3, "$GGAP_DEINIT");
+end;
+Add($GGAP_DATA.api, "$GGAP_DEINIT");
+
+
+#############################################################################
+##
+#F  $GGAP_RESET
+##
+##  This will be called if $GGAP_API_VERSION is different
+##  from the one used in ggap-restore.g
+##
+$GGAP_RESET := function()
+  local name, api;
+
+  $GGAP_DEINIT();
+
+  api := $GGAP_DATA.api;
+  for name in api do
+    UnbindGlobal(name);
+  od;
+end;
+
+
+#
+# Finally call $GGAP_INIT()
+#
+$GGAP_INIT();

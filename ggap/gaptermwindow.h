@@ -14,7 +14,7 @@
 #ifndef GAP_TERM_WINDOW_H
 #define GAP_TERM_WINDOW_H
 
-#include <mooui/mdappwindow.h>
+#include <mooutils/moowindow.h>
 
 G_BEGIN_DECLS
 
@@ -34,13 +34,13 @@ typedef struct GapTermWindowClass   GapTermWindowClass;
 
 struct GapTermWindow
 {
-    MdAppWindow base;
+    MooWindow base;
     GapTermWindowPrivate *priv;
 };
 
 struct GapTermWindowClass
 {
-    MdAppWindowClass base_class;
+    MooWindowClass base_class;
 };
 
 

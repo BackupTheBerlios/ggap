@@ -14,6 +14,7 @@
 #include "config.h"
 #include "gap.h"
 #include "gapapp.h"
+#include "ggap-restore.h"
 #include "mooutils/mooutils-fs.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooprefs.h"
@@ -41,14 +42,13 @@ SAVE_WORKSPACE                                          \
 
 
 char *
-ggap_pkg_exec_command (guint       stamp,
-                       const char *cmdname,
+ggap_pkg_exec_command (const char *cmdname,
                        const char *args)
 {
     if (args && args[0])
-        return g_strdup_printf ("$GGAP_EXEC_COMMAND(%u, \"%s\", %s);\n", stamp, cmdname, args);
+        return g_strdup_printf ("$GGAP_EXEC_COMMAND(\"%s\", %s);\n", cmdname, args);
     else
-        return g_strdup_printf ("$GGAP_EXEC_COMMAND(%u, \"%s\");\n", stamp, cmdname);
+        return g_strdup_printf ("$GGAP_EXEC_COMMAND(\"%s\");\n", cmdname);
 }
 
 char *
@@ -66,52 +66,25 @@ gap_cmd_save_workspace (const char *filename)
 }
 
 
-#define INIT_PKG                            \
-"if IsBoundGlobal(\"$GGAP_INIT\") then\n"   \
-"  $GGAP_INIT(\"%s\");\n"                   \
-"fi;\n"
-
-static const char *
-gap_init_file (const char *workspace,
-               gboolean    fancy)
+static char *
+save_workspace_init_file (const char *workspace)
 {
     GString *contents;
     GError *error = NULL;
-    gboolean init_pkg = fancy;
+    char *filename;
+    char *wsp_escaped;
 
-    static char *filename;
-
-    if (filename)
-    {
-        if (_moo_unlink (filename) != 0)
-        {
-            int err = errno;
-            g_warning ("%s: %s", G_STRLOC, g_strerror (err));
-        }
-
-        g_free (filename);
-        filename = NULL;
-    }
-
-    g_return_val_if_fail (workspace || init_pkg, NULL);
+    g_return_val_if_fail (workspace, NULL);
 
     filename = moo_tempnam ();
     g_return_val_if_fail (filename != NULL, NULL);
 
     contents = g_string_new (NULL);
 
-    if (init_pkg)
-        g_string_append_printf (contents, INIT_PKG, GGAP_VERSION);
-
-    /* FIRST load package, then save workspace */
-    if (workspace)
-    {
-        char *wsp_escaped = gap_escape_filename (workspace);
-        g_string_append_printf (contents, SAVE_WORKSPACE_AND_GZIP,
-                                wsp_escaped, wsp_escaped,
-                                wsp_escaped);
-        g_free (wsp_escaped);
-    }
+    wsp_escaped = gap_escape_filename (workspace);
+    g_string_append_printf (contents, SAVE_WORKSPACE_AND_GZIP,
+                            wsp_escaped, wsp_escaped,
+                            wsp_escaped);
 
     if (!_moo_save_file_utf8 (filename, contents->str, -1, &error))
     {
@@ -121,6 +94,7 @@ gap_init_file (const char *workspace,
         filename = NULL;
     }
 
+    g_free (wsp_escaped);
     g_string_free (contents, TRUE);
     return filename;
 }
@@ -215,14 +189,65 @@ gap_parse_cmd_line (const char *command_line,
 
 
 char *
-gap_saved_workspace_filename (gboolean fancy)
+gap_saved_workspace_filename (void)
 {
-    if (fancy)
-        return moo_get_user_data_file (GGAP_WORKSPACE_FILE_FANCY);
-    else
-        return moo_get_user_data_file (GGAP_WORKSPACE_FILE_BARE);
+    return moo_get_user_data_file ("workspace");
 }
 
+
+static char *
+find_init_file (void)
+{
+    char **dirs;
+    guint i, n_dirs = 0;
+
+    dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
+
+    for (i = 0; i < n_dirs; ++i)
+    {
+        char *file = g_build_filename (dirs[i], "gap", "ggap-init.g", NULL);
+
+        if (g_file_test (file, G_FILE_TEST_EXISTS))
+        {
+            g_strfreev (dirs);
+            return file;
+        }
+
+        g_free (file);
+    }
+
+    g_strfreev (dirs);
+    return NULL;
+}
+
+static char *
+gen_temp_file (const char *contents)
+{
+    GError *error = NULL;
+    char *filename;
+
+    filename = moo_tempnam ();
+    g_return_val_if_fail (filename != NULL, NULL);
+
+    if (!_moo_save_file_utf8 (filename, contents, -1, &error))
+    {
+        g_critical ("%s: %s", G_STRLOC, error->message);
+        g_error_free (error);
+        g_free (filename);
+        filename = NULL;
+    }
+
+    return filename;
+}
+
+static char *
+gen_restore_file (const char *init_file)
+{
+    char *text = g_strdup_printf (GGAP_RESTORE, GGAP_API_VERSION, init_file, init_file);
+    char *file = gen_temp_file (text);
+    g_free (text);
+    return file;
+}
 
 static GString *
 make_command_line (const char *cmd_base,
@@ -233,13 +258,7 @@ make_command_line (const char *cmd_base,
     gboolean save_workspace;
     gboolean wsp_already_saved = FALSE;
     char *wsp_file = NULL;
-    const char *init_file = NULL;
-    gboolean init_pkg = fancy;
     GString *cmd;
-
-#ifdef NEED_INIT_PKG
-    init_pkg = TRUE;
-#endif
 
     save_workspace = moo_prefs_get_bool (GGAP_PREFS_GAP_SAVE_WORKSPACE);
 
@@ -250,7 +269,7 @@ make_command_line (const char *cmd_base,
 
     if (!custom_wsp && save_workspace)
     {
-        wsp_file = gap_saved_workspace_filename (fancy);
+        wsp_file = gap_saved_workspace_filename ();
 
         g_return_val_if_fail (wsp_file != NULL, cmd);
 
@@ -276,28 +295,34 @@ make_command_line (const char *cmd_base,
         if (!wsp_already_saved && !moo_make_user_data_dir (NULL))
             g_critical ("%s: could not create user data dir", G_STRLOC);
 
-        if (!wsp_already_saved || init_pkg)
-            init_file = gap_init_file (wsp_already_saved ? NULL : wsp_file, fancy);
+        if (!wsp_already_saved)
+        {
+            char *file = save_workspace_init_file (wsp_file);
+            g_string_append_printf (cmd, " \"%s\"", file);
+            g_free (file);
+        }
     }
 
-    if (init_pkg && !init_file)
-        init_file = gap_init_file (NULL, fancy);
-
-    if (init_pkg)
+    if (fancy)
     {
-        char **dirs;
-        guint i, n_dirs = 0;
+        char *init_file;
 
-        dirs = moo_get_data_dirs (MOO_DATA_SHARE, &n_dirs);
+        if (!(init_file = find_init_file ()))
+        {
+            g_critical ("%s: could not find ggap-init.g file, broken installation?", G_STRLOC);
+        }
+        else
+        {
+            char *restore_file = gen_restore_file (init_file);
+            if (!restore_file)
+                g_critical ("%s: oops", G_STRLOC);
+            else
+                g_string_append_printf (cmd, " \"%s\"", restore_file);
+            g_free (restore_file);
+        }
 
-        for (i = 0; i < n_dirs; ++i)
-            g_string_append_printf (cmd, " -l \"%s\";", dirs[i]);
-
-        g_strfreev (dirs);
+        g_free (init_file);
     }
-
-    if (init_file)
-        g_string_append_printf (cmd, " \"%s\"", init_file);
 
     g_free (wsp_file);
     return cmd;

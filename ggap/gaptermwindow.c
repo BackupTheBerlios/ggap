@@ -17,7 +17,7 @@
 #include "gap.h"
 #include "gaptermwindow.h"
 #include "gapterm.h"
-#include "mooui/mdapp.h"
+#include "mooui/mooapp.h"
 #include "mooutils/moofiledialog.h"
 #include "mooutils/moocompat.h"
 #include "mooutils/mooutils-misc.h"
@@ -41,13 +41,13 @@ struct GapTermWindowPrivate {
 
 
 static GObject *gap_term_window_constructor     (GType           type,
-                                                 guint           n_props,
-                                                 GObjectConstructParam *props);
+                                              guint           n_props,
+                                              GObjectConstructParam *props);
 static void     gap_term_window_destroy         (GtkObject      *object);
 
 static void     prefs_notify                    (const char     *key,
-                                                 const GValue   *newval,
-                                                 GapTermWindow  *window);
+                                              const GValue   *newval,
+                                              GapTermWindow  *window);
 
 // static void     action_switch_to_editor         (void);
 static void     action_read_file                (GapTermWindow  *window);
@@ -56,7 +56,7 @@ static void     action_restart_gap              (GapTermWindow  *window);
 static void     action_send_intr                (GapTermWindow  *window);
 
 
-G_DEFINE_TYPE (GapTermWindow, gap_term_window, MD_TYPE_APP_WINDOW)
+G_DEFINE_TYPE (GapTermWindow, gap_term_window, MOO_TYPE_WINDOW)
 
 
 static void
@@ -64,54 +64,54 @@ gap_term_window_class_init (GapTermWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GtkObjectClass *gtkobject_class = GTK_OBJECT_CLASS (klass);
-    MdAppWindowClass *window_class = MD_APP_WINDOW_CLASS (klass);
+    MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
 
-    md_app_window_class_set_id (window_class, "Terminal", "Terminal");
+    moo_window_class_set_id (window_class, "Terminal", "Terminal");
 
     object_class->constructor = gap_term_window_constructor;
     gtkobject_class->destroy = gap_term_window_destroy;
 
     g_type_class_add_private (klass, sizeof (GapTermWindowPrivate));
 
-//     md_app_window_class_new_action (window_class, "SwitchToEditor", NULL,
-//                                     "display-name", _("Switch to Editor"),
-//                                     "label", _("Switch to Editor"),
-//                                     "tooltip", _("Switch to editor"),
-//                                     "stock-id", GTK_STOCK_EDIT,
-//                                     "closure-callback", action_switch_to_editor,
-//                                     NULL);
+//     moo_window_class_new_action (window_class, "SwitchToEditor", NULL,
+//                                  "display-name", _("Switch to Editor"),
+//                                  "label", _("Switch to Editor"),
+//                                  "tooltip", _("Switch to editor"),
+//                                  "stock-id", GTK_STOCK_EDIT,
+//                                  "closure-callback", action_switch_to_editor,
+//                                  NULL);
 
-    md_app_window_class_new_action (window_class, "GAPRead", NULL,
-                                    "display-name", _("Read File"),
-                                    "label", _("Read File"),
-                                    "tooltip", _("Read file"),
-                                    "stock-id", GTK_STOCK_OPEN,
-                                    "closure-callback", action_read_file,
-                                    NULL);
-    md_app_window_class_new_action (window_class, "GAPOpenWorkspace", NULL,
-                                    "display-name", _("Open Workspace"),
-                                    "label", _("Open _Workspace"),
-                                    "tooltip", _("Open workspace"),
-                                    "stock-id", GTK_STOCK_OPEN,
-                                    "closure-callback", action_open_workspace,
-                                    NULL);
+    moo_window_class_new_action (window_class, "GAPRead", NULL,
+                                 "display-name", _("Read File"),
+                                 "label", _("Read File"),
+                                 "tooltip", _("Read file"),
+                                 "stock-id", GTK_STOCK_OPEN,
+                                 "closure-callback", action_read_file,
+                                 NULL);
+    moo_window_class_new_action (window_class, "GAPOpenWorkspace", NULL,
+                                 "display-name", _("Open Workspace"),
+                                 "label", _("Open _Workspace"),
+                                 "tooltip", _("Open workspace"),
+                                 "stock-id", GTK_STOCK_OPEN,
+                                 "closure-callback", action_open_workspace,
+                                 NULL);
 
-    md_app_window_class_new_action (window_class, "Restart", NULL,
-                                    "display-name", _("Restart"),
-                                    "label", _("_Restart"),
-                                    "tooltip", _("Restart GAP"),
-                                    "stock-id", MOO_STOCK_RESTART,
-                                    "accel", "<alt>R",
-                                    "closure-callback", action_restart_gap,
-                                    NULL);
+    moo_window_class_new_action (window_class, "Restart", NULL,
+                                 "display-name", _("Restart"),
+                                 "label", _("_Restart"),
+                                 "tooltip", _("Restart GAP"),
+                                 "stock-id", MOO_STOCK_RESTART,
+                                 "accel", "<alt>R",
+                                 "closure-callback", action_restart_gap,
+                                 NULL);
 
-    md_app_window_class_new_action (window_class, "Interrupt", NULL,
-                                    "display-name", _("Interrupt"),
-                                    "label", _("_Interrupt"),
-                                    "tooltip", _("Interrupt computation"),
-                                    "stock-id", GTK_STOCK_STOP,
-                                    "closure-callback", action_send_intr,
-                                    NULL);
+    moo_window_class_new_action (window_class, "Interrupt", NULL,
+                                 "display-name", _("Interrupt"),
+                                 "label", _("_Interrupt"),
+                                 "tooltip", _("Interrupt computation"),
+                                 "stock-id", GTK_STOCK_STOP,
+                                 "closure-callback", action_send_intr,
+                                 NULL);
 }
 
 
@@ -119,14 +119,14 @@ static void
 gap_term_window_init (GapTermWindow *window)
 {
     window->priv = G_TYPE_INSTANCE_GET_PRIVATE (window, GAP_TYPE_TERM_WINDOW,
-                                                GapTermWindowPrivate);
+                                             GapTermWindowPrivate);
 
     g_object_set (G_OBJECT (window),
                   "menubar-ui-name", "Terminal/Menubar",
                   "toolbar-ui-name", "Terminal/Toolbar",
                   NULL);
 
-    md_app_window_set_global_accels (MD_APP_WINDOW (window), TRUE);
+    moo_window_set_global_accels (MOO_WINDOW (window), TRUE);
 }
 
 
@@ -143,12 +143,12 @@ gap_term_window_constructor (GType type,
     window = GAP_TERM_WINDOW (object);
 
     swin = gtk_scrolled_window_new (NULL, NULL);
-    gtk_box_pack_start (GTK_BOX (MD_APP_WINDOW (window)->vbox), swin, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (MOO_WINDOW (window)->vbox), swin, TRUE, TRUE, 0);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (swin),
-                                    GTK_POLICY_AUTOMATIC,
-                                    GTK_POLICY_ALWAYS);
+                                 GTK_POLICY_AUTOMATIC,
+                                 GTK_POLICY_ALWAYS);
     gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (swin),
-                                         GTK_SHADOW_ETCHED_OUT);
+                                      GTK_SHADOW_ETCHED_OUT);
 
     window->priv->term = g_object_new (GAP_TYPE_TERM, NULL);
 
@@ -159,15 +159,15 @@ gap_term_window_constructor (GType type,
     gtk_widget_grab_focus (GTK_WIDGET (window->priv->term));
     gtk_widget_grab_default (GTK_WIDGET (window->priv->term));
 
-    gtk_widget_show_all (MD_APP_WINDOW (window)->vbox);
+    gtk_widget_show_all (MOO_WINDOW (window)->vbox);
 
     moo_term_apply_settings (MOO_TERM (window->priv->term));
     window->priv->prefs_notify_id = moo_prefs_notify_connect (MOO_TERM_PREFS_PREFIX,
-                                                              MOO_PREFS_MATCH_PREFIX,
-                                                              (MooPrefsNotify) prefs_notify,
-                                                              window, NULL);
+                                                           MOO_PREFS_MATCH_PREFIX,
+                                                           (MooPrefsNotify) prefs_notify,
+                                                           window, NULL);
 
-    md_app_window_set_edit_ops_widget (MD_APP_WINDOW (window), GTK_WIDGET (window->priv->term));
+    moo_window_set_edit_ops_widget (MOO_WINDOW (window), GTK_WIDGET (window->priv->term));
     gap_term_start_gap (window->priv->term, NULL);
 
     return object;

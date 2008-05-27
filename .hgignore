@@ -22,6 +22,7 @@ Makefile$
 ggap/.*\.example$
 \.orig$
 \.ggap\.mprj
+zmooui
 ^ggap/gap/doc/\.manual-stamp
 ^ggap/gap/doc/\.pdf-stamp$
 ^ggap/gap/doc/manual\.idx$
@@ -44,3 +45,6 @@ ggap/.*\.example$
 ^mkinstalldirs$
 ^po/(ggap\.pot|dist|pot)$
 ^moo$
+^xcode/ggap.xcodeproj/.*\.(pbxuser|mode1)$
+\.DS_Store
+-old/
