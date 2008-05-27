@@ -171,7 +171,7 @@ Add($GGAP_DATA.api, "$GGAP_EXEC_COMMAND");
 $GGAP_BIND_NAMES := function(bind)
   local bind_global, unbind_global, store_global, restore_global;
 
-  Info(InfoGGAP, 3, "$GGAP_INIT");
+  Info(InfoGGAP, 3, "$GGAP_BIND_NAMES");
 
   unbind_global := function(name)
     if IsBoundGlobal(name) then
@@ -242,7 +242,7 @@ BindGlobal("$GGAP_INIT",
 function()
   Info(InfoGGAP, 3, "$GGAP_INIT");
   $GGAP_BIND_NAMES(true);
-#   $GGAP_SEND_GLOBALS();
+  $GGAP_SEND_GLOBALS();
 end);
 Add($GGAP_DATA.api, "$GGAP_INIT");
 
@@ -268,6 +268,8 @@ Add($GGAP_DATA.api, "$GGAP_DEINIT");
 ##
 $GGAP_RESET := function()
   local name, api;
+
+  Info(InfoGGAP, 3, "$GGAP_RESET");
 
   $GGAP_DEINIT();
 
