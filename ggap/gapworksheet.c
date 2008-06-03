@@ -312,7 +312,8 @@ gap_worksheet_constructor (GType           type,
     gap_worksheet_start_gap (GAP_WORKSHEET (object), NULL);
     moo_worksheet_set_accepting_input (MOO_WORKSHEET (object), FALSE);
 
-    md_document_set_modified (MD_DOCUMENT (object), FALSE);
+    gtk_text_buffer_set_modified (gtk_text_view_get_buffer (GTK_TEXT_VIEW (object)), FALSE);
+//     md_document_set_modified (MD_DOCUMENT (object), FALSE);
 
     g_signal_connect_swapped (gtk_text_view_get_buffer (GTK_TEXT_VIEW (object)),
                               "modified-changed", G_CALLBACK (gap_worksheet_modified_changed),
@@ -412,6 +413,24 @@ gap_worksheet_set_doc_status (MdDocument       *doc,
                                   (status & MD_DOCUMENT_MODIFIED) != 0);
 }
 
+// static void
+// gap_worksheet_get_empty (MdDocument *doc)
+// {
+//     GapWorksheet *ws = GAP_WORKSHEET (doc);
+//     GtkTextView *view = GTK_TEXT_VIEW (doc);
+//     MooWsBuffer *buffer = MOO_WS_BUFFER (gtk_text_view_get_buffer (view));
+//     MooWsBlock *block;
+//
+//     if (md_document_get_modified (doc))
+//         return FALSE;
+//
+//     block = _moo_ws_buffer_get_first_block (buffer);
+//     if (!block || block->next || !MOO_IS_WS_PROMPT_BLOCK (block))
+//         return FALSE;
+//
+//     text =
+// }
+
 static void
 doc_iface_init (MdDocumentIface *iface)
 {
@@ -422,6 +441,7 @@ doc_iface_init (MdDocumentIface *iface)
     iface->load_file = gap_worksheet_load_file;
     iface->save_file = gap_worksheet_save_file;
     iface->set_status = gap_worksheet_set_doc_status;
+//     iface->get_empty = gap_worksheet_get_empty;
 }
 
 // static void
@@ -944,7 +964,7 @@ gap_worksheet_ensure_completion (GapWorksheet *ws)
     {
         ws->priv->completion = g_object_new (GAP_TYPE_WS_COMPLETION, NULL);
         ws->priv->cmpl_group = moo_completion_simple_new_group (MOO_COMPLETION_SIMPLE (ws->priv->completion), NULL);
-        moo_completion_group_set_pattern (ws->priv->cmpl_group, "[A-Za-z0-9_]*", NULL, 0);
+        moo_completion_group_set_pattern (ws->priv->cmpl_group, "[A-Za-z0-9_$]*", NULL, 0);
         moo_text_completion_set_doc (ws->priv->completion, GTK_TEXT_VIEW (ws));
     }
 
