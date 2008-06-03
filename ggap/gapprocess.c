@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-MOO_DEBUG_INIT(gap, FALSE)
+MOO_DEBUG_INIT(gap-out, FALSE)
 
 typedef struct {
     GMainLoop *loop;
