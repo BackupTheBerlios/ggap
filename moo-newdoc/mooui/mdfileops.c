@@ -86,7 +86,7 @@ md_open_file_for_reading (const char  *filename,
     }
 
     errno = 0;
-    fd = g_open (filename, O_BINARY | O_RDONLY);
+    fd = g_open (filename, O_BINARY | O_RDONLY, 0);
 
     if (fd == -1)
     {
@@ -769,7 +769,7 @@ create_remote_loader (MdFileInfo  *file_info,
     MdFileLoader *loader;
 
     tmp_file = moo_tempnam ();
-    MD_CHECK_ARG (uri != NULL, error, NULL);
+    MD_CHECK_ARG (tmp_file != NULL, error, NULL);
 
     uri = md_file_info_get_uri (file_info);
     MD_CHECK_ARG (uri != NULL, error, NULL);

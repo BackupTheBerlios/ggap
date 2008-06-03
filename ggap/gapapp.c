@@ -373,11 +373,7 @@ open_gap_manual (void)
     char *root_dir, *pdf;
     GapApp *app = GAP_APP_INSTANCE;
 
-    if (app->gap_cmd_line)
-        cmd_base = app->gap_cmd_line;
-    else
-        cmd_base = moo_prefs_get_string (GGAP_PREFS_GAP_COMMAND);
-
+    cmd_base = moo_prefs_get_string (GGAP_PREFS_GAP_COMMAND);
     g_return_if_fail (cmd_base && cmd_base[0]);
 
     if (!gap_parse_cmd_line (cmd_base, NULL, &root_dir))
