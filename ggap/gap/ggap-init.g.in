@@ -238,12 +238,12 @@ Add($GGAP_DATA.api, "$GGAP_BIND_NAMES");
 ##
 #F  $GGAP_INIT()
 ##
-BindGlobal("$GGAP_INIT",
+$GGAP_INIT :=
 function()
   Info(InfoGGAP, 3, "$GGAP_INIT");
   $GGAP_BIND_NAMES(true);
   $GGAP_SEND_GLOBALS();
-end);
+end;
 Add($GGAP_DATA.api, "$GGAP_INIT");
 
 #############################################################################
