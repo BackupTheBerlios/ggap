@@ -66,6 +66,5 @@ echo
 echo "    OS........................... $MOO_OS_NAME"
 if test "x$MOO_OS_CYGWIN" != "xyes"; then
 echo "    installation prefix.......... $prefix"
-echo "    shared package goes to....... $GGAP_GAP_DIR"
 echo
 fi
