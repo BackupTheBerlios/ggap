@@ -135,8 +135,7 @@ static MdDocument  *open_file                   (MdManager      *mgr,
 static void         reload_doc                  (MdManager      *mgr,
                                                  MdDocument     *doc);
 
-static void         app_quit_requested          (MdManager      *mgr,
-                                                 MooApp         *app);
+static MooAppQuitReply app_quit_requested       (MdManager      *mgr);
 static void         app_quit_cancelled          (MdManager      *mgr);
 static void         app_quit                    (MdManager      *mgr);
 
@@ -345,9 +344,9 @@ md_manager_constructor (GType                  type,
 
     if ((app = moo_app_instance ()))
     {
-//         g_signal_connect_swapped (app, "quit-requested", G_CALLBACK (app_quit_requested), mgr);
-//         g_signal_connect_swapped (app, "quit-cancelled", G_CALLBACK (app_quit_cancelled), mgr);
-//         g_signal_connect_swapped (app, "quit", G_CALLBACK (app_quit), mgr);
+        g_signal_connect_swapped (app, "quit-requested", G_CALLBACK (app_quit_requested), mgr);
+        g_signal_connect_swapped (app, "quit-cancelled", G_CALLBACK (app_quit_cancelled), mgr);
+        g_signal_connect_swapped (app, "quit", G_CALLBACK (app_quit), mgr);
     }
 
     return object;
@@ -408,13 +407,14 @@ handler_quit (MdManager *mgr)
 
     if (mgr->priv->history_mgr)
     {
+        md_history_mgr_shutdown (mgr->priv->history_mgr);
         g_object_unref (mgr->priv->history_mgr);
         mgr->priv->history_mgr = NULL;
     }
 }
 
-void
-_md_manager_quit (MdManager *mgr)
+static void
+md_manager_quit (MdManager *mgr)
 {
     g_return_if_fail (MD_IS_MANAGER (mgr));
     MD_MANAGER_GET_CLASS (mgr)->quit (mgr);
@@ -1129,8 +1129,7 @@ handler_close_doc (MdManager  *mgr,
     if (!mgr->priv->windows && !mgr->priv->windowless && mgr->priv->handling_quit)
     {
         mgr->priv->handling_quit = FALSE;
-        g_critical ("%s: oopsie", G_STRLOC);
-//         moo_app_resume_quit (moo_app_instance ());
+        moo_app_should_quit (moo_app_instance (), TRUE);
     }
 
     g_object_unref (doc);
@@ -1143,8 +1142,7 @@ cancel_quit (MdManager *mgr)
     if (mgr->priv->handling_quit)
     {
         mgr->priv->handling_quit = FALSE;
-        g_critical ("%s: oopsie", G_STRLOC);
-//         moo_app_cancel_quit (moo_app_instance ());
+        moo_app_should_quit (moo_app_instance (), FALSE);
     }
 }
 
@@ -1204,7 +1202,7 @@ schedule_close_window (MdWindow *window)
                        "md-window-need-close",
                        GINT_TO_POINTER (TRUE));
 }
-//
+
 static void
 cancel_close_window (MdManager *mgr,
                      MdWindow  *window)
@@ -1214,34 +1212,29 @@ cancel_close_window (MdManager *mgr,
 }
 
 
-static void
-app_quit_requested (MdManager *mgr,
-                    MooApp    *app)
+static MooAppQuitReply
+app_quit_requested (MdManager *mgr)
 {
     MdCloseAllResult result;
 
-    if (mgr->priv->handling_quit)
-        return;
-
-    mgr->priv->handling_quit = TRUE;
-    g_critical ("%s: oopsie", G_STRLOC);
-//     moo_app_delay_quit (app);
+    g_return_val_if_fail (!mgr->priv->handling_quit, MOO_APP_QUIT_NOW);
 
     result = MD_MANAGER_GET_CLASS (mgr)->close_all (mgr);
 
     switch (result)
     {
         case MD_CLOSE_ALL_DONE:
-            g_critical ("%s: oopsie", G_STRLOC);
-            mgr->priv->handling_quit = FALSE;
-//             moo_app_resume_quit (app);
-            break;
+            return MOO_APP_QUIT_NOW;
+
         case MD_CLOSE_ALL_CANCELLED:
-            cancel_quit (mgr);
-            break;
+            return MOO_APP_QUIT_CANCEL;
+
         case MD_CLOSE_ALL_IN_PROGRESS:
-            break;
+            mgr->priv->handling_quit = TRUE;
+            return MOO_APP_QUIT_LATER;
     }
+
+    g_return_val_if_reached (MOO_APP_QUIT_NOW);
 }
 
 static void
@@ -1257,6 +1250,7 @@ app_quit (MdManager *mgr)
         emit_close_window (mgr, mgr->priv->windows->data);
     while (mgr->priv->windowless)
         emit_close_doc (mgr, mgr->priv->windowless->data);
+    md_manager_quit (mgr);
 }
 
 
