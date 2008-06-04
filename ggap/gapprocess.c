@@ -184,6 +184,8 @@ gap_process_dispose (GObject *object)
 {
     GapProcess *proc = GAP_PROCESS (object);
 
+    gap_process_die (proc);
+
     if (proc->priv->pt)
     {
         if (moo_term_pt_child_alive (proc->priv->pt))
@@ -813,10 +815,16 @@ void
 gap_process_die (GapProcess *proc)
 {
     g_return_if_fail (GAP_IS_PROCESS (proc));
+
+    if (proc->priv->cmd_info)
+    {
+        proc->priv->cmd_info->destroyed = TRUE;
+        stop_running_command_loop (proc->priv->cmd_info);
+    }
+
     if (proc->priv->pt)
         moo_term_pt_kill_child (proc->priv->pt);
 }
-
 
 static void
 stop_running_command_loop (GapCommandInfo *ci)
@@ -833,14 +841,6 @@ has_running_command_loop (GapProcess *proc)
             g_main_loop_is_running (proc->priv->cmd_info->loop);
 }
 
-static void
-run_command_destroy (G_GNUC_UNUSED GapProcess *proc,
-                     GapCommandInfo *ci)
-{
-    ci->destroyed = TRUE;
-    stop_running_command_loop (ci);
-}
-
 gboolean
 gap_process_run_command (GapProcess  *proc,
                          const char  *command,
@@ -850,7 +850,6 @@ gap_process_run_command (GapProcess  *proc,
 {
     char *string;
     GapCommandInfo ci;
-    gulong destroy_cb_id;
 
     if (output)
         *output = NULL;
@@ -873,10 +872,6 @@ gap_process_run_command (GapProcess  *proc,
     ci.destroyed = FALSE;
     ci.output = NULL;
 
-    destroy_cb_id = g_signal_connect (proc, "close",
-                                      G_CALLBACK (run_command_destroy),
-                                      &ci);
-
     ci.loop = g_main_loop_new (NULL, FALSE);
 
     gdk_threads_leave ();
@@ -885,9 +880,6 @@ gap_process_run_command (GapProcess  *proc,
 
     g_main_loop_unref (ci.loop);
     ci.loop = NULL;
-
-    if (!ci.destroyed)
-        g_signal_handler_disconnect (proc, destroy_cb_id);
 
     if (ci.destroyed)
         ci.success = FALSE;
