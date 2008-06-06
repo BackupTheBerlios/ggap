@@ -82,40 +82,62 @@ gap_ws_window_constructor (GType type,
 
 
 static void
+print_gap_state (GapWsWindow *window)
+{
+    MdDocument *doc = md_window_get_active_doc (MD_WINDOW (window));
+
+    if (doc)
+    {
+        GapState state;
+
+        g_object_get (doc, "gap-state", &state, NULL);
+
+        switch (state)
+        {
+            case GAP_BUSY:
+            case GAP_BUSY_INTERNAL:
+                moo_window_message (MOO_WINDOW (window), "Busy");
+                break;
+
+            case GAP_DEAD:
+                moo_window_message (MOO_WINDOW (window), "GAP not running");
+                break;
+
+            case GAP_IN_PROMPT:
+                moo_window_message (MOO_WINDOW (window), NULL);
+                break;
+
+            case GAP_LOADING:
+                moo_window_message (MOO_WINDOW (window), "Loading");
+                break;
+
+            default:
+                g_critical ("%s: fixme", G_STRLOC);
+                moo_window_message (MOO_WINDOW (window), NULL);
+                break;
+        }
+    }
+    else
+    {
+        moo_window_message (MOO_WINDOW (window), NULL);
+    }
+}
+
+
+static void
 gap_state_changed (MdDocument   *doc,
                    G_GNUC_UNUSED GParamSpec *pspec,
                    GapWsWindow  *window)
 {
-    GapState state;
-
-    if (doc != md_window_get_active_doc (MD_WINDOW (window)))
-        return;
-
-    g_object_get (doc, "gap-state", &state, NULL);
-
-    switch (state)
-    {
-        case GAP_BUSY:
-        case GAP_BUSY_INTERNAL:
-            moo_window_message (MOO_WINDOW (window), "Busy");
-            break;
-
-        case GAP_DEAD:
-        case GAP_IN_PROMPT:
-            moo_window_message (MOO_WINDOW (window), NULL);
-            break;
-
-        case GAP_LOADING:
-            moo_window_message (MOO_WINDOW (window), "Loading");
-            break;
-    }
+    if (doc == md_window_get_active_doc (MD_WINDOW (window)))
+        print_gap_state (window);
 }
 
 static void
 gap_ws_window_active_doc_changed (MdWindow *window)
 {
     MD_WINDOW_CLASS (gap_ws_window_parent_class)->active_doc_changed (window);
-    moo_window_message (MOO_WINDOW (window), NULL);
+    print_gap_state (GAP_WS_WINDOW (window));
 }
 
 static void
@@ -132,7 +154,7 @@ gap_ws_window_insert_doc (MdWindow   *window,
 
     MD_WINDOW_CLASS (gap_ws_window_parent_class)->insert_doc (window, doc);
 
-    gap_state_changed (MD_DOCUMENT (ws), NULL, GAP_WS_WINDOW (window));
+    print_gap_state (GAP_WS_WINDOW (window));
 }
 
 static void
@@ -146,4 +168,6 @@ gap_ws_window_remove_doc (MdWindow   *window,
     g_signal_handlers_disconnect_by_func (ws, (gpointer) gap_state_changed, window);
 
     MD_WINDOW_CLASS (gap_ws_window_parent_class)->remove_doc (window, doc);
+
+    print_gap_state (GAP_WS_WINDOW (window));
 }
