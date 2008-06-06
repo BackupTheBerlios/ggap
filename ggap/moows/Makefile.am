@@ -18,7 +18,12 @@ libmoows_la_SOURCES =		\
 	moowsbuffer.c		\
 	moowsbuffer.h		\
 	moowsview.c		\
-	moowsview.h
+	moowsview.h		\
+	moows-file.c		\
+	moows-file.h		\
+	moows-input.c		\
+	moows-input.h		\
+	moows-private.h
 
 if !GLIB_2_14
 regex_cflags = -I$(srcdir)/../moo/moo/mooutils/newgtk/glib-2.14
