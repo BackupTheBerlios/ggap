@@ -24,7 +24,7 @@
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-debug.h"
 #include "mooutils/mootype-macros.h"
-#include "moows/moowsblock.h"
+#include "moows/moowspromptblock.h"
 #include <glib/gregex.h>
 #include <gdk/gdkkeysyms.h>
 #include <errno.h>
@@ -412,23 +412,28 @@ gap_worksheet_set_doc_status (MdDocument       *doc,
                                   (status & MD_DOCUMENT_MODIFIED) != 0);
 }
 
-// static void
-// gap_worksheet_get_empty (MdDocument *doc)
-// {
-//     GapWorksheet *ws = GAP_WORKSHEET (doc);
-//     GtkTextView *view = GTK_TEXT_VIEW (doc);
-//     MooWsBuffer *buffer = MOO_WS_BUFFER (gtk_text_view_get_buffer (view));
-//     MooWsBlock *block;
-//
-//     if (md_document_get_modified (doc))
-//         return FALSE;
-//
-//     block = _moo_ws_buffer_get_first_block (buffer);
-//     if (!block || block->next || !MOO_IS_WS_PROMPT_BLOCK (block))
-//         return FALSE;
-//
-//     text =
-// }
+static gboolean
+gap_worksheet_get_empty (MdDocument *doc)
+{
+    MooWorksheet *ws = MOO_WORKSHEET (doc);
+    MooWsBuffer *buffer = moo_worksheet_get_buffer (ws);
+    MooWsBlock *block;
+    char *text;
+    gboolean empty;
+
+    if (md_document_get_modified (doc))
+        return FALSE;
+
+    block = moo_ws_buffer_get_first_block (buffer);
+    if (!block || moo_ws_block_next (block) || !MOO_IS_WS_PROMPT_BLOCK (block))
+        return FALSE;
+
+    text = moo_ws_prompt_block_get_text (MOO_WS_PROMPT_BLOCK (block));
+    empty = !text[0];
+
+    g_free (text);
+    return empty;
+}
 
 static void
 doc_iface_init (MdDocumentIface *iface)
@@ -440,7 +445,7 @@ doc_iface_init (MdDocumentIface *iface)
     iface->load_file = gap_worksheet_load_file;
     iface->save_file = gap_worksheet_save_file;
     iface->set_status = gap_worksheet_set_doc_status;
-//     iface->get_empty = gap_worksheet_get_empty;
+    iface->get_empty = gap_worksheet_get_empty;
 }
 
 // static void
@@ -629,48 +634,56 @@ gap_worksheet_load_text (GapWorksheet *ws,
                          const char   *text,
                          gsize         text_len)
 {
-    MooWsBlock *block;
-    GString *buf;
-    MooLineReader lr;
-    const char *line;
-    gsize line_len;
-
-    buf = g_string_new (NULL);
-
-    for (moo_line_reader_init (&lr, text, text_len);
-         (line = moo_line_reader_get_line (&lr, &line_len, NULL)); )
-    {
-        guint i;
-        struct {const char *str; gsize len;} pr[] = {{"gap> ", 5}, {"> ", 2}};
-
-        while (line_len)
-        {
-            gboolean got_prompt = FALSE;
-
-            for (i = 0; i < G_N_ELEMENTS (pr); ++i)
-                if (line_len >= pr[i].len && strncmp (text, pr[i].str, pr[i].len) == 0)
-                {
-                    line_len -= pr[i].len;
-                    line += pr[i].len;
-                    got_prompt = TRUE;
-                }
-
-            if (!got_prompt)
-                break;
-        }
-
-        if (buf->len)
-            g_string_append_c (buf, '\n');
-        g_string_append_len (buf, line, line_len);
-    }
-
-    moo_worksheet_reset (MOO_WORKSHEET (ws));
-    block = moo_worksheet_create_prompt_block (MOO_WORKSHEET (ws), "gap> ", "> ", buf->str);
-    moo_ws_buffer_append_block (MOO_WS_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws))), block);
-
-    g_string_free (buf, TRUE);
-    return TRUE;
+    return FALSE;
 }
+
+// static gboolean
+// gap_worksheet_load_text (GapWorksheet *ws,
+//                          const char   *text,
+//                          gsize         text_len)
+// {
+//     MooWsBlock *block;
+//     GString *buf;
+//     MooLineReader lr;
+//     const char *line;
+//     gsize line_len;
+//
+//     buf = g_string_new (NULL);
+//
+//     for (moo_line_reader_init (&lr, text, text_len);
+//          (line = moo_line_reader_get_line (&lr, &line_len, NULL)); )
+//     {
+//         guint i;
+//         struct {const char *str; gsize len;} pr[] = {{"gap> ", 5}, {"> ", 2}};
+//
+//         while (line_len)
+//         {
+//             gboolean got_prompt = FALSE;
+//
+//             for (i = 0; i < G_N_ELEMENTS (pr); ++i)
+//                 if (line_len >= pr[i].len && strncmp (text, pr[i].str, pr[i].len) == 0)
+//                 {
+//                     line_len -= pr[i].len;
+//                     line += pr[i].len;
+//                     got_prompt = TRUE;
+//                 }
+//
+//             if (!got_prompt)
+//                 break;
+//         }
+//
+//         if (buf->len)
+//             g_string_append_c (buf, '\n');
+//         g_string_append_len (buf, line, line_len);
+//     }
+//
+//     moo_worksheet_reset (MOO_WORKSHEET (ws));
+//     block = moo_worksheet_create_prompt_block (MOO_WORKSHEET (ws), "gap> ", "> ", buf->str);
+//     moo_ws_buffer_append_block (MOO_WS_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws))), block);
+//
+//     g_string_free (buf, TRUE);
+//     return TRUE;
+// }
 
 static void
 gap_worksheet_load_file (MdDocument   *doc,
