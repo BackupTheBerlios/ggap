@@ -206,6 +206,20 @@ run_save_dialog (G_GNUC_UNUSED MdManager *mgr,
     return ret;
 }
 
+
+static void
+ws_window_closed (GapApp *ggap)
+{
+    GSList *windows;
+
+    windows = md_manager_list_windows (ggap->priv->gd_mgr);
+
+    if (!windows)
+        moo_app_quit (MOO_APP (ggap));
+
+    g_slist_free (windows);
+}
+
 static void
 gap_app_start (MooApp *app)
 {
@@ -241,6 +255,10 @@ gap_app_start (MooApp *app)
         if (!windows)
             md_manager_ui_new_doc (ggap->priv->gd_mgr, NULL);
         g_slist_free (windows);
+
+        g_signal_connect_data (ggap->priv->gd_mgr, "close-window",
+                               G_CALLBACK (ws_window_closed), ggap, NULL,
+                               G_CONNECT_AFTER | G_CONNECT_SWAPPED);
 
 //         moo_app_set_document_manager (app, ggap->priv->gd_mgr);
     }
