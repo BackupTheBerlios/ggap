@@ -59,7 +59,7 @@ load_input (MooWorksheet  *ws,
     if (!ps2)
         g_critical ("%s: %s property missing", G_STRLOC, PROP_PS2);
 
-    block = moo_worksheet_create_prompt_block (ws, ps, ps2, moo_markup_get_content (elm));
+    block = _moo_worksheet_create_prompt_block (ws, ps, ps2, moo_markup_get_content (elm));
     g_return_if_fail (block != NULL);
 
     moo_ws_buffer_append_block (get_buffer (ws), block);
@@ -202,7 +202,7 @@ moo_worksheet_format (MooWorksheet  *ws,
     moo_markup_set_prop (root, PROP_VERSION, PROP_VERSION_VALUE);
     content = moo_markup_create_element (root, ELM_CONTENT);
 
-    for (block = _moo_ws_buffer_get_first_block (get_buffer (ws));
+    for (block = moo_ws_buffer_get_first_block (get_buffer (ws));
          block != NULL; block = block->next)
     {
         MooMarkupNode *elm;
@@ -258,7 +258,7 @@ moo_worksheet_get_input_text (MooWorksheet *ws)
 
     text = g_string_new (NULL);
 
-    for (block = _moo_ws_buffer_get_first_block (get_buffer (ws));
+    for (block = moo_ws_buffer_get_first_block (get_buffer (ws));
          block != NULL; block = block->next)
     {
         char *block_text;

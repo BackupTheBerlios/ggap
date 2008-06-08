@@ -14,6 +14,7 @@
 #include "moowspromptblock.h"
 #include "moowstextblock.h"
 #include "moows-private.h"
+#include "moows-input.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-gobject.h"
 #include <gdk/gdkkeysyms.h>
@@ -21,7 +22,11 @@
 #include <string.h>
 
 
-G_DEFINE_TYPE (MooWorksheet, moo_worksheet, MOO_TYPE_WS_VIEW)
+static void     moo_worksheet_beep      (MooWorksheet   *ws);
+
+
+gpointer _moo_worksheet_parent_class;
+G_DEFINE_TYPE (MooWorksheet, moo_worksheet, MOO_TYPE_TEXT_VIEW)
 
 
 struct MooWorksheetPrivate {
@@ -59,6 +64,29 @@ moo_worksheet_init (MooWorksheet *ws)
     ws->priv->allow_multiline = TRUE;
     ws->priv->history = g_queue_new ();
     ws->priv->history_ptr = NULL;
+
+    moo_text_view_set_buffer_type (MOO_TEXT_VIEW (ws), MOO_TYPE_WS_BUFFER);
+    moo_text_view_set_font_from_string (MOO_TEXT_VIEW (ws), "Monospace");
+
+    gtk_text_view_set_border_window_size (GTK_TEXT_VIEW (ws),
+                                          GTK_TEXT_WINDOW_LEFT,
+                                          20);
+}
+
+static GObject *
+moo_worksheet_constructor (GType                  type,
+                           guint                  n_props,
+                           GObjectConstructParam *props)
+{
+    GObject *object;
+
+    object = G_OBJECT_CLASS (moo_worksheet_parent_class)->constructor (type, n_props, props);
+
+    g_signal_connect_swapped (gtk_text_view_get_buffer (GTK_TEXT_VIEW (object)),
+                              "beep", G_CALLBACK (moo_worksheet_beep),
+                              object);
+
+    return object;
 }
 
 static void
@@ -126,10 +154,21 @@ static void
 moo_worksheet_class_init (MooWorksheetClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+    GtkTextViewClass *textview_class = GTK_TEXT_VIEW_CLASS (klass);
 
+    _moo_worksheet_parent_class = moo_worksheet_parent_class;
+
+    object_class->constructor = moo_worksheet_constructor;
     object_class->dispose = moo_worksheet_dispose;
     object_class->set_property = moo_worksheet_set_property;
     object_class->get_property = moo_worksheet_get_property;
+
+    widget_class->key_press_event = _moo_worksheet_key_press;
+
+    textview_class->move_cursor = _moo_worksheet_move_cursor;
+    textview_class->cut_clipboard = _moo_worksheet_cut_clipboard;
+    textview_class->paste_clipboard = _moo_worksheet_paste_clipboard;
 
     g_object_class_install_property (object_class,
                                      PROP_ACCEPTING_INPUT,
@@ -185,6 +224,26 @@ get_buffer (MooWorksheet *ws)
     return MOO_WS_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws)));
 }
 
+MooWsBuffer *
+moo_worksheet_get_buffer (MooWorksheet *ws)
+{
+    g_return_val_if_fail (MOO_IS_WORKSHEET (ws), NULL);
+    return get_buffer (ws);
+}
+
+
+static void
+moo_worksheet_beep (MooWorksheet *ws)
+{
+    g_return_if_fail (MOO_IS_WORKSHEET (ws));
+
+#if GTK_CHECK_VERSION(2,12,0)
+    gdk_window_beep (GTK_WIDGET (ws)->window);
+#else
+    gdk_display_beep (gtk_widget_get_display (GTK_WIDGET (ws)));
+#endif
+}
+
 
 void
 moo_worksheet_reset (MooWorksheet *ws)
@@ -196,7 +255,7 @@ moo_worksheet_reset (MooWorksheet *ws)
 
     buffer = get_buffer (ws);
 
-    while ((block = _moo_ws_buffer_get_first_block (buffer)))
+    while ((block = moo_ws_buffer_get_first_block (buffer)))
         moo_ws_buffer_delete_block (buffer, block);
 
     ws->priv->input = NULL;
@@ -221,10 +280,10 @@ scroll_insert_onscreen (MooWorksheet *ws)
 
 
 MooWsBlock *
-moo_worksheet_create_prompt_block (MooWorksheet *ws,
-                                   const char   *ps,
-                                   const char   *ps2,
-                                   const char   *text)
+_moo_worksheet_create_prompt_block (MooWorksheet *ws,
+                                    const char   *ps,
+                                    const char   *ps2,
+                                    const char   *text)
 {
     MooWsBlock *block;
 
@@ -282,7 +341,7 @@ moo_worksheet_start_input (MooWorksheet   *ws,
 
     if (!block)
     {
-        block = moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
+        block = _moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
 
         if (ws->priv->output)
             moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->output));
@@ -351,7 +410,7 @@ _moo_worksheet_commit_input (MooWorksheet *ws)
 
     if (!ws->priv->in_input)
     {
-        _moo_ws_view_beep (MOO_WS_VIEW (ws));
+        moo_worksheet_beep (ws);
         return TRUE;
     }
 
@@ -623,7 +682,7 @@ history_go (MooWorksheet *ws,
     return;
 
 beep_and_return:
-    _moo_ws_view_beep (MOO_WS_VIEW (ws));
+    moo_worksheet_beep (ws);
 }
 
 void

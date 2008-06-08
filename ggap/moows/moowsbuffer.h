@@ -51,8 +51,8 @@ void        moo_ws_buffer_append_block      (MooWsBuffer    *buffer,
 void        moo_ws_buffer_delete_block      (MooWsBuffer    *buffer,
                                              MooWsBlock     *block);
 
-MooWsBlock *_moo_ws_buffer_get_first_block  (MooWsBuffer    *buffer);
-MooWsBlock *_moo_ws_buffer_get_last_block   (MooWsBuffer    *buffer);
+MooWsBlock *moo_ws_buffer_get_first_block   (MooWsBuffer    *buffer);
+MooWsBlock *moo_ws_buffer_get_last_block    (MooWsBuffer    *buffer);
 
 void        _moo_ws_buffer_beep             (MooWsBuffer    *buffer);
 void        _moo_ws_buffer_start_edit       (MooWsBuffer    *buffer);

@@ -73,6 +73,10 @@ struct MooWsBlockClass
 
 GType        moo_ws_block_get_type          (void) G_GNUC_CONST;
 
+MooWsBlock  *moo_ws_block_next              (MooWsBlock     *block);
+MooWsBlock  *moo_ws_block_prev              (MooWsBlock     *block);
+MooWsBuffer *moo_ws_block_get_buffer        (MooWsBlock     *block);
+
 void        _moo_ws_block_add               (MooWsBlock     *block,
                                              MooWsBuffer    *buffer,
                                              MooWsBlock     *after,

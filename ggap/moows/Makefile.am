@@ -17,8 +17,6 @@ libmoows_la_SOURCES =		\
 	moowsblock.h		\
 	moowsbuffer.c		\
 	moowsbuffer.h		\
-	moowsview.c		\
-	moowsview.h		\
 	moows-file.c		\
 	moows-file.h		\
 	moows-input.c		\

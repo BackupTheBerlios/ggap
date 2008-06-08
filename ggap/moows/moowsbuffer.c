@@ -181,14 +181,14 @@ moo_ws_buffer_delete_block (MooWsBuffer *buffer,
 
 
 MooWsBlock *
-_moo_ws_buffer_get_first_block (MooWsBuffer *buffer)
+moo_ws_buffer_get_first_block (MooWsBuffer *buffer)
 {
     g_return_val_if_fail (MOO_IS_WS_BUFFER (buffer), NULL);
     return buffer->priv->first_block;
 }
 
 MooWsBlock *
-_moo_ws_buffer_get_last_block (MooWsBuffer *buffer)
+moo_ws_buffer_get_last_block (MooWsBuffer *buffer)
 {
     g_return_val_if_fail (MOO_IS_WS_BUFFER (buffer), NULL);
     return buffer->priv->last_block;

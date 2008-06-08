@@ -16,56 +16,50 @@
 #include <gdk/gdkkeysyms.h>
 
 
-static void     go_prev_block           (MooWsView      *view);
-static void     go_next_block           (MooWsView      *view);
-static void     go_first_block          (MooWsView      *view);
-static void     go_last_block           (MooWsView      *view);
-static void     go_home                 (MooWsView      *view,
+static void     go_prev_block           (MooWorksheet   *ws);
+static void     go_next_block           (MooWorksheet   *ws);
+static void     go_first_block          (MooWorksheet   *ws);
+static void     go_last_block           (MooWorksheet   *ws);
+static void     go_home                 (MooWorksheet   *ws,
                                          gboolean        block_end);
-static void     go_end                  (MooWsView      *view,
+static void     go_end                  (MooWorksheet   *ws,
                                          gboolean        block_end);
 
-static void     scroll_insert_onscreen  (MooWsView      *view);
+static void     scroll_insert_onscreen  (MooWorksheet   *ws);
 
 
 static GtkTextBuffer *
-get_buffer (MooWsView *view)
+get_buffer (MooWorksheet *ws)
 {
-    return gtk_text_view_get_buffer (GTK_TEXT_VIEW (view));
+    return gtk_text_view_get_buffer (GTK_TEXT_VIEW (ws));
 }
 
 static MooWsBuffer *
-get_ws_buffer (MooWsView *view)
+get_ws_buffer (MooWorksheet *ws)
 {
-    return MOO_WS_BUFFER (get_buffer (view));
-}
-
-static MooWorksheet *
-get_worksheet (MooWsView *view)
-{
-    return MOO_WORKSHEET (view); // XXX XXX XXX !!!
+    return MOO_WS_BUFFER (get_buffer (ws));
 }
 
 
 static void
-scroll_insert_onscreen (MooWsView *view)
+scroll_insert_onscreen (MooWorksheet *ws)
 {
-    gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW (view),
-                                        gtk_text_buffer_get_insert (get_buffer (view)));
+    gtk_text_view_scroll_mark_onscreen (GTK_TEXT_VIEW (ws),
+        gtk_text_buffer_get_insert (get_buffer (ws)));
 }
 
 
 static MooWsBlock *
-find_block (MooWsView  *view,
-            MooWsBlock *block,
-            int         steps)
+find_block (MooWorksheet *ws,
+            MooWsBlock   *block,
+            int           steps)
 {
     if (!block)
     {
         if (steps > 0)
-            block = _moo_ws_buffer_get_first_block (get_ws_buffer (view));
+            block = moo_ws_buffer_get_first_block (get_ws_buffer (ws));
         else
-            block = _moo_ws_buffer_get_last_block (get_ws_buffer (view));
+            block = moo_ws_buffer_get_last_block (get_ws_buffer (ws));
     }
 
     if (!block)
@@ -115,64 +109,64 @@ find_block (MooWsView  *view,
 }
 
 static void
-go_to_block (MooWsView *view,
-             int        steps)
+go_to_block (MooWorksheet *ws,
+             int           steps)
 {
     MooWsBlock *block;
     MooWsBlock *go_to = NULL;
     GtkTextIter iter;
 
-    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
     block = _moo_ws_iter_get_block (&iter);
-    go_to = find_block (view, block, steps);
+    go_to = find_block (ws, block, steps);
 
     if (go_to && go_to != block)
     {
         moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (go_to), -1, -1);
-        scroll_insert_onscreen (view);
+        scroll_insert_onscreen (ws);
     }
 }
 
 static void
-go_prev_block (MooWsView *view)
+go_prev_block (MooWorksheet *ws)
 {
-    go_to_block (view, -1);
+    go_to_block (ws, -1);
 }
 
 static void
-go_next_block (MooWsView *view)
+go_next_block (MooWorksheet *ws)
 {
-    go_to_block (view, 1);
+    go_to_block (ws, 1);
 }
 
 static void
-go_first_block (MooWsView *view)
+go_first_block (MooWorksheet *ws)
 {
-    go_to_block (view, G_MININT);
+    go_to_block (ws, G_MININT);
 }
 
 static void
-go_last_block (MooWsView *view)
+go_last_block (MooWorksheet *ws)
 {
-    go_to_block (view, G_MAXINT);
+    go_to_block (ws, G_MAXINT);
 }
 
 static void
-go_to_iter (MooWsView         *view,
+go_to_iter (MooWorksheet      *ws,
             const GtkTextIter *iter)
 {
-    gtk_text_buffer_place_cursor (get_buffer (view), iter);
-    scroll_insert_onscreen (view);
+    gtk_text_buffer_place_cursor (get_buffer (ws), iter);
+    scroll_insert_onscreen (ws);
 }
 
 static void
-go_home (MooWsView *view,
-         gboolean   block_start)
+go_home (MooWorksheet *ws,
+         gboolean      block_start)
 {
     GtkTextIter iter;
     MooWsBlock *block;
 
-    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
     block = _moo_ws_iter_get_block (&iter);
 
     if (block && block_start)
@@ -183,16 +177,16 @@ go_home (MooWsView *view,
     else
         gtk_text_iter_set_line_offset (&iter, 0);
 
-    go_to_iter (view, &iter);
+    go_to_iter (ws, &iter);
 }
 
 static void
-go_end (MooWsView *view,
-        gboolean   block_end)
+go_end (MooWorksheet *ws,
+        gboolean      block_end)
 {
     GtkTextIter iter;
 
-    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
 
     if (block_end)
     {
@@ -205,12 +199,12 @@ go_end (MooWsView *view,
     if (!gtk_text_iter_ends_line (&iter))
         gtk_text_iter_forward_to_line_end (&iter);
 
-    go_to_iter (view, &iter);
+    go_to_iter (ws, &iter);
 }
 
 static gboolean
-steal_navigation_keys (MooWsView   *view,
-                       GdkEventKey *event)
+steal_navigation_keys (MooWorksheet *ws,
+                       GdkEventKey  *event)
 {
     GdkModifierType mods = event->state & (GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_SHIFT_MASK);
 
@@ -219,12 +213,12 @@ steal_navigation_keys (MooWsView   *view,
         case GDK_Up:
             if (mods == GDK_MOD1_MASK)
             {
-                go_prev_block (view);
+                go_prev_block (ws);
                 return TRUE;
             }
             else if (mods == GDK_CONTROL_MASK)
             {
-                _moo_worksheet_history_prev (get_worksheet (view));
+                _moo_worksheet_history_prev (ws);
                 return TRUE;
             }
             break;
@@ -232,12 +226,12 @@ steal_navigation_keys (MooWsView   *view,
         case GDK_Down:
             if (mods == GDK_MOD1_MASK)
             {
-                go_next_block (view);
+                go_next_block (ws);
                 return TRUE;
             }
             else if (mods == GDK_CONTROL_MASK)
             {
-                _moo_worksheet_history_next (get_worksheet (view));
+                _moo_worksheet_history_next (ws);
                 return TRUE;
             }
             break;
@@ -247,13 +241,13 @@ steal_navigation_keys (MooWsView   *view,
             switch (mods)
             {
                 case GDK_MOD1_MASK | GDK_CONTROL_MASK:
-                    go_first_block (view);
+                    go_first_block (ws);
                     return TRUE;
                 case GDK_MOD1_MASK:
-                    go_home (view, TRUE);
+                    go_home (ws, TRUE);
                     return TRUE;
                 case 0:
-                    go_home (view, FALSE);
+                    go_home (ws, FALSE);
                     return TRUE;
                 default:
                     return FALSE;
@@ -265,13 +259,13 @@ steal_navigation_keys (MooWsView   *view,
             switch (mods)
             {
                 case GDK_MOD1_MASK | GDK_CONTROL_MASK:
-                    go_last_block (view);
+                    go_last_block (ws);
                     return TRUE;
                 case GDK_MOD1_MASK:
-                    go_end (view, TRUE);
+                    go_end (ws, TRUE);
                     return TRUE;
                 case 0:
-                    go_end (view, FALSE);
+                    go_end (ws, FALSE);
                     return TRUE;
                 default:
                     return FALSE;
@@ -288,23 +282,23 @@ _moo_worksheet_key_press (GtkWidget   *widget,
                           GdkEventKey *event)
 {
     gboolean retval;
-    MooWsView *view = MOO_WS_VIEW (widget);
+    MooWorksheet *ws = MOO_WORKSHEET (widget);
 
-    if (steal_navigation_keys (view, event))
+    if (steal_navigation_keys (ws, event))
         return TRUE;
 
     switch (event->keyval)
     {
         case GDK_Return:
-            if (!(_moo_worksheet_get_allow_multiline (get_worksheet (view)) &&
+            if (!(_moo_worksheet_get_allow_multiline (ws) &&
                   (event->state & GDK_SHIFT_MASK)) &&
-                _moo_worksheet_commit_input (get_worksheet (view)))
+                _moo_worksheet_commit_input (ws))
                     return TRUE;
     }
 
-    _moo_ws_buffer_start_user_edit (get_ws_buffer (view));
-    retval = GTK_WIDGET_CLASS (_moo_ws_view_parent_class)->key_press_event (widget, event);
-    _moo_ws_buffer_end_user_edit (get_ws_buffer (view));
+    _moo_ws_buffer_start_user_edit (get_ws_buffer (ws));
+    retval = GTK_WIDGET_CLASS (_moo_worksheet_parent_class)->key_press_event (widget, event);
+    _moo_ws_buffer_end_user_edit (get_ws_buffer (ws));
 
     return retval;
 }
@@ -312,19 +306,19 @@ _moo_worksheet_key_press (GtkWidget   *widget,
 void
 _moo_worksheet_cut_clipboard (GtkTextView *text_view)
 {
-    MooWsView *view = MOO_WS_VIEW (text_view);
-    _moo_ws_buffer_start_user_edit (get_ws_buffer (view));
-    GTK_TEXT_VIEW_CLASS (_moo_ws_view_parent_class)->cut_clipboard (text_view);
-    _moo_ws_buffer_end_user_edit (get_ws_buffer (view));
+    MooWorksheet *ws = MOO_WORKSHEET (text_view);
+    _moo_ws_buffer_start_user_edit (get_ws_buffer (ws));
+    GTK_TEXT_VIEW_CLASS (_moo_worksheet_parent_class)->cut_clipboard (text_view);
+    _moo_ws_buffer_end_user_edit (get_ws_buffer (ws));
 }
 
 void
 _moo_worksheet_paste_clipboard (GtkTextView *text_view)
 {
-    MooWsView *view = MOO_WS_VIEW (text_view);
-    _moo_ws_buffer_start_user_edit (get_ws_buffer (view));
-    GTK_TEXT_VIEW_CLASS (_moo_ws_view_parent_class)->paste_clipboard (text_view);
-    _moo_ws_buffer_end_user_edit (get_ws_buffer (view));
+    MooWorksheet *ws = MOO_WORKSHEET (text_view);
+    _moo_ws_buffer_start_user_edit (get_ws_buffer (ws));
+    GTK_TEXT_VIEW_CLASS (_moo_worksheet_parent_class)->paste_clipboard (text_view);
+    _moo_ws_buffer_end_user_edit (get_ws_buffer (ws));
 }
 
 void
@@ -333,14 +327,14 @@ _moo_worksheet_move_cursor (GtkTextView    *text_view,
                             int             count,
                             gboolean        extend_selection)
 {
-    MooWsView *view = MOO_WS_VIEW (text_view);
+    MooWorksheet *ws = MOO_WORKSHEET (text_view);
     GtkTextIter iter;
     MooWsBlock *block;
 
-    GTK_TEXT_VIEW_CLASS (_moo_ws_view_parent_class)->
+    GTK_TEXT_VIEW_CLASS (_moo_worksheet_parent_class)->
         move_cursor (text_view, step, count, extend_selection);
 
-    moo_text_view_get_cursor (MOO_TEXT_VIEW (view), &iter);
+    moo_text_view_get_cursor (MOO_TEXT_VIEW (ws), &iter);
     block = _moo_ws_iter_get_block (&iter);
 
     if (block && _moo_ws_block_check_move_cursor (block, &iter, step,

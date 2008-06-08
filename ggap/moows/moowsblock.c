@@ -280,6 +280,28 @@ moo_ws_block_class_init (MooWsBlockClass *klass)
 }
 
 
+MooWsBlock *
+moo_ws_block_next (MooWsBlock *block)
+{
+    g_return_val_if_fail (MOO_IS_WS_BLOCK (block), NULL);
+    return block->next;
+}
+
+MooWsBlock *
+moo_ws_block_prev (MooWsBlock *block)
+{
+    g_return_val_if_fail (MOO_IS_WS_BLOCK (block), NULL);
+    return block->prev;
+}
+
+MooWsBuffer *
+moo_ws_block_get_buffer (MooWsBlock *block)
+{
+    g_return_val_if_fail (MOO_IS_WS_BLOCK (block), NULL);
+    return block->buffer;
+}
+
+
 void
 _moo_ws_block_add (MooWsBlock  *block,
                    MooWsBuffer *buffer,
@@ -465,7 +487,7 @@ _moo_ws_iter_get_block (const GtkTextIter *pos)
         buffer = _moo_ws_iter_get_buffer (pos);
         g_return_val_if_fail (buffer != NULL, NULL);
 
-        return _moo_ws_buffer_get_last_block (buffer);
+        return moo_ws_buffer_get_last_block (buffer);
     }
 
     tags = gtk_text_iter_get_tags (pos);
