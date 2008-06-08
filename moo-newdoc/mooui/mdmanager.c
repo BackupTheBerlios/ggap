@@ -1844,8 +1844,6 @@ do_open_files (MdManager   *mgr,
 
         if (window || (window = md_manager_get_active_window (mgr)))
         {
-            MdDocument *doc;
-
             doc = md_window_get_active_doc (window);
 
             if (!doc || !md_document_is_empty (doc))
