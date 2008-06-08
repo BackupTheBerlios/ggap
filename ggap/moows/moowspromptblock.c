@@ -93,6 +93,16 @@ moo_ws_prompt_block_add (MooWsBlock  *block,
     gtk_text_tag_table_add (tag_table, pb->priv->ps_tag);
     gtk_text_tag_table_add (tag_table, pb->priv->text_tag);
 
+    if (!gtk_text_tag_table_lookup (tag_table, "moo-ws-prompt-block-error"))
+    {
+        GtkTextTag *tag = g_object_new (GTK_TYPE_TEXT_TAG,
+                                        "name", "moo-ws-prompt-block-error",
+                                        "underline", PANGO_UNDERLINE_ERROR,
+                                        NULL);
+        gtk_text_tag_table_add (tag_table, tag);
+        g_object_unref (tag);
+    }
+
     text = pb->priv->text;
     pb->priv->text = NULL;
     moo_ws_prompt_block_set_text (pb, text);
@@ -598,23 +608,21 @@ moo_ws_prompt_block_get_ps2 (MooWsPromptBlock *pb)
 }
 
 
-void
-moo_ws_prompt_block_place_cursor (MooWsPromptBlock *pb,
-                                  int               line,
-                                  int               column)
+static void
+moo_ws_prompt_block_get_iter (MooWsPromptBlock *pb,
+                              GtkTextIter      *iter,
+                              int               line,
+                              int               column)
 {
-    GtkTextIter iter;
     MooWsBlock *block;
 
-    g_return_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb));
-
     block = MOO_WS_BLOCK (pb);
-    _moo_ws_block_get_iter_at_line (block, &iter, line, &line);
+    _moo_ws_block_get_iter_at_line (block, iter, line, &line);
 
     if (column < 0)
     {
-        if (!gtk_text_iter_ends_line (&iter))
-            gtk_text_iter_forward_to_line_end (&iter);
+        if (!gtk_text_iter_ends_line (iter))
+            gtk_text_iter_forward_to_line_end (iter);
     }
     else
     {
@@ -625,13 +633,62 @@ moo_ws_prompt_block_place_cursor (MooWsPromptBlock *pb,
         else
             add = pb->priv->ps2_len;
 
-        line_chars = gtk_text_iter_get_chars_in_line (&iter);
+        line_chars = gtk_text_iter_get_chars_in_line (iter);
         column = MIN (column, line_chars - add);
 
-        gtk_text_iter_set_line_offset (&iter, column + add);
+        gtk_text_iter_set_line_offset (iter, column + add);
     }
+}
 
-    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (block->buffer), &iter);
+static GtkTextBuffer *
+get_buffer (MooWsPromptBlock *pb)
+{
+    return GTK_TEXT_BUFFER (MOO_WS_BLOCK (pb)->buffer);
+}
+
+void
+moo_ws_prompt_block_place_cursor (MooWsPromptBlock *pb,
+                                  int               line,
+                                  int               column)
+{
+    GtkTextIter iter;
+
+    g_return_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb));
+
+    moo_ws_prompt_block_get_iter (pb, &iter, line, column);
+    gtk_text_buffer_place_cursor (get_buffer (pb), &iter);
+}
+
+void
+moo_ws_prompt_block_highlight_error (MooWsPromptBlock   *pb,
+                                     int                 line,
+                                     int                 start_column,
+                                     int                 end_column)
+{
+    GtkTextIter start, end;
+
+    g_return_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb));
+
+    moo_ws_prompt_block_get_iter (pb, &start, line, start_column);
+    moo_ws_prompt_block_get_iter (pb, &end, line, end_column + 1);
+    gtk_text_buffer_apply_tag_by_name (get_buffer (pb),
+                                       "moo-ws-prompt-block-error",
+                                       &start, &end);
+}
+
+void
+moo_ws_prompt_block_clear_errors (MooWsPromptBlock *pb)
+{
+    GtkTextIter start, end;
+
+    g_return_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb));
+
+    _moo_ws_block_get_start_iter (MOO_WS_BLOCK (pb), &start);
+    _moo_ws_block_get_end_iter (MOO_WS_BLOCK (pb), &end);
+
+    gtk_text_buffer_remove_tag_by_name (get_buffer (pb),
+                                        "moo-ws-prompt-block-error",
+                                        &start, &end);
 }
 
 void

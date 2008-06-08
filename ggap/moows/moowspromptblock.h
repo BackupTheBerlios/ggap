@@ -64,6 +64,11 @@ void         moo_ws_prompt_block_iter_set_line_offset
 void         moo_ws_prompt_block_place_cursor   (MooWsPromptBlock   *pb,
                                                  int                 line,
                                                  int                 column);
+void         moo_ws_prompt_block_highlight_error(MooWsPromptBlock   *pb,
+                                                 int                 line,
+                                                 int                 start_column,
+                                                 int                 end_column);
+void         moo_ws_prompt_block_clear_errors   (MooWsPromptBlock   *pb);
 void         moo_ws_prompt_block_new_line       (MooWsPromptBlock   *pb);
 
 

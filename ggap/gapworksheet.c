@@ -253,7 +253,7 @@ gap_worksheet_start_gap (GapWorksheet *ws,
 
     if (!gap_worksheet_fork_command (ws, cmd_line, &error))
     {
-        moo_worksheet_write_error (MOO_WORKSHEET (ws), error->message);
+        moo_worksheet_write_error (MOO_WORKSHEET (ws), "%s", error->message);
         g_error_free (error);
         return FALSE;
     }
@@ -488,11 +488,10 @@ write_errors (MooWorksheet *mws,
         error = list->data;
         list = list->next;
 
-        moo_worksheet_write_error (mws, "Line %d, chars %d:%d: %s\n",
-                                   error->line + 1,
-                                   error->first_column + 1,
-                                   error->last_column + 1,
-                                   error->message);
+        moo_worksheet_highlight_error (mws, error->line,
+                                       error->first_column,
+                                       error->last_column,
+                                       error->message);
 
         if (line < 0)
         {

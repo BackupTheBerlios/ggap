@@ -426,6 +426,7 @@ _moo_worksheet_commit_input (MooWorksheet *ws)
     ws->priv->output = NULL;
     while (block->next && !MOO_IS_WS_PROMPT_BLOCK (block->next))
         moo_ws_buffer_delete_block (get_buffer (ws), block->next);
+    moo_ws_prompt_block_clear_errors (ws->priv->input);
 
     lines = moo_ws_prompt_block_get_lines (MOO_WS_PROMPT_BLOCK (block));
     g_signal_emit (ws, signals[PROCESS_INPUT], 0, lines);
@@ -596,6 +597,24 @@ moo_worksheet_write_error_len (MooWorksheet *ws,
     g_return_if_fail (MOO_IS_WORKSHEET (ws));
     g_return_if_fail (string != NULL);
     moo_worksheet_write_output_real (ws, string, len, MOO_WS_OUTPUT_ERR);
+}
+
+
+void
+moo_worksheet_highlight_error (MooWorksheet *ws,
+                               int           line,
+                               int           start_column,
+                               int           end_column,
+                               const char   *message)
+{
+    g_return_if_fail (MOO_IS_WORKSHEET (ws));
+
+    if (message)
+        moo_worksheet_write_error_len (ws, message, -1);
+
+    if (line >= 0)
+        moo_ws_prompt_block_highlight_error (ws->priv->input, line,
+                                             start_column, end_column);
 }
 
 

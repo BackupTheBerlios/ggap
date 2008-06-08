@@ -71,10 +71,15 @@ void        moo_worksheet_write_output          (MooWorksheet   *ws,
                                                  gssize          len);
 void        moo_worksheet_write_error           (MooWorksheet   *ws,
                                                  const char     *format,
-                                                 ...);
+                                                 ...) G_GNUC_PRINTF (2,3);
 void        moo_worksheet_write_error_len       (MooWorksheet   *ws,
                                                  const char     *string,
                                                  gssize          len);
+void        moo_worksheet_highlight_error       (MooWorksheet   *ws,
+                                                 int             line,
+                                                 int             start_column,
+                                                 int             end_column,
+                                                 const char     *message);
 
 MooWsBuffer *moo_worksheet_get_buffer           (MooWorksheet   *ws);
 
