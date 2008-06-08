@@ -175,20 +175,21 @@ gap_parse_error_free (GapParseError *error)
                             lex->input[lex->_ptr+2] :   \
                             '\0')
 
-#define CHECK1(c_, what_)           \
-G_STMT_START {                      \
-    if (THIS == c_)                 \
-    {                               \
-        lex->_ptr += 1;             \
-        return what_;               \
-    }                               \
-} G_STMT_END
-
 #define SET_LOCATION(first,last)                        \
 G_STMT_START {                                          \
     locp->first_line = locp->last_line = lex->line_no;  \
     locp->first_column = first - lex->line_ptr;         \
     locp->last_column = last - lex->line_ptr;           \
+} G_STMT_END
+
+#define CHECK1(c_, what_)                               \
+G_STMT_START {                                          \
+    if (THIS == c_)                                     \
+    {                                                   \
+        SET_LOCATION (lex->_ptr, lex->_ptr);            \
+        lex->_ptr += 1;                                 \
+        return what_;                                   \
+    }                                                   \
 } G_STMT_END
 
 #define CHECK2(c1_, c2_, what_)                         \
@@ -217,16 +218,12 @@ skip_eol (GapLex *lex)
 {
     g_assert (IS_EOL (THIS));
 
-    lex->line_ptr += 1;
-    lex->line_no += 1;
-
     if (THIS == '\r' && NEXT == '\n')
-    {
-        lex->line_ptr += 1;
         lex->_ptr += 1;
-    }
 
     lex->_ptr += 1;
+    lex->line_no += 1;
+    lex->line_ptr = lex->_ptr;
 }
 
 
