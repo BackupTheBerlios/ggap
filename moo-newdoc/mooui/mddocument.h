@@ -177,7 +177,7 @@ void                md_file_op_info_set_error           (MdFileOpInfo   *info,
                                                          GQuark          domain,
                                                          int             code,
                                                          const char     *fmt,
-                                                         ...);
+                                                         ...) G_GNUC_PRINTF(4,5);
 
 
 #endif /* MD_DOCUMENT_H */

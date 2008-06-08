@@ -57,7 +57,7 @@ void             md_file_saver_error            (MdFileSaver    *saver,
                                                  GQuark          err_domain,
                                                  int             err_code,
                                                  const char     *fmt,
-                                                 ...);
+                                                 ...) G_GNUC_PRINTF (4,5);
 
 int              md_open_file_for_reading       (const char     *filename,
                                                  GError        **error);

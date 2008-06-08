@@ -445,7 +445,7 @@ md_file_op_errorv (MdFileOp   *op,
     g_free (message);
 }
 
-static void
+static void G_GNUC_PRINTF(4,5)
 md_file_op_error (MdFileOp   *op,
                   GQuark      err_domain,
                   int         err_code,
@@ -945,7 +945,7 @@ md_file_saver_finish (MdFileSaver *saver)
     MD_FILE_SAVER_GET_CLASS (saver)->finish (saver);
 }
 
-void
+void G_GNUC_PRINTF(4,5)
 md_file_saver_error (MdFileSaver *saver,
                      GQuark       err_domain,
                      int          err_code,
