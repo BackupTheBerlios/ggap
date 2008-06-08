@@ -32,14 +32,14 @@ MOO_DEBUG_INIT (gap-file, FALSE)
 #define GGAP_FILE_HEADER_LEN    (GGAP_FILE_MAGIC_LEN + GGAP_FILE_VERSION_LEN)
 
 /*
- * Packed file is magic bytes followed by data compressed
+ * Packed file is header followed by data compressed
  * with zlib-compressed data:
  *
  * N_FILES FILE1 FILE2...
  * FILE: FILE_LENGTH FILE_CONTENTS
  * N_FILES, FILE_LENGTH: guint32
  *
- * Signature bytes are not compressed to make detecting
+ * Header bytes are not compressed to make detecting
  * content type possible for xdgmime.
  */
 
@@ -612,25 +612,40 @@ gap_file_load_text (const char  *filename,
                     gsize       *text_len_p,
                     GError     **error)
 {
-    char *text;
+    char *text = NULL;
     gsize text_len;
 
     g_return_val_if_fail (!error || !*error, FALSE);
 
+    *text_p = NULL;
+    *text_len_p = 0;
+
     if (!g_file_get_contents (filename, &text, &text_len, error))
         return FALSE;
+
+    if (memchr (text, 0, text_len))
+    {
+        g_set_error (error, GGAP_FILE_ERROR,
+                     GGAP_FILE_ERROR_BAD_DATA,
+                     "Unknown file type");
+        goto error;
+    }
 
     if (!g_utf8_validate (text, text_len, NULL))
     {
         g_set_error (error, GGAP_FILE_ERROR,
                      GGAP_FILE_ERROR_BAD_DATA,
                      "Invalid UTF-8");
-        return FALSE;
+        goto error;
     }
 
     *text_p = text;
     *text_len_p = text_len;
     return TRUE;
+
+error:
+    g_free (text);
+    return FALSE;
 }
 
 gboolean
