@@ -23,9 +23,6 @@
 #include <string.h>
 
 
-static void     moo_worksheet_beep      (MooWorksheet   *ws);
-
-
 gpointer _moo_worksheet_parent_class;
 G_DEFINE_TYPE (MooWorksheet, moo_worksheet, MOO_TYPE_TEXT_VIEW)
 
@@ -233,7 +230,7 @@ moo_worksheet_get_buffer (MooWorksheet *ws)
 }
 
 
-static void
+void
 moo_worksheet_beep (MooWorksheet *ws)
 {
     g_return_if_fail (MOO_IS_WORKSHEET (ws));
@@ -311,11 +308,12 @@ _moo_worksheet_create_prompt_block (MooWorksheet *ws,
 }
 
 void
-moo_worksheet_start_input (MooWorksheet   *ws,
-                           const char     *ps,
-                           const char     *ps2)
+moo_worksheet_start_input (MooWorksheet *ws,
+                           const char   *ps,
+                           const char   *ps2)
 {
     MooWsBlock *block = NULL;
+    MooWsBlock *after = NULL;
     MooWsBuffer *buffer;
 
     g_return_if_fail (MOO_IS_WORKSHEET (ws));
@@ -323,33 +321,52 @@ moo_worksheet_start_input (MooWorksheet   *ws,
 
     buffer = get_buffer (ws);
 
-    if (ws->priv->output)
+    if (ws->priv->output || ws->priv->input)
     {
-        block = MOO_WS_BLOCK (ws->priv->output)->next;
+        MooWsBlock *tmp;
+        const char *old_ps;
+        MooWsBlock *current = ws->priv->output ?
+                                MOO_WS_BLOCK (ws->priv->output) :
+                                MOO_WS_BLOCK (ws->priv->input);
 
-        if (!block || !MOO_IS_WS_PROMPT_BLOCK (block))
+        for (tmp = MOO_WS_BLOCK (current)->next; tmp != NULL; tmp = tmp->next)
         {
-            block = NULL;
+            if (MOO_IS_WS_PROMPT_BLOCK (tmp))
+            {
+                block = tmp;
+                break;
+            }
         }
-        else
+
+        if (block)
         {
-            const char *old_ps = moo_ws_prompt_block_get_ps (MOO_WS_PROMPT_BLOCK (block));
+            old_ps = moo_ws_prompt_block_get_ps (MOO_WS_PROMPT_BLOCK (block));
 
             if (strcmp (old_ps ? old_ps : "", ps ? ps : "") != 0)
+            {
+                after = block;
                 block = NULL;
+            }
         }
+
+        if (!after)
+            after = MOO_WS_BLOCK (current)->next;
     }
+
+    if (!block && after && MOO_IS_WS_PROMPT_BLOCK (after) &&
+        MOO_IS_WS_TEXT_BLOCK (after->next) &&
+        moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (after->next)))
+    {
+        after = after->next;
+    }
+
+    if (!after)
+        after = moo_ws_buffer_get_last_block (buffer);
 
     if (!block)
     {
         block = _moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
-
-        if (ws->priv->output)
-            moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->output));
-        else if (ws->priv->input)
-            moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->input));
-        else
-            moo_ws_buffer_append_block (buffer, block);
+        moo_ws_buffer_insert_block (buffer, block, after);
     }
 
     moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (block), 0, 0);
@@ -421,6 +438,31 @@ moo_worksheet_insert_text_block (MooWorksheet *ws,
 
     _moo_ws_block_get_start_iter (text, &iter);
     gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (get_buffer (ws)), &iter);
+    scroll_insert_onscreen (ws);
+}
+
+void
+moo_worksheet_insert_input_block (MooWorksheet *ws,
+                                  const char   *ps,
+                                  const char   *ps2,
+                                  gboolean      after_cursor)
+{
+    GtkTextIter iter;
+    MooWsBlock *block;
+    MooWsBlock *input;
+
+    g_return_if_fail (MOO_IS_WORKSHEET (ws));
+
+    moo_worksheet_get_cursor (ws, &iter);
+    block = _moo_ws_iter_get_block (&iter);
+
+    if (!after_cursor && block)
+        block = moo_ws_block_prev (block);
+
+    input = _moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
+    moo_ws_buffer_insert_block (get_buffer (ws), input, block);
+
+    moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (input), 0, 0);
     scroll_insert_onscreen (ws);
 }
 

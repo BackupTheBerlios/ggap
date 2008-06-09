@@ -137,23 +137,27 @@ gap_app_initialize (MooApp *app)
 }
 
 
-enum {
-    FILE_WORKSHEET,
-    FILE_TEXT
-};
-
 static char *
 check_name_func (G_GNUC_UNUSED MooFileDialog *dialog,
                  const char    *uri,
                  gpointer       data)
 {
     GtkComboBox *combo = data;
+    GapFileType type = gtk_combo_box_get_active (combo);
 
-    if (gtk_combo_box_get_active (combo) == FILE_WORKSHEET &&
-        !g_str_has_suffix (uri, ".gws"))
-            return g_strdup_printf ("%s.gws", uri);
-    else
-        return g_strdup (uri);
+    switch (type)
+    {
+        case GAP_FILE_WORKSPACE:
+        case GAP_FILE_WORKSHEET:
+            if (!g_str_has_suffix (uri, ".gws"))
+                return g_strdup_printf ("%s.gws", uri);
+            break;
+
+        case GAP_FILE_TEXT:
+            break;
+    }
+
+    return g_strdup (uri);
 }
 
 static MdFileInfo *
@@ -165,6 +169,7 @@ run_save_dialog (G_GNUC_UNUSED MdManager *mgr,
     MdFileInfo *ret;
     const char *uri;
     GtkWidget *hbox, *label, *combo;
+    GapFileType type;
 
     hbox = gtk_hbox_new (FALSE, 0);
     label = gtk_label_new ("File type:");
@@ -175,15 +180,14 @@ run_save_dialog (G_GNUC_UNUSED MdManager *mgr,
     moo_file_dialog_set_extra_widget (dialog, hbox);
     moo_file_dialog_set_check_name_func (dialog, check_name_func, combo, NULL);
 
-    gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "GGAP Worksheet (*.gws)");
+    gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "GGAP Worksheet");
+    gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "GGAP Worksheet, text only");
     gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "Text File");
-    gtk_combo_box_set_active (GTK_COMBO_BOX (combo), FILE_WORKSHEET);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (combo), GAP_FILE_WORKSPACE);
 
     ws = GAP_WORKSHEET (doc);
-    if (gap_worksheet_get_file_type (ws) == GAP_FILE_WORKSHEET)
-        gtk_combo_box_set_active (GTK_COMBO_BOX (combo), FILE_WORKSHEET);
-    else
-        gtk_combo_box_set_active (GTK_COMBO_BOX (combo), FILE_TEXT);
+    type = gap_worksheet_get_file_type (ws);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (combo), type);
 
     g_object_ref (combo);
 
@@ -197,8 +201,8 @@ run_save_dialog (G_GNUC_UNUSED MdManager *mgr,
     g_return_val_if_fail (uri != NULL, NULL);
 
     ret = md_file_info_new (uri);
-    if (gtk_combo_box_get_active (GTK_COMBO_BOX (combo)) == FILE_TEXT)
-        gap_file_info_set_file_type (ret, GAP_FILE_TEXT);
+    type = gtk_combo_box_get_active (GTK_COMBO_BOX (combo));
+    gap_file_info_set_file_type (ret, type);
 
     g_object_unref (combo);
     return ret;
@@ -332,13 +336,13 @@ extract_file (const char *filename)
         exit (EXIT_FAILURE);
     }
 
-    if (type != GAP_FILE_WORKSHEET)
+    if (type == GAP_FILE_TEXT)
     {
         g_printerr ("A text file\n");
         exit (EXIT_FAILURE);
     }
 
-    if (g_rename (workspace, "workspace") != 0)
+    if (workspace && g_rename (workspace, "workspace") != 0)
     {
         perror ("rename");
         exit (EXIT_FAILURE);
@@ -349,6 +353,9 @@ extract_file (const char *filename)
         g_printerr ("%s\n", error->message);
         exit (EXIT_FAILURE);
     }
+
+    g_free (text);
+    g_free (workspace);
 }
 
 G_GNUC_NORETURN static void

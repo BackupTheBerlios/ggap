@@ -66,8 +66,8 @@ draw_block_guides (GtkWidget      *widget,
         int y, height;
         int x, width;
 
-        block = _moo_ws_iter_get_block (&start);
-        g_return_if_fail (block != NULL);
+        if (!(block = _moo_ws_iter_get_block (&start)))
+            break;
 
         _moo_ws_block_get_start_iter (block, &start);
         _moo_ws_block_get_end_iter (block, &block_end);

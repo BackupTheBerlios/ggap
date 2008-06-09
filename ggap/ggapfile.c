@@ -672,7 +672,7 @@ ggap_file_load (const char  *filename,
     *text_p = NULL;
     *text_len_p = 0;
     *binary_file_p = NULL;
-    *type = GAP_FILE_WORKSHEET;
+    *type = GAP_FILE_WORKSPACE;
 
     if (!(file = gap_file_open_r (filename, &n_files, &is_gws, error)))
     {
@@ -696,6 +696,7 @@ ggap_file_load (const char  *filename,
     if (!gap_file_eof (file))
         goto error;
 
+    *type = n_files == 2 ? GAP_FILE_WORKSPACE : GAP_FILE_WORKSHEET;
     *text_p = text;
     *text_len_p = text_len;
     *binary_file_p = binary_file;

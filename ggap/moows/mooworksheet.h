@@ -63,6 +63,10 @@ void        moo_worksheet_start_input           (MooWorksheet   *ws,
                                                  const char     *ps,
                                                  const char     *ps2);
 
+void        moo_worksheet_insert_input_block    (MooWorksheet   *ws,
+                                                 const char     *ps,
+                                                 const char     *ps2,
+                                                 gboolean        after_cursor);
 void        moo_worksheet_insert_text_block     (MooWorksheet   *ws,
                                                  gboolean        after_cursor);
 
@@ -86,6 +90,7 @@ void        moo_worksheet_highlight_error       (MooWorksheet   *ws,
                                                  const char     *message);
 
 MooWsBuffer *moo_worksheet_get_buffer           (MooWorksheet   *ws);
+void        moo_worksheet_beep                  (MooWorksheet   *ws);
 
 gboolean    moo_worksheet_load_xml              (MooWorksheet   *ws,
                                                  const char     *text,

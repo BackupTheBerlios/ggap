@@ -24,6 +24,7 @@
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-debug.h"
 #include "mooutils/mootype-macros.h"
+#include "mooutils/mooaccel.h"
 #include "moows/moowspromptblock.h"
 #include <glib/gregex.h>
 #include <gdk/gdkkeysyms.h>
@@ -284,7 +285,7 @@ gap_worksheet_init (GapWorksheet *ws)
     ws->priv->width = -1;
     ws->priv->height = -1;
 
-    ws->priv->file_type = GAP_FILE_WORKSHEET;
+    ws->priv->file_type = GAP_FILE_WORKSPACE;
 
     md_document_set_capabilities (MD_DOCUMENT (ws),
                                   MD_DOCUMENT_SUPPORTS_SAVE);
@@ -700,7 +701,7 @@ gap_worksheet_load_file (MdDocument   *doc,
     GError *error = NULL;
     char *filename;
     GapFileType type;
-    gboolean result;
+    gboolean result = FALSE;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
 
     if (!(filename = md_file_info_get_filename (file_info)))
@@ -717,20 +718,19 @@ gap_worksheet_load_file (MdDocument   *doc,
         return;
     }
 
-    if (type == GAP_FILE_WORKSHEET)
+    switch (type)
     {
-        moo_dprint ("xml: %d\n%.*s\n", (int) text_len, (int) text_len, text);
-        moo_dprint ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+        case GAP_FILE_WORKSHEET:
+        case GAP_FILE_WORKSPACE:
+            moo_dprint ("xml: %d\n%.*s\n", (int) text_len, (int) text_len, text);
+            moo_dprint ("workspace: %s\n", workspace_file ? workspace_file : "NULL");
+            result = moo_worksheet_load_xml (MOO_WORKSHEET (ws), text, text_len, &error);
+            break;
+        case GAP_FILE_TEXT:
+            moo_dprint ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
+            result = gap_worksheet_load_text (ws, text, text_len);
+            break;
     }
-    else
-    {
-        moo_dprint ("text: %d\n%.*s\n", (int) text_len, (int) text_len, text);
-    }
-
-    if (type == GAP_FILE_WORKSHEET)
-        result = moo_worksheet_load_xml (MOO_WORKSHEET (ws), text, text_len, &error);
-    else
-        result = gap_worksheet_load_text (ws, text, text_len);
 
     if (!result)
     {
@@ -773,7 +773,9 @@ gap_file_info_get_file_type (MdFileInfo *file_info,
     else if (strcmp (s, "text") == 0)
         return GAP_FILE_TEXT;
     else if (strcmp (s, "worksheet") == 0)
-        return GAP_FILE_TEXT;
+        return GAP_FILE_WORKSHEET;
+    else if (strcmp (s, "workspace") == 0)
+        return GAP_FILE_WORKSPACE;
 
     g_warning ("%s: invalid file type string '%s'", G_STRFUNC, s);
     return dflt;
@@ -783,10 +785,18 @@ void
 gap_file_info_set_file_type (MdFileInfo *file_info,
                              GapFileType type)
 {
-    if (type == GAP_FILE_TEXT)
-        md_file_info_set (file_info, "gap-file-type", "text");
-    else
-        md_file_info_set (file_info, "gap-file-type", NULL);
+    switch (type)
+    {
+        case GAP_FILE_TEXT:
+            md_file_info_set (file_info, "gap-file-type", "text");
+            break;
+        case GAP_FILE_WORKSPACE:
+            md_file_info_set (file_info, "gap-file-type", NULL);
+            break;
+        case GAP_FILE_WORKSHEET:
+            md_file_info_set (file_info, "gap-file-type", "worksheet");
+            break;
+    }
 }
 
 
@@ -918,7 +928,7 @@ gap_worksheet_save_file (MdDocument   *doc,
 {
     MooFileWriter *writer;
     char *workspace = NULL;
-    gboolean save_workspace = TRUE;
+    gboolean save_workspace;
     GError *error = NULL;
     char *filename;
     GapWorksheet *ws = GAP_WORKSHEET (doc);
@@ -931,6 +941,9 @@ gap_worksheet_save_file (MdDocument   *doc,
     }
 
     gap_state = ws->priv->proc ? gap_process_get_state (ws->priv->proc) : GAP_DEAD;
+
+    save_workspace = gap_file_info_get_file_type (file_info, GAP_FILE_WORKSPACE) ==
+                            GAP_FILE_WORKSPACE;
 
     if (!(gap_state == GAP_DEAD || gap_state == GAP_IN_PROMPT))
     {
@@ -954,7 +967,6 @@ gap_worksheet_save_file (MdDocument   *doc,
         return;
     }
 
-    gap_file_info_get_file_type (file_info, GAP_FILE_WORKSHEET);
     writer = moo_string_writer_new ();
     moo_worksheet_format (MOO_WORKSHEET (ws), writer);
 
@@ -1003,7 +1015,7 @@ static gboolean
 gap_worksheet_key_press (GtkWidget   *widget,
                          GdkEventKey *event)
 {
-    if (event->keyval == GDK_Tab)
+    if (moo_accel_check_event (widget, event, GDK_Tab, 0))
     {
         gap_worksheet_complete (GAP_WORKSHEET (widget));
         return TRUE;
@@ -1030,17 +1042,14 @@ parse_words (const char *data,
              gsize       data_len)
 {
     GQueue words = {0};
-    gsize start, end;
+    const char *line;
+    gsize line_len;
+    MooLineReader lr;
 
-    for (start = 0, end = 0; end < data_len; end++)
-    {
-        if (data[end] == '\r' || data[end] == '\n')
-        {
-            if (start < end)
-                g_queue_push_tail (&words, g_strndup (data + start, end - start));
-            start = end + 1;
-        }
-    }
+    for (moo_line_reader_init (&lr, data, data_len);
+         (line = moo_line_reader_get_line (&lr, &line_len, NULL)); )
+        if (line_len)
+            g_queue_push_tail (&words, g_strndup (line, line_len));
 
     return words.head;
 }

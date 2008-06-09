@@ -34,6 +34,9 @@ static void     gap_ws_window_insert_doc            (MdWindow           *window,
 static void     gap_ws_window_remove_doc            (MdWindow           *window,
                                                      MdDocument         *doc);
 
+static void     action_insert_input_before_cursor   (MdWindow           *window);
+static void     action_insert_input_after_cursor    (MdWindow           *window);
+static void     action_insert_text_before_cursor    (MdWindow           *window);
 static void     action_insert_text_after_cursor     (MdWindow           *window);
 
 
@@ -53,11 +56,37 @@ gap_ws_window_class_init (GapWsWindowClass *klass)
     doc_window_class->insert_doc = gap_ws_window_insert_doc;
     doc_window_class->remove_doc = gap_ws_window_remove_doc;
 
+    moo_window_class_new_action (window_class, "InsertTextBeforeCursor", NULL,
+                                 "display-name", _("Insert Text Block Before Cursor"),
+                                 "label", _("Before Cursor"),
+                                 "short-label", "|T",
+                                 "tooltip", _("Insert text block before cursor"),
+                                 "closure-callback", action_insert_text_before_cursor,
+                                 "condition::sensitive", "md-has-open-document",
+                                 NULL);
     moo_window_class_new_action (window_class, "InsertTextAfterCursor", NULL,
                                  "display-name", _("Insert Text Block After Cursor"),
                                  "label", _("After Cursor"),
+                                 "short-label", "|T",
                                  "tooltip", _("Insert text block after cursor"),
                                  "closure-callback", action_insert_text_after_cursor,
+                                 "condition::sensitive", "md-has-open-document",
+                                 NULL);
+
+    moo_window_class_new_action (window_class, "InsertInputBeforeCursor", NULL,
+                                 "display-name", _("Insert Input Block Before Cursor"),
+                                 "label", _("Before Cursor"),
+                                 "short-label", ">I",
+                                 "tooltip", _("Insert input block before cursor"),
+                                 "closure-callback", action_insert_input_before_cursor,
+                                 "condition::sensitive", "md-has-open-document",
+                                 NULL);
+    moo_window_class_new_action (window_class, "InsertInputAfterCursor", NULL,
+                                 "display-name", _("Insert Input Block After Cursor"),
+                                 "label", _("After Cursor"),
+                                 "short-label", ">I",
+                                 "tooltip", _("Insert input block after cursor"),
+                                 "closure-callback", action_insert_input_after_cursor,
                                  "condition::sensitive", "md-has-open-document",
                                  NULL);
 }
@@ -184,11 +213,33 @@ gap_ws_window_remove_doc (MdWindow   *window,
 
 
 static void
+action_insert_text_before_cursor (MdWindow *window)
+{
+    MdDocument *doc = md_window_get_active_doc (window);
+    g_return_if_fail (doc != NULL);
+    moo_worksheet_insert_text_block (MOO_WORKSHEET (doc), FALSE);
+}
+
+static void
 action_insert_text_after_cursor (MdWindow *window)
 {
     MdDocument *doc = md_window_get_active_doc (window);
-
     g_return_if_fail (doc != NULL);
-
     moo_worksheet_insert_text_block (MOO_WORKSHEET (doc), TRUE);
+}
+
+static void
+action_insert_input_before_cursor (MdWindow *window)
+{
+    MdDocument *doc = md_window_get_active_doc (window);
+    g_return_if_fail (doc != NULL);
+    moo_worksheet_insert_input_block (MOO_WORKSHEET (doc), "gap> ", "> ", FALSE);
+}
+
+static void
+action_insert_input_after_cursor (MdWindow *window)
+{
+    MdDocument *doc = md_window_get_active_doc (window);
+    g_return_if_fail (doc != NULL);
+    moo_worksheet_insert_input_block (MOO_WORKSHEET (doc), "gap> ", "> ", TRUE);
 }

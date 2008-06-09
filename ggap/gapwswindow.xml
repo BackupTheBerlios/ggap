@@ -46,7 +46,14 @@
       <separator/>
       <item action="SelectAll"/>
       <separator/>
-      <item action="InsertTextAfterCursor"/>
+      <item label="Insert Input Block">
+        <item action="InsertInputBeforeCursor"/>
+        <item action="InsertInputAfterCursor"/>
+      </item>
+      <item label="Insert Text Block">
+        <item action="InsertTextBeforeCursor"/>
+        <item action="InsertTextAfterCursor"/>
+      </item>
       <separator/>
       <placeholder name="UserMenu"/>
       <separator/>
@@ -105,13 +112,10 @@
     <item action="Copy"/>
     <item action="Paste"/>
     <separator/>
-
     <item action="Find"/>
-
     <separator/>
-    <placeholder name="BuildToolbar">
-      <item action="StopJob"/>
-    </placeholder>
+    <item action="InsertInputAfterCursor"/>
+    <item action="InsertTextAfterCursor"/>
     <separator/>
 
   </widget> <!-- Toolbar -->

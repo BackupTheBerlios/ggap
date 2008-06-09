@@ -52,6 +52,7 @@ gap_file_type_get_type (void)
     if (G_UNLIKELY (!etype))
     {
         static const GEnumValue values[] = {
+            { GAP_FILE_WORKSPACE, (char*) "GAP_FILE_WORKSPACE", (char*) "workspace" },
             { GAP_FILE_WORKSHEET, (char*) "GAP_FILE_WORKSHEET", (char*) "worksheet" },
             { GAP_FILE_TEXT, (char*) "GAP_FILE_TEXT", (char*) "text" },
             { 0, NULL, NULL }

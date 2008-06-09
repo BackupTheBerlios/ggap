@@ -30,7 +30,9 @@ typedef struct GapWorksheet        GapWorksheet;
 typedef struct GapWorksheetPrivate GapWorksheetPrivate;
 typedef struct GapWorksheetClass   GapWorksheetClass;
 
+/* keep in sync with save dialog code */
 typedef enum {
+    GAP_FILE_WORKSPACE,
     GAP_FILE_WORKSHEET,
     GAP_FILE_TEXT
 } GapFileType;
