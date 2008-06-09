@@ -46,28 +46,13 @@
       <separator/>
       <item action="SelectAll"/>
       <separator/>
+      <item action="InsertTextAfterCursor"/>
+      <separator/>
       <placeholder name="UserMenu"/>
       <separator/>
       <item action="ConfigureShortcuts"/>
       <separator/>
       <item action="Preferences"/>
-    </item>
-
-    <!-- menu item label -->
-    <item name="Search" _label="_Search">
-      <separator/>
-      <item action="Find"/>
-      <item action="FindNext"/>
-      <item action="FindPrevious"/>
-      <separator/>
-      <item action="QuickSearch"/>
-      <item action="FindCurrent"/>
-      <item action="FindCurrentBack"/>
-      <separator/>
-      <item action="GoToLine"/>
-      <separator/>
-      <placeholder name="UserMenu"/>
-      <separator/>
     </item>
 
     <!-- menu item label -->
@@ -79,29 +64,6 @@
 <!--      <item action="FocusDoc"/>-->
       <separator/>
       <placeholder name="UserMenu"/>
-      <separator/>
-    </item>
-
-    <!-- menu item label -->
-    <item name="Document" _label="_Document">
-      <separator/>
-      <item action="LanguageMenu"/>
-      <item action="EncodingMenu"/>
-      <separator/>
-      <item action="ToggleBookmark"/>
-      <item action="BookmarksMenu"/>
-      <separator/>
-      <placeholder name="UserMenu"/>
-      <separator/>
-    </item>
-
-    <item name="Tools" _label="_Tools">
-      <separator/>
-      <placeholder name="ToolsMenu"/>
-      <separator/>
-      <placeholder name="UserMenu"/>
-      <separator/>
-      <item action="StopJob"/>
       <separator/>
     </item>
 

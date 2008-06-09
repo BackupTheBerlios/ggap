@@ -12,12 +12,16 @@
  */
 
 #include "moowstextblock.h"
-#include "moowsbuffer.h"
+#include "mooworksheet.h"
+#include <mooutils/mooutils-misc.h>
 
 
 struct MooWsTextBlockPrivate {
     char *text;
-    gboolean editable;
+    char *indent;
+    guint indent_width : 30;
+    gboolean editable : 1;
+    gboolean is_output : 1;
 };
 
 
@@ -30,6 +34,8 @@ moo_ws_text_block_init (MooWsTextBlock *block)
     block->priv = G_TYPE_INSTANCE_GET_PRIVATE (block, MOO_TYPE_WS_TEXT_BLOCK,
                                                MooWsTextBlockPrivate);
     block->priv->text = NULL;
+    block->priv->indent = NULL;
+    block->priv->indent_width = 0;
 }
 
 static void
@@ -40,7 +46,7 @@ moo_ws_text_block_dispose (GObject *object)
     if (tb->priv)
     {
         g_free (tb->priv->text);
-
+        g_free (tb->priv->indent);
         tb->priv = NULL;
     }
 
@@ -123,9 +129,22 @@ moo_ws_text_block_class_init (MooWsTextBlockClass *klass)
 
 
 MooWsTextBlock *
-moo_ws_text_block_new (void)
+moo_ws_text_block_new (gboolean is_output)
 {
-    return g_object_new (MOO_TYPE_WS_TEXT_BLOCK, NULL);
+    MooWsTextBlock *block = g_object_new (MOO_TYPE_WS_TEXT_BLOCK, NULL);
+    block->priv->is_output = is_output;
+    block->priv->editable = !is_output;
+    block->priv->indent_width = is_output ? MOO_WORKSHEET_OUTPUT_INDENT : 0;
+    block->priv->indent = is_output ? g_strnfill (MOO_WORKSHEET_OUTPUT_INDENT, ' ') : NULL;
+    return block;
+}
+
+
+gboolean
+moo_ws_text_block_is_output (MooWsTextBlock *block)
+{
+    g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (block), FALSE);
+    return block->priv->is_output;
 }
 
 
@@ -149,13 +168,11 @@ moo_ws_text_block_set_text (MooWsTextBlock *tb,
                                       &end, block->end);
 
     _moo_ws_buffer_start_edit (block->buffer);
-
     gtk_text_buffer_delete (GTK_TEXT_BUFFER (block->buffer), &start, &end);
+    _moo_ws_buffer_end_edit (block->buffer);
 
     if (text)
-        _moo_ws_block_insert (block, &start, text, -1);
-
-    _moo_ws_buffer_end_edit (block->buffer);
+        moo_ws_text_block_append (tb, text);
 }
 
 void
@@ -164,6 +181,9 @@ moo_ws_text_block_append (MooWsTextBlock *tb,
 {
     GtkTextIter iter;
     MooWsBlock *block;
+    MooLineReader lr;
+    const char *line;
+    gsize line_len;
 
     g_return_if_fail (MOO_IS_WS_TEXT_BLOCK (tb));
     g_return_if_fail (text != NULL);
@@ -172,9 +192,24 @@ moo_ws_text_block_append (MooWsTextBlock *tb,
     g_return_if_fail (block->buffer != NULL);
 
     _moo_ws_block_get_end_iter (block, &iter);
-
     _moo_ws_buffer_start_edit (block->buffer);
-    _moo_ws_block_insert (block, &iter, text, -1);
+
+    if (tb->priv->indent && gtk_text_iter_starts_line (&iter))
+        _moo_ws_block_insert (block, &iter, tb->priv->indent, -1);
+
+    for (moo_line_reader_init (&lr, text, -1);
+         (line = moo_line_reader_get_line (&lr, &line_len, NULL)); )
+    {
+        if (line != text)
+        {
+            _moo_ws_block_insert (block, &iter, "\n", -1);
+            if (tb->priv->indent)
+                _moo_ws_block_insert (block, &iter, tb->priv->indent, -1);
+        }
+
+        _moo_ws_block_insert (block, &iter, line, line_len);
+    }
+
     _moo_ws_buffer_end_edit (block->buffer);
 }
 
@@ -184,6 +219,7 @@ moo_ws_text_block_get_text (MooWsTextBlock *tb)
 {
     GtkTextIter start, end;
     MooWsBlock *block;
+    GString *string;
 
     g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (tb), NULL);
 
@@ -197,6 +233,43 @@ moo_ws_text_block_get_text (MooWsTextBlock *tb)
     gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (block->buffer),
                                       &end, block->end);
 
-    return gtk_text_buffer_get_slice (GTK_TEXT_BUFFER (block->buffer),
-                                      &start, &end, TRUE);
+    if (!tb->priv->indent_width)
+        return gtk_text_buffer_get_slice (GTK_TEXT_BUFFER (block->buffer),
+                                          &start, &end, TRUE);
+
+    if (gtk_text_iter_get_line (&start) == gtk_text_iter_get_line (&end))
+    {
+        gtk_text_iter_forward_chars (&start, tb->priv->indent_width);
+        return gtk_text_buffer_get_slice (GTK_TEXT_BUFFER (block->buffer),
+                                          &start, &end, TRUE);
+    }
+
+    g_assert (gtk_text_iter_starts_line (&start));
+    string = g_string_new (NULL);
+
+    do
+    {
+        GtkTextIter line_end;
+
+        if (string->len)
+            g_string_append (string, "\n");
+
+        line_end = start;
+        if (!gtk_text_iter_ends_line (&line_end))
+            gtk_text_iter_forward_to_line_end (&line_end);
+        gtk_text_iter_forward_chars (&start, tb->priv->indent_width);
+
+        if (gtk_text_iter_compare (&start, &line_end) < 0)
+        {
+            char *slice = gtk_text_buffer_get_slice (GTK_TEXT_BUFFER (block->buffer),
+                                                     &start, &line_end, TRUE);
+            g_string_append (string, slice);
+            g_free (slice);
+        }
+
+        gtk_text_iter_forward_line (&start);
+    }
+    while (gtk_text_iter_compare (&start, &end) < 0);
+
+    return g_string_free (string, FALSE);
 }

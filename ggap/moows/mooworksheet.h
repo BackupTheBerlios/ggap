@@ -20,6 +20,7 @@
 
 G_BEGIN_DECLS
 
+#define MOO_WORKSHEET_OUTPUT_INDENT 2
 
 #define MOO_TYPE_WORKSHEET             (moo_worksheet_get_type ())
 #define MOO_WORKSHEET(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), MOO_TYPE_WORKSHEET, MooWorksheet))
@@ -61,6 +62,9 @@ void        moo_worksheet_continue_input        (MooWorksheet   *ws);
 void        moo_worksheet_start_input           (MooWorksheet   *ws,
                                                  const char     *ps,
                                                  const char     *ps2);
+
+void        moo_worksheet_insert_text_block     (MooWorksheet   *ws,
+                                                 gboolean        after_cursor);
 
 void        moo_worksheet_add_history           (MooWorksheet   *ws,
                                                  const char     *string);

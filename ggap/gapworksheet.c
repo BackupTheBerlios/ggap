@@ -350,12 +350,17 @@ resize_idle (GapWorksheet *ws)
     {
         PangoLayout *layout;
         int width, height;
+        int text_width;
 
         layout = gtk_widget_create_pango_layout (GTK_WIDGET (ws), " ");
         pango_layout_get_pixel_size (layout, &width, &height);
 
+        text_width = allocation->width -
+                        gtk_text_view_get_left_margin (GTK_TEXT_VIEW (ws)) -
+                        gtk_text_view_get_right_margin (GTK_TEXT_VIEW (ws));
+
 #define HOW_MANY(x__,y__) (((x__) + (y__) - 1) / (y__))
-        ws->priv->width = HOW_MANY (allocation->width, width);
+        ws->priv->width = HOW_MANY (text_width, width) - MOO_WORKSHEET_OUTPUT_INDENT;
         ws->priv->height = HOW_MANY (allocation->height, height);
 #undef HOW_MANY
 

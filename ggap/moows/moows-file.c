@@ -17,6 +17,8 @@
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-gobject.h"
 #include "mooutils/moomarkup.h"
+#include <stdlib.h>
+#include <errno.h>
 
 #define MOO_WORKSHEET_FILE_ERROR (g_quark_from_static_string ("moo-worksheet-file-error"))
 #define MOO_WORKSHEET_FILE_ERROR_FORMAT 0
@@ -25,9 +27,12 @@
 #define ELM_CONTENT     "content"
 #define ELM_INPUT       "input"
 #define ELM_OUTPUT      "output"
+#define ELM_TEXT        "text"
 
 #define PROP_VERSION    "version"
-#define PROP_VERSION_VALUE "1.0"
+#define WS_MAJOR_VERSION 1
+#define WS_MINOR_VERSION 1
+#define WS_VERSION      "1.1"
 
 #define PROP_PS         "ps"
 #define PROP_PS2        "ps2"
@@ -70,7 +75,7 @@ create_output_block (MooWsOutputType out_type)
 {
     MooWsTextBlock *block;
 
-    block = moo_ws_text_block_new ();
+    block = moo_ws_text_block_new (TRUE);
 
     if (out_type == MOO_WS_OUTPUT_ERR)
     {
@@ -121,6 +126,88 @@ load_output (MooWorksheet  *ws,
     moo_ws_buffer_append_block (get_buffer (ws), block);
 }
 
+static void
+load_text (MooWorksheet  *ws,
+           MooMarkupNode *elm)
+{
+    MooWsTextBlock *block;
+    block = moo_ws_text_block_new (FALSE);
+    moo_ws_text_block_set_text (block, moo_markup_get_content (elm));
+    moo_ws_buffer_append_block (get_buffer (ws), MOO_WS_BLOCK (block));
+}
+
+static gboolean
+parse_version (const char *version,
+               guint      *pmajor,
+               guint      *pminor)
+{
+    long major, minor;
+    const char *dot;
+    char *end;
+    char *tmp;
+
+    if (!(dot = strchr (version, '.')) ||
+        dot == version || !dot[1])
+            return FALSE;
+
+    tmp = g_strndup (version, dot - version);
+    errno = 0;
+    major = strtol (tmp, &end, 10);
+    if (errno || *end)
+    {
+        g_free (tmp);
+        return FALSE;
+    }
+    g_free (tmp);
+
+    errno = 0;
+    minor = strtol (dot + 1, &end, 10);
+    if (errno || *end)
+        return FALSE;
+
+    if (major < 1 || major > G_MAXINT ||
+        minor < 0 || minor > G_MAXINT)
+            return FALSE;
+
+    *pmajor = major;
+    *pminor = minor;
+
+    return TRUE;
+}
+
+static gboolean
+check_version (const char  *version,
+               GError     **error)
+{
+    guint major, minor;
+
+    if (!parse_version (version, &major, &minor))
+    {
+        g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
+                     MOO_WORKSHEET_FILE_ERROR_FORMAT,
+                     "bad version '%s'", version);
+        return FALSE;
+    }
+
+    if (major != WS_MAJOR_VERSION)
+    {
+        g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
+                     MOO_WORKSHEET_FILE_ERROR_FORMAT,
+                     "incompatible version '%s'", version);
+        return FALSE;
+    }
+
+    if (minor > WS_MINOR_VERSION)
+    {
+        g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
+                     MOO_WORKSHEET_FILE_ERROR_FORMAT,
+                     "file was saved with newer version of ggap");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 gboolean
 moo_worksheet_load_xml (MooWorksheet   *ws,
                         const char     *text,
@@ -145,14 +232,16 @@ moo_worksheet_load_xml (MooWorksheet   *ws,
         goto error;
     }
 
-    version = moo_markup_get_prop (root, PROP_VERSION);
-    if (!version || strcmp (version, PROP_VERSION_VALUE) != 0)
+    if (!(version = moo_markup_get_prop (root, PROP_VERSION)))
     {
         g_set_error (error, MOO_WORKSHEET_FILE_ERROR,
                      MOO_WORKSHEET_FILE_ERROR_FORMAT,
                      "bad version '%s'", version ? version : "");
         goto error;
     }
+
+    if (!check_version (version, error))
+        goto error;
 
     if (!(elm = moo_markup_get_element (root, ELM_CONTENT)))
     {
@@ -173,6 +262,8 @@ moo_worksheet_load_xml (MooWorksheet   *ws,
             load_input (ws, child);
         else if (!strcmp (child->name, ELM_OUTPUT))
             load_output (ws, child);
+        else if (!strcmp (child->name, ELM_TEXT))
+            load_text (ws, child);
         else
             g_critical ("%s: unknown element %s", G_STRFUNC, child->name);
     }
@@ -199,16 +290,15 @@ moo_worksheet_format (MooWorksheet  *ws,
 
     doc = moo_markup_doc_new ("moo-worksheet");
     root = moo_markup_create_root_element (doc, ELM_WORKSHEET);
-    moo_markup_set_prop (root, PROP_VERSION, PROP_VERSION_VALUE);
+    moo_markup_set_prop (root, PROP_VERSION, WS_VERSION);
     content = moo_markup_create_element (root, ELM_CONTENT);
 
     for (block = moo_ws_buffer_get_first_block (get_buffer (ws));
          block != NULL; block = block->next)
     {
-        MooMarkupNode *elm;
-
         if (MOO_IS_WS_PROMPT_BLOCK (block))
         {
+            MooMarkupNode *elm;
             const char *ps, *ps2;
             char *text;
 
@@ -225,15 +315,21 @@ moo_worksheet_format (MooWorksheet  *ws,
         }
         else if (MOO_IS_WS_TEXT_BLOCK (block))
         {
-            char *text;
+            char *text = moo_ws_text_block_get_text (MOO_WS_TEXT_BLOCK (block));
 
-            text = moo_ws_text_block_get_text (MOO_WS_TEXT_BLOCK (block));
-            elm = moo_markup_create_text_element (content, ELM_OUTPUT, text);
+            if (moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (block)))
+            {
+                MooMarkupNode *elm = moo_markup_create_text_element (content, ELM_OUTPUT, text);
 
-            if (!g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr"))
-                moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDOUT);
+                if (!g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr"))
+                    moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDOUT);
+                else
+                    moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDERR);
+            }
             else
-                moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDERR);
+            {
+                moo_markup_create_text_element (content, ELM_TEXT, text);
+            }
 
             g_free (text);
         }

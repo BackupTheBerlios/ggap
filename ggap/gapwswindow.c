@@ -34,12 +34,15 @@ static void     gap_ws_window_insert_doc            (MdWindow           *window,
 static void     gap_ws_window_remove_doc            (MdWindow           *window,
                                                      MdDocument         *doc);
 
+static void     action_insert_text_after_cursor     (MdWindow           *window);
+
 
 static void
 gap_ws_window_class_init (GapWsWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     MdWindowClass *doc_window_class = MD_WINDOW_CLASS (klass);
+    MooWindowClass *window_class = MOO_WINDOW_CLASS (klass);
 
     moo_window_class_set_id (MOO_WINDOW_CLASS (klass), "Worksheet", "Worksheet");
     g_type_class_add_private (klass, sizeof (GapWsWindowPrivate));
@@ -49,6 +52,14 @@ gap_ws_window_class_init (GapWsWindowClass *klass)
     doc_window_class->active_doc_changed = gap_ws_window_active_doc_changed;
     doc_window_class->insert_doc = gap_ws_window_insert_doc;
     doc_window_class->remove_doc = gap_ws_window_remove_doc;
+
+    moo_window_class_new_action (window_class, "InsertTextAfterCursor", NULL,
+                                 "display-name", _("Insert Text Block After Cursor"),
+                                 "label", _("After Cursor"),
+                                 "tooltip", _("Insert text block after cursor"),
+                                 "closure-callback", action_insert_text_after_cursor,
+                                 "condition::sensitive", "md-has-open-document",
+                                 NULL);
 }
 
 
@@ -169,4 +180,15 @@ gap_ws_window_remove_doc (MdWindow   *window,
     MD_WINDOW_CLASS (gap_ws_window_parent_class)->remove_doc (window, doc);
 
     print_gap_state (GAP_WS_WINDOW (window));
+}
+
+
+static void
+action_insert_text_after_cursor (MdWindow *window)
+{
+    MdDocument *doc = md_window_get_active_doc (window);
+
+    g_return_if_fail (doc != NULL);
+
+    moo_worksheet_insert_text_block (MOO_WORKSHEET (doc), TRUE);
 }

@@ -15,6 +15,7 @@
 #include "moowstextblock.h"
 #include "moows-private.h"
 #include "moows-input.h"
+#include "moows-draw.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-gobject.h"
 #include <gdk/gdkkeysyms.h>
@@ -68,9 +69,8 @@ moo_worksheet_init (MooWorksheet *ws)
     moo_text_view_set_buffer_type (MOO_TEXT_VIEW (ws), MOO_TYPE_WS_BUFFER);
     moo_text_view_set_font_from_string (MOO_TEXT_VIEW (ws), "Monospace");
 
-    gtk_text_view_set_border_window_size (GTK_TEXT_VIEW (ws),
-                                          GTK_TEXT_WINDOW_LEFT,
-                                          20);
+    gtk_text_view_set_left_margin (GTK_TEXT_VIEW (ws),
+                                   MOO_WORKSHEET_MARGIN_WIDTH);
 }
 
 static GObject *
@@ -165,6 +165,7 @@ moo_worksheet_class_init (MooWorksheetClass *klass)
     object_class->get_property = moo_worksheet_get_property;
 
     widget_class->key_press_event = _moo_worksheet_key_press;
+    widget_class->expose_event = _moo_worksheet_expose_event;
 
     textview_class->move_cursor = _moo_worksheet_move_cursor;
     textview_class->cut_clipboard = _moo_worksheet_cut_clipboard;
@@ -399,6 +400,31 @@ moo_worksheet_get_cursor (MooWorksheet *ws,
 }
 
 
+void
+moo_worksheet_insert_text_block (MooWorksheet *ws,
+                                 gboolean      after_cursor)
+{
+    GtkTextIter iter;
+    MooWsBlock *block;
+    MooWsBlock *text;
+
+    g_return_if_fail (MOO_IS_WORKSHEET (ws));
+
+    moo_worksheet_get_cursor (ws, &iter);
+    block = _moo_ws_iter_get_block (&iter);
+
+    if (!after_cursor && block)
+        block = moo_ws_block_prev (block);
+
+    text = MOO_WS_BLOCK (moo_ws_text_block_new (FALSE));
+    moo_ws_buffer_insert_block (get_buffer (ws), text, block);
+
+    _moo_ws_block_get_start_iter (text, &iter);
+    gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (get_buffer (ws)), &iter);
+    scroll_insert_onscreen (ws);
+}
+
+
 gboolean
 _moo_worksheet_commit_input (MooWorksheet *ws)
 {
@@ -424,8 +450,9 @@ _moo_worksheet_commit_input (MooWorksheet *ws)
 
     ws->priv->input = MOO_WS_PROMPT_BLOCK (block);
     ws->priv->output = NULL;
-    while (block->next && !MOO_IS_WS_PROMPT_BLOCK (block->next))
-        moo_ws_buffer_delete_block (get_buffer (ws), block->next);
+    if (MOO_IS_WS_TEXT_BLOCK (block->next) &&
+        moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (block->next)))
+            moo_ws_buffer_delete_block (get_buffer (ws), block->next);
     moo_ws_prompt_block_clear_errors (ws->priv->input);
 
     lines = moo_ws_prompt_block_get_lines (MOO_WS_PROMPT_BLOCK (block));
@@ -450,15 +477,22 @@ text_block_check_type (MooWsBlock      *block,
 {
     g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (block), FALSE);
 
-    switch (out_type)
+    if (moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (block)))
     {
-        case MOO_WS_OUTPUT_OUT:
-            return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") == NULL;
-        case MOO_WS_OUTPUT_ERR:
-           return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") != NULL;
-    }
+        switch (out_type)
+        {
+            case MOO_WS_OUTPUT_OUT:
+                return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") == NULL;
+            case MOO_WS_OUTPUT_ERR:
+               return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") != NULL;
+        }
 
-    g_return_val_if_reached (FALSE);
+        g_return_val_if_reached (FALSE);
+    }
+    else
+    {
+        return TRUE;
+    }
 }
 
 static MooWsBlock *
@@ -466,7 +500,7 @@ create_output_block (MooWsOutputType out_type)
 {
     MooWsTextBlock *block;
 
-    block = moo_ws_text_block_new ();
+    block = moo_ws_text_block_new (TRUE);
 
     if (out_type == MOO_WS_OUTPUT_ERR)
     {
