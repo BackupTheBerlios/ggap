@@ -15,6 +15,7 @@
 #include "mooui/marshals.h"
 #include "mooui/mdenums.h"
 #include "mooui/mdutils.h"
+#include "mooui/mdfileops.h"
 #include "moofileview/moofile.h"
 #include "mooutils/mooutils-misc.h"
 #include "mooutils/mooutils-fs.h"
@@ -776,7 +777,14 @@ md_file_op_info_take_error (MdFileOpInfo *info,
     GError *tmp;
 
     g_return_if_fail (info != NULL);
-    g_return_if_fail (error != NULL);
+
+    if (!error)
+    {
+        g_critical ("%s: oops", G_STRLOC);
+        error = g_error_new_literal (MD_FILE_ERROR,
+                                     MD_FILE_ERROR_FAILED,
+                                     "Failed");
+    }
 
     tmp = info->error;
     info->error = error;
