@@ -52,9 +52,7 @@ static void     gap_app_start               (MooApp         *app);
 static void     gap_app_add_options         (MooApp         *app,
                                              GOptionContext *ctx);
 static void     gap_app_quit                (MooApp         *app);
-    /* signal and a virtual method */
-static MooAppQuitReply gap_app_quit_requested
-                                            (MooApp         *app);
+static MooAppQuitReply gap_app_quit_requested (MooApp       *app);
 
 static void     gap_app_setup_prefs_dialog  (MooApp         *app,
                                              MooPrefsDialog *dialog);
@@ -363,9 +361,40 @@ extract_files (char **files)
 
 
 static MooAppQuitReply
-gap_app_quit_requested (G_GNUC_UNUSED MooApp *app)
+gap_app_quit_requested (MooApp *app)
 {
-    return MOO_APP_QUIT_NOW;
+    GapApp *ggap = GAP_APP (app);
+    gboolean later = FALSE;
+
+    if (ggap->priv->gd_mgr)
+    {
+        switch (md_manager_quit_requested (ggap->priv->gd_mgr))
+        {
+            case MOO_APP_QUIT_CANCEL:
+                return MOO_APP_QUIT_CANCEL;
+            case MOO_APP_QUIT_LATER:
+                later = TRUE;
+                break;
+            case MOO_APP_QUIT_NOW:
+                break;
+        }
+    }
+
+    if (ggap->priv->editor)
+    {
+        switch (moo_editor_quit_requested (ggap->priv->editor))
+        {
+            case MOO_APP_QUIT_CANCEL:
+                return MOO_APP_QUIT_CANCEL;
+            case MOO_APP_QUIT_LATER:
+                later = TRUE;
+                break;
+            case MOO_APP_QUIT_NOW:
+                break;
+        }
+    }
+
+    return later ? MOO_APP_QUIT_LATER : MOO_APP_QUIT_NOW;
 }
 
 static void

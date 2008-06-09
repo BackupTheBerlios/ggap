@@ -135,7 +135,6 @@ static MdDocument  *open_file                   (MdManager      *mgr,
 static void         reload_doc                  (MdManager      *mgr,
                                                  MdDocument     *doc);
 
-static MooAppQuitReply app_quit_requested       (MdManager      *mgr);
 static void         app_quit_cancelled          (MdManager      *mgr);
 static void         app_quit                    (MdManager      *mgr);
 
@@ -344,7 +343,6 @@ md_manager_constructor (GType                  type,
 
     if ((app = moo_app_instance ()))
     {
-        g_signal_connect_swapped (app, "quit-requested", G_CALLBACK (app_quit_requested), mgr);
         g_signal_connect_swapped (app, "quit-cancelled", G_CALLBACK (app_quit_cancelled), mgr);
         g_signal_connect_swapped (app, "quit", G_CALLBACK (app_quit), mgr);
     }
@@ -385,7 +383,6 @@ handler_quit (MdManager *mgr)
 
     if ((app = moo_app_instance ()))
     {
-        g_signal_handlers_disconnect_by_func (app, (gpointer) app_quit_requested, mgr);
         g_signal_handlers_disconnect_by_func (app, (gpointer) app_quit_cancelled, mgr);
         g_signal_handlers_disconnect_by_func (app, (gpointer) app_quit, mgr);
     }
@@ -1212,29 +1209,37 @@ cancel_close_window (MdManager *mgr,
 }
 
 
-static MooAppQuitReply
-app_quit_requested (MdManager *mgr)
+MooAppQuitReply
+md_manager_quit_requested (MdManager *mgr)
 {
     MdCloseAllResult result;
+    MooAppQuitReply reply = MOO_APP_QUIT_NOW;
 
+    g_return_val_if_fail (MD_IS_MANAGER (mgr), MOO_APP_QUIT_NOW);
     g_return_val_if_fail (!mgr->priv->handling_quit, MOO_APP_QUIT_NOW);
+
+    g_object_ref (mgr);
 
     result = MD_MANAGER_GET_CLASS (mgr)->close_all (mgr);
 
     switch (result)
     {
         case MD_CLOSE_ALL_DONE:
-            return MOO_APP_QUIT_NOW;
+            reply = MOO_APP_QUIT_NOW;
+            break;
 
         case MD_CLOSE_ALL_CANCELLED:
-            return MOO_APP_QUIT_CANCEL;
+            reply = MOO_APP_QUIT_CANCEL;
+            break;
 
         case MD_CLOSE_ALL_IN_PROGRESS:
             mgr->priv->handling_quit = TRUE;
-            return MOO_APP_QUIT_LATER;
+            reply = MOO_APP_QUIT_LATER;
+            break;
     }
 
-    g_return_val_if_reached (MOO_APP_QUIT_NOW);
+    g_object_unref (mgr);
+    return reply;
 }
 
 static void

@@ -133,6 +133,8 @@ MooFilterMgr *md_manager_get_filter_mgr     (MdManager  *mgr);
 
 void        md_manager_apply_prefs          (MdManager  *mgr);
 
+MooAppQuitReply md_manager_quit_requested   (MdManager  *mgr);
+
 
 G_END_DECLS
 
