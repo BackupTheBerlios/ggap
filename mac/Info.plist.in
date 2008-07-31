@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>gws</string>
+			<key>CFBundleTypeName</key>
+			<string>GGAP Worksheet</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>net.sourceforge.ggap.gws</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>ggap</string>
+	<key>CFBundleGetInfoString</key>
+	<string>GGAP @GGAP_VERSION_UNQUOTED@</string>
+	<key>CFBundleIconFile</key>
+	<string>ggap.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>net.sourceforge.ggap.ggap</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>GGAP</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@GGAP_VERSION_UNQUOTED@</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>@GGAP_VERSION_UNQUOTED@</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.4.9</string>
+	<key>LSRequiresNativeExecution</key>
+	<string>YES</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2004-2008, Yevgen Muntyan &lt;muntyan@tamu.edu&gt;</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.pkware.zip-archive</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>GGAP Worksheet</string>
+			<key>UTTypeIconFile</key>
+			<string>gws.icns</string>
+			<key>UTTypeIdentifier</key>
+			<string>net.sourceforge.ggap.gws</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://ggap.sourceforge.net/gws.html</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>gws</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

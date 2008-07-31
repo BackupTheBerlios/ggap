@@ -1,0 +1,123 @@
+EXTRA_DIST +=			\
+    win32/ggap.nsi.in		\
+    win32/registerExtension.nsh	\
+    win32/qt.conf
+
+WIN32_CLEANFILES =
+WIN32_CLEANDIRS =
+win-clean:
+	rm -f $(WIN32_CLEANFILES) || exit 1
+	rm -fr $(WIN32_CLEANDIRS) || exit 1
+
+
+#########################################################################
+#
+# Generated zip files. ggap.zip is ggap only, for testing. ggap-gap
+# contains ggap, GAP, and NSIS files.
+#
+ZIP_DIR = ggap-$(VERSION)
+ZIP_FILE = $(ZIP_DIR).zip
+GAP_VERSION = 4.4.10
+BIG_ZIP_DIR = ggap-$(VERSION)-gap-$(GAP_VERSION)
+BIG_ZIP_FILE = $(BIG_ZIP_DIR).zip
+
+WIN32_CLEANFILES += $(ZIP_FILE) $(BIG_ZIP_FILE)
+WIN32_CLEANDIRS += $(ZIP_DIR) $(BIG_ZIP_DIR)
+
+
+#########################################################################
+#
+# NSIS files
+#
+registerExtension.nsh: win32/registerExtension.nsh
+	cp $(srcdir)/win32/registerExtension.nsh .
+
+ggap.nsi: win32/ggap.nsi.in $(top_builddir)/config.status ./registerExtension.nsh
+	$(SHELL) ./config.status --file=win32/ggap.nsi || exit 1
+	sed -e 's/@GGAP_NSI_DEFINE_FULL_INSTALLER@/; !define GGAP_FULL_INSTALLER/' \
+	    -e 's/@GGAP_INSTALLER_NAME@/ggap-$(VERSION).exe/' \
+	    win32/ggap.nsi > $@.tmp || exit 1
+	mv $@.tmp $@ || exit 1
+
+ggap-full.nsi: win32/ggap.nsi.in $(top_builddir)/config.status ./registerExtension.nsh
+	$(SHELL) ./config.status --file=win32/ggap.nsi || exit 1
+	sed -e 's/@GGAP_NSI_DEFINE_FULL_INSTALLER@/!define GGAP_FULL_INSTALLER/' \
+	    -e 's/@GGAP_INSTALLER_NAME@/ggap-$(VERSION)-gap-$(GAP_VERSION).exe/' \
+	    win32/ggap.nsi > $@.tmp || exit 1
+	mv $@.tmp $@ || exit 1
+
+nsi_files = ggap.nsi ggap-full.nsi registerExtension.nsh
+WIN32_CLEANFILES += $(nsi_files)
+
+
+#########################################################################
+#
+# Qt libraries
+#
+qt_libs = BIN/qt-libs
+
+$(qt_libs)/QtCore4.dll:
+	mkdir -p $(qt_libs) || exit 1
+	cp /usr/local/win/Qt/4.4.0/bin/QtCore4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/4.4.0/bin/QtGui4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/4.4.0/bin/QtScript4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/4.4.0/bin/QtXml4.dll $(qt_libs)/ || exit 1
+	mkdir -p $(qt_libs)/plugins/imageformats || exit 1
+	cp /usr/local/win/Qt/4.4.0/plugins/imageformats/*.dll $(qt_libs)/plugins/imageformats/ || exit 1
+	rm -f $(qt_libs)/plugins/imageformats/qsvg4.dll || exit 1
+
+$(qt_libs)/mingwm10.dll:
+	mkdir -p $(qt_libs) || exit 1
+	cp /usr/local/win/Qt/4.4.0/bin/mingwm10.dll $(qt_libs)/ || exit 1
+
+win-qt-libs: $(qt_libs)/QtCore4.dll $(qt_libs)/mingwm10.dll
+
+
+#########################################################################
+#
+# ggap files
+#
+ggap-files: win-qt-libs
+	rm -fr _bin_inst || exit 1
+	$(MAKE) $(AM_MAKEFLAGS) install-strip DESTDIR=`pwd`/_bin_inst || exit 1
+	rm -fr ggap-win/ggap || exit 1
+	mkdir -p ggap-win/ggap || exit 1
+	mv _bin_inst/$(bindir)/ggap.exe ggap-win/ggap/ || exit 1
+	cp -R $(qt_libs)/* ggap-win/ggap/ || exit 1
+	cp $(srcdir)/win32/qt.conf ggap-win/ggap/
+	cp $(srcdir)/COPYING ggap-win/ggap/ || exit 1
+	rm -fr _bin_inst || exit 1
+
+WIN32_CLEANDIRS += _bin_inst ggap-win
+
+
+#########################################################################
+#
+# GAP
+#
+BIN/gap4r4/bin/gapw95.exe:
+	@echo "warning, generating fake GAP"
+	mkdir -p BIN/gap4r4/bin || exit 1
+	touch BIN/gap4r4/bin/gapw95.exe || exit 1
+gap-files: BIN/gap4r4/bin/gapw95.exe
+
+
+#########################################################################
+#
+# Zip files
+#
+win_installer_deps = $(nsi_files) ggap-files gap-files
+
+win-zip: $(win_installer_deps)
+	rm -fr $(ZIP_FILE) ggap-win/$(ZIP_FILE) ggap-win/$(ZIP_DIR) || exit 1
+	(cd ggap-win && cp -R ggap $(ZIP_DIR) && zip -9 -r $(ZIP_FILE) $(ZIP_DIR)) || exit 1
+	mv ggap-win/$(ZIP_FILE) . || exit 1
+
+win-zip-full: $(win_installer_deps)
+	rm -rf $(BIG_ZIP_FILE) $(BIG_ZIP_DIR) || exit 1
+	mkdir $(BIG_ZIP_DIR) || exit 1
+	cp $(nsi_files) $(BIG_ZIP_DIR)/ || exit 1
+	cp -R ggap-win/ggap $(BIG_ZIP_DIR)/ || exit 1
+	mv BIN/gap4r4 $(BIG_ZIP_DIR)/ || exit 1
+	zip -9 -r $(BIG_ZIP_FILE) $(BIG_ZIP_DIR) || (mv $(BIG_ZIP_DIR)/gap4r4 BIN/; exit 1)
+	mv $(BIG_ZIP_DIR)/gap4r4 BIN/ || exit 1

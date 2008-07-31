@@ -1,0 +1,1156 @@
+<ui version="4.0" >
+ <class>WsWindow</class>
+ <widget class="QMainWindow" name="WsWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>606</width>
+    <height>373</height>
+   </rect>
+  </property>
+  <property name="iconSize" >
+   <size>
+    <width>22</width>
+    <height>22</height>
+   </size>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>56</y>
+     <width>606</width>
+     <height>295</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout" >
+    <property name="margin" >
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="ggap::Worksheet" name="worksheet" >
+      <property name="textInteractionFlags" >
+       <set>Qt::LinksAccessibleByMouse|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>606</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionNew" />
+    <addaction name="separator" />
+    <addaction name="actionOpen" />
+    <addaction name="actionSave" />
+    <addaction name="actionSaveAs" />
+    <addaction name="separator" />
+    <addaction name="actionPageSetup" />
+    <addaction name="actionPrintPreview" />
+    <addaction name="actionPrint" />
+    <addaction name="separator" />
+    <addaction name="actionClose" />
+    <addaction name="actionQuit" />
+   </widget>
+   <widget class="QMenu" name="menuEdit" >
+    <property name="title" >
+     <string>&amp;Edit</string>
+    </property>
+    <widget class="QMenu" name="menuInsert" >
+     <property name="title" >
+      <string>Insert</string>
+     </property>
+     <addaction name="actionInsertPromptBefore" />
+     <addaction name="actionInsertPromptAfter" />
+     <addaction name="actionInsertTextBefore" />
+     <addaction name="actionInsertTextAfter" />
+    </widget>
+    <addaction name="actionUndo" />
+    <addaction name="actionRedo" />
+    <addaction name="separator" />
+    <addaction name="actionCut" />
+    <addaction name="actionCopy" />
+    <addaction name="actionPaste" />
+    <addaction name="actionDelete" />
+    <addaction name="actionSelectAll" />
+    <addaction name="separator" />
+    <addaction name="menuInsert" />
+    <addaction name="actionDeleteBlock" />
+    <addaction name="separator" />
+    <addaction name="actionPrefs" />
+   </widget>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>&amp;View</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuGAP" >
+    <property name="title" >
+     <string>&amp;GAP</string>
+    </property>
+    <addaction name="actionInterruptGap" />
+    <addaction name="actionRestartGap" />
+   </widget>
+   <widget class="QMenu" name="menuHelp" >
+    <property name="title" >
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionHelp" />
+    <addaction name="separator" />
+    <addaction name="actionAbout" />
+   </widget>
+   <addaction name="menuFile" />
+   <addaction name="menuEdit" />
+   <addaction name="menuView" />
+   <addaction name="menuGAP" />
+   <addaction name="menuHelp" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>351</y>
+     <width>606</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QToolBar" name="mainToolbar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>22</y>
+     <width>606</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="windowTitle" >
+    <string>Main Toolbar</string>
+   </property>
+   <attribute name="toolBarArea" >
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak" >
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNew" />
+   <addaction name="separator" />
+   <addaction name="actionOpen" />
+   <addaction name="actionSave" />
+   <addaction name="actionSaveAs" />
+   <addaction name="separator" />
+   <addaction name="actionUndo" />
+   <addaction name="actionRedo" />
+   <addaction name="separator" />
+   <addaction name="actionCut" />
+   <addaction name="actionCopy" />
+   <addaction name="actionPaste" />
+   <addaction name="separator" />
+   <addaction name="actionInsertPromptAfter" />
+   <addaction name="actionInsertTextAfter" />
+  </widget>
+  <action name="actionNew" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/document-new.png</normaloff>:/icons32/document-new.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;New</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpen" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/document-open.png</normaloff>:/icons32/document-open.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Open</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionSave" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/document-save.png</normaloff>:/icons32/document-save.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Save</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSaveAs" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/document-save-as.png</normaloff>:/icons32/document-save-as.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Save &amp;As</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionReload" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/view-refresh.png</normaloff>:/icons32/view-refresh.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Reload</string>
+   </property>
+   <property name="shortcut" >
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionClose" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/close.png</normaloff>:/icons32/close.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Close</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionQuit" >
+   <property name="text" >
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Q</string>
+   </property>
+   <property name="menuRole" >
+    <enum>QAction::QuitRole</enum>
+   </property>
+  </action>
+  <action name="actionUndo" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/edit-undo.png</normaloff>:/icons32/edit-undo.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Undo</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/edit-redo.png</normaloff>:/icons32/edit-redo.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Redo</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionCut" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/edit-cut.png</normaloff>:/icons32/edit-cut.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Cut</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionPrefs" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/preferences.png</normaloff>:/icons32/preferences.png</iconset>
+   </property>
+   <property name="text" >
+    <string>P&amp;references</string>
+   </property>
+   <property name="menuRole" >
+    <enum>QAction::PreferencesRole</enum>
+   </property>
+  </action>
+  <action name="actionCopy" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/edit-copy.png</normaloff>:/icons32/edit-copy.png</iconset>
+   </property>
+   <property name="text" >
+    <string>C&amp;opy</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionPaste" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/edit-paste.png</normaloff>:/icons32/edit-paste.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Paste</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionAbout" >
+   <property name="text" >
+    <string>&amp;About GGAP</string>
+   </property>
+   <property name="menuRole" >
+    <enum>QAction::AboutRole</enum>
+   </property>
+  </action>
+  <action name="actionInsertPromptAfter" >
+   <property name="text" >
+    <string>Input After Cursor</string>
+   </property>
+   <property name="iconText" >
+    <string>></string>
+   </property>
+   <property name="toolTip" >
+    <string>Insert input block after cursor</string>
+   </property>
+  </action>
+  <action name="actionInsertPromptBefore" >
+   <property name="text" >
+    <string>Input Before Cursor</string>
+   </property>
+   <property name="iconText" >
+    <string>> |</string>
+   </property>
+   <property name="toolTip" >
+    <string>Insert input block before cursor</string>
+   </property>
+  </action>
+  <action name="actionInsertTextAfter" >
+   <property name="text" >
+    <string>Text After Cursor</string>
+   </property>
+   <property name="iconText" >
+    <string>T</string>
+   </property>
+   <property name="toolTip" >
+    <string>Insert text block after cursor</string>
+   </property>
+  </action>
+  <action name="actionInsertTextBefore" >
+   <property name="text" >
+    <string>Text Before Cursor</string>
+   </property>
+   <property name="iconText" >
+    <string>T |</string>
+   </property>
+   <property name="toolTip" >
+    <string>Insert text block before cursor</string>
+   </property>
+  </action>
+  <action name="actionMinimize" >
+   <property name="text" >
+    <string>Minimize</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionZoom" >
+   <property name="text" >
+    <string>Zoom</string>
+   </property>
+  </action>
+  <action name="actionBringAllToFront" >
+   <property name="text" >
+    <string>Bring All to Front</string>
+   </property>
+  </action>
+  <action name="actionHelp" >
+   <property name="text" >
+    <string>&amp;GAP Help</string>
+   </property>
+  </action>
+  <action name="actionSelectAll" >
+   <property name="text" >
+    <string>Select &amp;All</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionDelete" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>&amp;Delete</string>
+   </property>
+  </action>
+  <action name="actionDeleteBlock" >
+   <property name="text" >
+    <string>Delete Block</string>
+   </property>
+  </action>
+  <action name="actionInterruptGap" >
+   <property name="text" >
+    <string>Interrupt</string>
+   </property>
+   <property name="shortcut" >
+    <string>Meta+C</string>
+   </property>
+  </action>
+  <action name="actionRestartGap" >
+   <property name="text" >
+    <string>Restart</string>
+   </property>
+  </action>
+  <action name="actionPageSetup" >
+   <property name="text" >
+    <string>Page S&amp;etup</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Shift+P</string>
+   </property>
+  </action>
+  <action name="actionPrint" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/document-print.png</normaloff>:/icons32/document-print.png</iconset>
+   </property>
+   <property name="text" >
+    <string>&amp;Print...</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionPrintPreview" >
+   <property name="icon" >
+    <iconset resource="ggap.qrc" >
+     <normaloff>:/icons32/document-print-preview.png</normaloff>:/icons32/document-print-preview.png</iconset>
+   </property>
+   <property name="text" >
+    <string>Print Pre&amp;view</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ggap::Worksheet</class>
+   <extends>QTextEdit</extends>
+   <header>ggap/worksheet.h</header>
+   <slots>
+    <slot>deleteSelected()</slot>
+    <slot>deleteBlock()</slot>
+    <slot>addPromptBlockBeforeCursor()</slot>
+    <slot>addPromptBlockAfterCursor()</slot>
+    <slot>addTextBlockBeforeCursor()</slot>
+    <slot>addTextBlockAfterCursor()</slot>
+    <slot>interruptGap()</slot>
+    <slot>restartGap()</slot>
+    <signal>savingFinished(bool,QString)</signal>
+    <signal>modificationChanged(bool)</signal>
+    <signal>filenameChanged(QString)</signal>
+    <signal>gapStateChanged()</signal>
+    <signal>highlighted(QString)</signal>
+    <signal>docStateChanged()</signal>
+   </slots>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="ggap.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>savingFinished(bool,QString)</signal>
+   <receiver>WsWindow</receiver>
+   <slot>savingFinished(bool,QString)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>modificationChanged(bool)</signal>
+   <receiver>WsWindow</receiver>
+   <slot>setWindowModified(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>filenameChanged(QString)</signal>
+   <receiver>WsWindow</receiver>
+   <slot>setWindowFilePath(QString)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>gapStateChanged()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>gapStateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>copyAvailable(bool)</signal>
+   <receiver>actionCopy</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>copyAvailable(bool)</signal>
+   <receiver>actionCut</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>copyAvailable(bool)</signal>
+   <receiver>actionDelete</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>undoAvailable(bool)</signal>
+   <receiver>actionUndo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>redoAvailable(bool)</signal>
+   <receiver>actionRedo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionUndo</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>undo()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRedo</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>redo()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCut</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>cut()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCopy</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>copy()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPaste</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>paste()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDelete</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>deleteSelected()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDeleteBlock</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>deleteBlock()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionInsertPromptAfter</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>addPromptBlockAfterCursor()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionInsertPromptBefore</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>addPromptBlockBeforeCursor()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionInsertTextAfter</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>addTextBlockAfterCursor()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionInsertTextBefore</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>addTextBlockBeforeCursor()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionClose</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSelectAll</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>selectAll()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMinimize</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>showMinimized()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionZoom</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>zoomWindow()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionBringAllToFront</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>bringAllToFront()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionInterruptGap</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>interruptGap()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRestartGap</sender>
+   <signal>triggered()</signal>
+   <receiver>worksheet</receiver>
+   <slot>restartGap()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAbout</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>aboutDialog()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPrefs</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>prefsDialog()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>quit()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionHelp</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>gapHelp()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNew</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>actionNew()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpen</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>actionOpen()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>actionSave()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSaveAs</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>actionSaveAs()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPrint</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>printDocument()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPageSetup</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>pageSetup()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPrintPreview</sender>
+   <signal>triggered()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>printPreview()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>highlighted(QString)</signal>
+   <receiver>statusbar</receiver>
+   <slot>showMessage(QString)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>worksheet</sender>
+   <signal>docStateChanged()</signal>
+   <receiver>WsWindow</receiver>
+   <slot>docStateChanged()</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>302</x>
+     <y>203</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>302</x>
+     <y>186</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>savingFinished(bool,QString)</slot>
+  <slot>gapStateChanged()</slot>
+  <slot>zoomWindow()</slot>
+  <slot>bringAllToFront()</slot>
+  <slot>aboutDialog()</slot>
+  <slot>prefsDialog()</slot>
+  <slot>quit()</slot>
+  <slot>gapHelp()</slot>
+  <slot>setWindowFilePath(QString)</slot>
+  <slot>actionNew()</slot>
+  <slot>actionOpen()</slot>
+  <slot>actionSave()</slot>
+  <slot>actionSaveAs()</slot>
+  <slot>pageSetup()</slot>
+  <slot>printDocument()</slot>
+  <slot>printPreview()</slot>
+  <slot>docStateChanged()</slot>
+ </slots>
+</ui>

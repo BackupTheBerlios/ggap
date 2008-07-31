@@ -1,53 +1,30 @@
-/*
- *   gap.h
- *
- *   Copyright (C) 2004-2008 by Yevgen Muntyan <muntyan@tamu.edu>
- *
- *   This library is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU Lesser General Public
- *   License version 2.1 as published by the Free Software Foundation.
- *
- *   See COPYING file that comes with this distribution.
- */
+#ifndef GGAP_GAP_H
+#define GGAP_GAP_H
 
-#ifndef GAP_H
-#define GAP_H
+#include <QStringList>
+#include <ggap/proc.h>
 
-#include <glib.h>
+namespace ggap {
 
-G_BEGIN_DECLS
+struct GapOptions {
+    QString rootDir();
+    QString docDir();
+    QString exe();
+    QString args();
+};
 
-
-char        *gap_read_file_string   (const char *filename);
-char        *gap_reread_file_string (const char *filename);
-
-#ifdef __WIN32__
-gboolean     gap_parse_cmd_line     (const char *command_line,
-                                     char      **bin_dir,
-                                     char      **root_dir);
-#endif
-
-char        *gap_make_cmd_line      (const char *workspace,
-                                     const char *flags,
-                                     gboolean    fancy);
-
-char        *gap_escape_filename    (const char *filename);
+GapCommand makeGapCommand(const QString &workspace, const QStringList &flags);
 
 #define GGAP_CMD_RUN_COMMAND "run-command"
+QString gapCmdRunCommand(const QString &cmdname, const QString &args = QString());
 
-char        *ggap_pkg_exec_command  (const char *cmdname,
-                                     const char *args);
-
-char        *gap_cmd_save_workspace (const char *filename);
-
-char        *gap_saved_workspace_filename (void);
-
+QString gapCmdHelp(const QString &text);
+QString gapCmdSaveWorkspace(const QString &filename);
 
 #define GGAP_DTC_FIXED      'f'
 #define GGAP_DTC_VARIABLE   'v'
 #define GGAP_DTC_END        'e'
 
+} // namespace ggap
 
-G_END_DECLS
-
-#endif /* GAP_H */
+#endif // GGAP_GAP_H

@@ -1,8 +1,5 @@
-#
-# ggap/configure.ac
-#
-
-m4_define([ggap_version], [0.9.0])
+m4_define([ggap_version], [1.9.3])
+m4_define([ggap_api_version], [1.3])
 
 AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
 AM_INIT_AUTOMAKE([foreign])
@@ -11,60 +8,54 @@ AC_CONFIG_HEADERS(config.h)
 
 MOO_DEFINE_VERSIONS(ggap,[ggap_version])
 
-export MOO_PACKAGE_NAME=ggap
-
-AC_PROG_CC
-AC_DISABLE_STATIC
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
-
-ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
-
-AC_CHECK_HEADERS([readline/readline.h],[READLINE_LIBS='-lreadline'],[READLINE_LIBS=])
-AC_SUBST(READLINE_LIBS)
-
-zlib_missing=true
-AC_CHECK_HEADER([zlib.h],[
-  AC_CHECK_LIB([z],[gzdopen],[
-    ZLIB="-lz"
-    zlib_missing=false
-])])
-if $zlib_missing; then
-  AC_MSG_ERROR([libz missing])
-fi
-
-MOO_AC_CHECK_OS
-MOO_AC_SRCDIR(moo/moo)
-MOO_AC_I18N(ggap,no)
-MOO_AC_FLAGS
-MOO_AM_MK
-
-GGAP_API_VERSION=\"1.0\"
+GGAP_API_VERSION=\"ggap_api_version\"
 AC_SUBST(GGAP_API_VERSION)
 AC_DEFINE_UNQUOTED(GGAP_API_VERSION, [$GGAP_API_VERSION], [GGAP_API_VERSION])
 
-export MOO_BUILD_MEDIT=false
-AC_CONFIG_SUBDIRS(moo)
+MOO_PACKAGE_NAME=ggap
+AC_DEFINE_UNQUOTED([MOO_PACKAGE_NAME], "$MOO_PACKAGE_NAME", [package name])
+MOO_DATA_DIR="${datadir}/$MOO_PACKAGE_NAME"
+AC_SUBST(MOO_DATA_DIR)
+MOO_HELP_DIR="${htmldir}/help"
+AC_SUBST(MOO_HELP_DIR)
+
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_RANLIB
+
+MOO_AC_CHECK_OS
+if test x$MOO_OS_MINGW = "xyes"; then
+  AC_ARG_VAR([WINDRES], [windres])
+  AC_CHECK_TOOL(WINDRES, windres, :)
+fi
+
+MOO_AC_PCH
+MOO_AC_QT
+
+ACLOCAL="${ACLOCAL:-aclocal} $ACLOCAL_FLAGS"
+
+# AC_CHECK_HEADERS([readline/readline.h],[READLINE_LIBS='-lreadline'],[READLINE_LIBS=])
+# AC_SUBST(READLINE_LIBS)
+
+# zlib_missing=true
+# AC_CHECK_HEADER([zlib.h],[
+#   AC_CHECK_LIB([z],[gzdopen],[
+#     ZLIB="-lz"
+#     zlib_missing=false
+# ])])
+# if $zlib_missing; then
+#   AC_MSG_ERROR([libz missing])
+# fi
+
+# GGAP_API_VERSION=\"1.0\"
+# AC_SUBST(GGAP_API_VERSION)
+# AC_DEFINE_UNQUOTED(GGAP_API_VERSION, [$GGAP_API_VERSION], [GGAP_API_VERSION])
 
 
 AC_CONFIG_FILES([
 Makefile
-config.py
-moo-newdoc/mooui/Makefile
+contrib/Makefile
+moows/Makefile
 ggap/Makefile
-ggap/ggap_res.rc
-ggap/moows/Makefile
-wininstaller/ggap.iss
 ])
 AC_OUTPUT
-
-
-################################################################################
-#  Configuration info
-#
-echo
-echo "    OS........................... $MOO_OS_NAME"
-if test "x$MOO_OS_CYGWIN" != "xyes"; then
-echo "    installation prefix.......... $prefix"
-echo
-fi

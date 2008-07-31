@@ -1,3 +1,0 @@
-1. ggap/Makefile.am - disable automatic regeneration of ggap.c.
-2. Provide both png and ico icon.
-3. Remove Python menu.

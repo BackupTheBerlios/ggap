@@ -1,0 +1,63 @@
+# ../../configure CXXFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch ppc -arch i386 -O2" --disable-dependency-tracking
+
+mac/Info.plist: mac/Info.plist.in $(top_builddir)/config.status
+	$(SHELL) ./config.status --file=mac/Info.plist || exit 1
+
+Frameworks/QtCore.framework/QtCore:
+	mkdir -p Frameworks || exit 1
+	for fw in QtCore QtGui QtXml QtScript; do \
+	    cp -R /Library/Frameworks/$$fw.framework Frameworks/ || exit 1; \
+	    install_name_tool -id @executable_path/../Frameworks/$$fw.framework/Versions/4/$$fw \
+				    Frameworks/$$fw.framework/Versions/4/$$fw || exit 1; \
+	    rm -f Frameworks/$$fw.framework/Headers || exit 1; \
+	    rm -fr Frameworks/$$fw.framework/Versions/4/Headers || exit 1; \
+	    rm -f Frameworks/$$fw.framework/Versions/4/"$$fw"_debug || exit 1; \
+	    rm -f Frameworks/$$fw.framework/"$$fw"_debug* || exit 1; \
+	    rm -f Frameworks/$$fw.framework/$$fw.prl || exit 1; \
+	done
+	for fw in QtGui QtXml QtScript; do \
+	    install_name_tool -change QtCore.framework/Versions/4/QtCore \
+		@executable_path/../Frameworks/QtCore.framework/Versions/4/QtCore \
+		Frameworks/$$fw.framework/Versions/4/$$fw || exit 1; \
+	done
+
+qt-plugins/imageformats/libqgif.dylib:
+	mkdir -p qt-plugins || exit 1
+	cp -R /Developer/Applications/Qt/plugins/imageformats qt-plugins/ || exit 1
+	rm qt-plugins/imageformats/libqsvg.dylib || exit 1
+
+	rm -f qt-plugins/*/*_debug.dylib || exit 1
+	for plugin in qt-plugins/*/*.dylib; do \
+	    for fw in QtCore QtGui; do \
+		install_name_tool -change $$fw.framework/Versions/4/$$fw \
+		    @executable_path/../Frameworks/$$fw.framework/Versions/4/$$fw \
+		    $$plugin; \
+	    done; \
+	done
+
+mac-qt-libs: Frameworks/QtCore.framework/QtCore qt-plugins/imageformats/libqgif.dylib
+
+bundle: mac/Info.plist mac-qt-libs
+	rm -fr _bin_inst || exit 1
+	$(MAKE) $(AM_MAKEFLAGS) install-strip DESTDIR=`pwd`/_bin_inst || exit 1
+	rm -fr ggap.app || exit 1
+	mkdir -p ggap.app/Contents/MacOS || exit 1
+	mkdir -p ggap.app/Contents/Resources || exit 1
+	mv _bin_inst/$(bindir)/ggap ggap.app/Contents/MacOS/ || exit 1
+	cp mac/Info.plist ggap.app/Contents/ || exit 1
+	cp $(srcdir)/mac/PkgInfo ggap.app/Contents/ || exit 1
+	cp $(top_srcdir)/ggap/icons/ggap/ggap.icns ggap.app/Contents/Resources/ || exit 1
+	cp $(top_srcdir)/ggap/icons/ggap/gws.icns ggap.app/Contents/Resources/ || exit 1
+	cp $(srcdir)/mac/qt.conf ggap.app/Contents/Resources/ || exit 1
+
+	cp -R Frameworks ggap.app/Contents/ || exit 1
+	cp -R qt-plugins ggap.app/Contents/plugins || exit 1
+
+	for fw in QtCore QtGui QtXml QtScript; do \
+	    install_name_tool -change $$fw.framework/Versions/4/$$fw \
+		@executable_path/../Frameworks/$$fw.framework/Versions/4/$$fw \
+		ggap.app/Contents/MacOs/ggap || exit 1; \
+	done
+
+	rm -fr /Applications/ggap.app || exit 1
+	mv ggap.app /Applications/ || exit 1

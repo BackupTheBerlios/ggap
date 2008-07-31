@@ -1,57 +1,43 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip
+ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
 
-DIST_SUBDIRS = moo moo-newdoc/mooui ggap
-SUBDIRS = moo .
-# SUBDIRS = .
-
-if !MOO_OS_CYGWIN
-SUBDIRS += moo-newdoc/mooui ggap
-endif
-
-# if GGAP_BUILD_DOCS
-# if !MOO_OS_CYGWIN
-# SUBDIRS += help
-# endif
-# endif
+SUBDIRS = contrib moows ggap
 
 EXTRA_DIST =            \
-    INSTALL             \
     autogen.sh          \
-    THANKS		\
-    scripts/ggap-full.sh\
-    scripts/ggap.sh
+    moo-debug.h		\
+    moo-macros.h	\
+    moo-pimpl.h		\
+    COPYING		\
+    xml2h.sh
 
-ACLOCAL_AMFLAGS = -I moo/m4 $(ACLOCAL_FLAGS)
-
-DISTCLEANFILES = configargs.h
-
-desktopdir = $(datadir)/applications
-desktop_DATA = ggap.desktop
-
-pixmaps_files = ggap.png
-theme_files = ggap.png gap.png
-include ../moo/mk/icon.mk
+# desktopdir = $(datadir)/applications
+# desktop_DATA = ggap.desktop
+#
+# pixmaps_files = ggap.png
+# theme_files = ggap.png gap.png
+# include ../moo/mk/icon.mk
 
 distuninstallcheck_listfiles = find . -type f -print | grep -v share/mime/ | grep -v share/icons/hicolor
 
-EXTRA_DIST +=		\
-	$(desktop_DATA)	\
-	$(ggap_DATA)	\
-	ggap.png	\
-	ggap.ico	\
-	gap.png
+# EXTRA_DIST +=		\
+# 	$(desktop_DATA)	\
+# 	$(ggap_DATA)	\
+# 	ggap.png	\
+# 	ggap.ico	\
+# 	gap.png
 
-generated = wininstaller/ggap.iss
+moo-config-dirs.h: moo-config-dirs.h.stamp
+moo-config-dirs.h.stamp: Makefile
+	{ echo '#define MOO_DATA_DIR "$(MOO_DATA_DIR)"'; \
+	  echo '#define MOO_HELP_DIR "$(MOO_HELP_DIR)"'; \
+	} | sed '/""/d' > moo-config-dirs.h.tmp || exit 1
+	cmp -s moo-config-dirs.h moo-config-dirs.h.tmp || \
+	    mv moo-config-dirs.h.tmp moo-config-dirs.h || exit 1
+	rm -f moo-config-dirs.h.tmp
+	echo stamp > moo-config-dirs.h.stamp
+BUILT_SOURCES = moo-config-dirs.h.stamp
+CLEANFILES = moo-config-dirs.h.stamp moo-config-dirs.h
 
-all-am: $(generated)
-
-_bin-dist: all
-	rm -fr ggap-bin-inst ggap-bin
-	$(MAKE) install DESTDIR=`pwd`/ggap-bin-inst && \
-	mv ggap-bin-inst/$(prefix) ggap-bin && \
-	cp $(srcdir)/scripts/$(ggap_script) ggap-bin/ggap.sh && \
-	rm -fr ggap-bin-inst
-bin-dist-full:
-	$(MAKE) _bin-dist ggap_script=ggap-full.sh
-bin-dist: all
-	$(MAKE) _bin-dist ggap_script=ggap.sh
+include mac/Makefile.incl
+include win32/Makefile.incl

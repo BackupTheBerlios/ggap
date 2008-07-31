@@ -1,122 +1,103 @@
-SUBDIRS = moows .
+include ../mk/pre.mk
 
-EXTRA_PROGRAMS = ggap
-bin_PROGRAMS =
-noinst_PROGRAMS = testparser
+bin_PROGRAMS = ggap
 
-if !MOO_OS_CYGWIN
-bin_PROGRAMS += ggap
-endif
+ggap_SOURCES =		\
+    app.cpp		\
+    appwindow.cpp	\
+    dialogs.cpp		\
+    dialogs.h		\
+    gap.cpp		\
+    gap.h		\
+    gapdoc.cpp		\
+    gapdoc.h		\
+    gws.cpp		\
+    gws.h		\
+    help_p.h		\
+    help.cpp		\
+    main.cpp		\
+    parser.cpp		\
+    parser.h		\
+    parser_p.h		\
+    parser-yacc.cpp	\
+    parser-yacc.h	\
+    prefs.cpp		\
+    prefs.h		\
+    prefsdialog.cpp	\
+    proc.cpp		\
+    script.cpp		\
+    utils.cpp		\
+    utils.h		\
+    windowmenu.cpp	\
+    worksheet.cpp	\
+    wswindow.cpp	\
+    $(moc_h_files)	\
+    $(moc_cpp_files)	\
+    $(qrc_sources)
 
-AM_CFLAGS =				\
-    -I$(top_srcdir)/moo-newdoc		\
-    $(MOO_CFLAGS)			\
-    $(MOO_DEBUG_CFLAGS)
+moc_cpp_files =
 
-testparser_LDADD = ../moo/moo/libmoo.la $(READLINE_LIBS)
+moc_h_files =		\
+    app.h		\
+    appwindow.h		\
+    help.h		\
+    prefsdialog.h	\
+    proc.h		\
+    proc_p.h		\
+    proc-wrapper.h	\
+    script.h		\
+    windowmenu.h	\
+    worksheet.h		\
+    worksheet_p.h	\
+    wswindow.h		\
+    wswindow_p.h
 
-ggap_LDADD = moows/libmoows.la ../moo-newdoc/mooui/libmooui.la ../moo/moo/libmoo.la $(ZLIB)
-ggap_LDFLAGS = -export-dynamic -export-symbols-regex "^[^_].*"
+nodist_ggap_SOURCES =	\
+    $(moc_gen_cpp)	\
+    $(ui_gen_sources)
 
-CLEANFILES =
-EXTRA_DIST =
-BUILT_SOURCES =
-nodist_ggap_SOURCES =
+ggap_LDADD = ../moows/libmoows.a ../contrib/libcontrib.a $(QT_LIBS)
+ALL_CXXFLAGS =			\
+    -I..			\
+    -I$(srcdir)/..		\
+    -I$(srcdir)/../contrib	\
+    -I$(srcdir)/../contrib/qxt	\
+    $(QT_CXXFLAGS)		\
+    -Wall -Wreorder		\
+    -Wno-non-template-friend	\
+    -Woverloaded-virtual	\
+    -Wunused
 
-if MOO_OS_MINGW
-ggap_LDFLAGS += -mwindows
-rc_in_files = ggap_res.rc.in
-nodist_ggap_SOURCES += ggap_res.res
-include ../moo/mk/rc.mk
-endif MOO_OS_MINGW
+ui_files =			\
+    about.ui			\
+    help.ui			\
+    prefs.ui			\
+    wswindow.ui
 
-testparser_SOURCES =		\
-	testparser.c		\
-	gapparser.c		\
-	gapparser.h		\
-	gapparser-yacc.c	\
-	gapparser-yacc.h
+qrc_files = ggap.qrc gap.qrc
+gap_qrc_deps = gap/restore.g gap/ggap.g
 
-ggap_SOURCES =			\
-	gap.c			\
-	gap.h			\
-	gapapp.c		\
-	gapapp.h		\
-	gapeditwindow.c		\
-	gapeditwindow.h		\
-	gapparser-priv.h	\
-	gapparser-yacc.c	\
-	gapparser-yacc.h	\
-	gapparser.c		\
-	gapparser.h		\
-	gapprocess.c		\
-	gapprocess.h		\
-	gapterm.c		\
-	gapterm.h		\
-	gaptermwindow-ui.h	\
-	gaptermwindow.c		\
-	gaptermwindow.h		\
-	gapworksheet.c		\
-	gapworksheet.h		\
-	gapwscompletion.c	\
-	gapwscompletion.h	\
-	gapwswindow-ui.h	\
-	gapwswindow.c		\
-	gapwswindow.h		\
-	ggap-credits.h		\
-	ggap-enums.c		\
-	ggap-enums.h		\
-	ggap-i18n.c		\
-	ggap-i18n.h		\
-	ggapfile.c		\
-	ggapfile.h		\
-	main.c
+include ../mk/qt.mk
 
-BUILT_SOURCES += ggap-credits.h
-ggap-credits.h: ../THANKS $(MOO_XML2H)
-	$(SHELL) $(MOO_XML2H) THANKS $(srcdir)/../THANKS > ggap-credits.h.tmp && \
-	mv ggap-credits.h.tmp ggap-credits.h
+pch_header = $(srcdir)/../moows/common.h
+include ../mk/pch.mk
 
-enum_file = ggap-enums
-enum_prefix = GAP
-enum_headers =			\
-	gap.h			\
-	gapapp.h		\
-	gapeditwindow.h		\
-	gapparser.h		\
-	gapprocess.h		\
-	gapterm.h		\
-	gaptermwindow.h		\
-	gapworksheet.h		\
-	gapwscompletion.h	\
-	gapwswindow.h		\
-	ggapfile.h
-include ../../moo/mk/enums.mk
-
-yacc_files = gapparser-yacc.y
-include ../moo/mk/yacc.mk
-
-ui_files = gapwswindow.xml gaptermwindow.xml
-include ../moo/mk/ui.mk
-
-glade_files = glade/gapprefs.glade
-include ../moo/mk/glade.mk
-
-mime_in_files = ggap.xml.in
-include ../moo/mk/mime.mk
+%_p.o: %.o
+	@true
+proc-wrapper.o: proc.o
+	@true
+# worksheet_p.o: worksheet.o
+# proc_p.o: proc.o
 
 include gap/Makefile.incl
 
+yacc_pp_files = parser-yacc.y
+include ../mk/yacc.mk
 
-# include ../../moo/mk/marshals.mk
-BUILT_SOURCES += marshals.c marshals.h
-nodist_ggap_SOURCES += marshals.c marshals.h
-CLEANFILES += marshals.c marshals.h
-EXTRA_DIST += marshals.list
-marshals.c: marshals.list
-	glib-genmarshal --prefix=_ggap_marshal --header $(srcdir)/marshals.list > $@.tmp && \
-	glib-genmarshal --prefix=_ggap_marshal --body $(srcdir)/marshals.list >> $@.tmp && \
-	mv $@.tmp $@
-marshals.h: marshals.list
-	glib-genmarshal --prefix=_ggap_marshal --header $(srcdir)/marshals.list > $@.tmp && \
-	mv $@.tmp $@
+if MOO_OS_MINGW
+# ggap_LDFLAGS += -mwindows
+rc_in_files = ggap.rc.in
+ggap_LDADD += ggap.res
+ggap.exe: ggap.res
+include ../mk/rc.mk
+endif MOO_OS_MINGW

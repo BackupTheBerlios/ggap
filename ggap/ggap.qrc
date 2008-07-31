@@ -1,0 +1,53 @@
+<!-- xml -->
+<RCC>
+  <qresource>
+    <file>icons/ggap/ggap-16.png</file>
+    <file>icons/ggap/ggap-64.png</file>
+  </qresource>
+  <qresource prefix="/icons16">
+    <file alias="go-up.png">icons/tango/16x16/go-up.png</file>
+    <file alias="file.png">icons/tango/16x16/text-x-generic.png</file>
+    <file alias="folder.png">icons/tango/16x16/folder.png</file>
+  </qresource>
+  <qresource prefix="/icons32">
+    <file alias="close.png">icons/gnome/32x32/window-close.png</file>
+    <file alias="preferences.png">icons/tango/32x32/preferences-system.png</file>
+    <file alias="underline.png">icons/tango/32x32/format-text-underline.png</file>
+    <file alias="strikethrough.png">icons/tango/32x32/format-text-strikethrough.png</file>
+    <file alias="italic.png">icons/tango/32x32/format-text-italic.png</file>
+    <file alias="bold.png">icons/tango/32x32/format-text-bold.png</file>
+    <file alias="justify-right.png">icons/tango/32x32/format-justify-right.png</file>
+    <file alias="justify-left.png">icons/tango/32x32/format-justify-left.png</file>
+    <file alias="justify-fill.png">icons/tango/32x32/format-justify-fill.png</file>
+    <file alias="justify-center.png">icons/tango/32x32/format-justify-center.png</file>
+    <file alias="view-refresh.png">icons/tango/32x32/view-refresh.png</file>
+    <file alias="edit-delete.png">icons/tango/32x32/edit-delete.png</file>
+    <file alias="edit-cut.png">icons/tango/32x32/edit-cut.png</file>
+    <file alias="edit-copy.png">icons/tango/32x32/edit-copy.png</file>
+    <file alias="edit-paste.png">icons/tango/32x32/edit-paste.png</file>
+    <file alias="edit-find.png">icons/tango/32x32/edit-find.png</file>
+    <file alias="edit-find-replace.png">icons/tango/32x32/edit-find-replace.png</file>
+    <file alias="edit-clear.png">icons/tango/32x32/edit-clear.png</file>
+    <file alias="edit-undo.png">icons/tango/32x32/edit-undo.png</file>
+    <file alias="edit-select-all.png">icons/tango/32x32/edit-select-all.png</file>
+    <file alias="edit-redo.png">icons/tango/32x32/edit-redo.png</file>
+    <file alias="document-properties.png">icons/tango/32x32/document-properties.png</file>
+    <file alias="document-print-preview.png">icons/tango/32x32/document-print-preview.png</file>
+    <file alias="document-save-as.png">icons/tango/32x32/document-save-as.png</file>
+    <file alias="document-new.png">icons/tango/32x32/document-new.png</file>
+    <file alias="document-open.png">icons/tango/32x32/document-open.png</file>
+    <file alias="document-save.png">icons/tango/32x32/document-save.png</file>
+    <file alias="document-print.png">icons/tango/32x32/document-print.png</file>
+    <file alias="bookmark-new.png">icons/tango/32x32/bookmark-new.png</file>
+    <file alias="tab-new.png">icons/tango/32x32/tab-new.png</file>
+    <file alias="go-home.png">icons/tango/32x32/go-home.png</file>
+    <file alias="go-next.png">icons/tango/32x32/go-next.png</file>
+    <file alias="go-previous.png">icons/tango/32x32/go-previous.png</file>
+  </qresource>
+  <qresource prefix="/icons16">
+    <file alias="close.png">icons/gnome/16x16/window-close.png</file>
+  </qresource>
+  <qresource>
+    <file alias="COPYING">../COPYING</file>
+  </qresource>
+</RCC>

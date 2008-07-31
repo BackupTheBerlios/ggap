@@ -1,0 +1,7 @@
+<!-- xml -->
+<RCC>
+  <qresource>
+    <file>gap/restore.g</file>
+    <file>gap/ggap.g</file>
+  </qresource>
+</RCC>

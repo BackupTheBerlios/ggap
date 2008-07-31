@@ -1,0 +1,162 @@
+$GGAP_VERSION := @GGAP_VERSION@;
+$GGAP_API_VERSION := @GGAP_API_VERSION@;
+
+
+#############################################################################
+##
+#V  $GGAP_DATA
+##
+$GGAP_DATA := rec(
+  debug := false,
+  original_funcs := rec(),
+  next_prompt := [],
+  globals := [],
+  globals_sent := false,
+  api := ["$GGAP_VERSION", "$GGAP_API_VERSION", "$GGAP_RESET", "$GGAP_DATA"],
+);
+
+
+#############################################################################
+##
+#V  InfoGGAP
+##
+if not IsBoundGlobal("InfoGGAP") then
+  InfoGGAP := NewInfoClass("InfoGGAP");
+  SetInfoLevel(InfoGGAP, 10);
+fi;
+
+
+#############################################################################
+##
+#F  $GGAP_SEND_DATA()
+##
+$GGAP_SEND_DATA :=
+function(arg)
+  local s, a;
+  s := OutputTextUser();
+  WriteAll(s, "@GGAP@v");
+  for a in arg do
+    if IsString(a) then
+      WriteAll(s, a);
+    else
+      WriteAll(s, String(a));
+    fi;
+  od;
+  WriteAll(s, "@GGAP@e\c");
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_DATA");
+
+
+#############################################################################
+##
+#F  $GGAP_SEND_RESULT_ERROR(message)
+##
+$GGAP_SEND_RESULT_ERROR :=
+function(message)
+  $GGAP_SEND_DATA("result-error:", message);
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_RESULT_ERROR");
+
+$GGAP_SEND_ADDED_DELETED :=
+function(added, deleted)
+  local w;
+
+  if not IsEmpty(added) then
+    Print("@GGAP@vglobals-added:");
+    for w in added do
+      Print(w, "\n");
+    od;
+    Print("@GGAP@e\c");
+  fi;
+
+  if not IsEmpty(deleted) then
+    Print("@GGAP@vglobals-deleted:");
+    for w in deleted do
+      Print(w, "\n");
+    od;
+    Print("@GGAP@e\c");
+  fi;
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_ADDED_DELETED");
+
+$GGAP_SEND_GLOBALS_FIRST_TIME :=
+function()
+  local func, list, i, remove, add;
+  $GGAP_DATA.globals_sent := true;
+
+  remove := ["Unbind.", "Unbind[]"];
+  add := ["for", "end", "do", "od", "if", "fi"];
+
+  list := List(NamesGVars());
+  for i in [1..Length(list)] do
+    if not IsBoundGlobal(list[i]) or list[i] in remove then
+      Unbind(list[i]);
+    fi;
+  od;
+  Append(list, add);
+
+  $GGAP_SEND_ADDED_DELETED(AsSet(list), []);
+  func := ValueGlobal("NamesUserGVars");
+  $GGAP_DATA.globals := AsSet(func());
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_GLOBALS_FIRST_TIME");
+
+$GGAP_SEND_GLOBALS :=
+function()
+  local func, current, added, deleted;
+
+  if not $GGAP_DATA.globals_sent then
+    $GGAP_SEND_GLOBALS_FIRST_TIME();
+    return;
+  fi;
+
+  func := ValueGlobal("NamesUserGVars");
+  current := AsSet(func());
+  added := Difference(current, $GGAP_DATA.globals);
+  deleted := Difference($GGAP_DATA.globals, current);
+  $GGAP_SEND_ADDED_DELETED(added, deleted);
+
+  $GGAP_DATA.globals := List(current);
+end;
+Add($GGAP_DATA.api, "$GGAP_SEND_GLOBALS");
+
+$GGAP_RESEND_GLOBALS :=
+function()
+  $GGAP_DATA.globals_sent := false;
+  $GGAP_SEND_GLOBALS();
+end;
+Add($GGAP_DATA.api, "$GGAP_RESEND_GLOBALS");
+
+
+#############################################################################
+##
+#F  $GGAP_EXEC_COMMAND(cmdname, ...)
+##
+$GGAP_EXEC_COMMAND :=
+function(arg)
+  local cmd;
+
+  if IsEmpty(arg) then
+    $GGAP_SEND_RESULT_ERROR(0, "bad arguments");
+    $GGAP_DATA.next_prompt := [""];
+    return;
+  fi;
+
+  cmd := arg[1];
+
+  if cmd = "run-command" then
+    if Length(arg) <> 1 then
+      $GGAP_SEND_RESULT_ERROR("bad arguments for run-command");
+      $GGAP_DATA.next_prompt := [""];
+    else
+      $GGAP_DATA.next_prompt := ["@GGAP@voutput:", "@GGAP@e\c"];
+    fi;
+  elif cmd = "get-globals" then
+    $GGAP_SEND_GLOBALS();
+    $GGAP_DATA.next_prompt := [""];
+  else
+    $GGAP_SEND_RESULT_ERROR(Concatenation("bad command '", String(cmd), "'"));
+    $GGAP_DATA.next_prompt := [""];
+  fi;
+end;
+Add($GGAP_DATA.api, "$GGAP_EXEC_COMMAND");
