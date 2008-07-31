@@ -82,6 +82,7 @@ TARGET = conftest
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.4
 HEADERS += conftest.h
 SOURCES += conftest.cpp
+DEFINES += QT_NO_CAST_TO_ASCII
 MOOEOFEOF
 
     cat > Makefile <<\MOOEOFEOF
@@ -142,6 +143,7 @@ if test "x$QT_CXXFLAGS" = x -a "x$QT_LIBS" = x; then
   fi
 
   QT_CXXFLAGS=" -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED \
+-DQT_NO_CAST_TO_ASCII \
 -I$QT_PREFIX/include -I$QT_PREFIX/mkspecs/win32-g++ \
 -I$QT_PREFIX/include/QtGui -I$QT_PREFIX/include/QtScript \
 -I$QT_PREFIX/include/QtCore -I$QT_PREFIX/include/QtXml"

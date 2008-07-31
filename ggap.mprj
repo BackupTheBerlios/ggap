@@ -17,9 +17,9 @@
   <debug>
    <build_dir>build/debug</build_dir>
    <configure>
-    <args>--enable-debug --enable-all-warnings --enable-unit-tests --prefix=$PREFIX --enable-pch</args>
+    <args>--enable-debug --enable-all-warnings --enable-unit-tests --enable-pch</args>
     <vars>
-     <var name="CXXFLAGS">${CXXFLAGS:--g} -DQT_NO_CAST_TO_ASCII</var>
+     <var name="CXXFLAGS">${CXXFLAGS:--g}</var>
     </vars>
    </configure>
   </debug>
