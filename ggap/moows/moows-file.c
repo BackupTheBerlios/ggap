@@ -64,47 +64,17 @@ load_input (MooWorksheet  *ws,
     if (!ps2)
         g_critical ("%s: %s property missing", G_STRLOC, PROP_PS2);
 
-    block = _moo_worksheet_create_prompt_block (ws, ps, ps2, moo_markup_get_content (elm));
+    block = moo_ws_prompt_block_new (ps, ps2, moo_markup_get_content (elm));
     g_return_if_fail (block != NULL);
 
     moo_ws_buffer_append_block (get_buffer (ws), block);
-}
-
-static MooWsBlock *
-create_output_block (MooWsOutputType out_type)
-{
-    MooWsTextBlock *block;
-
-    block = moo_ws_text_block_new (TRUE);
-
-    if (out_type == MOO_WS_OUTPUT_ERR)
-    {
-        g_object_set_data (G_OBJECT (block), "moo-worksheet-stderr",
-                           GINT_TO_POINTER (TRUE));
-        g_object_set (MOO_WS_BLOCK (block)->tag,
-                      "foreground", "red",
-#if 0
-                      "background", "green",
-#endif
-                      NULL);
-    }
-    else
-    {
-#if 0
-        g_object_set (MOO_WS_BLOCK (block)->tag,
-                      "background", "yellow",
-                      NULL);
-#endif
-    }
-
-    return MOO_WS_BLOCK (block);
 }
 
 static void
 load_output (MooWorksheet  *ws,
              MooMarkupNode *elm)
 {
-    MooWsBlock *block;
+    MooWsTextBlock *block;
     const char *type;
     MooWsOutputType out_type = MOO_WS_OUTPUT_OUT;
 
@@ -118,12 +88,11 @@ load_output (MooWorksheet  *ws,
     if (!strcmp (type, PROP_OUTPUT_TYPE_STDERR))
         out_type = MOO_WS_OUTPUT_ERR;
 
-    block = create_output_block (out_type);
+    block = moo_ws_output_block_new (out_type);
     g_return_if_fail (block != NULL);
 
-    moo_ws_text_block_set_text (MOO_WS_TEXT_BLOCK (block),
-                                moo_markup_get_content (elm));
-    moo_ws_buffer_append_block (get_buffer (ws), block);
+    moo_ws_text_block_set_text (block, moo_markup_get_content (elm));
+    moo_ws_buffer_append_block (get_buffer (ws), MOO_WS_BLOCK (block));
 }
 
 static void
@@ -131,7 +100,7 @@ load_text (MooWorksheet  *ws,
            MooMarkupNode *elm)
 {
     MooWsTextBlock *block;
-    block = moo_ws_text_block_new (FALSE);
+    block = moo_ws_user_text_block_new ();
     moo_ws_text_block_set_text (block, moo_markup_get_content (elm));
     moo_ws_buffer_append_block (get_buffer (ws), MOO_WS_BLOCK (block));
 }
@@ -321,10 +290,15 @@ moo_worksheet_format (MooWorksheet  *ws,
             {
                 MooMarkupNode *elm = moo_markup_create_text_element (content, ELM_OUTPUT, text);
 
-                if (!g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr"))
-                    moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDOUT);
-                else
-                    moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDERR);
+                switch (moo_ws_output_block_get_output_type (MOO_WS_TEXT_BLOCK (block)))
+                {
+                    case MOO_WS_OUTPUT_OUT:
+                        moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDOUT);
+                        break;
+                    case MOO_WS_OUTPUT_ERR:
+                        moo_markup_set_prop (elm, PROP_TYPE, PROP_OUTPUT_TYPE_STDERR);
+                        break;
+                }
             }
             else
             {

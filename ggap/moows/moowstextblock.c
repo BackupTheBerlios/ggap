@@ -19,9 +19,10 @@
 struct MooWsTextBlockPrivate {
     char *text;
     char *indent;
-    guint indent_width : 30;
+    guint indent_width : 29;
     gboolean editable : 1;
     gboolean is_output : 1;
+    guint output_type : 1;
 };
 
 
@@ -129,13 +130,29 @@ moo_ws_text_block_class_init (MooWsTextBlockClass *klass)
 
 
 MooWsTextBlock *
-moo_ws_text_block_new (gboolean is_output)
+moo_ws_user_text_block_new (void)
 {
     MooWsTextBlock *block = g_object_new (MOO_TYPE_WS_TEXT_BLOCK, NULL);
-    block->priv->is_output = is_output;
-    block->priv->editable = !is_output;
-    block->priv->indent_width = is_output ? MOO_WORKSHEET_OUTPUT_INDENT : 0;
-    block->priv->indent = is_output ? g_strnfill (MOO_WORKSHEET_OUTPUT_INDENT, ' ') : NULL;
+    block->priv->is_output = FALSE;
+    block->priv->editable = TRUE;
+    block->priv->indent_width = 0;
+    block->priv->indent = NULL;
+    return block;
+}
+
+MooWsTextBlock *
+moo_ws_output_block_new (MooWsOutputType output_type)
+{
+    MooWsTextBlock *block = g_object_new (MOO_TYPE_WS_TEXT_BLOCK, NULL);
+    block->priv->is_output = TRUE;
+    block->priv->output_type = output_type;
+    block->priv->editable = FALSE;
+    block->priv->indent_width = MOO_WORKSHEET_OUTPUT_INDENT;
+    block->priv->indent = g_strnfill (MOO_WORKSHEET_OUTPUT_INDENT, ' ');
+
+    if (output_type == MOO_WS_OUTPUT_ERR)
+        MOO_WS_BLOCK (block)->tag = MOO_WS_TAG_OUTPUT_ERR;
+
     return block;
 }
 
@@ -145,6 +162,14 @@ moo_ws_text_block_is_output (MooWsTextBlock *block)
 {
     g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (block), FALSE);
     return block->priv->is_output;
+}
+
+MooWsOutputType
+moo_ws_output_block_get_output_type (MooWsTextBlock *block)
+{
+    g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (block), MOO_WS_OUTPUT_OUT);
+    g_return_val_if_fail (block->priv->is_output, MOO_WS_OUTPUT_OUT);
+    return block->priv->output_type;
 }
 
 

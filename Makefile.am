@@ -1,8 +1,8 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip
 
 DIST_SUBDIRS = moo moo-newdoc/mooui ggap
-# SUBDIRS = moo .
-SUBDIRS = .
+SUBDIRS = moo .
+# SUBDIRS = .
 
 if !MOO_OS_CYGWIN
 SUBDIRS += moo-newdoc/mooui ggap

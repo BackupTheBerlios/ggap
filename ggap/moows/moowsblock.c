@@ -22,17 +22,13 @@ enum {
 };
 
 static void
-moo_ws_block_init (MooWsBlock *block)
+moo_ws_block_init (G_GNUC_UNUSED MooWsBlock *block)
 {
-    block->tag = gtk_text_tag_new (NULL);
-    g_object_set_data (G_OBJECT (block->tag), "moo-ws-block", block);
 }
 
 static void
 moo_ws_block_finalize (GObject *object)
 {
-    MooWsBlock *block = MOO_WS_BLOCK (object);
-    g_object_unref (block->tag);
     G_OBJECT_CLASS (moo_ws_block_parent_class)->finalize (object);
 }
 
@@ -84,17 +80,16 @@ moo_ws_block_add_real (MooWsBlock  *block,
 
     gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (block->buffer), &position);
     g_assert (gtk_text_iter_is_end (&position) || gtk_text_iter_is_cursor_position (&position));
+
     block->start = gtk_text_buffer_create_mark (GTK_TEXT_BUFFER (block->buffer),
                                                 NULL, &position, TRUE);
     g_object_set_data (G_OBJECT (block->start), "moo-ws-block", block);
     g_object_set_data (G_OBJECT (block->start), "moo-ws-block-start", GINT_TO_POINTER (TRUE));
+
     block->end = gtk_text_buffer_create_mark (GTK_TEXT_BUFFER (block->buffer),
                                               NULL, &position, FALSE);
     g_object_set_data (G_OBJECT (block->end), "moo-ws-block", block);
-    g_object_set_data (G_OBJECT (block->end), "moo-ws-block-end", GINT_TO_POINTER (TRUE));
-
-    gtk_text_tag_table_add (gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (block->buffer)),
-                            block->tag);
+    g_object_set_data (G_OBJECT (block->end), "moo-ws-block-end", GINT_TO_POINTER (FALSE));
 
 #if 0
     g_print ("--- before insert\n");
@@ -165,7 +160,6 @@ static void
 moo_ws_block_remove_real (MooWsBlock *block)
 {
     GtkTextIter start_pos, end_pos;
-    GtkTextTagTable *tag_table;
 
     g_return_if_fail (block->buffer != NULL);
 
@@ -194,9 +188,6 @@ moo_ws_block_remove_real (MooWsBlock *block)
 
     gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (block->buffer), block->start);
     gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (block->buffer), block->end);
-
-    tag_table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (block->buffer));
-    gtk_text_tag_table_remove (tag_table, block->tag);
 
 #if 0
     g_print ("--- after remove\n");
@@ -424,8 +415,11 @@ _moo_ws_block_insert (MooWsBlock  *block,
                       const char  *text,
                       gssize       len)
 {
+    g_return_if_fail (MOO_IS_WS_BLOCK (block));
+    g_return_if_fail (where != NULL);
+    g_return_if_fail (text != NULL);
     gtk_text_buffer_insert_with_tags (GTK_TEXT_BUFFER (block->buffer),
-                                      where, text, len, block->tag, NULL);
+                                      where, text, len, NULL, NULL);
 }
 
 void
@@ -433,7 +427,7 @@ _moo_ws_block_insert_with_tags (MooWsBlock  *block,
                                 GtkTextIter *where,
                                 const char  *text,
                                 gssize       len,
-                                GtkTextTag  *tag,
+                                const char  *tag,
                                 ...)
 {
     gint start_offset;
@@ -451,16 +445,17 @@ _moo_ws_block_insert_with_tags (MooWsBlock  *block,
     gtk_text_buffer_get_iter_at_offset (GTK_TEXT_BUFFER (block->buffer),
                                         &start, start_offset);
 
-    gtk_text_buffer_apply_tag (GTK_TEXT_BUFFER (block->buffer),
-                               block->tag, &start, where);
+    if (block->tag)
+        gtk_text_buffer_apply_tag_by_name (GTK_TEXT_BUFFER (block->buffer),
+                                           block->tag, &start, where);
 
     va_start (args, tag);
 
     while (tag)
     {
-        gtk_text_buffer_apply_tag (GTK_TEXT_BUFFER (block->buffer),
-                                   tag, &start, where);
-        tag = va_arg (args, GtkTextTag*);
+        gtk_text_buffer_apply_tag_by_name (GTK_TEXT_BUFFER (block->buffer),
+                                           tag, &start, where);
+        tag = va_arg (args, char*);
     }
 
     va_end (args);
@@ -476,7 +471,7 @@ _moo_ws_block_insert_with_tags (MooWsBlock  *block,
 MooWsBlock *
 _moo_ws_iter_get_block (const GtkTextIter *pos)
 {
-    GSList *tags;
+    GtkTextIter iter;
 
     g_return_val_if_fail (pos != NULL, NULL);
 
@@ -490,19 +485,28 @@ _moo_ws_iter_get_block (const GtkTextIter *pos)
         return moo_ws_buffer_get_last_block (buffer);
     }
 
-    tags = gtk_text_iter_get_tags (pos);
+    iter = *pos;
+    gtk_text_iter_set_line_offset (&iter, 0);
 
-    while (tags)
+    while (TRUE)
     {
-        MooWsBlock *block = g_object_get_data (tags->data, "moo-ws-block");
+        GSList *marks = gtk_text_iter_get_marks (&iter);
 
-        if (block)
+        while (marks)
         {
-            g_slist_free (tags);
-            return block;
+            MooWsBlock *block = g_object_get_data (marks->data, "moo-ws-block");
+
+            if (block)
+            {
+                g_slist_free (marks);
+                return block;
+            }
+
+            marks = g_slist_delete_link (marks, marks);
         }
 
-        tags = g_slist_delete_link (tags, tags);
+        if (!gtk_text_iter_backward_line (&iter))
+            break;
     }
 
     return NULL;

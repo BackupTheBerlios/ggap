@@ -18,22 +18,12 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-    MOO_WS_OUTPUT_OUT,
-    MOO_WS_OUTPUT_ERR
-} MooWsOutputType;
-
 extern gpointer _moo_worksheet_parent_class;
 
 void        _moo_worksheet_history_next         (MooWorksheet   *ws);
 void        _moo_worksheet_history_prev         (MooWorksheet   *ws);
 gboolean    _moo_worksheet_commit_input         (MooWorksheet   *ws);
 gboolean    _moo_worksheet_get_allow_multiline  (MooWorksheet   *ws);
-
-MooWsBlock *_moo_worksheet_create_prompt_block  (MooWorksheet   *ws,
-                                                 const char     *ps,
-                                                 const char     *ps2,
-                                                 const char     *text);
 
 G_END_DECLS
 

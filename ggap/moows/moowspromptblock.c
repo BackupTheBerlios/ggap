@@ -23,8 +23,6 @@ struct MooWsPromptBlockPrivate
     char *text;
     guint ps_len;
     guint ps2_len;
-    GtkTextTag *ps_tag;
-    GtkTextTag *text_tag;
 };
 
 
@@ -53,9 +51,6 @@ moo_ws_prompt_block_init (MooWsPromptBlock *block)
     block->priv->ps2 = g_strdup ("... ");
     block->priv->ps_len = block->priv->ps2_len = 4;
     block->priv->text = NULL;
-    block->priv->text_tag = gtk_text_tag_new (NULL);
-    block->priv->ps_tag = gtk_text_tag_new (NULL);
-    g_object_set_data (G_OBJECT (block->priv->ps_tag), "moo-ws-prompt", GINT_TO_POINTER (TRUE));
 }
 
 static void
@@ -68,8 +63,6 @@ moo_ws_prompt_block_dispose (GObject *object)
         g_free (block->priv->text);
         g_free (block->priv->ps);
         g_free (block->priv->ps2);
-        g_object_unref (block->priv->text_tag);
-        g_object_unref (block->priv->ps_tag);
         block->priv = NULL;
     }
 
@@ -83,25 +76,10 @@ moo_ws_prompt_block_add (MooWsBlock  *block,
                          MooWsBlock  *before)
 {
     char *text;
-    GtkTextTagTable *tag_table;
     MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
 
     MOO_WS_BLOCK_CLASS (moo_ws_prompt_block_parent_class)->
         add (block, buffer, after, before);
-
-    tag_table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (block->buffer));
-    gtk_text_tag_table_add (tag_table, pb->priv->ps_tag);
-    gtk_text_tag_table_add (tag_table, pb->priv->text_tag);
-
-    if (!gtk_text_tag_table_lookup (tag_table, "moo-ws-prompt-block-error"))
-    {
-        GtkTextTag *tag = g_object_new (GTK_TYPE_TEXT_TAG,
-                                        "name", "moo-ws-prompt-block-error",
-                                        "underline", PANGO_UNDERLINE_ERROR,
-                                        NULL);
-        gtk_text_tag_table_add (tag_table, tag);
-        g_object_unref (tag);
-    }
 
     text = pb->priv->text;
     pb->priv->text = NULL;
@@ -112,13 +90,6 @@ moo_ws_prompt_block_add (MooWsBlock  *block,
 static void
 moo_ws_prompt_block_remove (MooWsBlock *block)
 {
-    MooWsPromptBlock *pb = MOO_WS_PROMPT_BLOCK (block);
-    GtkTextTagTable *tag_table;
-
-    tag_table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (block->buffer));
-    gtk_text_tag_table_remove (tag_table, pb->priv->ps_tag);
-    gtk_text_tag_table_remove (tag_table, pb->priv->text_tag);
-
     MOO_WS_BLOCK_CLASS (moo_ws_prompt_block_parent_class)->remove (block);
 }
 
@@ -158,12 +129,12 @@ moo_ws_prompt_block_insert_interactive (MooWsBlock  *block,
             _moo_ws_block_insert (block, where, "\n", -1);
             if (pb->priv->ps2)
                 _moo_ws_block_insert_with_tags (block, where, pb->priv->ps2, -1,
-                                                pb->priv->ps_tag, NULL);
+                                                MOO_WS_TAG_PROMPT_PS, NULL);
         }
 
         if (**p)
             _moo_ws_block_insert_with_tags (block, where, *p, -1,
-                                            pb->priv->text_tag, NULL);
+                                            MOO_WS_TAG_PROMPT_TEXT, NULL);
     }
 
 #if 0
@@ -403,9 +374,14 @@ moo_ws_prompt_block_class_init (MooWsPromptBlockClass *klass)
 
 MooWsBlock *
 moo_ws_prompt_block_new (const char *ps,
-                         const char *ps2)
+                         const char *ps2,
+                         const char *text)
 {
-    return g_object_new (MOO_TYPE_WS_PROMPT_BLOCK, "ps", ps, "ps2", ps2, NULL);
+    return g_object_new (MOO_TYPE_WS_PROMPT_BLOCK,
+                         "ps", ps,
+                         "ps2", ps2,
+                         "text", text,
+                         NULL);
 }
 
 
@@ -442,10 +418,10 @@ moo_ws_prompt_block_set_text (MooWsPromptBlock *pb,
 
     if (pb->priv->ps)
         _moo_ws_block_insert_with_tags (block, &start, pb->priv->ps, -1,
-                                        pb->priv->ps_tag, NULL);
+                                        MOO_WS_TAG_PROMPT_PS, NULL);
     if (lines && lines[0])
         _moo_ws_block_insert_with_tags (block, &start, lines[0], -1,
-                                        pb->priv->text_tag, NULL);
+                                        MOO_WS_TAG_PROMPT_TEXT, NULL);
 
     if (lines && lines[0])
     {
@@ -454,9 +430,9 @@ moo_ws_prompt_block_set_text (MooWsPromptBlock *pb,
             _moo_ws_block_insert (block, &start, "\n", -1);
             if (pb->priv->ps2)
                 _moo_ws_block_insert_with_tags (block, &start, pb->priv->ps2, -1,
-                                                pb->priv->ps_tag, NULL);
+                                                MOO_WS_TAG_PROMPT_PS, NULL);
             _moo_ws_block_insert_with_tags (block, &start, *p, -1,
-                                            pb->priv->text_tag, NULL);
+                                            MOO_WS_TAG_PROMPT_TEXT, NULL);
         }
     }
 
@@ -469,18 +445,22 @@ moo_ws_prompt_block_set_text (MooWsPromptBlock *pb,
 static gboolean
 moo_ws_iter_is_prompt (const GtkTextIter *iter)
 {
-    GSList *tags;
-
-    tags = gtk_text_iter_get_tags (iter);
+    GSList *tags = gtk_text_iter_get_tags (iter);
 
     while (tags)
     {
-        if (g_object_get_data (tags->data, "moo-ws-prompt"))
+        char *name;
+
+        g_object_get (tags->data, "name", &name, NULL);
+
+        if (name && strcmp (name, MOO_WS_TAG_PROMPT_PS) == 0)
         {
+            g_free (name);
             g_slist_free (tags);
             return TRUE;
         }
 
+        g_free (name);
         tags = g_slist_delete_link (tags, tags);
     }
 
@@ -522,21 +502,6 @@ moo_ws_prompt_block_get_iter_position (MooWsPromptBlock  *pb,
         if (characterp)
             *characterp = gtk_text_iter_get_line_offset (&iter) - pb->priv->ps2_len;
     }
-}
-
-
-GtkTextTag *
-moo_ws_prompt_block_get_ps_tag (MooWsPromptBlock *pb)
-{
-    g_return_val_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb), NULL);
-    return pb->priv->ps_tag;
-}
-
-GtkTextTag *
-moo_ws_prompt_block_get_text_tag (MooWsPromptBlock *pb)
-{
-    g_return_val_if_fail (MOO_IS_WS_PROMPT_BLOCK (pb), NULL);
-    return pb->priv->text_tag;
 }
 
 
@@ -672,7 +637,7 @@ moo_ws_prompt_block_highlight_error (MooWsPromptBlock   *pb,
     moo_ws_prompt_block_get_iter (pb, &start, line, start_column);
     moo_ws_prompt_block_get_iter (pb, &end, line, end_column + 1);
     gtk_text_buffer_apply_tag_by_name (get_buffer (pb),
-                                       "moo-ws-prompt-block-error",
+                                       MOO_WS_TAG_PROMPT_ERROR,
                                        &start, &end);
 }
 
@@ -687,7 +652,7 @@ moo_ws_prompt_block_clear_errors (MooWsPromptBlock *pb)
     _moo_ws_block_get_end_iter (MOO_WS_BLOCK (pb), &end);
 
     gtk_text_buffer_remove_tag_by_name (get_buffer (pb),
-                                        "moo-ws-prompt-block-error",
+                                        MOO_WS_TAG_PROMPT_ERROR,
                                         &start, &end);
 }
 
@@ -727,7 +692,7 @@ moo_ws_prompt_block_new_line (MooWsPromptBlock *pb)
 
     if (pb->priv->ps2)
         _moo_ws_block_insert_with_tags (block, &iter, pb->priv->ps2, -1,
-                                        pb->priv->ps_tag, NULL);
+                                        MOO_WS_TAG_PROMPT_PS, NULL);
 
     _moo_ws_buffer_end_edit (block->buffer);
     gtk_text_buffer_place_cursor (GTK_TEXT_BUFFER (block->buffer), &iter);

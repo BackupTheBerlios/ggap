@@ -26,6 +26,7 @@
 #include "mooutils/mootype-macros.h"
 #include "mooutils/mooaccel.h"
 #include "moows/moowspromptblock.h"
+#include "moows/moowstextblock.h"
 #include <glib/gregex.h>
 #include <gdk/gdkkeysyms.h>
 #include <errno.h>

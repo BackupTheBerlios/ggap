@@ -18,6 +18,9 @@
 
 G_BEGIN_DECLS
 
+#define MOO_WS_TAG_PROMPT_PS    "moo-worksheet-prompt-ps"
+#define MOO_WS_TAG_PROMPT_TEXT  "moo-worksheet-prompt-text"
+#define MOO_WS_TAG_PROMPT_ERROR "moo-worksheet-prompt-error"
 
 #define MOO_TYPE_WS_PROMPT_BLOCK             (moo_ws_prompt_block_get_type ())
 #define MOO_WS_PROMPT_BLOCK(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), MOO_TYPE_WS_PROMPT_BLOCK, MooWsPromptBlock))
@@ -45,10 +48,8 @@ struct MooWsPromptBlockClass
 GType        moo_ws_prompt_block_get_type       (void) G_GNUC_CONST;
 
 MooWsBlock  *moo_ws_prompt_block_new            (const char         *ps,
-                                                 const char         *ps2);
-
-GtkTextTag  *moo_ws_prompt_block_get_ps_tag     (MooWsPromptBlock   *pb);
-GtkTextTag  *moo_ws_prompt_block_get_text_tag   (MooWsPromptBlock   *pb);
+                                                 const char         *ps2,
+                                                 const char         *text);
 
 char        *moo_ws_prompt_block_get_text       (MooWsPromptBlock   *pb);
 char       **moo_ws_prompt_block_get_lines      (MooWsPromptBlock   *pb);

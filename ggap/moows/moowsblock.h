@@ -40,7 +40,7 @@ struct MooWsBlock
     MooWsBlock *next;
     GtkTextMark *start;
     GtkTextMark *end;
-    GtkTextTag *tag;
+    const char *tag;
 
     MooWsBuffer *buffer;
 };
@@ -104,7 +104,7 @@ void        _moo_ws_block_insert_with_tags  (MooWsBlock         *block,
                                              GtkTextIter        *where,
                                              const char         *text,
                                              gssize              len,
-                                             GtkTextTag         *first_tag,
+                                             const char         *first_tag,
                                              ...) G_GNUC_NULL_TERMINATED;
 
 MooWsBuffer *_moo_ws_iter_get_buffer        (const GtkTextIter  *iter);

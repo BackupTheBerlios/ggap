@@ -20,8 +20,6 @@
 
 G_BEGIN_DECLS
 
-#define MOO_WORKSHEET_OUTPUT_INDENT 2
-
 #define MOO_TYPE_WORKSHEET             (moo_worksheet_get_type ())
 #define MOO_WORKSHEET(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), MOO_TYPE_WORKSHEET, MooWorksheet))
 #define MOO_WORKSHEET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), MOO_TYPE_WORKSHEET, MooWorksheetClass))

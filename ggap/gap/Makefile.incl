@@ -5,6 +5,8 @@ EXTRA_DIST += gap/ggap-init.g.in gap/ggap-restore.g
 BUILT_SOURCES += gap-files-stamp
 CLEANFILES += gap-files-stamp gap/ggap-init.g ggap-restore-g.h
 
+MOO_XML2H = $(top_srcdir)/xml2h.sh
+
 gap-files-stamp: gap/ggap-init.g.in gap/ggap-restore.g $(top_builddir)/config.status $(MOO_XML2H)
 	$(MAKE) gap-files-stamp-dep && echo stamp > gap-files-stamp
 gap-files-stamp-dep: gap/ggap-init.g ggap-restore.h

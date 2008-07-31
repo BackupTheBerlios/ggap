@@ -18,6 +18,9 @@
 
 G_BEGIN_DECLS
 
+#define MOO_WORKSHEET_OUTPUT_INDENT 2
+#define MOO_WS_TAG_OUTPUT_OUT "moo-worksheet-output-out"
+#define MOO_WS_TAG_OUTPUT_ERR "moo-worksheet-output-err"
 
 #define MOO_TYPE_WS_TEXT_BLOCK             (moo_ws_text_block_get_type ())
 #define MOO_WS_TEXT_BLOCK(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), MOO_TYPE_WS_TEXT_BLOCK, MooWsTextBlock))
@@ -29,6 +32,12 @@ G_BEGIN_DECLS
 typedef struct MooWsTextBlock MooWsTextBlock;
 typedef struct MooWsTextBlockPrivate MooWsTextBlockPrivate;
 typedef struct MooWsTextBlockClass MooWsTextBlockClass;
+
+/* keep in sync with MooWsTextBlockPrivate */
+typedef enum {
+    MOO_WS_OUTPUT_OUT,
+    MOO_WS_OUTPUT_ERR
+} MooWsOutputType;
 
 struct MooWsTextBlock
 {
@@ -42,17 +51,20 @@ struct MooWsTextBlockClass
 };
 
 
-GType           moo_ws_text_block_get_type  (void) G_GNUC_CONST;
+GType           moo_ws_text_block_get_type          (void) G_GNUC_CONST;
 
-MooWsTextBlock *moo_ws_text_block_new       (gboolean        is_output);
+MooWsTextBlock *moo_ws_user_text_block_new          (void);
 
-gboolean        moo_ws_text_block_is_output (MooWsTextBlock *block);
+MooWsTextBlock *moo_ws_output_block_new             (MooWsOutputType type);
 
-void            moo_ws_text_block_set_text  (MooWsTextBlock *block,
-                                             const char     *text);
-char           *moo_ws_text_block_get_text  (MooWsTextBlock *block);
-void            moo_ws_text_block_append    (MooWsTextBlock *block,
-                                             const char     *text);
+gboolean        moo_ws_text_block_is_output         (MooWsTextBlock *block);
+MooWsOutputType moo_ws_output_block_get_output_type (MooWsTextBlock *block);
+
+void            moo_ws_text_block_set_text          (MooWsTextBlock *block,
+                                                     const char     *text);
+char           *moo_ws_text_block_get_text          (MooWsTextBlock *block);
+void            moo_ws_text_block_append            (MooWsTextBlock *block,
+                                                     const char     *text);
 
 
 G_END_DECLS

@@ -76,12 +76,25 @@ moo_worksheet_constructor (GType                  type,
                            GObjectConstructParam *props)
 {
     GObject *object;
+    GtkTextBuffer *buffer;
 
     object = G_OBJECT_CLASS (moo_worksheet_parent_class)->constructor (type, n_props, props);
 
-    g_signal_connect_swapped (gtk_text_view_get_buffer (GTK_TEXT_VIEW (object)),
+    buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (object));
+    g_signal_connect_swapped (buffer,
                               "beep", G_CALLBACK (moo_worksheet_beep),
                               object);
+
+    gtk_text_buffer_create_tag (buffer, MOO_WS_TAG_OUTPUT_OUT, NULL);
+    gtk_text_buffer_create_tag (buffer, MOO_WS_TAG_OUTPUT_ERR,
+                                "foreground", "red", NULL);
+
+    gtk_text_buffer_create_tag (buffer, MOO_WS_TAG_PROMPT_PS,
+                                "foreground", "darkred", NULL);
+    gtk_text_buffer_create_tag (buffer, MOO_WS_TAG_PROMPT_TEXT,
+                                "foreground", "darkgreen", NULL);
+    gtk_text_buffer_create_tag (buffer, MOO_WS_TAG_PROMPT_ERROR,
+                                "underline", PANGO_UNDERLINE_ERROR, NULL);
 
     return object;
 }
@@ -277,36 +290,6 @@ scroll_insert_onscreen (MooWorksheet *ws)
 }
 
 
-MooWsBlock *
-_moo_worksheet_create_prompt_block (MooWorksheet *ws,
-                                    const char   *ps,
-                                    const char   *ps2,
-                                    const char   *text)
-{
-    MooWsBlock *block;
-
-    block = moo_ws_prompt_block_new (ps, ps2);
-    g_return_val_if_fail (block != NULL, NULL);
-
-    g_object_set (moo_ws_prompt_block_get_ps_tag (MOO_WS_PROMPT_BLOCK (block)),
-                  "foreground", "darkred",
-#if 0
-                  "background", "blue",
-#endif
-                  NULL);
-    g_object_set (moo_ws_prompt_block_get_text_tag (MOO_WS_PROMPT_BLOCK (block)),
-                  "foreground", "darkgreen",
-#if 0
-                  "background", "magenta",
-#endif
-                  NULL);
-
-    if (text)
-        moo_ws_prompt_block_set_text (MOO_WS_PROMPT_BLOCK (block), text);
-
-    return block;
-}
-
 void
 moo_worksheet_start_input (MooWorksheet *ws,
                            const char   *ps,
@@ -365,7 +348,7 @@ moo_worksheet_start_input (MooWorksheet *ws,
 
     if (!block)
     {
-        block = _moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
+        block = moo_ws_prompt_block_new (ps, ps2, NULL);
         moo_ws_buffer_insert_block (buffer, block, after);
     }
 
@@ -433,7 +416,12 @@ moo_worksheet_insert_text_block (MooWorksheet *ws,
     if (!after_cursor && block)
         block = moo_ws_block_prev (block);
 
-    text = MOO_WS_BLOCK (moo_ws_text_block_new (FALSE));
+    if (MOO_IS_WS_PROMPT_BLOCK (block) &&
+        MOO_IS_WS_TEXT_BLOCK (block->next) &&
+        moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (block->next)))
+            block = block->next;
+
+    text = MOO_WS_BLOCK (moo_ws_user_text_block_new ());
     moo_ws_buffer_insert_block (get_buffer (ws), text, block);
 
     _moo_ws_block_get_start_iter (text, &iter);
@@ -459,7 +447,12 @@ moo_worksheet_insert_input_block (MooWorksheet *ws,
     if (!after_cursor && block)
         block = moo_ws_block_prev (block);
 
-    input = _moo_worksheet_create_prompt_block (ws, ps, ps2, NULL);
+    if (MOO_IS_WS_PROMPT_BLOCK (block) &&
+        MOO_IS_WS_TEXT_BLOCK (block->next) &&
+        moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (block->next)))
+            block = block->next;
+
+    input = moo_ws_prompt_block_new (ps, ps2, NULL);
     moo_ws_buffer_insert_block (get_buffer (ws), input, block);
 
     moo_ws_prompt_block_place_cursor (MOO_WS_PROMPT_BLOCK (input), 0, 0);
@@ -513,81 +506,27 @@ _moo_worksheet_get_allow_multiline (MooWorksheet *ws)
 }
 
 
-static gboolean
-text_block_check_type (MooWsBlock      *block,
-                       MooWsOutputType  out_type)
-{
-    g_return_val_if_fail (MOO_IS_WS_TEXT_BLOCK (block), FALSE);
-
-    if (moo_ws_text_block_is_output (MOO_WS_TEXT_BLOCK (block)))
-    {
-        switch (out_type)
-        {
-            case MOO_WS_OUTPUT_OUT:
-                return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") == NULL;
-            case MOO_WS_OUTPUT_ERR:
-               return g_object_get_data (G_OBJECT (block), "moo-worksheet-stderr") != NULL;
-        }
-
-        g_return_val_if_reached (FALSE);
-    }
-    else
-    {
-        return TRUE;
-    }
-}
-
-static MooWsBlock *
-create_output_block (MooWsOutputType out_type)
-{
-    MooWsTextBlock *block;
-
-    block = moo_ws_text_block_new (TRUE);
-
-    if (out_type == MOO_WS_OUTPUT_ERR)
-    {
-        g_object_set_data (G_OBJECT (block), "moo-worksheet-stderr",
-                           GINT_TO_POINTER (TRUE));
-        g_object_set (MOO_WS_BLOCK (block)->tag,
-                      "foreground", "red",
-#if 0
-                      "background", "green",
-#endif
-                      NULL);
-    }
-    else
-    {
-#if 0
-        g_object_set (MOO_WS_BLOCK (block)->tag,
-                      "background", "yellow",
-                      NULL);
-#endif
-    }
-
-    return MOO_WS_BLOCK (block);
-}
-
 static MooWsTextBlock *
 create_output (MooWorksheet    *ws,
                MooWsOutputType  out_type)
 {
-    MooWsBlock *block;
+    MooWsTextBlock *block;
     MooWsBuffer *buffer = get_buffer (ws);
 
-    block = create_output_block (out_type);
+    block = moo_ws_output_block_new (out_type);
     g_return_val_if_fail (block != NULL, NULL);
 
     if (ws->priv->output)
-        moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->output));
+        moo_ws_buffer_insert_block (buffer, MOO_WS_BLOCK (block), MOO_WS_BLOCK (ws->priv->output));
     else if (ws->priv->input)
-        moo_ws_buffer_insert_block (buffer, block, MOO_WS_BLOCK (ws->priv->input));
+        moo_ws_buffer_insert_block (buffer, MOO_WS_BLOCK (block), MOO_WS_BLOCK (ws->priv->input));
     else
-        moo_ws_buffer_append_block (buffer, block);
+        moo_ws_buffer_append_block (buffer, MOO_WS_BLOCK (block));
 
-    ws->priv->output = MOO_WS_TEXT_BLOCK (block);
+    ws->priv->output = block;
     ws->priv->output_newline = FALSE;
 
-    return MOO_WS_TEXT_BLOCK (block);
+    return block;
 }
 
 static void
@@ -606,7 +545,7 @@ moo_worksheet_write_output_real (MooWorksheet    *ws,
     if (!string[0])
         return;
 
-    if (ws->priv->output && text_block_check_type (MOO_WS_BLOCK (ws->priv->output), out_type))
+    if (ws->priv->output && moo_ws_output_block_get_output_type (ws->priv->output) == out_type)
         output = ws->priv->output;
     else
         output = create_output (ws, out_type);

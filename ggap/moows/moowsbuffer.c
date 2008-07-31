@@ -421,42 +421,42 @@ out:
 }
 
 
+// static void
+// moo_ws_buffer_check_tags (MooWsBuffer *buffer)
+// {
+//     GtkTextIter iter;
+//
+//     gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (buffer), &iter);
+//
+//     while (!gtk_text_iter_is_end (&iter))
+//     {
+//         GSList *tags;
+//         GtkTextTag *block_tag = NULL;
+//
+//         tags = gtk_text_iter_get_tags (&iter);
+//
+//         while (tags)
+//         {
+//             if (g_object_get_data (tags->data, "moo-ws-block"))
+//             {
+//                 if (block_tag)
+//                     g_assert (g_object_get_data (tags->data, "moo-ws-block") ==
+//                                 g_object_get_data (G_OBJECT (block_tag), "moo-ws-block"));
+//                 else
+//                     block_tag = tags->data;
+//             }
+//
+//             tags = g_slist_delete_link (tags, tags);
+//         }
+//
+//         g_assert (block_tag != NULL);
+//
+//         gtk_text_iter_forward_to_tag_toggle (&iter, NULL);
+//     }
+// }
+
 static void
-moo_ws_buffer_check_tags (MooWsBuffer *buffer)
+moo_ws_buffer_check (G_GNUC_UNUSED MooWsBuffer *buffer)
 {
-    GtkTextIter iter;
-
-    gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (buffer), &iter);
-
-    while (!gtk_text_iter_is_end (&iter))
-    {
-        GSList *tags;
-        GtkTextTag *block_tag = NULL;
-
-        tags = gtk_text_iter_get_tags (&iter);
-
-        while (tags)
-        {
-            if (g_object_get_data (tags->data, "moo-ws-block"))
-            {
-                if (block_tag)
-                    g_assert (g_object_get_data (tags->data, "moo-ws-block") ==
-                                g_object_get_data (G_OBJECT (block_tag), "moo-ws-block"));
-                else
-                    block_tag = tags->data;
-            }
-
-            tags = g_slist_delete_link (tags, tags);
-        }
-
-        g_assert (block_tag != NULL);
-
-        gtk_text_iter_forward_to_tag_toggle (&iter, NULL);
-    }
-}
-
-static void
-moo_ws_buffer_check (MooWsBuffer *buffer)
-{
-    moo_ws_buffer_check_tags (buffer);
+//     moo_ws_buffer_check_tags (buffer);
 }
