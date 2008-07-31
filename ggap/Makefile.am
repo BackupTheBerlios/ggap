@@ -56,6 +56,19 @@ nodist_ggap_SOURCES =	\
     $(moc_gen_cpp)	\
     $(ui_gen_sources)
 
+test_sources =		\
+    tester.cpp		\
+    tester.h
+test_moc_h_files =	\
+    gws_t.h		\
+    script_t.h
+if MOO_ENABLE_UNIT_TESTS
+ggap_SOURCES += $(test_sources)
+moc_h_files += $(test_moc_h_files)
+else
+EXTRA_DIST += $(test_sources) $(test_moc_h_files)
+endif
+
 ggap_LDADD = ../moows/libmoows.a ../contrib/libcontrib.a $(QT_LIBS)
 ALL_CXXFLAGS =			\
     -I..			\
@@ -66,7 +79,8 @@ ALL_CXXFLAGS =			\
     -Wall -Wreorder		\
     -Wno-non-template-friend	\
     -Woverloaded-virtual	\
-    -Wunused
+    -Wunused			\
+    $(MOO_UNIT_TESTS_CFLAGS)
 
 ui_files =			\
     about.ui			\

@@ -1,3 +1,4 @@
+# MOO_AC_QT([additional-modules])
 AC_DEFUN([MOO_AC_QT],[
 AC_REQUIRE([MOO_AC_CHECK_OS])
 
@@ -11,9 +12,9 @@ AC_ARG_VAR([QT_CXXFLAGS], [Qt compilation flags])
 AC_ARG_VAR([QT_LIBS], [Qt linker flags])
 
 if test "x$cross_compiling" = xyes; then
-  _MOO_AC_QT_CROSS
+  _MOO_AC_QT_CROSS([$1])
 else
-  _MOO_AC_QT_NATIVE
+  _MOO_AC_QT_NATIVE([$1])
 fi
 
 _MOO_AC_QT_CHECK
@@ -74,9 +75,9 @@ if test "x$QT_CXXFLAGS" = x -a "x$QT_LIBS" = x; then
     echo > conftest.h
     echo > conftest.cpp
 
-    cat > conftest.pro <<\MOOEOFEOF
+    cat > conftest.pro <<MOOEOFEOF
 CONFIG += qt thread
-QT += xml script
+QT += xml script $1
 TEMPLATE = app
 TARGET = conftest
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.4
@@ -126,9 +127,9 @@ rm -fr $_moo_ac_temp_dir
 
 AC_DEFUN([_MOO_AC_QT_CROSS],[
   if test x$MOO_OS_MINGW = xyes; then
-    _MOO_AC_QT_CROSS_MINGW
+    _MOO_AC_QT_CROSS_MINGW([$1])
   else
-    _MOO_AC_QT_NATIVE
+    _MOO_AC_QT_NATIVE([$1])
   fi
 ])
 
@@ -142,13 +143,29 @@ if test "x$QT_CXXFLAGS" = x -a "x$QT_LIBS" = x; then
     AC_MSG_ERROR([QT_PREFIX is not set])
   fi
 
-  QT_CXXFLAGS=" -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED \
--DQT_NO_CAST_TO_ASCII \
--I$QT_PREFIX/include -I$QT_PREFIX/mkspecs/win32-g++ \
+  QT_CXXFLAGS="-DQT_SHARED -DQT_NO_CAST_TO_ASCII \
+-I$QT_PREFIX/include -I$QT_PREFIX/mkspecs/win32-g++"
+  QT_LIBS="-L$QT_PREFIX/lib"
+
+  for _moo_ac_mod in "$1"; do
+    case "$_moo_ac_mod" in
+      testlib)
+        _moo_ac_qt_define="QT_TEST_LIB"
+        _moo_ac_qt_lib="QtTest"
+        ;;
+      *)
+        AC_MSG_ERROR([Unknown Qt component $_moo_ac_mod])
+        ;;
+    esac
+
+    QT_CXXFLAGS="$QT_CXXFLAGS -D$_moo_ac_qt_define -I$QT_PREFIX/include/$_moo_ac_qt_lib"
+    QT_LIBS="$QT_LIBS -l$_moo_ac_qt_lib"4
+  done
+
+  QT_CXXFLAGS="$QT_CXXFLAGS -DQT_XML_LIB -DQT_SCRIPT_LIB -DQT_GUI_LIB -DQT_CORE_LIB \
 -I$QT_PREFIX/include/QtGui -I$QT_PREFIX/include/QtScript \
 -I$QT_PREFIX/include/QtCore -I$QT_PREFIX/include/QtXml"
-
-  QT_LIBS="-L$QT_PREFIX/lib -lQtGui4 -lQtScript4 -lQtXml4 -lQtCore4"
+  QT_LIBS="$QT_LIBS -lQtScript4 -lQtXml4 -lQtGui4 -lQtCore4"
 
   AC_MSG_RESULT(found)
   echo Qt compiler flags: $QT_CXXFLAGS

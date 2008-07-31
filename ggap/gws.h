@@ -2,6 +2,7 @@
 #define GGAP_GWS_H
 
 #include <QFile>
+#include <moo-unit-tests.h>
 
 namespace ggap {
 
@@ -9,6 +10,8 @@ class GwsReaderPrivate;
 class GwsReader {
     friend class GwsReaderPrivate;
     GwsReaderPrivate *impl;
+    MOO_DECLARE_UNIT_TESTS()
+
 public:
     GwsReader(const QString &file);
     ~GwsReader();
@@ -22,6 +25,7 @@ class GwsWriterPrivate;
 class GwsWriter {
     friend class GwsWriterPrivate;
     GwsWriterPrivate *impl;
+    MOO_DECLARE_UNIT_TESTS()
 
 public:
     GwsWriter(const QString &dest);

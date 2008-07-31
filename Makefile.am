@@ -8,6 +8,7 @@ EXTRA_DIST =            \
     moo-debug.h		\
     moo-macros.h	\
     moo-pimpl.h		\
+    moo-unit-tests.h	\
     COPYING		\
     xml2h.sh
 

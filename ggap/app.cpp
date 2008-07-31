@@ -9,10 +9,12 @@
 #include "ggap/gap.h"
 #include "ggap/prefsdialog.h"
 #include "ggap/help.h"
+#include "ggap/tester.h"
 #include <qxtcommandoptions.h>
 #include <QtGui>
 #include <iostream>
 #include <stdlib.h>
+#include <string.h>
 #ifdef Q_OS_MAC
 #include <CoreFoundation/CoreFoundation.h>
 #endif
@@ -26,10 +28,13 @@ struct AppOptions {
     bool open_help_browser;
     QString help_url;
     bool raise;
+    bool unit_tests;
+    QStringList unit_test_args;
 
     AppOptions() :
         open_help_browser(false),
-        raise(false)
+        raise(false),
+        unit_tests(false)
     {
     }
 };
@@ -63,6 +68,17 @@ static void usage(QxtCommandOptions &opts, bool show_qt)
 
 void App::parseOptions(int &argc, char **argv)
 {
+#ifdef MOO_ENABLE_UNIT_TESTS
+    if (argc > 1 && strcmp(argv[1], "--unit-tests") == 0)
+    {
+        appData.options.unit_tests = true;
+        for (int i = 0; i < argc; ++i)
+            if (i != 1)
+                appData.options.unit_test_args << argv[i];
+        return;
+    }
+#endif
+
     QxtCommandOptions opts;
     opts.setFlagStyle(QxtCommandOptions::DoubleDash);
 
@@ -228,7 +244,8 @@ static void deleteFile(const QString &name)
 
 App::~App()
 {
-    deleteFile(appData.tempDir);
+    if (!appData.tempDir.isEmpty())
+        deleteFile(appData.tempDir);
     foreach (const QString &name, appData.tempFiles)
         deleteFile(name);
 }
@@ -302,6 +319,14 @@ void App::checkGap()
 
 int App::exec()
 {
+#ifdef MOO_ENABLE_UNIT_TESTS
+    if (appData.options.unit_tests)
+    {
+        moo::test::Tester tester;
+        return tester.exec(appData.options.unit_test_args);
+    }
+#endif
+
     checkGap();
 
     foreach (const QString &f, appData.options.files_to_open)

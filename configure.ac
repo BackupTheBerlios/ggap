@@ -30,27 +30,25 @@ if test x$MOO_OS_MINGW = "xyes"; then
 fi
 
 MOO_AC_PCH
-MOO_AC_QT
+
+QT_MODULES=""
+MOO_ENABLE_UNIT_TESTS=false
+AC_ARG_ENABLE([unit-tests],
+  AC_HELP_STRING([--enable-unit-tests],[enable unit tests (default = NO)]),[
+  if test "x$enableval" = xyes; then
+    MOO_ENABLE_UNIT_TESTS=true
+  fi
+])
+AM_CONDITIONAL(MOO_ENABLE_UNIT_TESTS, $MOO_ENABLE_UNIT_TESTS)
+if $MOO_ENABLE_UNIT_TESTS; then
+  QT_MODULES="$QT_MODULES testlib"
+  MOO_UNIT_TESTS_CFLAGS="-DMOO_ENABLE_UNIT_TESTS"
+fi
+AC_SUBST(MOO_UNIT_TESTS_CFLAGS)
+
+MOO_AC_QT([$QT_MODULES])
 
 ACLOCAL="${ACLOCAL:-aclocal} $ACLOCAL_FLAGS"
-
-# AC_CHECK_HEADERS([readline/readline.h],[READLINE_LIBS='-lreadline'],[READLINE_LIBS=])
-# AC_SUBST(READLINE_LIBS)
-
-# zlib_missing=true
-# AC_CHECK_HEADER([zlib.h],[
-#   AC_CHECK_LIB([z],[gzdopen],[
-#     ZLIB="-lz"
-#     zlib_missing=false
-# ])])
-# if $zlib_missing; then
-#   AC_MSG_ERROR([libz missing])
-# fi
-
-# GGAP_API_VERSION=\"1.0\"
-# AC_SUBST(GGAP_API_VERSION)
-# AC_DEFINE_UNQUOTED(GGAP_API_VERSION, [$GGAP_API_VERSION], [GGAP_API_VERSION])
-
 
 AC_CONFIG_FILES([
 Makefile
