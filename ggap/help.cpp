@@ -123,6 +123,16 @@ static QString htmlFromPlainText(const QString &text)
     return Qt::convertFromPlainText(text);
 }
 
+static bool isHtml(const QString &s)
+{
+    return s.contains(QRegExp("\\<([Hh]tml|HTML)")); // XXX
+}
+
+static bool isHtml(const QByteArray &a)
+{
+    return a.contains("<html") || a.contains("<HTML"); // XXX
+}
+
 QVariant HelpView::checkLoadHtml(const QVariant &data, const QUrl &url)
 {
     if (data.isNull())
@@ -131,7 +141,7 @@ QVariant HelpView::checkLoadHtml(const QVariant &data, const QUrl &url)
     if (data.type() == QVariant::String)
     {
         const QString s = data.toString();
-        if (s.contains("<html", Qt::CaseInsensitive)) // XXX
+        if (isHtml(s))
             return data;
         else
             return htmlFromPlainText(s);
@@ -139,10 +149,10 @@ QVariant HelpView::checkLoadHtml(const QVariant &data, const QUrl &url)
     else if (data.type() == QVariant::ByteArray)
     {
         const QByteArray a = data.toByteArray();
-        if (a.contains("<html") || a.contains("<HTML")) // XXX
+        if (isHtml(a))
             return data;
         else
-            return htmlFromPlainText(QString(a)); // XXX
+            return htmlFromPlainText(QString(a)); // XXX encoding
     }
     else
     {

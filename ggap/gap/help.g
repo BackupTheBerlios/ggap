@@ -40,6 +40,26 @@ $GGAP_HELP_SIMPLE_STRING := function(str)
 end;
 Add($GGAP_DATA.api, "$GGAP_HELP_SIMPLE_STRING");
 
+$GGAP_ESCAPE_MARKUP := function(str)
+  local escaped, c;
+  escaped := "";
+  for c in str do
+    if c = '"' then
+      Append(escaped, "&quot;");
+    elif c = '<' then
+      Append(escaped, "&lt;");
+    elif c = '>' then
+      Append(escaped, "&gt;");
+    elif c = '\'' then
+      Append(escaped, "&apos;");
+    else
+      Add(escaped, c);
+    fi;
+  od;
+  return escaped;
+end;
+Add($GGAP_DATA.api, "$GGAP_ESCAPE_MARKUP");
+
 $GGAP_HELP_MAKE_URI := function(str)
   if IsString(str) then
     # let ggap parse it
@@ -58,7 +78,8 @@ $GGAP_HELP_PRINT_MATCHES := function(entries)
   fi;
 
   if Length(entries) = 1 then
-    $GGAP_SEND_DATA("markup:Help: opening <a href=\"", entries[1][2], "\">", entries[1][1], "</a>\n");
+    $GGAP_SEND_DATA("markup:Help: opening <a href=\"", entries[1][2], "\">",
+                    $GGAP_ESCAPE_MARKUP(entries[1][1]), "</a>\n");
     $GGAP_SEND_DATA("script:openUrl('", entries[1][2], "')");
     return;
   fi;
@@ -73,7 +94,8 @@ $GGAP_HELP_PRINT_MATCHES := function(entries)
   cnt := 1;
   len := LogInt(Length(entries), 10) + 1;
   for e in entries do
-    $GGAP_SEND_DATA("markup:<a href=\"", e[2], "\">[", String(cnt, len), "] ", e[1], "</a>\n");
+    $GGAP_SEND_DATA("markup:<a href=\"", e[2], "\">[", String(cnt, len), "] ",
+                    $GGAP_ESCAPE_MARKUP(e[1]), "</a>\n");
     cnt := cnt + 1;
   od;
 end;
@@ -153,6 +175,32 @@ end;
 Add($GGAP_DATA.api, "$GGAP_HELP_SHOW_MATCHES");
 
 
+# Well, it doesn't work. How to get url of the table of contents?
+# $GGAP_HELP_SHOW_BOOKS := function()
+#   local book, info, url, line;
+#   for book in HELP_KNOWN_BOOKS[2] do
+#     info := HELP_BOOK_INFO(book[1]);
+#     if info = fail then
+#       continue;
+#     fi;
+#
+#     url := HELP_BOOK_HANDLER.(info.handler).HelpData(book, no, "url");
+#     if data <> fail then
+#       data := $GGAP_HELP_MAKE_URI(data);
+#     fi;
+#
+#     url := "http://google.com";
+#     line := ReplacedString(book[1], " (not loaded)", "");
+#     if not IsEmpty(book[2]) then
+#       Append(line, " - ");
+#       Append(line, book[2]);
+#     fi;
+#     $GGAP_SEND_DATA("markup:<a href=\"", url, "\">", $GGAP_ESCAPE_MARKUP(line), "</a>\n");
+#   od;
+# end;
+# Add($GGAP_DATA.api, "$GGAP_HELP_SHOW_BOOKS");
+
+
 $GGAP_HELP := function(str)
   local origstr, p, book, books, b;
 
@@ -200,7 +248,7 @@ $GGAP_HELP := function(str)
   # XXX
 #   # if the topic is 'books' display the table of books
 #   elif book = "" and str = "books"  then
-#     add(books, "books");
+#     $GGAP_HELP_SHOW_BOOKS();
 
   # XXX
 #   # if the topic is 'chapters' display the table of chapters
