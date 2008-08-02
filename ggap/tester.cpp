@@ -1,6 +1,6 @@
 #include "ggap/tester.h"
-#include "ggap/gws_t.h"
-#include "ggap/script_t.h"
+#include "ggap/gws-t.h"
+#include "ggap/script-t.h"
 #include <QtTest>
 
 #define TEST_CLASS(Class, args) { \

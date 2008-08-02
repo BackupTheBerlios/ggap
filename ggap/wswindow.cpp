@@ -1,4 +1,4 @@
-#include "ggap/wswindow_p.h"
+#include "ggap/wswindow-p.h"
 #include "ggap/worksheet.h"
 #include "ggap/dialogs.h"
 #include "ggap/app.h"

@@ -1,4 +1,4 @@
-#include "ggap/worksheet_p.h"
+#include "ggap/worksheet-p.h"
 #include "ggap/proc.h"
 #include "ggap/gap.h"
 #include "ggap/app.h"

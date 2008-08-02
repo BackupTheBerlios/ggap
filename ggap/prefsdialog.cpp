@@ -2,7 +2,7 @@
 #include "ggap/prefs.h"
 #include "ggap/gap.h"
 #include "ggap/dialogs.h"
-#include "ggap/wswindow_p.h"
+#include "ggap/wswindow-p.h"
 #include "ggap/help.h"
 #include "ggap/ui_prefs.h"
 #include <QFontDialog>

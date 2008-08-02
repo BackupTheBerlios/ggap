@@ -23,7 +23,7 @@ libmoows_a_SOURCES =	\
     worksheet-xml.h	\
     worksheet-xml-p.h	\
     wsblock.h		\
-    wsblock_p.h		\
+    wsblock-p.h		\
     wsblock.cpp		\
     wsblockformat.h	\
     wstextblock.cpp	\
@@ -37,10 +37,10 @@ moc_cpp_files =		\
 
 moc_h_files =		\
     colorcombobox.h	\
-    worksheet_p.h	\
+    worksheet-p.h	\
     worksheet.h		\
     wstextblock.h	\
-    wstextdocument_p.h	\
+    wstextdocument-p.h	\
     wstextdocument.h
 
 include ../mk/qt.mk
@@ -50,6 +50,5 @@ include ../mk/pch.mk
 
 %_p.o: %.o
 	@true
-
 %-p.o: %.o
 	@true

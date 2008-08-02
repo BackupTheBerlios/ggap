@@ -1,5 +1,5 @@
 %{
-#include "ggap/parser_p.h"
+#include "ggap/parser-p.h"
 using namespace ggap::parser;
 #define YY_(s) ggap::parser::translate(s)
 %}

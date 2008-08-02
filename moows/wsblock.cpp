@@ -1,4 +1,4 @@
-#include "moows/wsblock_p.h"
+#include "moows/wsblock-p.h"
 #include "moows/wstextdocument.h"
 #include "moo-macros.h"
 

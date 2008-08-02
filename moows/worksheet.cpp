@@ -1,6 +1,6 @@
-#include "moows/worksheet_p.h"
+#include "moows/worksheet-p.h"
 #include "moows/wstextdocument.h"
-#include "moows/wsblock_p.h"
+#include "moows/wsblock-p.h"
 #include "moo-macros.h"
 #include <QtGui>
 

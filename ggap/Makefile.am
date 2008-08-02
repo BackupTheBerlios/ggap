@@ -13,13 +13,13 @@ ggap_SOURCES =		\
     gapdoc.h		\
     gws.cpp		\
     gws.h		\
-    help_p.h		\
+    help-p.h		\
     help.cpp		\
     help-bookmarks.cpp	\
     main.cpp		\
     parser.cpp		\
     parser.h		\
-    parser_p.h		\
+    parser-p.h		\
     parser-yacc.cpp	\
     parser-yacc.h	\
     prefs.cpp		\
@@ -46,14 +46,14 @@ moc_h_files =		\
     help-bookmarks-p.h	\
     prefsdialog.h	\
     proc.h		\
-    proc_p.h		\
+    proc-p.h		\
     proc-wrapper.h	\
     script.h		\
     windowmenu.h	\
     worksheet.h		\
-    worksheet_p.h	\
+    worksheet-p.h	\
     wswindow.h		\
-    wswindow_p.h
+    wswindow-p.h
 
 nodist_ggap_SOURCES =	\
     $(moc_gen_cpp)	\
@@ -63,8 +63,8 @@ test_sources =		\
     tester.cpp		\
     tester.h
 test_moc_h_files =	\
-    gws_t.h		\
-    script_t.h
+    gws-t.h		\
+    script-t.h
 if MOO_ENABLE_UNIT_TESTS
 ggap_SOURCES += $(test_sources)
 moc_h_files += $(test_moc_h_files)
@@ -106,8 +106,6 @@ include ../mk/pch.mk
 	@true
 proc-wrapper.o: proc.o
 	@true
-# worksheet_p.o: worksheet.o
-# proc_p.o: proc.o
 
 include gap/Makefile.incl
 

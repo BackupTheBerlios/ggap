@@ -1,4 +1,4 @@
-#include "moows/worksheet_p.h"
+#include "moows/worksheet-p.h"
 #include "moows/wstextblock.h"
 #include "moo-macros.h"
 #include <QtGui>

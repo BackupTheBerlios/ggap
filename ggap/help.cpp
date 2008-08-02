@@ -1,4 +1,4 @@
-#include "ggap/help_p.h"
+#include "ggap/help-p.h"
 #include "ggap/dialogs.h"
 #include "ggap/gap.h"
 #include "ggap/prefs.h"
