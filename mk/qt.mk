@@ -2,13 +2,13 @@
 
 moc_%.cpp.stamp: %.cpp Makefile
 	$(QT_MOC) -o moc_$*.cpp.tmp $< && \
-        sed 's/\*\* Created: [^*]*$$/** Created: some day/' moc_$*.cpp.tmp > moc_$*.cpp.tmp2 && \
+        sed 's/\*\* Created: [^*]*$$/** Created: today/' moc_$*.cpp.tmp > moc_$*.cpp.tmp2 && \
 	(cmp -s moc_$*.cpp.tmp2 moc_$*.cpp || mv moc_$*.cpp.tmp2 moc_$*.cpp) && \
 	rm -f moc_$*.cpp.tmp moc_$*.cpp.tmp2 && echo stamp > $@
 
 ui_%.h.stamp: $(srcdir)/%.ui Makefile
 	$(QT_UIC) -o ui_$*.h.tmp $< && \
-        sed 's/\*\* Created: [^*]*$$/** Created: some day/' ui_$*.h.tmp > ui_$*.h.tmp2 && \
+        sed 's/\*\* Created: [^*]*$$/** Created: today/' ui_$*.h.tmp > ui_$*.h.tmp2 && \
         (cmp -s ui_$*.h.tmp2 ui_$*.h || mv ui_$*.h.tmp2 ui_$*.h) && \
         rm -f ui_$*.h.tmp ui_$*.h.tmp2 && echo stamp > $@
 
@@ -17,7 +17,7 @@ moc_gen_sources = $(if $(moc_h_files),$(moc_gen_cpp))
 $(moc_gen_cpp).stamp: $(moc_h_files) Makefile
 	(cat $(addprefix $(srcdir)/,$(moc_h_files)) | \
             $(QT_MOC) $(addprefix -f,$(moc_h_files)) -o $(moc_gen_cpp).tmp) && \
-        sed 's/\*\* Created: [^*]*$$/** Created: some day/' $(moc_gen_cpp).tmp > $(moc_gen_cpp).tmp2 && \
+        sed 's/\*\* Created: [^*]*$$/** Created: today/' $(moc_gen_cpp).tmp > $(moc_gen_cpp).tmp2 && \
 	(cmp -s $(moc_gen_cpp).tmp2 $(moc_gen_cpp) || mv $(moc_gen_cpp).tmp2 $(moc_gen_cpp)) && \
 	rm -f $(moc_gen_cpp).tmp $(moc_gen_cpp).tmp2 && echo stamp > $@
 

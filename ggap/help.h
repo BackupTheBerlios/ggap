@@ -75,9 +75,6 @@ private Q_SLOTS:
     void on_actionZoomIn_triggered();
     void on_actionZoomOut_triggered();
     void on_actionZoomNormal_triggered();
-    void on_actionShowContents_triggered();
-    void on_actionShowBookmarks_triggered();
-    void on_actionShowSearch_triggered();
 };
 
 }

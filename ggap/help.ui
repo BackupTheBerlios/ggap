@@ -21,10 +21,10 @@
   <widget class="QWidget" name="centralwidget" >
    <property name="geometry" >
     <rect>
-     <x>298</x>
-     <y>63</y>
-     <width>561</width>
-     <height>522</height>
+     <x>286</x>
+     <y>56</y>
+     <width>573</width>
+     <height>531</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" >
@@ -127,7 +127,7 @@
      <x>0</x>
      <y>0</y>
      <width>859</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile" >
@@ -160,10 +160,6 @@
     <addaction name="actionZoomOut" />
     <addaction name="actionZoomNormal" />
     <addaction name="separator" />
-    <addaction name="actionShowContents" />
-    <addaction name="actionShowBookmarks" />
-    <addaction name="actionShowSearch" />
-    <addaction name="separator" />
    </widget>
    <widget class="QMenu" name="menuGo" >
     <property name="title" >
@@ -176,13 +172,6 @@
     <addaction name="actionGoPrevPage" />
     <addaction name="actionGoNextPage" />
    </widget>
-   <widget class="QMenu" name="menuBookmarks" >
-    <property name="title" >
-     <string>&amp;Bookmarks</string>
-    </property>
-    <addaction name="actionAddBookmark" />
-    <addaction name="separator" />
-   </widget>
    <widget class="QMenu" name="menuHelp" >
     <property name="title" >
      <string>&amp;Help</string>
@@ -193,30 +182,29 @@
    <addaction name="menuEdit" />
    <addaction name="menuView" />
    <addaction name="menuGo" />
-   <addaction name="menuBookmarks" />
    <addaction name="menuHelp" />
   </widget>
   <widget class="QStatusBar" name="statusbar" >
    <property name="geometry" >
     <rect>
      <x>0</x>
-     <y>585</y>
+     <y>587</y>
      <width>859</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
-  <widget class="QDockWidget" name="sideBar" >
+  <widget class="QDockWidget" name="bookmarkDock" >
    <property name="geometry" >
     <rect>
      <x>0</x>
-     <y>63</y>
-     <width>292</width>
-     <height>522</height>
+     <y>56</y>
+     <width>280</width>
+     <height>531</height>
     </rect>
    </property>
    <property name="windowTitle" >
-    <string>Sidebar</string>
+    <string>Bookmarks</string>
    </property>
    <attribute name="dockWidgetArea" >
     <number>1</number>
@@ -225,75 +213,47 @@
     <property name="geometry" >
      <rect>
       <x>0</x>
-      <y>23</y>
-      <width>292</width>
-      <height>499</height>
+      <y>26</y>
+      <width>280</width>
+      <height>505</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" >
+    <layout class="QVBoxLayout" name="verticalLayout" >
      <item>
-      <widget class="QToolBox" name="toolBox" >
-       <property name="currentIndex" >
-        <number>0</number>
-       </property>
-       <widget class="QWidget" name="pageContents" >
-        <property name="geometry" >
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>274</width>
-          <height>382</height>
-         </rect>
-        </property>
-        <attribute name="label" >
-         <string>Contents</string>
-        </attribute>
-        <layout class="QVBoxLayout" >
-         <item>
-          <widget class="QTreeView" name="contentsView" />
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageBookmarks" >
-        <property name="geometry" >
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>96</width>
-          <height>93</height>
-         </rect>
-        </property>
-        <attribute name="label" >
-         <string>Bookmarks</string>
-        </attribute>
-        <layout class="QVBoxLayout" >
-         <item>
-          <widget class="QTreeView" name="bookmarkView" />
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageSearch" >
-        <property name="geometry" >
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>96</width>
-          <height>128</height>
-         </rect>
-        </property>
-        <attribute name="label" >
-         <string>Search</string>
-        </attribute>
-        <layout class="QVBoxLayout" >
-         <item>
-          <widget class="QLineEdit" name="searchEntry" />
-         </item>
-         <item>
-          <widget class="QListView" name="searchView" />
-         </item>
-        </layout>
-       </widget>
-      </widget>
+      <widget class="ggap::BookmarkList" name="bookmarkList" />
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout" >
+       <item>
+        <spacer name="horizontalSpacer" >
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0" >
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QToolButton" name="bookmarkAdd" >
+         <property name="icon" >
+          <iconset resource="ggap.qrc" >
+           <normaloff>:/icons16/list-add.png</normaloff>:/icons16/list-add.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="bookmarkDelete" >
+         <property name="icon" >
+          <iconset resource="ggap.qrc" >
+           <normaloff>:/icons16/list-remove.png</normaloff>:/icons16/list-remove.png</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -302,9 +262,9 @@
    <property name="geometry" >
     <rect>
      <x>0</x>
-     <y>27</y>
-     <width>264</width>
-     <height>36</height>
+     <y>22</y>
+     <width>275</width>
+     <height>34</height>
     </rect>
    </property>
    <property name="windowTitle" >
@@ -328,10 +288,10 @@
   <widget class="QToolBar" name="toolbarAddress" >
    <property name="geometry" >
     <rect>
-     <x>264</x>
-     <y>27</y>
-     <width>595</width>
-     <height>36</height>
+     <x>275</x>
+     <y>22</y>
+     <width>584</width>
+     <height>34</height>
     </rect>
    </property>
    <property name="windowTitle" >
@@ -444,36 +404,12 @@
     <string>Ctrl+0</string>
    </property>
   </action>
-  <action name="actionShowContents" >
-   <property name="text" >
-    <string>Contents</string>
-   </property>
-   <property name="shortcut" >
-    <string>Alt+C</string>
-   </property>
-  </action>
-  <action name="actionShowIndex" >
-   <property name="text" >
-    <string>Index</string>
-   </property>
-   <property name="shortcut" >
-    <string>Alt+I</string>
-   </property>
-  </action>
   <action name="actionShowBookmarks" >
    <property name="text" >
     <string>Bookmarks</string>
    </property>
    <property name="shortcut" >
     <string>Alt+B</string>
-   </property>
-  </action>
-  <action name="actionShowSearch" >
-   <property name="text" >
-    <string>Search</string>
-   </property>
-   <property name="shortcut" >
-    <string>Alt+S</string>
    </property>
   </action>
   <action name="actionCopy" >
@@ -606,380 +542,20 @@
     <signal>upAvailable(bool)</signal>
    </slots>
   </customwidget>
+  <customwidget>
+   <class>ggap::BookmarkList</class>
+   <extends>QListWidget</extends>
+   <header>ggap/help-bookmarks.h</header>
+   <slots>
+    <slot>deleteSelected()</slot>
+    <signal>urlActivated(QUrl)</signal>
+   </slots>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="ggap.qrc" />
  </resources>
- <connections>
-  <connection>
-   <sender>helpView</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>statusbar</receiver>
-   <slot>showMessage(QString)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>597</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>helpView</sender>
-   <signal>forwardAvailable(bool)</signal>
-   <receiver>actionGoForward</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>helpView</sender>
-   <signal>backwardAvailable(bool)</signal>
-   <receiver>actionGoBackward</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionGoForward</sender>
-   <signal>triggered()</signal>
-   <receiver>helpView</receiver>
-   <slot>forward()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionGoBackward</sender>
-   <signal>triggered()</signal>
-   <receiver>helpView</receiver>
-   <slot>backward()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionGoHome</sender>
-   <signal>triggered()</signal>
-   <receiver>helpView</receiver>
-   <slot>home()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionAbout</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>aboutDialog()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionPreferences</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>prefsDialog()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionClose</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionQuit</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>quit()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionPrint</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>printDocument()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionPageSetup</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>pageSetup()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionFind</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>startFind()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionFindNext</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>findNext()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionFindPrev</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>findPrev()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>findButtonNext</sender>
-   <signal>clicked()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>findNext()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>590</x>
-     <y>545</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>findButtonPrev</sender>
-   <signal>clicked()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>findPrev()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>556</x>
-     <y>545</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>findButtonClose</sender>
-   <signal>clicked()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>cancelFind()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>347</x>
-     <y>545</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionPrintPreview</sender>
-   <signal>triggered()</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>printPreview()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionCopy</sender>
-   <signal>triggered()</signal>
-   <receiver>helpView</receiver>
-   <slot>copy()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>findEntry</sender>
-   <signal>textEdited(QString)</signal>
-   <receiver>HelpBrowser</receiver>
-   <slot>findEntryTextEdited(QString)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>452</x>
-     <y>545</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>429</x>
-     <y>304</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionGoUp</sender>
-   <signal>triggered()</signal>
-   <receiver>helpView</receiver>
-   <slot>up()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>helpView</sender>
-   <signal>upAvailable(bool)</signal>
-   <receiver>actionGoUp</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>584</x>
-     <y>287</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>aboutDialog()</slot>
   <slot>prefsDialog()</slot>

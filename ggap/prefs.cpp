@@ -138,6 +138,29 @@ void Prefs::setValue(StringKey key, const QString &value)
     m_return_if_reached();
 }
 
+QStringList Prefs::value(StringListKey key)
+{
+    switch (key)
+    {
+        case HelpBookmarks:
+            return value("help/bookmarks").toStringList();
+    }
+
+    m_return_val_if_reached(QStringList());
+}
+
+void Prefs::setValue(StringListKey key, const QStringList &value)
+{
+    switch (key)
+    {
+        case HelpBookmarks:
+            setValue("help/bookmarks", value);
+            return;
+    }
+
+    m_return_if_reached();
+}
+
 QByteArray Prefs::value(ByteArrayKey key)
 {
     switch (key)

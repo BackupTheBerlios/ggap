@@ -2,6 +2,7 @@
 #define GGAP_PREFS_H
 
 #include <QVariant>
+#include <QStringList>
 #include <QFont>
 
 namespace ggap {
@@ -39,6 +40,13 @@ public:
     QString value(StringKey key);
     void setValue(StringKey key, const QString &value);
 
+    enum StringListKey {
+        HelpBookmarks
+    };
+
+    QStringList value(StringListKey key);
+    void setValue(StringListKey key, const QStringList &value);
+
     enum ByteArrayKey {
         PageSetup
     };
@@ -68,6 +76,11 @@ inline bool prefsValue(Prefs::BoolKey k)
 }
 
 inline QString prefsValue(Prefs::StringKey k)
+{
+    return Prefs(SettingsPrefs).value(k);
+}
+
+inline QStringList prefsValue(Prefs::StringListKey k)
 {
     return Prefs(SettingsPrefs).value(k);
 }

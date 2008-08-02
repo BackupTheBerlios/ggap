@@ -249,8 +249,38 @@ void HelpBrowserPrivate::setupUi()
 
     ui.setupUi(q);
 
-    q->connect(ui.helpView, SIGNAL(sourceChanged(const QUrl&)),
-               SLOT(viewSourceChanged(const QUrl&)));
+    QMenu *bookmarkMenu = createBookmarkMenu(ui.actionAddBookmark, ui.menubar);
+    ui.menubar->insertMenu(ui.menuHelp->menuAction(), bookmarkMenu);
+    QObject::connect(bookmarkMenu, SIGNAL(itemActivated(int)), ui.bookmarkList, SLOT(activateBookmark(int)));
+
+    QObject::connect(ui.helpView, SIGNAL(highlighted(QString)), ui.statusbar, SLOT(showMessage(QString)));
+    QObject::connect(ui.helpView, SIGNAL(forwardAvailable(bool)), ui.actionGoForward, SLOT(setEnabled(bool)));
+    QObject::connect(ui.helpView, SIGNAL(backwardAvailable(bool)), ui.actionGoBackward, SLOT(setEnabled(bool)));
+    QObject::connect(ui.helpView, SIGNAL(upAvailable(bool)), ui.actionGoUp, SLOT(setEnabled(bool)));
+    QObject::connect(ui.actionGoForward, SIGNAL(triggered()), ui.helpView, SLOT(forward()));
+    QObject::connect(ui.actionGoBackward, SIGNAL(triggered()), ui.helpView, SLOT(backward()));
+    QObject::connect(ui.actionGoHome, SIGNAL(triggered()), ui.helpView, SLOT(home()));
+    QObject::connect(ui.actionCopy, SIGNAL(triggered()), ui.helpView, SLOT(copy()));
+    QObject::connect(ui.actionGoUp, SIGNAL(triggered()), ui.helpView, SLOT(up()));
+    QObject::connect(ui.bookmarkDelete, SIGNAL(clicked()), ui.bookmarkList, SLOT(deleteSelected()));
+    QObject::connect(ui.bookmarkAdd, SIGNAL(clicked()), ui.actionAddBookmark, SLOT(trigger()));
+    QObject::connect(ui.bookmarkList, SIGNAL(urlActivated(QUrl)), ui.helpView, SLOT(setSource(QUrl)));
+
+    q->connect(ui.actionAbout, SIGNAL(triggered()), SLOT(aboutDialog()));
+    q->connect(ui.actionPreferences, SIGNAL(triggered()), SLOT(prefsDialog()));
+    q->connect(ui.actionClose, SIGNAL(triggered()), SLOT(close()));
+    q->connect(ui.actionQuit, SIGNAL(triggered()), SLOT(quit()));
+    q->connect(ui.actionPrint, SIGNAL(triggered()), SLOT(printDocument()));
+    q->connect(ui.actionPageSetup, SIGNAL(triggered()), SLOT(pageSetup()));
+    q->connect(ui.actionFind, SIGNAL(triggered()), SLOT(startFind()));
+    q->connect(ui.actionFindNext, SIGNAL(triggered()), SLOT(findNext()));
+    q->connect(ui.actionFindPrev, SIGNAL(triggered()), SLOT(findPrev()));
+    q->connect(ui.findButtonNext, SIGNAL(clicked()), SLOT(findNext()));
+    q->connect(ui.findButtonPrev, SIGNAL(clicked()), SLOT(findPrev()));
+    q->connect(ui.findButtonClose, SIGNAL(clicked()), SLOT(cancelFind()));
+    q->connect(ui.actionPrintPreview, SIGNAL(triggered()), SLOT(printPreview()));
+    q->connect(ui.findEntry, SIGNAL(textEdited(QString)), SLOT(findEntryTextEdited(QString)));
+    q->connect(ui.helpView, SIGNAL(sourceChanged(QUrl)), SLOT(viewSourceChanged(QUrl)));
 
     ui.findBox->hide();
     ui.findEntry->installEventFilter(q);
@@ -260,10 +290,15 @@ void HelpBrowserPrivate::setupUi()
     addressEntry->setEditable(true);
     addressEntry->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     ui.toolbarAddress->insertWidget(ui.actionGo, addressEntry);
-    pub->connect(addressEntry, SIGNAL(activated(const QString&)), SLOT(openAddress(const QString&)));
+    pub->connect(addressEntry, SIGNAL(activated(QString)), SLOT(openAddress(QString)));
 
     ui.menubar->insertMenu(ui.menuHelp->menuAction(), q->windowMenu());
-    ui.menuView->addAction(ui.sideBar->toggleViewAction());
+
+    ui.bookmarkDock->hide();
+    QAction *action = ui.bookmarkDock->toggleViewAction();
+    action->setShortcut(QKeySequence("Alt+B"));
+    ui.menuView->addAction(action);
+
     ui.menuView->addAction(ui.toolbar->toggleViewAction());
     ui.menuView->addAction(ui.toolbarAddress->toggleViewAction());
 
@@ -425,7 +460,15 @@ HelpView *HelpBrowser::view()
 
 void HelpBrowser::on_actionAddBookmark_triggered()
 {
-    implement_me();
+    QString label = impl->ui.helpView->documentTitle();
+    QUrl url = impl->ui.helpView->source();
+
+    if (!url.isValid())
+        return;
+
+    label = runBookmarkDialog(label, this);
+    if (!label.isEmpty())
+        impl->ui.bookmarkList->addBookmark(label, url);
 }
 
 void HelpBrowser::on_actionGoNextPage_triggered()
@@ -500,30 +543,4 @@ void HelpBrowser::on_actionZoomOut_triggered()
 void HelpBrowser::on_actionZoomNormal_triggered()
 {
     view()->setFontFromPrefs();
-}
-
-#if QT_VERSION < 0x040400
-static void restoreDockWidget(QDockWidget*)
-{
-}
-#endif
-
-void HelpBrowser::on_actionShowContents_triggered()
-{
-    restoreDockWidget(impl->ui.sideBar);
-    impl->ui.toolBox->setCurrentWidget(impl->ui.pageContents);
-}
-
-void HelpBrowser::on_actionShowBookmarks_triggered()
-{
-    restoreDockWidget(impl->ui.sideBar);
-    impl->ui.toolBox->setCurrentWidget(impl->ui.pageBookmarks);
-    impl->ui.bookmarkView->setFocus(Qt::OtherFocusReason);
-}
-
-void HelpBrowser::on_actionShowSearch_triggered()
-{
-    restoreDockWidget(impl->ui.sideBar);
-    impl->ui.toolBox->setCurrentWidget(impl->ui.pageSearch);
-    impl->ui.searchEntry->setFocus(Qt::OtherFocusReason);
 }

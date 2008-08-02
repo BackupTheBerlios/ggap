@@ -15,6 +15,7 @@ ggap_SOURCES =		\
     gws.h		\
     help_p.h		\
     help.cpp		\
+    help-bookmarks.cpp	\
     main.cpp		\
     parser.cpp		\
     parser.h		\
@@ -41,6 +42,8 @@ moc_h_files =		\
     app.h		\
     appwindow.h		\
     help.h		\
+    help-bookmarks.h	\
+    help-bookmarks-p.h	\
     prefsdialog.h	\
     proc.h		\
     proc_p.h		\
@@ -84,6 +87,7 @@ ALL_CXXFLAGS =			\
 
 ui_files =			\
     about.ui			\
+    addbookmark.ui		\
     help.ui			\
     prefs.ui			\
     wswindow.ui
@@ -97,6 +101,8 @@ pch_header = $(srcdir)/../moows/common.h
 include ../mk/pch.mk
 
 %_p.o: %.o
+	@true
+%-p.o: %.o
 	@true
 proc-wrapper.o: proc.o
 	@true

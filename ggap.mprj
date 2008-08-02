@@ -47,7 +47,7 @@
   </optimized>
  </configurations>
  <run>
-  <args>--raise</args>
+  <args>--raise --help-browser</args>
   <exe>ggap/ggap</exe>
   <vars>
    <var name="LANGUAGEE">ru</var>
