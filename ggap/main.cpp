@@ -54,13 +54,13 @@ static void msgHandler(QtMsgType type, const char *msg)
             fprintf(stderr, "D: %s\n", msg);
             break;
         case QtWarningMsg:
-            fprintf(stderr, "W: %s\n", msg);
+            fprintf(stderr, "*** Warning: %s\n", msg);
             break;
         case QtCriticalMsg:
-            fprintf(stderr, "C: %s\n", msg);
+            fprintf(stderr, "*** Critical: %s\n", msg);
             break;
         case QtFatalMsg:
-            fprintf(stderr, "F: %s\n", msg);
+            fprintf(stderr, "*** Fatal: %s\n", msg);
             abort();
             break;
     }

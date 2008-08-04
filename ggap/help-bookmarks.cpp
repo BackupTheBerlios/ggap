@@ -32,7 +32,6 @@ BookmarkListPrivate::~BookmarkListPrivate()
 
 void BookmarkList::activated(const QModelIndex &index)
 {
-    qDebug() << impl->model->url(index);
     emit urlActivated(impl->model->url(index));
 }
 
@@ -58,7 +57,6 @@ void BookmarkList::activateBookmark(int row)
     QStandardItem *item = impl->model->item(row);
     BookmarkItem *bi = dynamic_cast<BookmarkItem*>(item);
     m_return_if_fail(bi != 0);
-    qDebug() << bi->url();
     emit urlActivated(bi->url());
 }
 
