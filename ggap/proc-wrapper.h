@@ -7,14 +7,52 @@
 
 namespace ggap {
 
-class ProcessReaper : public QProcess, public QSharedData {
+template<typename T>
+class RefPtr {
+    T *p;
+public:
+    RefPtr(T *np = 0) : p(0) { *this = np; }
+    ~RefPtr() { if (p) p->unref(); }
+    RefPtr(const RefPtr &rp) : p(0) { *this = rp; }
+    RefPtr &operator = (const RefPtr &rp) { *this = rp.p; return *this; }
+    RefPtr &operator = (T *np) { if (np != p) {if (p) p->unref(); p = np; if (p) p->ref(); } return *this; }
+    operator bool () const { return p != 0; }
+    operator T* () { return p; }
+    T *operator -> () { return p; }
+    T &operator * () { return *p; }
+};
+
+class ProcessReaper : public QProcess {
     Q_OBJECT
 
-    QExplicitlySharedDataPointer<ProcessReaper> self;
+    uint ref_count;
+    RefPtr<ProcessReaper> self;
 
     void start(const QString &program, OpenMode mode = ReadWrite);
 
+    ~ProcessReaper()
+    {
+    }
+
 public:
+    ProcessReaper(QObject *parent = 0) :
+        QProcess(parent),
+        ref_count(0)
+    {
+    }
+
+    void ref()
+    {
+        ++ref_count;
+    }
+
+    void unref()
+    {
+        m_return_if_fail(ref_count != 0);
+        if (!--ref_count)
+            deleteLater();
+    }
+
     void start(const QString &program, const QStringList &arguments, OpenMode mode = ReadWrite)
     {
         QProcess::start(program, arguments, mode);
@@ -23,10 +61,6 @@ public:
                 this, SLOT(error(QProcess::ProcessError)));
         connect(this, SIGNAL(finished(int, QProcess::ExitStatus)),
                 this, SLOT(finished(int, QProcess::ExitStatus)));
-    }
-
-    ~ProcessReaper()
-    {
     }
 
 private Q_SLOTS:
@@ -142,7 +176,7 @@ class GapProcessWrapper : public QObject {
 
     QStringList args;
     QList<GapMsg> output;
-    QExplicitlySharedDataPointer<ProcessReaper> proc;
+    RefPtr<ProcessReaper> proc;
     GapProcessParser parser_stdout, parser_stderr;
     QTimer *timer;
     bool gap_started;
@@ -154,15 +188,15 @@ class GapProcessWrapper : public QObject {
         gap_started = false;
         proc = new ProcessReaper;
 
-        connect(proc.data(), SIGNAL(started()), SLOT(childStarted()));
-        connect(proc.data(), SIGNAL(error(QProcess::ProcessError)),
+        connect(proc, SIGNAL(started()), SLOT(childStarted()));
+        connect(proc, SIGNAL(error(QProcess::ProcessError)),
                 SLOT(childError(QProcess::ProcessError)));
-        connect(proc.data(), SIGNAL(finished(int, QProcess::ExitStatus)),
+        connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)),
                 SLOT(childDied(int, QProcess::ExitStatus)));
 
-        connect(proc.data(), SIGNAL(readyReadStandardError()),
+        connect(proc, SIGNAL(readyReadStandardError()),
                 SLOT(readyReadStandardError()));
-        connect(proc.data(), SIGNAL(readyReadStandardOutput()),
+        connect(proc, SIGNAL(readyReadStandardOutput()),
                 SLOT(readyReadStandardOutput()));
 
         if (1)
@@ -350,7 +384,7 @@ public:
 
     void kill()
     {
-        QExplicitlySharedDataPointer<ProcessReaper> p = proc;
+        RefPtr<ProcessReaper> p = proc;
         disconnectProcess();
         if (p)
             p->kill();
