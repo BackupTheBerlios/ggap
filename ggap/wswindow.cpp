@@ -20,6 +20,39 @@ void WsWindow::init()
     ui = new Ui::WsWindow;
     ui->setupUi(this);
 
+    QObject::connect(ui->worksheet, SIGNAL(copyAvailable(bool)), ui->actionCopy, SLOT(setEnabled(bool)));
+    QObject::connect(ui->worksheet, SIGNAL(copyAvailable(bool)), ui->actionCut, SLOT(setEnabled(bool)));
+    QObject::connect(ui->worksheet, SIGNAL(copyAvailable(bool)), ui->actionDelete, SLOT(setEnabled(bool)));
+    QObject::connect(ui->worksheet, SIGNAL(undoAvailable(bool)), ui->actionUndo, SLOT(setEnabled(bool)));
+    QObject::connect(ui->worksheet, SIGNAL(redoAvailable(bool)), ui->actionRedo, SLOT(setEnabled(bool)));
+
+    connectAction(ui->actionUndo, ui->worksheet, SLOT(undo()));
+    connectAction(ui->actionRedo, ui->worksheet, SLOT(redo()));
+    connectAction(ui->actionCut, ui->worksheet, SLOT(cut()));
+    connectAction(ui->actionCopy, ui->worksheet, SLOT(copy()));
+    connectAction(ui->actionPaste, ui->worksheet, SLOT(paste()));
+    connectAction(ui->actionDelete, ui->worksheet, SLOT(deleteSelected()));
+    connectAction(ui->actionDeleteBlock, ui->worksheet, SLOT(deleteBlock()));
+    connectAction(ui->actionInsertPromptAfter, ui->worksheet, SLOT(addPromptBlockAfterCursor()));
+    connectAction(ui->actionInsertPromptBefore, ui->worksheet, SLOT(addPromptBlockBeforeCursor()));
+    connectAction(ui->actionInsertTextAfter, ui->worksheet, SLOT(addTextBlockAfterCursor()));
+    connectAction(ui->actionInsertTextBefore, ui->worksheet, SLOT(addTextBlockBeforeCursor()));
+    connectAction(ui->actionSelectAll, ui->worksheet, SLOT(selectAll()));
+    connectAction(ui->actionInterruptGap, ui->worksheet, SLOT(interruptGap()));
+    connectAction(ui->actionRestartGap, ui->worksheet, SLOT(restartGap()));
+
+    connectAction(ui->actionNew, SLOT(actionNew()));
+    connectAction(ui->actionOpen, SLOT(actionOpen()));
+    connectAction(ui->actionSave, SLOT(actionSave()));
+    connectAction(ui->actionSaveAs, SLOT(actionSaveAs()));
+    connectAction(ui->actionHelp, gapApp, SLOT(gapHelp()));
+
+    connect(ui->worksheet, SIGNAL(docStateChanged()), SLOT(docStateChanged()));
+    connect(ui->worksheet, SIGNAL(savingFinished(bool,QString)), SLOT(savingFinished(bool,QString)));
+    connect(ui->worksheet, SIGNAL(modificationChanged(bool)), SLOT(setWindowModified(bool)));
+    connect(ui->worksheet, SIGNAL(filenameChanged(QString)), SLOT(setWindowFilePath(QString)));
+    connect(ui->worksheet, SIGNAL(gapStateChanged()), SLOT(gapStateChanged()));
+
     gapStateChanged();
 
     impl->setupFormatToolbar(ui);

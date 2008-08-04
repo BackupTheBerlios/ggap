@@ -36,10 +36,6 @@ public:
 
     void allWindowsClosed();
 
-    void deleteLater(QWidget *window);
-private Q_SLOTS:
-    void queuedDelete();
-
 public Q_SLOTS:
     void maybeQuit();
     void aboutDialog();

@@ -9,7 +9,6 @@ class NiceDialog : public QDialog {
 protected:
     NiceDialog(QWidget *parent);
     ~NiceDialog();
-    void closeEvent(QCloseEvent *e);
 };
 
 class AboutDialog : public NiceDialog {

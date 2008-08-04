@@ -44,7 +44,6 @@ struct AppData {
     QString tempDir;
     QStringList tempFiles;
     QSettings *settings[2];
-    QList<QPointer<QWidget> > deleteQueue;
 
     bool inQuit;
 
@@ -201,23 +200,6 @@ void App::initMacBundle()
 //     CFRelease(macPath);
 }
 #endif
-
-
-void App::queuedDelete()
-{
-    QList<QPointer<QWidget> > tmp;
-    qSwap(appData.deleteQueue, tmp);
-    foreach (const QPointer<QWidget> &p, tmp)
-        if (p)
-            // Qt 4.3 doesn't have QPointer::data()
-            delete &*p;
-}
-
-void App::deleteLater(QWidget *window)
-{
-    appData.deleteQueue << window;
-    QTimer::singleShot(0, this, SLOT(queuedDelete()));
-}
 
 
 QSettings *App::settings(SettingsType type)

@@ -66,8 +66,39 @@ void AppWindow::setActionShortcut(const char *name, const QKeySequence &shortcut
         a->setShortcut(shortcut);
 }
 
+void AppWindow::connectAction(const char *name, const char *slot)
+{
+    if (QAction *a = findAction(this, name))
+        connect(a, SIGNAL(triggered()), slot);
+}
+
+void AppWindow::connectAction(QAction *action, const char *slot)
+{
+    connect(action, SIGNAL(triggered()), slot);
+}
+
+void AppWindow::connectAction(const char *name, QObject *receiver, const char *slot)
+{
+    if (QAction *a = findAction(this, name))
+        connect(a, SIGNAL(triggered()), receiver, slot);
+}
+
+void AppWindow::connectAction(QAction *action, QObject *receiver, const char *slot)
+{
+    connect(action, SIGNAL(triggered()), receiver, slot);
+}
+
 void AppWindow::loadUiConfig()
 {
+    connectAction("actionClose", SLOT(close()));
+    connectAction("actionMinimize", SLOT(showMinimized()));
+    connectAction("actionZoom", SLOT(zoomWindow()));
+    connectAction("actionBringAllToFront", SLOT(bringAllToFront()));
+    connectAction("actionAbout", gapApp, SLOT(aboutDialog()));
+    connectAction("actionAboutQt", gapApp, SLOT(aboutQt()));
+    connectAction("actionPrefs", gapApp, SLOT(prefsDialog()));
+    connectAction("actionQuit", gapApp, SLOT(maybeQuit()));
+
     QSize size;
 
 #ifndef Q_OS_WIN32
@@ -91,7 +122,6 @@ void AppWindow::closeEvent(QCloseEvent *e)
 {
     saveUiConfig();
     e->accept();
-    gapApp->deleteLater(this);
 }
 
 static void show_implement_me(QWidget *parent, const char *func)
@@ -112,26 +142,6 @@ void AppWindow::zoomWindow()
         showNormal();
     else
         showMaximized();
-}
-
-void AppWindow::quit()
-{
-    gapApp->maybeQuit();
-}
-
-void AppWindow::aboutDialog()
-{
-    gapApp->aboutDialog();
-}
-
-void AppWindow::prefsDialog()
-{
-    gapApp->prefsDialog();
-}
-
-void AppWindow::gapHelp()
-{
-    gapApp->gapHelp();
 }
 
 void AppWindow::setWindowFilePath(const QString &path)
@@ -168,6 +178,10 @@ TextEditWindow::~TextEditWindow()
 
 void TextEditWindow::loadUiConfig()
 {
+    connectAction("actionPrint", SLOT(printDocument()));
+    connectAction("actionPageSetup", SLOT(pageSetup()));
+    connectAction("actionPrintPreview", SLOT(printPreview()));
+
 #if defined(Q_OS_MAC) || QT_VERSION < 0x040400
     if (QAction *a = findAction(this, "actionPrintPreview"))
         a->setVisible(false);

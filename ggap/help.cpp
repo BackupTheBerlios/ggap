@@ -276,19 +276,12 @@ void HelpBrowserPrivate::setupUi()
     QObject::connect(ui.bookmarkAdd, SIGNAL(clicked()), ui.actionAddBookmark, SLOT(trigger()));
     QObject::connect(ui.bookmarkList, SIGNAL(urlActivated(QUrl)), ui.helpView, SLOT(setSource(QUrl)));
 
-    q->connect(ui.actionAbout, SIGNAL(triggered()), SLOT(aboutDialog()));
-    q->connect(ui.actionPreferences, SIGNAL(triggered()), SLOT(prefsDialog()));
-    q->connect(ui.actionClose, SIGNAL(triggered()), SLOT(close()));
-    q->connect(ui.actionQuit, SIGNAL(triggered()), SLOT(quit()));
-    q->connect(ui.actionPrint, SIGNAL(triggered()), SLOT(printDocument()));
-    q->connect(ui.actionPageSetup, SIGNAL(triggered()), SLOT(pageSetup()));
     q->connect(ui.actionFind, SIGNAL(triggered()), SLOT(startFind()));
     q->connect(ui.actionFindNext, SIGNAL(triggered()), SLOT(findNext()));
     q->connect(ui.actionFindPrev, SIGNAL(triggered()), SLOT(findPrev()));
     q->connect(ui.findButtonNext, SIGNAL(clicked()), SLOT(findNext()));
     q->connect(ui.findButtonPrev, SIGNAL(clicked()), SLOT(findPrev()));
     q->connect(ui.findButtonClose, SIGNAL(clicked()), SLOT(cancelFind()));
-    q->connect(ui.actionPrintPreview, SIGNAL(triggered()), SLOT(printPreview()));
     q->connect(ui.findEntry, SIGNAL(textEdited(QString)), SLOT(findEntryTextEdited(QString)));
     q->connect(ui.helpView, SIGNAL(sourceChanged(QUrl)), SLOT(viewSourceChanged(QUrl)));
 

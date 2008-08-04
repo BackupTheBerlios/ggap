@@ -31,6 +31,11 @@ protected:
 
     void setActionShortcut(const char *name, const QKeySequence &shortcut);
 
+    void connectAction(const char *action, const char *slot);
+    void connectAction(QAction *action, const char *slot);
+    void connectAction(const char *action, QObject *receiver, const char *slot);
+    void connectAction(QAction *action, QObject *receiver, const char *slot);
+
 protected Q_SLOTS:
     void setWindowFilePath(const QString &path);
     void setWindowTitle(const QString &title);
@@ -38,10 +43,6 @@ protected Q_SLOTS:
 
     void zoomWindow();
     void bringAllToFront();
-    void quit();
-    void aboutDialog();
-    void prefsDialog();
-    void gapHelp();
 
 Q_SIGNALS:
     // FIXME Qt should have these

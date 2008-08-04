@@ -23,12 +23,6 @@ NiceDialog::~NiceDialog()
 {
 }
 
-void NiceDialog::closeEvent(QCloseEvent *e)
-{
-    e->accept();
-    gapApp->deleteLater(this);
-}
-
 
 static QPointer<AboutDialog> about_dialog_instance;
 
