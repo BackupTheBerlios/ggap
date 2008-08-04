@@ -70,28 +70,17 @@ static void setFontLabel(QLabel *label, const QFont &font)
 
 static QString norm_file_path(const QString &p)
 {
-    QString np = p;
-#ifdef Q_OS_WIN32
-    np.replace('\\', '/');
-#endif
-    return np;
+    return QDir::fromNativeSeparators(p);
 }
 
 static QString disp_file_path(const QString &p)
 {
-    QString np = p;
-#ifdef Q_OS_WIN32
-    np.replace('/', '\\');
-#endif
-    return np;
+    return QDir::toNativeSeparators(p);
 }
 
 static QString norm_dir_path(const QString &p)
 {
-    QString np = p;
-#ifdef Q_OS_WIN32
-    np.replace('\\', '/');
-#endif
+    QString np = QDir::fromNativeSeparators(p);
     if (np.endsWith('/') && np != "/")
         np.chop(1);
     return np;
@@ -102,10 +91,7 @@ static QString disp_dir_path(const QString &p)
     QString np = p;
     if (!np.isEmpty() && !np.endsWith('/'))
         np.append('/');
-#ifdef Q_OS_WIN32
-    np.replace('/', '\\');
-#endif
-    return np;
+    return QDir::toNativeSeparators(np);
 }
 
 void PrefsDialog::init()
