@@ -54,6 +54,8 @@ void TextDocument::insertBlock(Block *block, Block *after)
 
     m_return_if_fail(block != 0);
 
+    block->setColorScheme(impl->colorScheme);
+
     impl->nonUndoableModification();
 
     if (after)
@@ -207,6 +209,16 @@ void TextDocument::insertFragment(QTextCursor &cr, const rt::Fragment &fragment)
 void TextDocument::deleteText(QTextCursor &cr)
 {
     impl->deleteText(cr);
+}
+
+const ColorScheme &TextDocument::colorScheme() const
+{
+    return impl->colorScheme;
+}
+
+void TextDocument::setColorScheme(const ColorScheme &scheme)
+{
+    impl->colorScheme = scheme;
 }
 
 void TextDocument::applyFormat(QTextCursor &cr, const QTextCharFormat &format)

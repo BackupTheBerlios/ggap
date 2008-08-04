@@ -56,6 +56,7 @@ public:
 public Q_SLOTS:
     void interruptGap();
     void restartGap();
+    void applyPrefs();
 
 private:
     void setFilename(const QString &filename);

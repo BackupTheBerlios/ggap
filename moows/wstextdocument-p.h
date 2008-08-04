@@ -2,6 +2,7 @@
 #define WS_TEXT_DOCUMENT_P_H
 
 #include "moows/wstextdocument.h"
+#include "moows/wsblock-format.h"
 #include <QUndoStack>
 
 namespace moo {
@@ -170,6 +171,7 @@ private:
     }
 
 private:
+    ColorScheme colorScheme;
     Block *first;
     Block *last;
     QTextDocument qdoc;

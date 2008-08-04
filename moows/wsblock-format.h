@@ -37,6 +37,33 @@ public:
     }
 };
 
+struct ColorScheme {
+    enum NamedColor {
+        Prompt,
+        Stdout,
+        Stderr,
+        Text
+    };
+
+    QColor color(NamedColor name) const { return colors[name]; }
+
+    ColorScheme()
+    {
+        defaultInit();
+    }
+
+private:
+    void defaultInit()
+    {
+        colors[Prompt] = Qt::darkRed;
+        colors[Stdout] = Qt::darkGreen;
+        colors[Stderr] = Qt::red;
+        colors[Text] = Qt::darkBlue;
+    }
+
+    QColor colors[4];
+};
+
 }
 }
 

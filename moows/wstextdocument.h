@@ -11,6 +11,7 @@ namespace ws {
 class Block;
 class TextDocumentPrivate;
 class EditCommand;
+class ColorScheme;
 
 namespace rt {
 class Fragment;
@@ -62,6 +63,9 @@ public:
     bool isModified () const;
 
     void setHrefParser(QString (*parse) (const QString&));
+
+    const ColorScheme &colorScheme() const;
+    void setColorScheme(const ColorScheme &scheme);
 
 public Q_SLOTS:
     void undo();

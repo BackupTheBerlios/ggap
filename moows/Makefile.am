@@ -23,9 +23,9 @@ libmoows_a_SOURCES =	\
     worksheet-xml.h	\
     worksheet-xml-p.h	\
     wsblock.h		\
-    wsblock-p.h		\
     wsblock.cpp		\
-    wsblockformat.h	\
+    wsblock-p.h		\
+    wsblock-format.h	\
     wstextblock.cpp	\
     wstextdocument.cpp	\
     $(moc_h_files)	\
@@ -48,6 +48,8 @@ include ../mk/qt.mk
 pch_header = common.h
 include ../mk/pch.mk
 
+wsblock-format.o: wsblock.o
+	@true
 %_p.o: %.o
 	@true
 %-p.o: %.o

@@ -203,7 +203,7 @@ void WsWindow::present(WsWindow *old)
 void WsWindowPrivate::applyPrefs()
 {
     foreach (WsWindow *w, windows)
-        w->doc()->setFont(prefsValue(Prefs::WorksheetFont));
+        w->doc()->applyPrefs();
 }
 
 

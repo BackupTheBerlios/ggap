@@ -2,7 +2,7 @@
 #define MOO_WS_BLOCK_H
 
 #include <moo-pimpl.h>
-#include <moows/wsblockformat.h>
+#include <moows/wsblock-format.h>
 #include <moows/worksheet-xml.h>
 #include <QTextCursor>
 #include <QTextBlockUserData>
@@ -15,6 +15,7 @@ class Worksheet;
 class WorksheetPrivate;
 class EditCommand;
 class BlockPrivate;
+class ColorScheme;
 
 class Block : public QObject {
     M_DECLARE_IMPL(Block)
@@ -34,6 +35,7 @@ protected:
 
 public:
 
+    virtual void setColorScheme(const ColorScheme &scheme) = 0;
     void setFormat(const BlockFormat &fmt);
     const BlockFormat &format() const;
     bool isEditable() const;

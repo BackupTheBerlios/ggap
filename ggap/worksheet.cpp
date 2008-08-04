@@ -103,7 +103,7 @@ Worksheet::Worksheet(QWidget *parent) :
     moo::ws::Worksheet(parent),
     impl(this)
 {
-    setFont(prefsValue(Prefs::WorksheetFont));
+    applyPrefs();
     connect(&document(), SIGNAL(modificationChanged(bool)),
             SIGNAL(modificationChanged(bool)));
     document().setHrefParser(HelpBrowser::parseUrl);
@@ -112,6 +112,12 @@ Worksheet::Worksheet(QWidget *parent) :
 Worksheet::~Worksheet()
 {
     impl->killGap();
+}
+
+
+void Worksheet::applyPrefs()
+{
+    setFont(prefsValue(Prefs::WorksheetFont));
 }
 
 

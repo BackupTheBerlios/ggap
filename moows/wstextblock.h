@@ -41,6 +41,9 @@ class TextBlock : public TextBlockBase {
 public:
     TextBlock();
     ~TextBlock();
+
+private:
+    void setColorScheme(const ColorScheme &scheme);
 };
 
 
@@ -66,6 +69,7 @@ private:
     friend class PromptBlock;
     friend class PromptBlockPrivate;
     void setPromptBlock(PromptBlock *pb);
+    void setColorScheme(const ColorScheme &scheme);
 };
 
 
@@ -85,6 +89,9 @@ public:
     OutputBlock *outputBlock(OutputBlock::Type type) { return outputBlock((int)type); }
     void setOutputBlock(int type, OutputBlock *ob);
     void setOutputBlock(OutputBlock::Type type, OutputBlock *ob) { setOutputBlock((int)type, ob); }
+
+private:
+    void setColorScheme(const ColorScheme &scheme);
 
 private Q_SLOTS:
     void docContentsChanged();

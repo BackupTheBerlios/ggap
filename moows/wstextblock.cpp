@@ -115,13 +115,17 @@ struct moo::ws::TextBlockPrivate {
 TextBlock::TextBlock() :
     TextBlockBase(true), impl(this)
 {
-    BlockFormat fmt;
-    fmt.setForeground(Qt::darkBlue);
-    setFormat(fmt);
 }
 
 TextBlock::~TextBlock()
 {
+}
+
+void TextBlock::setColorScheme(const ColorScheme &scheme)
+{
+    BlockFormat fmt;
+    fmt.setForeground(scheme.color(ColorScheme::Text));
+    setFormat(fmt);
 }
 
 
@@ -145,18 +149,22 @@ OutputBlock::OutputBlock(bool is_stdout) :
     TextBlockBase(false),
     impl(this, is_stdout)
 {
-    Qt::GlobalColor color;
-    if (is_stdout)
-        color = Qt::darkGreen;
-    else
-        color = Qt::red;
-    BlockFormat fmt;
-    fmt.setForeground(color);
-    setFormat(fmt);
 }
 
 OutputBlock::~OutputBlock()
 {
+}
+
+void OutputBlock::setColorScheme(const ColorScheme &scheme)
+{
+    QColor color;
+    if (type() == Stdout)
+        color = scheme.color(ColorScheme::Stdout);
+    else
+        color = scheme.color(ColorScheme::Stderr);
+    BlockFormat fmt;
+    fmt.setForeground(color);
+    setFormat(fmt);
 }
 
 OutputBlock::Type OutputBlock::type() const
@@ -269,13 +277,17 @@ PromptBlock::PromptBlock() :
     TextBlockBase(true),
     impl(this)
 {
-    BlockFormat fmt;
-    fmt.setForeground(Qt::darkRed);
-    setFormat(fmt);
 }
 
 PromptBlock::~PromptBlock()
 {
+}
+
+void PromptBlock::setColorScheme(const ColorScheme &scheme)
+{
+    BlockFormat fmt;
+    fmt.setForeground(scheme.color(ColorScheme::Prompt));
+    setFormat(fmt);
 }
 
 OutputBlock *PromptBlock::outputBlock(int type)
