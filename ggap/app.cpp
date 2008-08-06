@@ -124,8 +124,13 @@ App::App(int &argc, char **argv) :
     Q_INIT_RESOURCE(ggap);
     Q_INIT_RESOURCE(gap);
 
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN32)
-    setWindowIcon(QIcon(":/icons/ggap/ggap-16.png"));
+#if !defined(Q_OS_MAC)
+    QIcon icon;
+    icon.addFile(":/icons/ggap/ggap-16.png", QSize(16, 16));
+    icon.addFile(":/icons/ggap/ggap-32.png", QSize(32, 32));
+    icon.addFile(":/icons/ggap/ggap-48.png", QSize(48, 48));
+    icon.addFile(":/icons/ggap/ggap-64.png", QSize(64, 64));
+    setWindowIcon(icon);
 #endif
 
     setOrganizationName("ggap.sourceforge.net");
