@@ -5,18 +5,62 @@
 #include <errno.h>
 #ifndef Q_OS_WIN32
 #include <signal.h>
+#else
+#include <windows.h>
 #endif
 
 using namespace ggap;
 
+// #ifdef Q_OS_WIN32
+//
+// namespace {
+//
+// struct FindWindowData {
+//     DWORD proc_id;
+//     HWND handle;
+// };
+//
+// static BOOL find_window_func(HWND hwnd, LPARAM lParam)
+// {
+//     FindWindowData *data = lParam;
+//     DWORD proc_id = 0;
+//
+//     GetWindowThreadProcessId(hwnd, &proc_id);
+//
+//     if (proc_id == data->proc_id)
+//     {
+//         data->handle = hwnd;
+//         return FALSE;
+//     }
+//
+//     return TRUE;
+// }
+//
+// }
+//
+// #endif
+
 void GapProcessWrapper::sendIntr()
 {
 #ifndef Q_OS_WIN32
-    ::kill(proc->pid(), SIGINT);
+    ::kill(process->pid(), SIGINT);
 #else
-    // XXX
-    m_implement_me();
-#endif
+
+    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION*) process->pid();
+//     FindWindowData data = { pi->dwProcessId, 0 };
+//     EnumWindows(find_window_func, LPARAM lParam);
+//
+//     if (!data.handle)
+//     {
+//         qCritical("could not find window for process id %d",
+//                   (int) pi->dwProcessId);
+//         return;
+//     }
+
+    qDebug("sending Ctrl-C to process id %d", (int) pi->dwProcessId);
+    GenerateConsoleCtrlEvent(CTRL_C_EVENT, pi->dwProcessId);
+
+#endif // Q_OS_WIN32
 }
 
 ///////////////////////////////////////////////////////////////////////////
