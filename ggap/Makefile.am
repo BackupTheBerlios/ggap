@@ -89,6 +89,7 @@ ui_files =			\
     about.ui			\
     addbookmark.ui		\
     help.ui			\
+    otherprefs.ui		\
     prefs.ui			\
     wswindow.ui
 

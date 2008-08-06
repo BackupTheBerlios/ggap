@@ -42,14 +42,7 @@ AboutDialog::~AboutDialog()
 
 void AboutDialog::showDialog()
 {
-    if (!about_dialog_instance)
-    {
-        about_dialog_instance = new AboutDialog;
-        about_dialog_instance->show();
-    }
-
-    about_dialog_instance->raise();
-    about_dialog_instance->activateWindow();
+    NiceDialog::showDialog(about_dialog_instance);
 }
 
 

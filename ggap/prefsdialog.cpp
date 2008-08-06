@@ -5,10 +5,79 @@
 #include "ggap/wswindow-p.h"
 #include "ggap/help.h"
 #include "ggap/ui_prefs.h"
-#include <QFontDialog>
+#include "ggap/ui_otherprefs.h"
+#include <QtGui>
 #include <QDir>
 
 using namespace ggap;
+
+///////////////////////////////////////////////////////////////////////////
+// PrefsDialogBase
+//
+
+PrefsDialogBase::PrefsDialogBase(QWidget *parent) :
+    NiceDialog(parent)
+{
+}
+
+void PrefsDialogBase::accept()
+{
+    NiceDialog::accept();
+    apply();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// OtherPrefsDialog
+//
+
+namespace {
+
+struct OtherPrefsDialog : public PrefsDialogBase {
+    Ui::OtherPrefsDialog ui;
+
+    static QPointer<OtherPrefsDialog> instance;
+
+    OtherPrefsDialog::OtherPrefsDialog(QWidget *parent = 0) :
+        PrefsDialogBase(parent)
+    {
+        ui.setupUi(this);
+        init();
+    }
+
+    static void showDialog()
+    {
+        NiceDialog::showDialog(instance);
+    }
+
+    void init();
+    void apply();
+};
+
+QPointer<OtherPrefsDialog> OtherPrefsDialog::instance;
+
+}
+
+void OtherPrefsDialog::init()
+{
+    if (prefsValue(Prefs::DefaultFileFormat) == "workspace")
+        ui.radioWorkspace->setChecked(true);
+    else
+        ui.radioWorksheet->setChecked(true);
+}
+
+void OtherPrefsDialog::apply()
+{
+    if (ui.radioWorkspace->isChecked())
+        setPrefsValue(Prefs::DefaultFileFormat, "workspace");
+    else
+        setPrefsValue(Prefs::DefaultFileFormat, "worksheet");
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// PrefsDialog
+//
 
 struct PrefsDialog::Private {
     Ui::PrefsDialog ui;
@@ -25,10 +94,11 @@ struct PrefsDialog::Private {
 QPointer<PrefsDialog> PrefsDialog::Private::instance;
 
 PrefsDialog::PrefsDialog() :
-    NiceDialog(0),
+    PrefsDialogBase(0),
     priv(new Private)
 {
     priv->ui.setupUi(this);
+    new QShortcut(QKeySequence("Ctrl+Shift+P"), this, SLOT(otherPrefs()));
     init();
 }
 
@@ -39,14 +109,7 @@ PrefsDialog::~PrefsDialog()
 
 void PrefsDialog::showDialog()
 {
-    if (!Private::instance)
-    {
-        Private::instance = new PrefsDialog;
-        Private::instance->show();
-    }
-
-    Private::instance->raise();
-    Private::instance->activateWindow();
+    NiceDialog::showDialog(Private::instance);
 }
 
 void PrefsDialog::execDialog()
@@ -55,10 +118,9 @@ void PrefsDialog::execDialog()
     Private::instance->exec();
 }
 
-void PrefsDialog::accept()
+void PrefsDialog::otherPrefs()
 {
-    QDialog::accept();
-    apply();
+    OtherPrefsDialog::showDialog();
 }
 
 

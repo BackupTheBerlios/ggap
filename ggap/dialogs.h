@@ -2,20 +2,36 @@
 #define GGAP_DIALOGS_H
 
 #include <QMessageBox>
+#include <QPointer>
 
 namespace ggap {
 
 class NiceDialog : public QDialog {
+    template<typename T>
+    static T *createDialog()
+    {
+        T *dlg = new T;
+        dlg->show();
+        dlg->raise();
+        dlg->activateWindow();
+        return dlg;
+    }
+
 protected:
     NiceDialog(QWidget *parent);
     ~NiceDialog();
+
+    template<typename T>
+    static void showDialog(QPointer<T> &dlg)
+    {
+        if (!dlg)
+            dlg = createDialog<T>();
+    }
 };
 
-class AboutDialog : public NiceDialog {
+struct AboutDialog : public NiceDialog {
     AboutDialog();
     ~AboutDialog();
-
-public:
     static void showDialog();
 };
 

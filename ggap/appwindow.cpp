@@ -99,13 +99,12 @@ void AppWindow::loadUiConfig()
     connectAction("actionPrefs", gapApp, SLOT(prefsDialog()));
     connectAction("actionQuit", gapApp, SLOT(maybeQuit()));
 
-    QSize size;
-
 #ifndef Q_OS_WIN32
+    QSize size;
     size = stateValue(windowSizeKey(this), QSize()).toSize();
-#endif
     if (size.width() > 0 && size.height() > 0)
         resize(size);
+#endif
 
     QByteArray state = stateValue(windowStateKey(this), QByteArray()).toByteArray();
     if (!state.isEmpty())
