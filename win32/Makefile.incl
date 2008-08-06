@@ -3,6 +3,8 @@ EXTRA_DIST +=			\
     win32/registerExtension.nsh	\
     win32/qt.conf
 
+QT_VER = 4.4.1
+
 WIN32_CLEANFILES =
 WIN32_CLEANDIRS =
 win-clean:
@@ -58,17 +60,17 @@ qt_libs = BIN/qt-libs
 
 $(qt_libs)/QtCore4.dll:
 	mkdir -p $(qt_libs) || exit 1
-	cp /usr/local/win/Qt/4.4.0/bin/QtCore4.dll $(qt_libs)/ || exit 1
-	cp /usr/local/win/Qt/4.4.0/bin/QtGui4.dll $(qt_libs)/ || exit 1
-	cp /usr/local/win/Qt/4.4.0/bin/QtScript4.dll $(qt_libs)/ || exit 1
-	cp /usr/local/win/Qt/4.4.0/bin/QtXml4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/$(QT_VER)/bin/QtCore4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/$(QT_VER)/bin/QtGui4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/$(QT_VER)/bin/QtScript4.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/$(QT_VER)/bin/QtXml4.dll $(qt_libs)/ || exit 1
 	mkdir -p $(qt_libs)/plugins/imageformats || exit 1
-	cp /usr/local/win/Qt/4.4.0/plugins/imageformats/*.dll $(qt_libs)/plugins/imageformats/ || exit 1
+	cp /usr/local/win/Qt/$(QT_VER)/plugins/imageformats/*.dll $(qt_libs)/plugins/imageformats/ || exit 1
 	rm -f $(qt_libs)/plugins/imageformats/qsvg4.dll || exit 1
 
 $(qt_libs)/mingwm10.dll:
 	mkdir -p $(qt_libs) || exit 1
-	cp /usr/local/win/Qt/4.4.0/bin/mingwm10.dll $(qt_libs)/ || exit 1
+	cp /usr/local/win/Qt/$(QT_VER)/bin/mingwm10.dll $(qt_libs)/ || exit 1
 
 win-qt-libs: $(qt_libs)/QtCore4.dll $(qt_libs)/mingwm10.dll
 
