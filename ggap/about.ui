@@ -16,14 +16,6 @@
       <number>0</number>
      </property>
      <widget class="QWidget" name="tabAbout" >
-      <property name="geometry" >
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>341</width>
-        <height>220</height>
-       </rect>
-      </property>
       <attribute name="title" >
        <string>About</string>
       </attribute>
@@ -151,32 +143,16 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tabCredits" >
-      <property name="geometry" >
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>341</width>
-        <height>220</height>
-       </rect>
-      </property>
       <attribute name="title" >
        <string>Credits</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4" >
        <item>
-        <widget class="QTextBrowser" name="viewCredits" />
+        <widget class="QTextBrowser" name="viewCredits"/>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabLicense" >
-      <property name="geometry" >
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>341</width>
-        <height>220</height>
-       </rect>
-      </property>
       <attribute name="title" >
        <string>License</string>
       </attribute>

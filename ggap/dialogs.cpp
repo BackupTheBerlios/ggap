@@ -33,6 +33,7 @@ AboutDialog::AboutDialog() :
     ui.setupUi(this);
     ui.labelVersion->setText("Version " GGAP_VERSION);
     ui.viewLicense->setPlainText(util::getFileText(":/COPYING"));
+    ui.viewCredits->setPlainText(util::getFileText(":/THANKS"));
 }
 
 AboutDialog::~AboutDialog()

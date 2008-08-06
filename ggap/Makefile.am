@@ -93,6 +93,7 @@ ui_files =			\
     wswindow.ui
 
 qrc_files = ggap.qrc gap.qrc
+ggap_qrc_deps = $(top_srcdir)/THANKS
 gap_qrc_deps = gap/restore.g gap/ggap.g
 
 include ../mk/qt.mk

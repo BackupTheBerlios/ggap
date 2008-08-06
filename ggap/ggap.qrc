@@ -1,5 +1,9 @@
 <RCC>
   <qresource>
+    <file alias="COPYING" >../COPYING</file>
+    <file alias="THANKS" >../THANKS</file>
+  </qresource>
+  <qresource>
     <file>icons/ggap/ggap-16.png</file>
     <file>icons/ggap/ggap-64.png</file>
   </qresource>
@@ -47,8 +51,5 @@
   </qresource>
   <qresource prefix="/icons16" >
     <file alias="close.png" >icons/gnome/16x16/window-close.png</file>
-  </qresource>
-  <qresource>
-    <file alias="COPYING" >../COPYING</file>
   </qresource>
 </RCC>
