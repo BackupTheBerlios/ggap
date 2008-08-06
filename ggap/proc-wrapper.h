@@ -7,6 +7,75 @@
 
 namespace ggap {
 
+template<typename T>
+class RefPtr {
+    T *p;
+public:
+    RefPtr(T *np = 0) : p(0) { *this = np; }
+    ~RefPtr() { if (p) p->unref(); }
+    RefPtr(const RefPtr &rp) : p(0) { *this = rp; }
+    RefPtr &operator = (const RefPtr &rp) { *this = rp.p; return *this; }
+    RefPtr &operator = (T *np) { if (np != p) {if (p) p->unref(); p = np; if (p) p->ref(); } return *this; }
+    operator bool () const { return p != 0; }
+    operator T* () { return p; }
+    T *operator -> () { return p; }
+    T &operator * () { return *p; }
+};
+
+class ProcessReaper : public QProcess {
+    Q_OBJECT
+
+    uint ref_count;
+    RefPtr<ProcessReaper> self;
+
+    void start(const QString &program, OpenMode mode = ReadWrite);
+
+    ~ProcessReaper()
+    {
+    }
+
+public:
+    ProcessReaper(QObject *parent = 0) :
+        QProcess(parent),
+        ref_count(0)
+    {
+    }
+
+    void ref()
+    {
+        ++ref_count;
+    }
+
+    void unref()
+    {
+        m_return_if_fail(ref_count != 0);
+        if (!--ref_count)
+            deleteLater();
+    }
+
+    void start(const QString &program, const QStringList &arguments, OpenMode mode = ReadWrite)
+    {
+        QProcess::start(program, arguments, mode);
+        self = this;
+        connect(this, SIGNAL(error(QProcess::ProcessError)),
+                this, SLOT(error(QProcess::ProcessError)));
+        connect(this, SIGNAL(finished(int, QProcess::ExitStatus)),
+                this, SLOT(finished(int, QProcess::ExitStatus)));
+    }
+
+private Q_SLOTS:
+    void error(QProcess::ProcessError error)
+    {
+        if (error == QProcess::FailedToStart)
+            self = 0;
+    }
+
+    void finished(int, QProcess::ExitStatus)
+    {
+        self = 0;
+    }
+};
+
 struct GapMsg {
     enum Type {
         Text = 1,
@@ -107,7 +176,7 @@ class GapProcessWrapper : public QObject {
 
     QStringList args;
     QList<GapMsg> output;
-    QProcess *process;
+    RefPtr<ProcessReaper> proc;
     GapProcessParser parser_stdout, parser_stderr;
     QTimer *timer;
     bool gap_started;
@@ -117,29 +186,29 @@ class GapProcessWrapper : public QObject {
         qDebug() << "starting GAP: " << args;
 
         gap_started = false;
-        process = new QProcess(this);
+        proc = new ProcessReaper;
 
-        connect(process, SIGNAL(started()), SLOT(childStarted()));
-        connect(process, SIGNAL(error(QProcess::ProcessError)),
+        connect(proc, SIGNAL(started()), SLOT(childStarted()));
+        connect(proc, SIGNAL(error(QProcess::ProcessError)),
                 SLOT(childError(QProcess::ProcessError)));
-        connect(process, SIGNAL(finished(int, QProcess::ExitStatus)),
+        connect(proc, SIGNAL(finished(int, QProcess::ExitStatus)),
                 SLOT(childDied(int, QProcess::ExitStatus)));
 
-        connect(process, SIGNAL(readyReadStandardError()),
+        connect(proc, SIGNAL(readyReadStandardError()),
                 SLOT(readyReadStandardError()));
-        connect(process, SIGNAL(readyReadStandardOutput()),
+        connect(proc, SIGNAL(readyReadStandardOutput()),
                 SLOT(readyReadStandardOutput()));
 
         if (1)
             // otherwise stderr gets mixed with stdout
-            process->setProcessChannelMode(QProcess::MergedChannels);
+            proc->setProcessChannelMode(QProcess::MergedChannels);
 
         timer = new QTimer(this);
         timer->setSingleShot(true);
         timer->start(1000);
         connect(timer, SIGNAL(timeout()), SLOT(timeout()));
 
-        process->start(args.at(0), args.mid(1), QIODevice::ReadWrite | QIODevice::Unbuffered);
+        proc->start(args.at(0), args.mid(1), QIODevice::ReadWrite | QIODevice::Unbuffered);
     }
 
     void disconnectTimer()
@@ -154,11 +223,11 @@ class GapProcessWrapper : public QObject {
 
     void disconnectProcess()
     {
-        if (process)
+        if (proc)
         {
-            process->disconnect(this);
-            process->kill();
-            process->deleteLater();
+            proc->kill();
+            proc->disconnect(this);
+            proc = 0;
         }
     }
 
@@ -280,26 +349,27 @@ private:
 private Q_SLOTS:
     void readyReadStandardOutput()
     {
-        childOutput(process->readAllStandardOutput(), GapProcess::Stdout);
+        childOutput(proc->readAllStandardOutput(), GapProcess::Stdout);
     }
 
     void readyReadStandardError()
     {
-        childOutput(process->readAllStandardError(), GapProcess::Stderr);
+        childOutput(proc->readAllStandardError(), GapProcess::Stderr);
     }
 
 public:
     GapProcessWrapper(QObject *parent) :
         QObject(parent),
-        process(0),
         parser_stdout(GapProcess::Stdout),
         parser_stderr(GapProcess::Stderr),
-        timer(0),
-        gap_started(false)
+        timer(0), gap_started(false)
     {
     }
 
-    ~GapProcessWrapper() {}
+    ~GapProcessWrapper()
+    {
+        disconnectProcess();
+    }
 
     void start(const QStringList &cmd)
     {
@@ -311,14 +381,17 @@ public:
     void write(const QByteArray &data)
     {
         m_return_if_fail(gap_started);
-        m_return_if_fail(process);
+        m_return_if_fail(proc);
 //         write_log(data, -1, false);
-        process->write(data);
+        proc->write(data);
     }
 
     void kill()
     {
+        RefPtr<ProcessReaper> p = proc;
         disconnectProcess();
+        if (p)
+            p->kill();
     }
 
     void sendIntr();
@@ -428,7 +501,6 @@ public:
         if (proc)
         {
             proc->disconnect(this);
-            proc->kill();
             proc->deleteLater();
             proc = 0;
         }

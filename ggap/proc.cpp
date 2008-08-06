@@ -43,10 +43,10 @@ using namespace ggap;
 void GapProcessWrapper::sendIntr()
 {
 #ifndef Q_OS_WIN32
-    ::kill(process->pid(), SIGINT);
+    ::kill(proc->pid(), SIGINT);
 #else
 
-    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION*) process->pid();
+    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION*) proc->pid();
 //     FindWindowData data = { pi->dwProcessId, 0 };
 //     EnumWindows(find_window_func, LPARAM lParam);
 //
