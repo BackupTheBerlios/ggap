@@ -16,11 +16,11 @@ VS_VERSION_INFO VERSIONINFO
     BEGIN
       BLOCK "040904B0"
       BEGIN
-	VALUE "CompanyName", "Yevgen Muntyan"
+	VALUE "CompanyName", "http://ggap.sourceforge.net/"
 	VALUE "FileDescription", "GGAP"
 	VALUE "FileVersion", "@GGAP_VERSION_UNQUOTED@.0"
 	VALUE "InternalName", "ggap-@GGAP_VERSION_UNQUOTED@"
-	VALUE "LegalCopyright", "(C) 2004-2008 Yevgen Muntyan <muntyan@tamu.edu>"
+	VALUE "LegalCopyright", "(C) 2004-2008 Yevgen Muntyan"
 	VALUE "OriginalFilename", "ggap.exe"
 	VALUE "ProductName", "GGAP"
 	VALUE "ProductVersion", @GGAP_VERSION@
