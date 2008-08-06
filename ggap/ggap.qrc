@@ -5,6 +5,8 @@
   </qresource>
   <qresource>
     <file>icons/ggap/ggap-16.png</file>
+    <file>icons/ggap/ggap-32.png</file>
+    <file>icons/ggap/ggap-48.png</file>
     <file>icons/ggap/ggap-64.png</file>
   </qresource>
   <qresource prefix="/icons16" >
