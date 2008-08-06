@@ -148,18 +148,20 @@ if test "x$QT_CXXFLAGS" = x -a "x$QT_LIBS" = x; then
   QT_LIBS="-L$QT_PREFIX/lib"
 
   for _moo_ac_mod in "$1"; do
-    case "$_moo_ac_mod" in
-      testlib)
-        _moo_ac_qt_define="QT_TEST_LIB"
-        _moo_ac_qt_lib="QtTest"
-        ;;
-      *)
-        AC_MSG_ERROR([Unknown Qt component $_moo_ac_mod])
-        ;;
-    esac
+    if test -n "$_moo_ac_mod"; then
+      case "$_moo_ac_mod" in
+        testlib)
+          _moo_ac_qt_define="QT_TEST_LIB"
+          _moo_ac_qt_lib="QtTest"
+          ;;
+        *)
+          AC_MSG_ERROR([Unknown Qt component $_moo_ac_mod])
+          ;;
+      esac
 
-    QT_CXXFLAGS="$QT_CXXFLAGS -D$_moo_ac_qt_define -I$QT_PREFIX/include/$_moo_ac_qt_lib"
-    QT_LIBS="$QT_LIBS -l$_moo_ac_qt_lib"4
+      QT_CXXFLAGS="$QT_CXXFLAGS -D$_moo_ac_qt_define -I$QT_PREFIX/include/$_moo_ac_qt_lib"
+      QT_LIBS="$QT_LIBS -l$_moo_ac_qt_lib"4
+    fi
   done
 
   QT_CXXFLAGS="$QT_CXXFLAGS -DQT_XML_LIB -DQT_SCRIPT_LIB -DQT_GUI_LIB -DQT_CORE_LIB \
