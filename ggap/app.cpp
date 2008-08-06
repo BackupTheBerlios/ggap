@@ -124,7 +124,7 @@ App::App(int &argc, char **argv) :
     Q_INIT_RESOURCE(ggap);
     Q_INIT_RESOURCE(gap);
 
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN32)
     setWindowIcon(QIcon(":/icons/ggap/ggap-16.png"));
 #endif
 
