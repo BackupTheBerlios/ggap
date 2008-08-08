@@ -12,9 +12,9 @@ class WorksheetScriptProxy::UnitTest : public QObject {
 private Q_SLOTS:
     void main()
     {
-        Worksheet ws;
-        WorksheetScriptProxy proxy(&ws);
-        proxy.runScript("openUrl('http://google.com')");
+//         Worksheet ws;
+//         WorksheetScriptProxy proxy(&ws);
+//         proxy.runScript("openUrl('http://google.com')");
     }
 };
 
