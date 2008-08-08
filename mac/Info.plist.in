@@ -16,6 +16,18 @@
 				<string>net.sourceforge.ggap.gws</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>gwp</string>
+			<key>CFBundleTypeName</key>
+			<string>GGAP Workspace</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>net.sourceforge.ggap.gwp</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>ggap</string>
@@ -63,6 +75,27 @@
 				<key>public.filename-extension</key>
 				<array>
 					<string>gws</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.pkware.zip-archive</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>GGAP Workspace</string>
+			<key>UTTypeIconFile</key>
+			<string>gwp.icns</string>
+			<key>UTTypeIdentifier</key>
+			<string>net.sourceforge.ggap.gwp</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://ggap.sourceforge.net/gws.html</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>gwp</string>
 				</array>
 			</dict>
 		</dict>

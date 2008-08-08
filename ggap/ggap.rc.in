@@ -2,6 +2,7 @@
 
 A ICON "@srcdir@/icons/ggap/ggap.ico"
 B ICON "@srcdir@/icons/ggap/gws.ico"
+C ICON "@srcdir@/icons/ggap/gwp.ico"
 
 VS_VERSION_INFO VERSIONINFO
   FILEVERSION @GGAP_MAJOR_VERSION@,@GGAP_MINOR_VERSION@,@GGAP_MICRO_VERSION@,0

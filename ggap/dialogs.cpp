@@ -32,7 +32,6 @@ AboutDialog::AboutDialog() :
     Ui::AboutDialog ui;
     ui.setupUi(this);
     ui.labelVersion->setText("Version " GGAP_VERSION);
-    ui.viewLicense->setPlainText(util::getFileText(":/COPYING"));
     ui.viewCredits->setPlainText(util::getFileText(":/THANKS"));
 }
 
@@ -103,7 +102,7 @@ static T get_filenames(WsWindow *window,
 #endif
 
     return func(parent, tr("Open File"), QString(),
-                tr("GGAP Worksheets (*.gws);;All files (*)"),
+                tr("GGAP Files (*.gws *.gwp);;All files (*)"),
                 0, options);
 }
 
@@ -118,7 +117,7 @@ QString ggap::getOpenFileName(WsWindow *window)
 }
 
 #define FILTER_WORKSHEET "GGAP Worksheet (*.gws)"
-#define FILTER_WORKSPACE "GGAP Workspace (*.gws)"
+#define FILTER_WORKSPACE "GGAP Workspace (*.gwp)"
 
 static QString filterString()
 {
@@ -128,9 +127,7 @@ static QString filterString()
         return tr(FILTER_WORKSPACE) + ";;" + tr(FILTER_WORKSHEET);
 }
 
-#if 1 && (defined(Q_OS_MAC) || defined(Q_OS_WIN32))
-
-QString ggap::getSaveFileName(WsWindow *window, bool *saveWorkspace)
+static QString getNameFromWindow(WsWindow *window)
 {
     QString name;
 
@@ -138,15 +135,21 @@ QString ggap::getSaveFileName(WsWindow *window, bool *saveWorkspace)
     {
         name = window->doc()->filename();
         if (name.isEmpty())
-        {
             name = window->doc()->displayName();
-            if (!name.endsWith(".gws"))
-                name.append(".gws");
-        }
+        if (name.endsWith(".gws") || name.endsWith(".gwp"))
+            name.chop(4);
     }
 
+    return name;
+}
+
+#if 1 && (defined(Q_OS_MAC) || defined(Q_OS_WIN32))
+
+QString ggap::getSaveFileName(WsWindow *window, bool *saveWorkspace)
+{
     QString filter;
-    QString filename = QFileDialog::getSaveFileName(window, tr("Save As"), name,
+    QString filename = QFileDialog::getSaveFileName(window, tr("Save As"),
+                                                    getNameFromWindow(window),
                                                     filterString(), &filter,
                                                     QFileDialog::DontResolveSymlinks);
 
@@ -162,42 +165,59 @@ QString ggap::getSaveFileName(WsWindow *window, bool *saveWorkspace)
 
 QString ggap::getSaveFileName(WsWindow *window, bool *saveWorkspace)
 {
-    QString name;
+    QPointer<WsWindow> window_ptr = window;
 
-    if (window)
-    {
-        name = window->doc()->filename();
-        if (name.isEmpty())
-        {
-            name = window->doc()->displayName();
-            if (!name.endsWith(".gws"))
-                name.append(".gws");
-        }
-    }
-
-    QFileDialog dlg(window, tr("Save As"), name, filterString());
+    QFileDialog dlg(window, tr("Save As"),
+                    getNameFromWindow(window),
+                    filterString());
     dlg.setAcceptMode(QFileDialog::AcceptSave);
     dlg.setFileMode(QFileDialog::AnyFile);
-    dlg.setDefaultSuffix("gws");
     dlg.setResolveSymlinks(false);
+    dlg.setConfirmOverwrite(false);
 
     QByteArray state = stateValue(PREFS_SAVE_DIALOG_STATE).toByteArray();
     if (!state.isEmpty())
         dlg.restoreState(state);
 
     QString filename;
+    bool workspace = true;
 
-    if (dlg.exec())
+    while (dlg.exec())
+    {
         filename = dlg.selectedFiles().value(0);
+        workspace = dlg.selectedFilter() == tr(FILTER_WORKSPACE);
+
+        if (QFileInfo(filename).suffix().isEmpty())
+        {
+            if (workspace)
+                filename += ".gwp";
+            else
+                filename += ".gws";
+        }
+
+        if (QFileInfo(filename).exists())
+        {
+            QString basename = QFileInfo(filename).fileName();
+            QMessageBox::StandardButton btn =
+                QMessageBox::warning(&dlg, "",
+                                     QString("A file named \"%1\" already exists in this location. "
+                                             "Do you want to replace it with the one you are saving?").arg(basename),
+                                     QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel);
+            if (btn == QMessageBox::Ok)
+                break;
+        }
+
+        filename = QString();
+    }
 
     if (!filename.isEmpty())
-        *saveWorkspace = dlg.selectedFilter() == tr(FILTER_WORKSPACE);
+        *saveWorkspace = workspace;
 
     state = dlg.saveState();
     setStateValue(PREFS_SAVE_DIALOG_STATE, state);
 
-    if (window)
-        window->activateWindow();
+    if (window_ptr)
+        window_ptr->activateWindow();
 
     return filename;
 }
