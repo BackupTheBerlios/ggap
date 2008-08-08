@@ -78,6 +78,8 @@ bool Prefs::value(BoolKey key)
     {
         case SaveWorkspace:
             return value("gap/save-workspace", true).toBool();
+        case UseDefaultGap:
+            return value("gap/use-default", true).toBool();
     }
 
     m_return_val_if_reached(false);
@@ -89,6 +91,9 @@ void Prefs::setValue(BoolKey key, bool value)
     {
         case SaveWorkspace:
             setValue("gap/save-workspace", value, true);
+            return;
+        case UseDefaultGap:
+            setValue("gap/use-default", value, true);
             return;
     }
 
@@ -144,6 +149,8 @@ QStringList Prefs::value(StringListKey key)
     {
         case HelpBookmarks:
             return value("help/bookmarks").toStringList();
+        case ExtraGapRoots:
+            return value("gap/extraroots").toStringList();
     }
 
     m_return_val_if_reached(QStringList());
@@ -155,6 +162,9 @@ void Prefs::setValue(StringListKey key, const QStringList &value)
     {
         case HelpBookmarks:
             setValue("help/bookmarks", value);
+            return;
+        case ExtraGapRoots:
+            setValue("gap/extraroots", value);
             return;
     }
 

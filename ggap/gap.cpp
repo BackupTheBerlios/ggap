@@ -1,5 +1,6 @@
 #include "config.h"
 #include "ggap/gap.h"
+#include "ggap/gap-p.h"
 #include "ggap/app.h"
 #include "ggap/utils.h"
 #include "moo-macros.h"
@@ -58,12 +59,28 @@ static QString getGapRootFromBinDir(const QDir &bindir)
         return root.path();
 }
 
+QString GapOptions::defaultRootDir()
+{
+    QString val = QCoreApplication::applicationDirPath() + "/gap4r4";
+    if (QFileInfo(val).isDir())
+        return val;
+    else
+        return QString();
+}
+
 QString GapOptions::rootDir()
 {
-    QString d = prefsValue(Prefs::GapRootDir);
+    if (prefsValue(Prefs::UseDefaultGap))
+    {
+        QString val = defaultRootDir();
+        if (!val.isEmpty())
+            return val;
+    }
 
-    if (!d.isEmpty())
-        return d;
+    QString val = prefsValue(Prefs::GapRootDir);
+
+    if (!val.isEmpty())
+        return val;
 
     QString exe = this->exe();
 
@@ -97,26 +114,47 @@ QString GapOptions::docDir()
         return QString();
 }
 
+QString GapOptions::defaultExe()
+{
+    QString val;
+
+#ifdef Q_OS_WIN32
+    val = QCoreApplication::applicationDirPath() + "/gap4r4/bin/gapw95.exe";
+#else
+    val = QCoreApplication::applicationDirPath() + "/gap4r4/bin/gap.sh";
+#endif
+
+    if (QFileInfo(val).exists())
+        return val;
+    else
+        return QString();
+}
+
 QString GapOptions::exe()
 {
-    QString val = prefsValue(Prefs::GapExe);
+    QString val;
+
+    if (prefsValue(Prefs::UseDefaultGap))
+    {
+        val = defaultExe();
+        if (!val.isEmpty())
+            return val;
+    }
+
+    val = prefsValue(Prefs::GapExe);
 
     if (val.isEmpty())
     {
 #ifdef Q_OS_WIN32
-        val = QCoreApplication::applicationDirPath() + "/gap4r4/bin/gapw95.exe";
-        if (!QFileInfo(val).exists())
-            val = "c:/gap4r4/bin/gap.bat";
-        if (!QFileInfo(val).exists())
-            val = QString();
+        val = "c:/gap4r4/bin/gapw95.exe";
 #else
-        val = QCoreApplication::applicationDirPath() + "/gap4r4/bin/gap.sh";
-        if (!QFileInfo(val).exists())
-            val = "gap";
+        val = "gap";
 #endif
+
+        val = util::findProgramInPath(val);
     }
 
-    return util::findProgramInPath(val);
+    return val;
 }
 
 QString GapOptions::args()
@@ -220,49 +258,6 @@ static QString save_workspace_init_file(const QString &workspace)
 // }
 
 
-#ifdef Q_OS_WIN32
-bool gap_parse_cmd_line(const QString &command_line, QString *bin_dir_p, QString *root_dir_p)
-{
-    QString bin_dir, root_dir, exe;
-
-    m_return_val_if_fail(!command_line.isEmpty(), false);
-
-    if (command_line[0] == '"')
-    {
-        int second = command_line.indexOf('"', 1);
-
-        if (second < 0)
-            return false;
-
-        exe = command_line.mid(1, second - 1);
-    }
-    else
-    {
-        QStringList comps = command_line.split(QRegExp("[ \\t]+"));
-
-        if (comps.isEmpty())
-            return false;
-
-        exe = comps.at(0);
-    }
-
-    QFileInfo fi(exe);
-    if (!fi.isAbsolute())
-        return false;
-
-    bin_dir =fi.path();
-    root_dir = QFileInfo(bin_dir).path();
-
-    if (bin_dir_p)
-        *bin_dir_p = bin_dir;
-    if (root_dir_p)
-        *root_dir_p = root_dir;
-
-    return true;
-}
-#endif
-
-
 static QString saved_workspace_filename()
 {
     return gapApp->getUserDataFile("workspace");
@@ -322,6 +317,10 @@ static GapCommand make_command_line(const QString     &cmd_base,
             prefix << "-l" << filenameToCommandLine(root);
     }
 #endif
+
+    QStringList extra_roots = prefsValue(Prefs::ExtraGapRoots);
+    foreach (const QString &d, extra_roots)
+        prefix << "-l" << d + ";";
 
     QStringList wsp1, wsp2;
     bool use_2 = false;

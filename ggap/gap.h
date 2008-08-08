@@ -11,6 +11,9 @@ struct GapOptions {
     QString docDir();
     QString exe();
     QString args();
+
+    QString defaultRootDir();
+    QString defaultExe();
 };
 
 GapCommand makeGapCommand(const QString &workspace, const QStringList &flags);

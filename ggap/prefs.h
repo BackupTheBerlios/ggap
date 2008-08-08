@@ -23,7 +23,8 @@ public:
     void unsetValue(const QString &key);
 
     enum BoolKey {
-        SaveWorkspace
+        SaveWorkspace,
+        UseDefaultGap
     };
 
     bool value(BoolKey key);
@@ -41,7 +42,8 @@ public:
     void setValue(StringKey key, const QString &value);
 
     enum StringListKey {
-        HelpBookmarks
+        HelpBookmarks,
+        ExtraGapRoots
     };
 
     QStringList value(StringListKey key);
