@@ -67,8 +67,11 @@ static void usage(QxtCommandOptions &opts, bool show_qt)
 
 void App::parseOptions(int &argc, char **argv)
 {
+    QxtCommandOptions opts;
+    opts.setFlagStyle(QxtCommandOptions::DoubleDash);
+
 #ifdef MOO_ENABLE_UNIT_TESTS
-    if (argc > 1 && strcmp(argv[1], "--unit-tests") == 0)
+    if (argc > 1 && strcmp(argv[1], "--ut") == 0)
     {
         appData.options.unit_tests = true;
         for (int i = 0; i < argc; ++i)
@@ -76,10 +79,9 @@ void App::parseOptions(int &argc, char **argv)
                 appData.options.unit_test_args << argv[i];
         return;
     }
-#endif
 
-    QxtCommandOptions opts;
-    opts.setFlagStyle(QxtCommandOptions::DoubleDash);
+    opts.add("--ut", "run unit tests");
+#endif
 
 #ifdef Q_OS_MAC
     opts.add("raise", "raise window");
