@@ -142,7 +142,7 @@
     <addaction name="actionFindNext" />
     <addaction name="actionFindPrev" />
     <addaction name="separator" />
-    <addaction name="actionPreferences" />
+    <addaction name="actionPrefs" />
    </widget>
    <widget class="QMenu" name="menuView" >
     <property name="title" >
@@ -445,7 +445,7 @@
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="actionPreferences" >
+  <action name="actionPrefs" >
    <property name="icon" >
     <iconset resource="ggap.qrc" >
      <normaloff>:/icons32/preferences.png</normaloff>:/icons32/preferences.png</iconset>
