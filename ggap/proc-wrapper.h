@@ -58,19 +58,13 @@ public:
         QProcess::start(program, arguments, mode);
         self = this;
         connect(this, SIGNAL(error(QProcess::ProcessError)),
-                this, SLOT(error(QProcess::ProcessError)));
+                this, SLOT(unrefSelf()));
         connect(this, SIGNAL(finished(int, QProcess::ExitStatus)),
-                this, SLOT(finished(int, QProcess::ExitStatus)));
+                this, SLOT(unrefSelf()));
     }
 
 private Q_SLOTS:
-    void error(QProcess::ProcessError error)
-    {
-        if (error == QProcess::FailedToStart)
-            self = 0;
-    }
-
-    void finished(int, QProcess::ExitStatus)
+    void unrefSelf()
     {
         self = 0;
     }
