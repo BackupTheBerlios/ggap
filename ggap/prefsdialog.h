@@ -34,9 +34,10 @@ public:
 private Q_SLOTS:
     void on_buttonGapDir_clicked();
     void on_buttonGapExe_clicked();
+    void on_buttonGapRoots_clicked();
     void on_buttonWorksheetFont_clicked();
     void on_buttonHelpFont_clicked();
-    void otherPrefs();
+    void on_buttonUseDefaultGap_stateChanged(int state);
 };
 
 }

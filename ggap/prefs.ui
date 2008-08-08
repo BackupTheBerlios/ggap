@@ -5,196 +5,368 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>496</width>
-    <height>324</height>
+    <width>559</width>
+    <height>417</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>GGAP Preferences</string>
   </property>
-  <layout class="QVBoxLayout" >
+  <layout class="QVBoxLayout" name="verticalLayout" >
    <item>
-    <widget class="QGroupBox" name="gapBox" >
-     <property name="title" >
-      <string>GAP</string>
-     </property>
-     <layout class="QVBoxLayout" >
-      <item>
-       <layout class="QGridLayout" >
-        <item row="1" column="0" >
-         <widget class="QLabel" name="label" >
-          <property name="text" >
-           <string>&amp;Command:</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy" >
-           <cstring>entryGapExe</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2" >
-         <widget class="QPushButton" name="buttonGapExe" >
-          <property name="text" >
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" >
-         <widget class="QLabel" name="label_2" >
-          <property name="text" >
-           <string>O&amp;ptions:</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy" >
-           <cstring>entryGapArgs</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1" >
-         <widget class="QLineEdit" name="entryGapArgs" />
-        </item>
-        <item row="1" column="1" >
-         <widget class="QLineEdit" name="entryGapExe" />
-        </item>
-        <item row="0" column="0" >
-         <widget class="QLabel" name="label_4" >
-          <property name="text" >
-           <string>&amp;Directory:</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy" >
-           <cstring>entryGapDir</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" >
-         <widget class="QLineEdit" name="entryGapDir" />
-        </item>
-        <item row="0" column="2" >
-         <widget class="QPushButton" name="buttonGapDir" >
-          <property name="text" >
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
+    <layout class="QGridLayout" name="gridLayout" >
+     <item row="1" column="1" >
+      <widget class="QLabel" name="labelGapDir" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>GAP &amp;Directory:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>buttonGapDir</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3" colspan="3" >
+      <widget class="QLineEdit" name="entryGapDir" />
+     </item>
+     <item row="1" column="6" >
+      <widget class="QPushButton" name="buttonGapDir" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLabel" name="labelGapExe" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>E&amp;xecutable:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>buttonGapExe</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3" colspan="3" >
+      <widget class="QLineEdit" name="entryGapExe" />
+     </item>
+     <item row="2" column="6" >
+      <widget class="QPushButton" name="buttonGapExe" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3" colspan="3" >
+      <widget class="QLineEdit" name="entryGapArgs" />
+     </item>
+     <item row="4" column="1" >
+      <widget class="QLabel" name="labelGapArgs" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>O&amp;ptions:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>entryGapArgs</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="3" >
+      <spacer name="verticalSpacer" >
+       <property name="orientation" >
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>0</width>
+         <height>6</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="7" column="1" >
+      <widget class="QLabel" name="label_4" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>Default file format:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>radioWorkspace</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="3" colspan="3" >
+      <widget class="QRadioButton" name="radioWorkspace" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>Work&amp;space</string>
+       </property>
+       <property name="checked" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="3" colspan="3" >
+      <widget class="QRadioButton" name="radioWorksheet" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>Works&amp;heet</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="3" >
+      <spacer name="verticalSpacer_3" >
+       <property name="orientation" >
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>0</width>
+         <height>6</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="10" column="1" >
+      <widget class="QLabel" name="label_6" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>&amp;Worksheet font:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>buttonWorksheetFont</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <spacer name="horizontalSpacer" >
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>12</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="7" >
+      <spacer name="horizontalSpacer_2" >
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>12</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="10" column="4" >
+      <widget class="QPushButton" name="buttonWorksheetFont" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="5" >
+      <spacer name="horizontalSpacer_3" >
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="11" column="4" >
+      <widget class="QPushButton" name="buttonHelpFont" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1" >
+      <widget class="QLabel" name="label_8" >
+       <property name="text" >
+        <string>He&amp;lp font:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>buttonHelpFont</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="3" >
+      <widget class="QLineEdit" name="entryWorksheetFont" >
+       <property name="text" >
+        <string>Some font</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="readOnly" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="3" >
+      <widget class="QLineEdit" name="entryHelpFont" >
+       <property name="text" >
+        <string>Some font</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="readOnly" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" colspan="3" >
+      <widget class="QCheckBox" name="buttonUseDefaultGap" >
+       <property name="text" >
+        <string>Use d&amp;efault GAP installation</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" >
+      <widget class="QLabel" name="label" >
+       <property name="text" >
+        <string>Extra &amp;root folders:</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>buttonGapRoots</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3" colspan="3" >
+      <widget class="QLineEdit" name="entryGapRoots" >
+       <property name="readOnly" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="6" >
+      <widget class="QPushButton" name="buttonGapRoots" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1" colspan="3" >
+      <widget class="QCheckBox" name="buttonSaveWorkspace" >
+       <property name="text" >
+        <string>Sa&amp;ve workspace for faster startup</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_2" >
-     <property name="title" >
-      <string>Display</string>
-     </property>
-     <layout class="QVBoxLayout" >
-      <item>
-       <layout class="QGridLayout" >
-        <item row="0" column="1" >
-         <widget class="QLabel" name="label_3" >
-          <property name="text" >
-           <string>Worksheet font:</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" >
-         <widget class="QLabel" name="labelWorksheetFont" >
-          <property name="text" >
-           <string>TextLabel</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3" >
-         <widget class="QPushButton" name="buttonWorksheetFont" >
-          <property name="sizePolicy" >
-           <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text" >
-           <string>C&amp;hoose...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" >
-         <widget class="QLabel" name="label_5" >
-          <property name="text" >
-           <string>Help font:</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2" >
-         <widget class="QLabel" name="labelHelpFont" >
-          <property name="text" >
-           <string>TextLabel</string>
-          </property>
-          <property name="alignment" >
-           <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3" >
-         <widget class="QPushButton" name="buttonHelpFont" >
-          <property name="sizePolicy" >
-           <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text" >
-           <string>C&amp;hoose...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4" >
-         <spacer>
-          <property name="orientation" >
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0" >
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="0" >
-         <spacer>
-          <property name="orientation" >
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0" >
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer" >
+    <spacer name="verticalSpacer_2" >
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
      </property>
@@ -207,24 +379,40 @@
     </spacer>
    </item>
    <item>
+    <widget class="Line" name="line" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox" >
      <property name="orientation" >
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons" >
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <tabstops>
+  <tabstop>buttonUseDefaultGap</tabstop>
   <tabstop>entryGapDir</tabstop>
   <tabstop>buttonGapDir</tabstop>
   <tabstop>entryGapExe</tabstop>
   <tabstop>buttonGapExe</tabstop>
+  <tabstop>entryGapRoots</tabstop>
+  <tabstop>buttonGapRoots</tabstop>
   <tabstop>entryGapArgs</tabstop>
+  <tabstop>buttonSaveWorkspace</tabstop>
+  <tabstop>radioWorkspace</tabstop>
+  <tabstop>radioWorksheet</tabstop>
+  <tabstop>entryWorksheetFont</tabstop>
   <tabstop>buttonWorksheetFont</tabstop>
+  <tabstop>entryHelpFont</tabstop>
+  <tabstop>buttonHelpFont</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources/>

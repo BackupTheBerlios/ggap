@@ -1,11 +1,10 @@
 #include "ggap/prefsdialog.h"
+#include "ggap/prefsdialog-p.h"
 #include "ggap/prefs.h"
 #include "ggap/gap.h"
-#include "ggap/dialogs.h"
 #include "ggap/wswindow-p.h"
 #include "ggap/help.h"
 #include "ggap/ui_prefs.h"
-#include "ggap/ui_otherprefs.h"
 #include <QtGui>
 #include <QDir>
 
@@ -28,54 +27,6 @@ void PrefsDialogBase::accept()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// OtherPrefsDialog
-//
-
-namespace {
-
-struct OtherPrefsDialog : public PrefsDialogBase {
-    Ui::OtherPrefsDialog ui;
-
-    static QPointer<OtherPrefsDialog> instance;
-
-    OtherPrefsDialog::OtherPrefsDialog(QWidget *parent = 0) :
-        PrefsDialogBase(parent)
-    {
-        ui.setupUi(this);
-        init();
-    }
-
-    static void showDialog()
-    {
-        NiceDialog::showDialog(instance);
-    }
-
-    void init();
-    void apply();
-};
-
-QPointer<OtherPrefsDialog> OtherPrefsDialog::instance;
-
-}
-
-void OtherPrefsDialog::init()
-{
-    if (prefsValue(Prefs::DefaultFileFormat) == "workspace")
-        ui.radioWorkspace->setChecked(true);
-    else
-        ui.radioWorksheet->setChecked(true);
-}
-
-void OtherPrefsDialog::apply()
-{
-    if (ui.radioWorkspace->isChecked())
-        setPrefsValue(Prefs::DefaultFileFormat, "workspace");
-    else
-        setPrefsValue(Prefs::DefaultFileFormat, "worksheet");
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // PrefsDialog
 //
 
@@ -87,6 +38,7 @@ struct PrefsDialog::Private {
     QString gapDir;
     QString gapExe;
     QString gapArgs;
+    QStringList gapRoots;
 
     static QPointer<PrefsDialog> instance;
 };
@@ -98,7 +50,9 @@ PrefsDialog::PrefsDialog() :
     priv(new Private)
 {
     priv->ui.setupUi(this);
-    new QShortcut(QKeySequence("Ctrl+Shift+P"), this, SLOT(otherPrefs()));
+    QButtonGroup *group = new QButtonGroup(this);
+    group->addButton(priv->ui.radioWorkspace);
+    group->addButton(priv->ui.radioWorksheet);
     init();
 }
 
@@ -118,16 +72,11 @@ void PrefsDialog::execDialog()
     Private::instance->exec();
 }
 
-void PrefsDialog::otherPrefs()
-{
-    OtherPrefsDialog::showDialog();
-}
 
-
-static void setFontLabel(QLabel *label, const QFont &font)
+static void setFontEntry(QLineEdit *entry, const QFont &font)
 {
-    label->setText(QString("%1, %2").arg(font.family()).arg(font.pointSize()));
-    label->setFont(font);
+    entry->setText(QString("%1, %2").arg(font.family()).arg(font.pointSize()));
+    entry->setFont(font);
 }
 
 static QString norm_file_path(const QString &p)
@@ -156,10 +105,30 @@ static QString disp_dir_path(const QString &p)
     return QDir::toNativeSeparators(np);
 }
 
+void PrefsDialog::on_buttonUseDefaultGap_stateChanged(int state)
+{
+    bool enabled = !priv->ui.buttonUseDefaultGap->isEnabled() || state == Qt::Unchecked;
+    priv->ui.labelGapDir->setEnabled(enabled);
+    priv->ui.labelGapExe->setEnabled(enabled);
+    priv->ui.entryGapDir->setEnabled(enabled);
+    priv->ui.entryGapExe->setEnabled(enabled);
+    priv->ui.buttonGapDir->setEnabled(enabled);
+    priv->ui.buttonGapExe->setEnabled(enabled);
+}
+
 void PrefsDialog::init()
 {
+    GapOptions go;
+
+    QString dfltRootDir = go.defaultRootDir();
+    QString dfltExe = go.defaultExe();
+
+    priv->ui.buttonUseDefaultGap->setEnabled(!dfltExe.isEmpty());
+    priv->ui.buttonUseDefaultGap->setChecked(prefsValue(Prefs::UseDefaultGap));
+
     priv->gapDir = norm_dir_path(GapOptions().rootDir());
     priv->gapExe = GapOptions().exe();
+    priv->gapRoots = prefsValue(Prefs::ExtraGapRoots);
     priv->gapArgs = GapOptions().args();
     if (priv->gapArgs.isEmpty())
         priv->gapArgs = "";
@@ -167,25 +136,47 @@ void PrefsDialog::init()
     priv->ui.entryGapDir->setText(disp_dir_path(priv->gapDir));
     priv->ui.entryGapExe->setText(disp_file_path(priv->gapExe));
     priv->ui.entryGapArgs->setText(priv->gapArgs);
+    priv->ui.entryGapRoots->setText(priv->gapRoots.join("; "));
+
+    priv->ui.buttonSaveWorkspace->setChecked(prefsValue(Prefs::SaveWorkspace));
+
+    if (prefsValue(Prefs::DefaultFileFormat) == "workspace")
+        priv->ui.radioWorkspace->setChecked(true);
+    else
+        priv->ui.radioWorksheet->setChecked(true);
 
     priv->worksheetFont = prefsValue(Prefs::WorksheetFont);
     priv->helpFont = prefsValue(Prefs::HelpFont);
-    setFontLabel(priv->ui.labelWorksheetFont, priv->worksheetFont);
-    setFontLabel(priv->ui.labelHelpFont, priv->helpFont);
+    setFontEntry(priv->ui.entryWorksheetFont, priv->worksheetFont);
+    setFontEntry(priv->ui.entryHelpFont, priv->helpFont);
 }
 
 void PrefsDialog::apply()
 {
-    QString gapDir = norm_dir_path(priv->ui.entryGapDir->text());
-    QString gapExe = norm_file_path(priv->ui.entryGapExe->text());
-    QString gapArgs = priv->ui.entryGapArgs->text();
+    setPrefsValue(Prefs::UseDefaultGap, priv->ui.buttonUseDefaultGap->isChecked());
 
-    if (gapDir != priv->gapDir)
-        setPrefsValue(Prefs::GapRootDir, gapDir);
-    if (gapExe != priv->gapExe)
-        setPrefsValue(Prefs::GapExe, gapExe);
+    if (priv->ui.buttonUseDefaultGap->isChecked())
+    {
+        QString gapDir = norm_dir_path(priv->ui.entryGapDir->text());
+        QString gapExe = norm_file_path(priv->ui.entryGapExe->text());
+
+        if (gapDir != priv->gapDir)
+            setPrefsValue(Prefs::GapRootDir, gapDir);
+        if (gapExe != priv->gapExe)
+            setPrefsValue(Prefs::GapExe, gapExe);
+    }
+
+    QString gapArgs = priv->ui.entryGapArgs->text();
     if (gapArgs != priv->gapArgs)
         setPrefsValue(Prefs::GapArgs, gapArgs);
+
+    setPrefsValue(Prefs::ExtraGapRoots, priv->gapRoots);
+    setPrefsValue(Prefs::SaveWorkspace, priv->ui.buttonSaveWorkspace->isChecked());
+
+    if (priv->ui.radioWorkspace->isChecked())
+        setPrefsValue(Prefs::DefaultFileFormat, "workspace");
+    else
+        setPrefsValue(Prefs::DefaultFileFormat, "worksheet");
 
     setPrefsValue(Prefs::WorksheetFont, priv->worksheetFont);
     setPrefsValue(Prefs::HelpFont, priv->helpFont);
@@ -257,22 +248,35 @@ void PrefsDialog::on_buttonGapExe_clicked()
     }
 }
 
-static void font_dialog(PrefsDialog *dlg, QFont *font, QLabel *label)
+void PrefsDialog::on_buttonGapRoots_clicked()
+{
+    EditDirListDialog dlg(priv->gapRoots, this);
+
+    if (dlg.exec())
+    {
+        QStringList dirs = dlg.dirs();
+        qDebug() << dirs;
+        priv->gapRoots = dirs;
+        priv->ui.entryGapRoots->setText(priv->gapRoots.join(";"));
+    }
+}
+
+static void font_dialog(PrefsDialog *dlg, QFont *font, QLineEdit *entry)
 {
     bool ok;
-    QFont newFont = QFontDialog::getFont(&ok, *font, dlg, "Choose font");
+    QFont newFont = QFontDialog::getFont(&ok, *font, dlg, "Choose Font");
     if (!ok)
         return;
     *font = newFont;
-    setFontLabel(label, newFont);
+    setFontEntry(entry, newFont);
 }
 
 void PrefsDialog::on_buttonWorksheetFont_clicked()
 {
-    font_dialog(this, &priv->worksheetFont, priv->ui.labelWorksheetFont);
+    font_dialog(this, &priv->worksheetFont, priv->ui.entryWorksheetFont);
 }
 
 void PrefsDialog::on_buttonHelpFont_clicked()
 {
-    font_dialog(this, &priv->helpFont, priv->ui.labelHelpFont);
+    font_dialog(this, &priv->helpFont, priv->ui.entryHelpFont);
 }
