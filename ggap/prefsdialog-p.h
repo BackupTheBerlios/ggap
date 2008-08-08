@@ -3,7 +3,7 @@
 
 #include <ggap/ui_editdirlist.h>
 #include <moo-macros.h>
-#include <QDialog>
+#include <QFileDialog>
 #include <QStringList>
 #include <QStringListModel>
 

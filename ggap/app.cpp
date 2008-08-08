@@ -125,6 +125,7 @@ App::App(int &argc, char **argv) :
 {
     Q_INIT_RESOURCE(ggap);
     Q_INIT_RESOURCE(gap);
+    Q_INIT_RESOURCE(help);
 
 #if !defined(Q_OS_MAC)
     QIcon icon;
@@ -164,6 +165,7 @@ App::App(int &argc, char **argv) :
 
     QDesktopServices::setUrlHandler("ghelp", this, "gapHelp");
     QDesktopServices::setUrlHandler("gfile", this, "gapHelp");
+    QDesktopServices::setUrlHandler("help", this, "gapHelp");
 }
 
 #if defined(Q_OS_MAC)

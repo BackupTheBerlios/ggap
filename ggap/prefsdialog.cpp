@@ -5,6 +5,7 @@
 #include "ggap/wswindow-p.h"
 #include "ggap/help.h"
 #include "ggap/ui_prefs.h"
+#include "ggap/help-topics.h"
 #include <QtGui>
 #include <QDir>
 
@@ -279,4 +280,9 @@ void PrefsDialog::on_buttonWorksheetFont_clicked()
 void PrefsDialog::on_buttonHelpFont_clicked()
 {
     font_dialog(this, &priv->helpFont, priv->ui.entryHelpFont);
+}
+
+void PrefsDialog::on_buttonBox_helpRequested()
+{
+    QDesktopServices::openUrl(HELP_PREFS_DIALOG);
 }

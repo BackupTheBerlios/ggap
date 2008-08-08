@@ -6,13 +6,13 @@ ggap_SOURCES =		\
     app.cpp		\
     appwindow.cpp	\
     dialogs.cpp		\
-    dialogs.h		\
     gap.cpp		\
     gap.h		\
     gap-p.h		\
     gws.cpp		\
     gws.h		\
     help-p.h		\
+    help-topics.h	\
     help.cpp		\
     help-bookmarks.cpp	\
     main.cpp		\
@@ -40,6 +40,7 @@ moc_cpp_files =
 moc_h_files =		\
     app.h		\
     appwindow.h		\
+    dialogs.h		\
     help.h		\
     help-bookmarks.h	\
     help-bookmarks-p.h	\
@@ -94,9 +95,12 @@ ui_files =			\
     prefs.ui			\
     wswindow.ui
 
-qrc_files = ggap.qrc gap.qrc
+qrc_files = ggap.qrc gap.qrc help.qrc
 ggap_qrc_deps = $(top_srcdir)/THANKS
 gap_qrc_deps = gap/restore.g gap/ggap.g
+help_qrc_deps =			\
+    help/prefsdialog.html
+EXTRA_DIST += $(help_qrc_deps)
 
 include ../mk/qt.mk
 

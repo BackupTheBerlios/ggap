@@ -3,13 +3,7 @@
 
 #include "ggap/app.h"
 #include "ggap/gap.h"
-#include <QStringList>
-#include <QString>
-#include <QFileInfo>
-#include <QSettings>
-#include <QDateTime>
-#include <QMap>
-#include <QSet>
+#include <QtCore>
 
 namespace ggap {
 

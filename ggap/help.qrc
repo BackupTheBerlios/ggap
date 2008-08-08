@@ -1,0 +1,6 @@
+<!-- xml -->
+<RCC>
+  <qresource>
+    <file>help/prefsdialog.html</file>
+  </qresource>
+</RCC>

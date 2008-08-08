@@ -7,6 +7,8 @@
 namespace ggap {
 
 class NiceDialog : public QDialog {
+    Q_OBJECT
+
     template<typename T>
     static T *createDialog()
     {
@@ -16,6 +18,9 @@ class NiceDialog : public QDialog {
         dlg->activateWindow();
         return dlg;
     }
+
+private Q_SLOTS:
+    void quit();
 
 protected:
     NiceDialog(QWidget *parent);

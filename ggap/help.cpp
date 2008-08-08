@@ -52,6 +52,8 @@ void HelpView::setSource(const QUrl &url)
     QUrl realUrl = url;
     if (realUrl.scheme() == "gfile")
         realUrl.setScheme("file");
+    else if (realUrl.scheme() == "help")
+        realUrl.setScheme("qrc");
 
     QTextBrowser::setSource(realUrl);
     QString p = source().toLocalFile();

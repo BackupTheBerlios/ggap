@@ -38,6 +38,7 @@ private Q_SLOTS:
     void on_buttonWorksheetFont_clicked();
     void on_buttonHelpFont_clicked();
     void on_buttonUseDefaultGap_stateChanged(int state);
+    void on_buttonBox_helpRequested();
 };
 
 }

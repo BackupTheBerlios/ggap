@@ -17,10 +17,16 @@ NiceDialog::NiceDialog(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     setAttribute(Qt::WA_QuitOnClose, false);
     new QShortcut(QKeySequence::Close, this, SLOT(close()));
+    new QShortcut(QKeySequence("Ctrl+Q"), this, SLOT(quit()));
 }
 
 NiceDialog::~NiceDialog()
 {
+}
+
+void NiceDialog::quit()
+{
+    gapApp->maybeQuit();
 }
 
 
