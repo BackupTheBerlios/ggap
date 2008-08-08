@@ -34,6 +34,16 @@ WIN32_CLEANDIRS += $(ZIP_DIR) $(BIG_ZIP_DIR)
 registerExtension.nsh: win32/registerExtension.nsh
 	cp $(srcdir)/win32/registerExtension.nsh .
 
+file-list-uninstall-gap.nsh: file-list-install-gap.nsh
+file-list-install-gap.nsh: win32/gen-file-list BIN/gap4r4/bin/gapw95.exe
+	$(SHELL) $(srcdir)/win32/gen-file-list BIN/gap4r4 gap4r4 \
+		file-list-install-gap.nsh file-list-uninstall-gap.nsh
+
+file-list-uninstall-ggap.nsh: file-list-install-ggap.nsh
+file-list-install-ggap.nsh: win32/gen-file-list ggap-win/ggap/ggap.exe
+	$(SHELL) $(srcdir)/win32/gen-file-list ggap-win/ggap "" \
+		file-list-install-ggap.nsh file-list-uninstall-ggap.nsh
+
 ggap.nsi: win32/ggap.nsi.in $(top_builddir)/config.status ./registerExtension.nsh
 	$(SHELL) ./config.status --file=win32/ggap.nsi || exit 1
 	sed -e 's/@GGAP_NSI_DEFINE_FULL_INSTALLER@/; !define GGAP_FULL_INSTALLER/' \
@@ -48,7 +58,15 @@ ggap-full.nsi: win32/ggap.nsi.in $(top_builddir)/config.status ./registerExtensi
 	    win32/ggap.nsi > $@.tmp || exit 1
 	mv $@.tmp $@ || exit 1
 
-nsi_files = ggap.nsi ggap-full.nsi registerExtension.nsh
+nsi_files =			\
+    ggap.nsi			\
+    ggap-full.nsi		\
+    registerExtension.nsh	\
+    file-list-uninstall-gap.nsh \
+    file-list-install-gap.nsh	\
+    file-list-uninstall-ggap.nsh\
+    file-list-install-ggap.nsh
+
 WIN32_CLEANFILES += $(nsi_files)
 
 
@@ -100,7 +118,12 @@ WIN32_CLEANDIRS += _bin_inst ggap-win
 BIN/gap4r4/bin/gapw95.exe:
 	@echo "warning, generating fake GAP"
 	mkdir -p BIN/gap4r4/bin || exit 1
+	mkdir -p BIN/gap4r4/pkg/foobar || exit 1
+	touch BIN/gap4r4/README || exit 1
 	touch BIN/gap4r4/bin/gapw95.exe || exit 1
+	touch BIN/gap4r4/pkg/fsdfsdf || exit 1
+	touch BIN/gap4r4/pkg/foobar/fsdfsdf || exit 1
+
 gap-files: BIN/gap4r4/bin/gapw95.exe
 
 
@@ -121,5 +144,5 @@ win-zip-full: $(win_installer_deps)
 	cp $(nsi_files) $(BIG_ZIP_DIR)/ || exit 1
 	cp -R ggap-win/ggap $(BIG_ZIP_DIR)/ || exit 1
 	mv BIN/gap4r4 $(BIG_ZIP_DIR)/ || exit 1
-	zip -9 -r $(BIG_ZIP_FILE) $(BIG_ZIP_DIR) || (mv $(BIG_ZIP_DIR)/gap4r4 BIN/; exit 1)
+	zip -r $(BIG_ZIP_FILE) $(BIG_ZIP_DIR) || (mv $(BIG_ZIP_DIR)/gap4r4 BIN/; exit 1)
 	mv $(BIG_ZIP_DIR)/gap4r4 BIN/ || exit 1

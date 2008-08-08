@@ -1,0 +1,35 @@
+#! /bin/sh
+
+if [ ! -d "$1" ]; then
+  echo usage: $0 GAPDIR OUTPUT
+  exit 1
+fi
+
+source="$1"
+inst_source=`basename "$source"`
+dest="$2"
+
+if [ -n "$dest" ]; then
+  echo "SetOutPath \"\$INSTDIR\\$dest\"" > $3.tmp
+else
+  echo "SetOutPath \"\$INSTDIR\"" > $3.tmp
+fi
+
+echo "SetOverwrite on" >> $3.tmp
+echo 'File /r "'$inst_source'\*.*"' >> $3.tmp
+
+# # File "ggap.exe"
+# (cd "$source" && find * -type f) | sed -e 's@/@\\@g' -e 's@^@File "'"$inst_source\\\\"'@' -e 's@$@"@' >> "$3.tmp" || exit 1
+
+# Delete "$INSTDIR\ggap.exe"
+(cd "$source" && find * -type f) | sed -e 's@/@\\@g' -e 's@^@Delete "\$INSTDIR\\'"$dest\\\\"'@' -e 's@$@"@' -e 's@\\\\@\\@' > "$4.tmp" || exit 1
+
+# RMDir "$INSTDIR\plugins\imageformats"
+(cd "$source" && find -d * -type d) | sed -e 's@/@\\@g' -e 's@^@RMDir "\$INSTDIR\\'"$dest\\\\"'@' -e 's@$@"@' -e 's@\\\\@\\@' >> "$4.tmp" || exit 1
+
+if [ -n "$dest" ]; then
+  echo "RMDir \"\$INSTDIR\\$dest\"" >> "$4.tmp"
+fi
+
+mv "$3.tmp" "$3" || exit 1
+mv "$4.tmp" "$4" || exit 1
