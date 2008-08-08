@@ -91,9 +91,6 @@ void AppWindow::connectAction(QAction *action, QObject *receiver, const char *sl
 void AppWindow::loadUiConfig()
 {
     connectAction("actionClose", SLOT(close()));
-    connectAction("actionMinimize", SLOT(showMinimized()));
-    connectAction("actionZoom", SLOT(zoomWindow()));
-    connectAction("actionBringAllToFront", SLOT(bringAllToFront()));
     connectAction("actionAbout", gapApp, SLOT(aboutDialog()));
     connectAction("actionAboutQt", gapApp, SLOT(aboutQt()));
     connectAction("actionPrefs", gapApp, SLOT(prefsDialog()));
