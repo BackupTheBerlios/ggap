@@ -1,12 +1,13 @@
 ;; registerExtension.nsh from http://nsis.sourceforge.net/File_Association
 ;; The following was changed:
 ;;  removed Edit action
-;;  changed index of the icon from 0 to 1
+;;  added an argument: index of icon in the executable
 
 !define registerExtension "!insertmacro registerExtension"
 !define unregisterExtension "!insertmacro unregisterExtension"
 
-!macro registerExtension executable extension description
+!macro registerExtension icon executable extension description
+       Push "${icon}"        ;  "icon index in the executable"
        Push "${executable}"  ; "full path to my.exe"
        Push "${extension}"   ;  ".mkv"
        Push "${description}" ;  "MKV File"
@@ -19,6 +20,7 @@ Function registerExtension
   pop $R0 ; ext name
   pop $R1
   pop $R2
+  pop $R3
   push $1
   push $0
   ReadRegStr $1 HKCR $R1 ""
@@ -31,7 +33,7 @@ Function registerExtension
   StrCmp $0 "" 0 "${Index}-Skip"
 	WriteRegStr HKCR $R0 "" $R0
 	WriteRegStr HKCR "$R0\shell" "" "open"
-	WriteRegStr HKCR "$R0\DefaultIcon" "" "$R2,1"
+	WriteRegStr HKCR "$R0\DefaultIcon" "" "$R2,$R3"
 "${Index}-Skip:"
   WriteRegStr HKCR "$R0\shell\open\command" "" '$R2 "%1"'
   ; WriteRegStr HKCR "$R0\shell\edit" "" "Edit $R0"
