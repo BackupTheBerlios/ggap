@@ -29,8 +29,7 @@ libmoows_a_SOURCES =	\
     wstextblock.cpp	\
     wstextdocument.cpp	\
     $(moc_h_files)	\
-    $(moc_cpp_files)	\
-    $(moc_gen_cpp)
+    $(moc_cpp_files)
 
 moc_cpp_files =		\
     worksheet-format.cpp
@@ -42,6 +41,10 @@ moc_h_files =		\
     wstextblock.h	\
     wstextdocument-p.h	\
     wstextdocument.h
+
+nodist_libmoows_a_SOURCES = \
+    $(moc_gen_cpp)	\
+    $(ui_gen_sources)
 
 include ../mk/qt.mk
 
