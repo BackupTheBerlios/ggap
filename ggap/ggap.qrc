@@ -1,6 +1,5 @@
 <RCC>
   <qresource>
-    <file alias="COPYING" >../COPYING</file>
     <file alias="THANKS" >../THANKS</file>
   </qresource>
   <qresource>
@@ -13,6 +12,7 @@
     <file alias="list-remove.png" >icons/tango/16x16/list-remove.png</file>
     <file alias="list-add.png" >icons/tango/16x16/list-add.png</file>
     <file alias="go-up.png" >icons/tango/16x16/go-up.png</file>
+    <file alias="go-down.png" >icons/tango/16x16/go-down.png</file>
     <file alias="file.png" >icons/tango/16x16/text-x-generic.png</file>
     <file alias="folder.png" >icons/tango/16x16/folder.png</file>
   </qresource>

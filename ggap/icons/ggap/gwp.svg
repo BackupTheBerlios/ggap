@@ -15,11 +15,11 @@
    width="128"
    height="128"
    version="1.0"
-   sodipodi:docname="gws.svg"
+   sodipodi:docname="gwp.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:export-filename="/Users/muntyan/Desktop/gws/gws-48.png"
-   inkscape:export-xdpi="33.75"
-   inkscape:export-ydpi="33.75">
+   inkscape:export-filename="/Users/muntyan/Desktop/gws/gwp-64.png"
+   inkscape:export-xdpi="45"
+   inkscape:export-ydpi="45">
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -318,15 +318,15 @@
      ry="0.83058411" />
   <text
      xml:space="preserve"
-     style="font-size:34.94532775999999785px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;font-family:Sans;-inkscape-font-specification:Sans"
+     style="font-size:34.94532776px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;font-family:Sans;-inkscape-font-specification:Sans"
      x="30.726854"
      y="122.84898"
      id="text5808"
      transform="scale(1.101284,0.908031)"
      sodipodi:linespacing="125%"><tspan
-       style="font-size:34.94532775999999785px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0;font-family:Sans;-inkscape-font-specification:Sans;stroke:#000000;stroke-opacity:1"
+       style="font-size:34.94532776px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-opacity:1;font-family:Sans;-inkscape-font-specification:Sans"
        sodipodi:role="line"
        x="30.726854"
        y="122.84898"
-       id="tspan5812">GWS</tspan></text>
+       id="tspan5812">GWP</tspan></text>
 </svg>
