@@ -1,6 +1,5 @@
 #include "ggap/windowmenu.h"
 #include "ggap/appwindow.h"
-#include "ggap/prefs.h"
 #include <QFileInfo>
 
 using namespace ggap;
