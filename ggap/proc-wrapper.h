@@ -227,7 +227,6 @@ class GapProcessWrapper : public QObject {
 
     void successStarting()
     {
-        qDebug() << Q_FUNC_INFO;
         disconnectTimer();
         gap_started = true;
         emit started();
@@ -236,7 +235,6 @@ class GapProcessWrapper : public QObject {
 
     void errorStarting(int exitCode, QProcess::ExitStatus exitStatus)
     {
-        qDebug() << Q_FUNC_INFO;
         disconnectProcess();
         emit error(exitCode, exitStatus, output);
     }
@@ -274,7 +272,6 @@ class GapProcessWrapper : public QObject {
 private Q_SLOTS:
     void timeout()
     {
-        qDebug() << Q_FUNC_INFO;
         // If we got here, then the process is still alive. Emit started()
         successStarting();
     }
@@ -283,7 +280,6 @@ private Q_SLOTS:
     {
         // This means GAP did start but it may yet spit out error messages
         // and exit. Wait.
-        qDebug() << Q_FUNC_INFO;
     }
 
     void childError(QProcess::ProcessError error)
@@ -368,7 +364,6 @@ public:
     void start(const QStringList &cmd)
     {
         args = cmd;
-        qDebug() << Q_FUNC_INFO;
         start();
     }
 
@@ -414,7 +409,6 @@ class GapProcessWrapper2 : public QObject {
 
     void start(const QStringList &args)
     {
-        qDebug() << Q_FUNC_INFO;
         M_ASSERT(!proc);
         proc = new GapProcessWrapper(this);
         connect(proc, SIGNAL(started()), SLOT(childStarted()));
