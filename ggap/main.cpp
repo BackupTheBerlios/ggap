@@ -45,7 +45,6 @@ static void msgHandler(QtMsgType type, const char *msg)
 
 #else
 
-
 static void msgHandler(QtMsgType type, const char *msg)
 {
     switch (type)
@@ -68,8 +67,39 @@ static void msgHandler(QtMsgType type, const char *msg)
 
 #endif
 
+#ifdef Q_OS_WIN32
+
+#include <windows.h>
+#include <stdlib.h>
+
+static void abicheck()
+{
+    struct S {
+        uint a;
+        char b;
+        uint c : 1;
+    };
+
+    // it is 12 with -mms-bitfields
+    if (sizeof(S) != 8)
+    {
+        MessageBoxA(NULL, "Application appears to be incorrectly built, can not continue",
+                    NULL, MB_OK | MB_ICONERROR);
+        exit(EXIT_FAILURE);
+    }
+}
+
+#else
+
+static void abicheck()
+{
+}
+
+#endif
+
 int main(int argc, char *argv[])
 {
+    abicheck();
     setlocale(LC_ALL, "");
     qInstallMsgHandler(msgHandler);
     ggap::App::parseOptions(argc, argv);
