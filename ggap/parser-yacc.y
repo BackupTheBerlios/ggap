@@ -36,6 +36,7 @@ using namespace ggap::parser;
 %token TOK_TRUE             "true"
 
 %token TOK_SAVE_WORKSPACE   "SaveWorkspace"
+%token TOK_IS_BOUND         "IsBound"
 %token TOK_UNBIND           "Unbind"
 
 %token TOK_IDENTIFIER       "identifier"
@@ -153,17 +154,9 @@ func_opt_list
         | func_opt_list ',' TOK_IDENTIFIER ":=" expression
         ;
 
-unbind_expression
-        : Lvalue '.' TOK_IDENTIFIER
-	| Lvalue '.' TOK_INTEGER
-	| Lvalue '.' '(' expression ')'
-	| Lvalue '[' expression ']'
-	| Lvalue "!." TOK_IDENTIFIER
-	| Lvalue "!." '(' expression ')'
-	| Lvalue "![" expression ']'
-        ;
 unbind
-        : "Unbind" '(' unbind_expression ')'
+        : "Unbind" '(' Lvalue ')'
+        | "IsBound" '(' Lvalue ')'
         ;
 
 save_workspace
@@ -240,7 +233,7 @@ perm_elms
 
 List
         : '[' expression ".." expression ']'
-        | '[' expression ',' expression TOK_TWO_DOTS expression ']'
+        | '[' expression ',' expression ".." expression ']'
         | '[' ',' list_elms ']'
         | '[' expression ',' ',' list_elms ']'
         | '[' expression ',' expression ',' list_elms ']'

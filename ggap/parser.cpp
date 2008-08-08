@@ -1,6 +1,7 @@
 #include "ggap/parser-p.h"
 #include "moo-macros.h"
 #include <string.h>
+#include <QHash>
 
 const char *ggap::parser::translate(const char *s)
 {
@@ -337,49 +338,67 @@ static int parse_string (Lex     *lex,
 }
 
 
-static struct {
-    const char *kw;
-    uint len;
-    int token;
-} keywords[] = {
-    { "rec",            3, TOK_REC },
-    { "local",          5, TOK_LOCAL },
-    { "function",       8, TOK_FUNCTION },
-    { "end",            3, TOK_END },
-    { "for",            3, TOK_FOR },
-    { "in",             2, TOK_IN },
-    { "do",             2, TOK_DO },
-    { "od",             2, TOK_OD },
-    { "while",          5, TOK_WHILE },
-    { "repeat",         6, TOK_REPEAT },
-    { "until",          5, TOK_UNTIL },
-    { "if",             2, TOK_IF },
-    { "then",           4, TOK_THEN },
-    { "else",           4, TOK_ELSE },
-    { "elif",           4, TOK_ELIF },
-    { "fi",             2, TOK_FI },
-    { "return",         6, TOK_RETURN },
-    { "break",          5, TOK_BREAK },
-    { "quit",           4, TOK_QUIT },
-    { "QUIT",           4, TOK_QUIT_CAP },
-    { "not",            3, TOK_NOT },
-    { "and",            3, TOK_AND },
-    { "or",             2, TOK_OR },
-    { "mod",            3, TOK_MOD },
-    { "true",           4, TOK_TRUE },
-    { "false",          5, TOK_FALSE },
-    { "SaveWorkspace",  13, TOK_SAVE_WORKSPACE },
-    { "Unbind",         6, TOK_UNBIND },
+namespace {
+
+class KeywordMap {
+    QHash<QString, int> data;
+
+    KeywordMap()
+    {
+        struct {
+            const char *kw;
+            int token;
+        } const keywords[] = {
+            { "rec",            TOK_REC },
+            { "local",          TOK_LOCAL },
+            { "function",       TOK_FUNCTION },
+            { "end",            TOK_END },
+            { "for",            TOK_FOR },
+            { "in",             TOK_IN },
+            { "do",             TOK_DO },
+            { "od",             TOK_OD },
+            { "while",          TOK_WHILE },
+            { "repeat",         TOK_REPEAT },
+            { "until",          TOK_UNTIL },
+            { "if",             TOK_IF },
+            { "then",           TOK_THEN },
+            { "else",           TOK_ELSE },
+            { "elif",           TOK_ELIF },
+            { "fi",             TOK_FI },
+            { "return",         TOK_RETURN },
+            { "break",          TOK_BREAK },
+            { "quit",           TOK_QUIT },
+            { "QUIT",           TOK_QUIT_CAP },
+            { "not",            TOK_NOT },
+            { "and",            TOK_AND },
+            { "or",             TOK_OR },
+            { "mod",            TOK_MOD },
+            { "true",           TOK_TRUE },
+            { "false",          TOK_FALSE },
+            { "SaveWorkspace",  TOK_SAVE_WORKSPACE },
+            { "Unbind",         TOK_UNBIND },
+            { "IsBound",        TOK_IS_BOUND },
+        };
+
+        for (uint i = 0; i < sizeof(keywords) / sizeof(keywords[0]); ++i)
+            data[keywords[i].kw] = keywords[i].token;
+    }
+
+public:
+    static bool checkWord(const QChar *text, uint len, int *token)
+    {
+        static KeywordMap km;
+        QHash<QString,int>::const_iterator iter;
+        iter = km.data.find(QString(text, len));
+        if (iter == km.data.constEnd())
+            return false;
+        *token = iter.value();
+        return true;
+    }
+
 };
 
-inline bool check_keyword(int i, const QChar *text, uint len)
-{
-    // XXX
-    return len == keywords[i].len && QString(text, len) == QString(keywords[i].kw);
 }
-
-#define CHECK_KEYWORD(i) check_keyword(i, start, len)
-// (len == keywords[i].len && !strncmp (keywords[i].kw, start, len))
 
 static int parse_word(Lex     *lex,
                       Parser  *parser,
@@ -431,10 +450,9 @@ static int parse_word(Lex     *lex,
 
     if (!seen_escape)
     {
-        uint i;
-        for (i = 0; i < M_N_ELEMENTS (keywords); ++i)
-            if (CHECK_KEYWORD (i))
-                return keywords[i].token;
+        int tok;
+        if (KeywordMap::checkWord(start, len, &tok))
+            return tok;
     }
 
     SET_LOCATION (start_ptr, lex->_ptr - 1);
