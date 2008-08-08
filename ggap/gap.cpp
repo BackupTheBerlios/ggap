@@ -1,5 +1,4 @@
 #include "config.h"
-#include "ggap/gap.h"
 #include "ggap/gap-p.h"
 #include "ggap/app.h"
 #include "ggap/utils.h"
@@ -179,17 +178,6 @@ static QString filenameToGapString(const QString &path)
 #define SAVE_WORKSPACE \
 "SaveWorkspace(\"%1\");\n"
 
-// DO NOT replace rm -f with RemoveFile():
-// "rm -f" is broken when the filename contains spaces: GAP doesn't escape anything;
-// but fixing it will break GAP which won't be able to un'gzip the workspace file.
-#define SAVE_WORKSPACE_AND_GZIP                         \
-SAVE_WORKSPACE                                          \
-"if ARCH_IS_UNIX() then\n"                              \
-"  Exec(\"rm -f\", Concatenation(\"%2\", \".gz\"));\n"  \
-"  Exec(\"gzip\", \"%3\");\n"                           \
-"fi;\n"
-
-
 QString ggap::gapCmdRunCommand(const QString &cmdname, const QString &args)
 {
     if (!args.isEmpty())
@@ -208,6 +196,16 @@ QString ggap::gapCmdHelp(const QString &text)
     return QString("$GGAP_HELP(\"%1\");").arg(escape_text(text));
 }
 
+
+// DO NOT replace rm -f with RemoveFile():
+// "rm -f" is broken when the filename contains spaces: GAP doesn't escape anything;
+// but fixing it will break GAP which won't be able to un'gzip the workspace file.
+#define SAVE_WORKSPACE_AND_GZIP                         \
+SAVE_WORKSPACE                                          \
+"if ARCH_IS_UNIX() then\n"                              \
+"  Exec(\"rm -f\", Concatenation(\"%2\", \".gz\"));\n"  \
+"  Exec(\"gzip\", \"%3\");\n"                           \
+"fi;\n"
 
 static QString save_workspace_init_file(const QString &workspace)
 {
@@ -257,11 +255,6 @@ static QString save_workspace_init_file(const QString &workspace)
 //     return gap_file_func_string (filename, "Reread");
 // }
 
-
-static QString saved_workspace_filename()
-{
-    return gapApp->getUserDataFile("workspace");
-}
 
 static QString get_restore_g()
 {
@@ -326,24 +319,13 @@ static GapCommand make_command_line(const QString     &cmd_base,
     bool use_2 = false;
     bool save_workspace = prefsValue(Prefs::SaveWorkspace);
     bool wsp_already_saved = false;
-    QString wsp_file;
     GapCommand::Flags cmd_flags;
 
+    QString wsp_file;
+    static GapConfigCache cache;
+
     if (custom_wsp.isEmpty() && save_workspace)
-    {
-        wsp_file = saved_workspace_filename();
-        if (wsp_file.isEmpty())
-        {
-            qCritical("%s: oops", Q_FUNC_INFO);
-            save_workspace = false;
-        }
-        else
-        {
-            wsp_already_saved = QFileInfo(wsp_file).exists();
-            if (!wsp_already_saved)
-                wsp_already_saved = QFileInfo(wsp_file + ".gz").exists();
-        }
-    }
+        wsp_already_saved = cache.checkSavedWorkspace(GapConfig::current(), &wsp_file);
 
     if (!custom_wsp.isEmpty())
     {
