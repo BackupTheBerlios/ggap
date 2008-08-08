@@ -9,8 +9,7 @@ ggap_SOURCES =		\
     dialogs.h		\
     gap.cpp		\
     gap.h		\
-    gapdoc.cpp		\
-    gapdoc.h		\
+    gap-p.h		\
     gws.cpp		\
     gws.h		\
     help-p.h		\
@@ -45,6 +44,7 @@ moc_h_files =		\
     help-bookmarks.h	\
     help-bookmarks-p.h	\
     prefsdialog.h	\
+    prefsdialog-p.h	\
     proc.h		\
     proc-p.h		\
     proc-wrapper.h	\
@@ -64,6 +64,7 @@ test_sources =		\
     tester.h
 test_moc_h_files =	\
     gws-t.h		\
+    parser-t.h		\
     script-t.h
 if MOO_ENABLE_UNIT_TESTS
 ggap_SOURCES += $(test_sources)
@@ -88,8 +89,8 @@ ALL_CXXFLAGS =			\
 ui_files =			\
     about.ui			\
     addbookmark.ui		\
+    editdirlist.ui		\
     help.ui			\
-    otherprefs.ui		\
     prefs.ui			\
     wswindow.ui
 
@@ -102,9 +103,9 @@ include ../mk/qt.mk
 pch_header = $(srcdir)/../moows/common.h
 include ../mk/pch.mk
 
-%_p.o: %.o
-	@true
 %-p.o: %.o
+	@true
+%-t.o: %.o
 	@true
 proc-wrapper.o: proc.o
 	@true
@@ -121,3 +122,10 @@ ggap_LDADD += ggap.res
 ggap.exe: ggap.res
 include ../mk/rc.mk
 endif MOO_OS_MINGW
+
+tests = run-unit-tests
+TESTS =
+EXTRA_DIST += $(tests)
+if MOO_ENABLE_UNIT_TESTS
+TESTS += $(tests)
+endif
