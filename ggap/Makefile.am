@@ -84,7 +84,7 @@ ALL_CXXFLAGS =			\
     -Wall -Wreorder		\
     -Wno-non-template-friend	\
     -Woverloaded-virtual	\
-    -Wunused			\
+    -Wunused -W			\
     $(MOO_UNIT_TESTS_CFLAGS)
 
 ui_files =			\

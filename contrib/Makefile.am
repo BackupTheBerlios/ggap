@@ -6,6 +6,7 @@ libcontrib_a_SOURCES =
 
 AM_CXXFLAGS =			\
     $(QT_CXXFLAGS)		\
+    -Wall -W			\
     -I$(srcdir)/qxt
 
 include ../mk/qt.mk

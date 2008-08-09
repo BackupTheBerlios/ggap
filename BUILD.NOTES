@@ -1,0 +1,6 @@
+Mac universal:
+
+    CFLAGS="-O2 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc" \
+    CXXFLAGS="-O2 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc" \
+    LDFLAGS="-arch i386 -arch ppc" \
+    ../../configure --disable-dependency-tracking

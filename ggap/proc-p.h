@@ -199,7 +199,7 @@ public:
         die();
     }
 
-    void start(const GapCommand &cmd, int width, int height)
+    void start(const GapCommand &cmd, int, int)
     {
         m_return_if_fail(!proc);
 
@@ -218,7 +218,7 @@ public:
         proc->start(cmd);
     }
 
-    void setWindowSize(int width, int height)
+    void setWindowSize(int, int)
     {
         if (proc)
         {

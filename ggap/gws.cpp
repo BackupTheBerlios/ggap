@@ -207,7 +207,7 @@ GwsWriter::~GwsWriter()
     delete impl;
 }
 
-bool GwsWriter::open(QString &error)
+bool GwsWriter::open(QString &)
 {
     m_return_val_if_fail(impl->closed, false);
     impl->closed = false;

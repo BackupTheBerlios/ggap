@@ -305,6 +305,8 @@ void Worksheet::gapError(int exitCode, QProcess::ExitStatus exitStatus, const QS
 {
     qDebug() << Q_FUNC_INFO << output;
 
+#warning "Worksheet::gapError: Fix me already"
+
     QString msg;
 
 //     switch (error)

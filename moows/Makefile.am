@@ -11,7 +11,8 @@ ALL_CXXFLAGS =		\
     -Woverloaded-virtual\
     -Wunused -Winit-self\
     -Woverloaded-virtual \
-    -Wunused-parameter
+    -Wunused-parameter	\
+    -W
 
 libmoows_a_SOURCES =	\
     colorcombobox.cpp	\
