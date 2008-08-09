@@ -1,4 +1,4 @@
-m4_define([ggap_version], [1.9.3])
+m4_define([ggap_version], [1.9.4])
 m4_define([ggap_api_version], [1.3])
 
 AC_INIT([GGAP],[ggap_version],[muntyan@tamu.edu],[ggap])
