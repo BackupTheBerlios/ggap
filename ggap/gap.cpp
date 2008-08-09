@@ -298,7 +298,7 @@ static GapCommand make_command_line(const QString     &cmd_base,
                                     const QString     &custom_wsp)
 {
     QStringList prefix;
-    prefix << cmd_base;
+    prefix << cmd_base << flags;
 
 #ifdef Q_OS_WIN32
     if (cmd_base.endsWith("gapw95.exe", Qt::CaseInsensitive))
