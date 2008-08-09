@@ -116,7 +116,7 @@ static QVariant loadDir(const QFileInfo &fi)
     return str;
 }
 
-static QString htmlFromPlainText(const QString &text)
+static inline QString htmlFromPlainText(const QString &text)
 {
     QString html = "<html><body><pre>";
     html.append(Qt::escape(text));
@@ -125,36 +125,52 @@ static QString htmlFromPlainText(const QString &text)
     return Qt::convertFromPlainText(text);
 }
 
-static bool isHtml(const QString &s)
+static inline bool isHtml(const QString &s)
 {
+    return Qt::mightBeRichText(s);
     return s.contains(QRegExp("\\<([Hh]tml|HTML)")); // XXX
 }
 
-static bool isHtml(const QByteArray &a)
+static inline bool isHtml(const QByteArray &a)
 {
     return a.contains("<html") || a.contains("<HTML"); // XXX
 }
 
-QVariant HelpView::checkLoadHtml(const QVariant &data, const QUrl &url)
+static inline void fixHtml(QString &s)
+{
+    static QRegExp ffffff("<(body bgcolor|BODY BGCOLOR)=\"(ffffff|FFFFFF)\">");
+    s.replace(ffffff, "<body bgcolor=\"#ffffff\">");
+}
+
+static inline QString checkLoadHtml(QString &s)
+{
+    if (isHtml(s))
+    {
+        fixHtml(s);
+        return s;
+    }
+    else
+    {
+        return htmlFromPlainText(s);
+    }
+}
+
+QVariant HelpView::checkLoadHtml(const QVariant &data, const QUrl &)
 {
     if (data.isNull())
         return QString("<html><body><h1>Not found</h1></body></html>");
 
     if (data.type() == QVariant::String)
     {
-        const QString s = data.toString();
-        if (isHtml(s))
-            return data;
-        else
-            return htmlFromPlainText(s);
+        QString s = data.toString();
+        return ::checkLoadHtml(s);
     }
     else if (data.type() == QVariant::ByteArray)
     {
-        const QByteArray a = data.toByteArray();
-        if (isHtml(a))
-            return data;
-        else
-            return htmlFromPlainText(QString(a)); // XXX encoding
+        const QByteArray ba = data.toByteArray();
+        QTextCodec *codec = Qt::codecForHtml(ba);
+        QString s = codec->toUnicode(ba);
+        return ::checkLoadHtml(s);
     }
     else
     {
