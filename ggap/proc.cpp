@@ -92,12 +92,12 @@ GapMsg GapMsg::text(const QByteArray &data, GapProcess::OutputType type)
 }
 
 GapMsg::GapMsg(Type type, const QByteArray &data, uint offset) :
-    type(type), data(data.data() + offset, data.size() - offset)
+    type(type), data(data.constData() + offset, data.size() - offset)
 {
 }
 
 GapMsg::GapMsg(Type type, const QByteArray &data, uint offset, const QVariant &extra) :
-    type(type), data(data.data() + offset, data.size() - offset), extra(extra)
+    type(type), data(data.constData() + offset, data.size() - offset), extra(extra)
 {
 }
 
@@ -120,7 +120,7 @@ GapMsg GapMsg::parseData(const QByteArray &data)
         return GapMsg(Globals, data, strlen("globals-deleted:"),
                       GapProcess::GlobalsRemoved);
 
-    qCritical ("%s: got unknown data: '%s'", Q_FUNC_INFO, data.data());
+    qCritical ("%s: got unknown data: '%s'", Q_FUNC_INFO, data.constData());
     return GapMsg(Text, data);
 }
 
@@ -218,7 +218,7 @@ void GapProcessParser::readCharsMaybeMagic(char const **data_p, uint *data_len_p
     *data_p = data + n;
     *data_len_p = data_len - n;
 
-    if (strncmp (inputBuf.data(), MAGIC, inputBuf.size()) != 0)
+    if (strncmp (inputBuf.constData(), MAGIC, inputBuf.size()) != 0)
     {
         QByteArray tmp;
         qSwap(inputBuf, tmp);
@@ -293,7 +293,7 @@ void GapProcessParser::readCharsDataFixedLen(char const **data_p, uint *data_len
 
     if (inputBuf.size() == LENGTH_LEN)
     {
-        uint input_data_len = get_length(inputBuf.data());
+        uint input_data_len = get_length(inputBuf.constData());
 
         if (input_data_len == 0)
         {
@@ -389,7 +389,7 @@ void GapProcessParser::readCharsMaybeDataEnd(char const **data_p, uint *data_len
         if (inputBuf2.size() < int(MAGIC_LEN))
             return;
 
-        if (strncmp (inputBuf2.data(), MAGIC, inputBuf2.size()) != 0)
+        if (strncmp (inputBuf2.constData(), MAGIC, inputBuf2.size()) != 0)
         {
             inputBuf.append(inputBuf2);
             erase(inputBuf2);
@@ -469,7 +469,7 @@ void GapProcessParser::process_data(const char **buf, uint *len, QList<GapMsg> &
 
 void GapProcessPrivate::doOutput(const QByteArray &output, GapProcess::OutputType type)
 {
-    const char *data = output.data();
+    const char *data = output.constData();
     uint data_len = output.size();
 
     m_return_if_fail(data_len != 0);
@@ -555,7 +555,7 @@ void GapProcessPrivate::doScript(const QString &text)
 void GapProcessPrivate::doGlobals(const QByteArray &data, GapProcess::GlobalsChange change)
 {
     M_Q(GapProcess);
-    emit q->globalsChanged(data.data(), data.size(), change);
+    emit q->globalsChanged(data.constData(), data.size(), change);
 }
 
 void GapProcessPrivate::stopRunningCommandLoop(CommandInfo *ci)

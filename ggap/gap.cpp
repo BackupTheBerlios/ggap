@@ -20,11 +20,11 @@ static QString filenameToCommandLine(const QString &path)
     path_w[len] = 0;
 
     QVector<wchar_t> dest(len + 1);
-    int ret = GetShortPathNameW(path_w.data(), dest.data(), dest.size());
+    int ret = GetShortPathNameW(path_w.constData(), dest.data(), dest.size());
     if (ret > dest.size())
     {
         dest.resize(ret);
-        ret = GetShortPathNameW(path_w.data(), dest.data(), dest.size());
+        ret = GetShortPathNameW(path_w.constData(), dest.data(), dest.size());
     }
 
     if (ret <= 0)
@@ -34,7 +34,7 @@ static QString filenameToCommandLine(const QString &path)
     }
     else
     {
-        return QDir::fromNativeSeparators(QString::fromWCharArray(dest.data()));
+        return QDir::fromNativeSeparators(QString::fromWCharArray(dest.constData()));
     }
 }
 #else

@@ -158,7 +158,7 @@ static QStringList getExeDirs()
         comps << qenv.split(';');
 #else
         QByteArray env = qgetenv("PATH");
-        QString qenv = QString::fromLocal8Bit(env.data(), env.size());
+        QString qenv = QString::fromLocal8Bit(env);
         comps = qenv.split(':');
 #endif
 

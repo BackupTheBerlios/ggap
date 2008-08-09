@@ -323,9 +323,9 @@ private:
                                     parser_stdout : parser_stderr;
 
 //         if (type == GapProcess::Stderr)
-//             write_log(data.data(), data.size(), true);
+//             write_log(data.constData(), data.size(), true);
 
-        const char *buf = data.data();
+        const char *buf = data.constData();
         uint len = data.size();
         QList<GapMsg> messages;
 

@@ -56,7 +56,7 @@ static QAction *findAction(AppWindow *self, const char *name)
     QAction *a = self->findChild<QAction*>(name);
     if (!a)
         qCritical("no action `%s' in window `%s'", name,
-                  self->objectName().toLocal8Bit().data());
+                  qPrintable(self->objectName()));
     return a;
 }
 

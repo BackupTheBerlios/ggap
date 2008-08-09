@@ -104,7 +104,7 @@ inline QString gapOutputToString(const char *data, uint data_len)
 
 inline QString gapOutputToString(const QByteArray &data)
 {
-    return gapOutputToString(data.data(), data.size());
+    return gapOutputToString(data.constData(), data.size());
 }
 
 } // namespace ggap

@@ -642,7 +642,7 @@ public:
     }
 
     Utf8LineReader(const QByteArray &data) :
-        ptr(data.data()), le(0), next(0), end(data.data() + data.size())
+        ptr(data.constData()), le(0), next(0), end(data.constData() + data.size())
     {
     }
 };
