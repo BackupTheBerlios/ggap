@@ -2,7 +2,7 @@ include ../mk/pre.mk
 
 noinst_LIBRARIES = libmoows.a
 
-ALL_CXXFLAGS =		\
+AM_CXXFLAGS =		\
     -I..		\
     -I$(srcdir)/..	\
     $(QT_CXXFLAGS)	\
@@ -49,7 +49,7 @@ nodist_libmoows_a_SOURCES = \
 
 include ../mk/qt.mk
 
-pch_header = common.h
+PCH_HEADER = common.h
 include ../mk/pch.mk
 
 wsblock-format.o: wsblock.o

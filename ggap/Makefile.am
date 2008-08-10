@@ -75,7 +75,7 @@ EXTRA_DIST += $(test_sources) $(test_moc_h_files)
 endif
 
 ggap_LDADD = ../moows/libmoows.a ../contrib/libcontrib.a $(QT_LIBS)
-ALL_CXXFLAGS =			\
+AM_CXXFLAGS =			\
     -I..			\
     -I$(srcdir)/..		\
     -I$(srcdir)/../contrib	\
@@ -104,7 +104,7 @@ EXTRA_DIST += $(help_qrc_deps)
 
 include ../mk/qt.mk
 
-pch_header = $(srcdir)/../moows/common.h
+PCH_HEADER = $(srcdir)/../moows/common.h
 include ../mk/pch.mk
 
 %-p.o: %.o
