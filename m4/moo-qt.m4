@@ -46,7 +46,8 @@ AC_DEFUN([_MOO_AC_QT_CHECK],[
   ]])],[
     AC_MSG_RESULT([yes])
   ],[
-    AC_MSG_ERROR([no])
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([Can't compile Qt programs])
   ])
 
   AC_LANG_POP
