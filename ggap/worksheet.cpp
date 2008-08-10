@@ -730,19 +730,12 @@ void Worksheet::keyPressEvent(QKeyEvent *e)
 {
     if (impl->completer.popup()->isVisible())
     {
-//         switch (e->key())
-//         {
-//             case Qt::Key_Enter:
-//             case Qt::Key_Return:
-//             case Qt::Key_Escape:
-//             case Qt::Key_Tab:
-//             case Qt::Key_Backtab:
-                e->ignore();
-                return;
-//         }
+        impl->completer.keyPressEvent(e);
+        return;
     }
-    else if (e->key() == Qt::Key_Tab && e->modifiers() == 0 &&
-             dynamic_cast<moo::ws::PromptBlock*>(blockAtCursor()))
+
+    if (e->key() == Qt::Key_Tab && e->modifiers() == 0 &&
+        dynamic_cast<moo::ws::PromptBlock*>(blockAtCursor()))
     {
         impl->completer.maybeComplete();
         e->accept();
@@ -904,6 +897,12 @@ void WsCompleter::maybeComplete()
     rect.setWidth(popup()->sizeHintForColumn(0) +
                   popup()->verticalScrollBar()->sizeHint().width());
     complete(rect);
+}
+
+void WsCompleter::keyPressEvent(QKeyEvent *e)
+{
+    m_implement_me();
+    e->ignore();
 }
 
 bool WsCompleter::eventFilter(QObject *obj, QEvent *event)

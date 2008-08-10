@@ -30,6 +30,8 @@ private Q_SLOTS:
 
 public:
     WsCompleter(Worksheet *ws);
+
+    void keyPressEvent(QKeyEvent *e);
     void maybeComplete();
     void clear();
 
