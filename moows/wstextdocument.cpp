@@ -502,7 +502,7 @@ void TextDocumentPrivate::applyFormat(QTextCursor &cr, const QTextCharFormat &fo
     if (!cr.hasSelection())
         return;
 
-    m_implement_me();
+    M_IMPLEMENT_ME();
     modify(cr, format, true);
 
     pub->check();
@@ -896,8 +896,7 @@ public:
 
     void undo()
     {
-        qDebug() << Q_FUNC_INFO;
-        m_implement_me();
+        M_IMPLEMENT_ME();
     }
 
     int id() const

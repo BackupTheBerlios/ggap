@@ -89,7 +89,7 @@ static void paintBlockGuide(Worksheet *ws, const Block *block, QPainter &p)
     else if (const TextBlock *tb = dynamic_cast<const TextBlock*>(block))
         paintTextBlockGuide(ws, tb, p);
     else
-        m_implement_me();
+        M_IMPLEMENT_ME();
 }
 
 void Worksheet::paintEvent(QPaintEvent *e)

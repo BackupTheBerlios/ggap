@@ -379,7 +379,7 @@ void Worksheet::writeMarkup(const QString &text)
 
 void Worksheet::highlightError(int line, int firstColumn, int lastColumn, const QString &message)
 {
-    m_implement_me();
+    M_IMPLEMENT_ME();
     writeError(message + "\n");
     m_return_if_fail(impl->input != 0);
     impl->input->highlightError(line, firstColumn, lastColumn);

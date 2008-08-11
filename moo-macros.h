@@ -39,11 +39,13 @@ M_STMT_START { \
     return val; \
 } M_STMT_END
 
-#define M_ABORT() \
-M_STMT_START { \
-    char *a__ = 0; \
-    a__[-1] = 9; \
-} M_STMT_END
+inline void m_segfault()
+{
+    char *a__ = 0;
+    a__[-1] = 9;
+}
+
+#define M_ABORT() m_segfault()
 
 #ifndef QT_NO_DEBUG
 #define M_ASSERT(cond) \
@@ -58,15 +60,18 @@ M_STMT_START { \
 #define M_ASSERT(cond) Q_ASSERT(cond)
 #endif
 
-#define m_implement_me() \
+#define m_code_warning__(msg) \
 M_STMT_START { \
     static bool been_here_##__LINE__; \
     if (!been_here_##__LINE__) \
     { \
         been_here_##__LINE__ = true; \
-        qCritical("IMPLEMENT ME: %s", Q_FUNC_INFO); \
+        qCritical(msg ": %s", Q_FUNC_INFO); \
     } \
 } M_STMT_END
+
+#define M_IMPLEMENT_ME() m_code_warning__("IMPLEMENT ME")
+#define M_FIXME() m_code_warning__("FIXME")
 
 #define M_IMPLEMENT_ME_FATAL() \
 M_STMT_START { \

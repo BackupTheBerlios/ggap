@@ -13,7 +13,7 @@ using namespace moo::ws;
 rt::Fragment::Fragment(const QTextCursor &cr) :
     d(new FragmentData(cr.selectedText()))
 {
-    m_implement_me();
+    M_IMPLEMENT_ME();
 }
 
 rt::Fragment::Fragment() :
