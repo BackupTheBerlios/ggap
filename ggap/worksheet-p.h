@@ -17,9 +17,10 @@ class WsCompleter : public QCompleter {
     QStringListModel model;
     QStringList items;
     bool model_set;
+    QTextCursor selection;
 
 private:
-    QString getTextToComplete(QTextCursor &cr);
+    QString getTextToComplete();
     void ensureModelSet();
     void unsetModel();
     bool eventFilter(QObject *obj, QEvent *event);

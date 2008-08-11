@@ -671,6 +671,8 @@ void WsCompleter::doUnsetModel()
         model_set = false;
         model.setStringList(QStringList());
     }
+
+    selection = QTextCursor();
 }
 
 void WsCompleter::clear()
@@ -776,9 +778,11 @@ inline static bool isWordChar(const QString &s)
                 ch == ch.toAscii();
 }
 
-QString WsCompleter::getTextToComplete(QTextCursor &cr)
+QString WsCompleter::getTextToComplete()
 {
-    m_implement_me();
+    M_FIXME();
+
+    QTextCursor cr = ws->textCursor();
 
     if (cr.atBlockStart())
         return QString();
@@ -802,15 +806,15 @@ QString WsCompleter::getTextToComplete(QTextCursor &cr)
     int cursor = cr.position();
     cr.setPosition(start.position());
     cr.setPosition(cursor, QTextCursor::KeepAnchor);
+    selection = cr;
     return cr.selectedText();
 }
 
 void WsCompleter::doActivated(const QString &text)
 {
-    int extra = text.length() - completionPrefix().length();
-    QTextCursor cr = ws->textCursor(); // XXX
-    ws->document().insertInteractive(cr, text.right(extra), 0);
-    ws->setTextCursor(cr);
+    m_return_if_fail(!selection.isNull());
+    ws->document().insertInteractive(selection, text, 0);
+    ws->setTextCursor(selection);
     unsetModel();
 }
 
@@ -843,8 +847,7 @@ void WsCompleter::maybeComplete()
     m_return_if_fail(!popup()->isVisible());
     m_return_if_fail(!model_set);
 
-    QTextCursor cr = ws->textCursor();
-    QString prefix = getTextToComplete(cr);
+    QString prefix = getTextToComplete();
 
     if (prefix.isEmpty())
     {
@@ -880,20 +883,19 @@ void WsCompleter::maybeComplete()
     QString new_prefix = find_max_prefix(this, prefix);
     if (new_prefix != prefix)
     {
-        m_implement_me();
-        int extra = new_prefix.length() - prefix.length();
-        QTextCursor tmp = cr;
-        tmp.clearSelection();
-        ws->document().insertInteractive(tmp, new_prefix.right(extra), 0);
-        ws->setTextCursor(tmp);
-        cr.setPosition(tmp.position(), QTextCursor::KeepAnchor);
+        int start = selection.selectionStart();
+        ws->document().insertInteractive(selection, new_prefix, 0);
+        ws->setTextCursor(selection);
+        int end = selection.position();
+        selection.setPosition(start);
+        selection.setPosition(end, QTextCursor::KeepAnchor);
         setCompletionPrefix(new_prefix);
         prefix = new_prefix;
     }
 
     popup()->setCurrentIndex(completionModel()->index(0, 0));
 
-    QRect rect = ws->cursorRect(cr);
+    QRect rect = ws->cursorRect(selection);
     rect.setWidth(popup()->sizeHintForColumn(0) +
                   popup()->verticalScrollBar()->sizeHint().width());
     complete(rect);
@@ -901,7 +903,7 @@ void WsCompleter::maybeComplete()
 
 void WsCompleter::keyPressEvent(QKeyEvent *e)
 {
-    m_implement_me();
+    M_IMPLEMENT_ME();
     e->ignore();
 }
 
