@@ -1,5 +1,4 @@
 #include "config.h"
-#include "moo-config-dirs.h"
 #include "moo-macros.h"
 #include "ggap/app.h"
 #include "ggap/dialogs.h"
