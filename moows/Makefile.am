@@ -19,6 +19,7 @@ libmoows_a_SOURCES =	\
     worksheet.cpp	\
     worksheet-draw.cpp	\
     worksheet-file.cpp	\
+    worksheet-format.cpp\
     worksheet-input.cpp	\
     worksheet-xml.cpp	\
     worksheet-xml.h	\
@@ -32,13 +33,11 @@ libmoows_a_SOURCES =	\
     $(moc_h_files)	\
     $(moc_cpp_files)
 
-moc_cpp_files =		\
-    worksheet-format.cpp
-
 moc_h_files =		\
     colorcombobox.h	\
     worksheet-p.h	\
     worksheet.h		\
+    worksheet-format-p.h\
     wstextblock.h	\
     wstextdocument-p.h	\
     wstextdocument.h

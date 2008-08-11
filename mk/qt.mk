@@ -1,11 +1,5 @@
 # -*- makefile -*-
 
-moc_%.cpp.stamp: %.cpp Makefile
-	$(QT_MOC) -o moc_$*.cpp.tmp $< && \
-        sed 's/\*\* Created: [^*]*$$/** Created: today/' moc_$*.cpp.tmp > moc_$*.cpp.tmp2 && \
-	(cmp -s moc_$*.cpp.tmp2 moc_$*.cpp || mv moc_$*.cpp.tmp2 moc_$*.cpp) && \
-	rm -f moc_$*.cpp.tmp moc_$*.cpp.tmp2 && echo stamp > $@
-
 ui_%.h.stamp: $(srcdir)/%.ui Makefile
 	$(QT_UIC) -o ui_$*.h.tmp $< && \
         sed 's/\*\* Created: [^*]*$$/** Created: today/' ui_$*.h.tmp > ui_$*.h.tmp2 && \
@@ -21,10 +15,9 @@ $(moc_gen_cpp).stamp: $(moc_h_files) Makefile
 	(cmp -s $(moc_gen_cpp).tmp2 $(moc_gen_cpp) || mv $(moc_gen_cpp).tmp2 $(moc_gen_cpp)) && \
 	rm -f $(moc_gen_cpp).tmp $(moc_gen_cpp).tmp2 && echo stamp > $@
 
-moc_gen_incls = $(patsubst %,moc_%,$(moc_cpp_files))
 ui_gen_sources = $(patsubst %.ui,ui_%.h,$(ui_files))
 
-qt_gen_sources = $(moc_gen_sources) $(moc_gen_incls) $(ui_gen_sources)
+qt_gen_sources = $(moc_gen_sources) $(ui_gen_sources)
 qt_gen_stamps = $(addsuffix .stamp,$(qt_gen_sources))
 
 EXTRA_DIST += $(moc_h_files) $(ui_files)
