@@ -123,8 +123,6 @@ App::App(int &argc, char **argv) :
     QApplication(argc, argv)
 {
     Q_INIT_RESOURCE(ggap);
-    Q_INIT_RESOURCE(gap);
-    Q_INIT_RESOURCE(help);
 
 #if !defined(Q_OS_MAC)
     QIcon icon;

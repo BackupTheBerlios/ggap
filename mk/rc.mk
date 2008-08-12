@@ -11,11 +11,11 @@ if MOO_OS_MINGW
 	$(WINDRES) -i $*.rc --input-format=rc -o $@ -O coff && \
 	rm $*.rc
 
-res_files = $(RC_IN_FILES:.rc.in=.res)
+ugly_res_files = $(RC_IN_FILES:.rc.in=.res)
 
-CLEANFILES += $(res_files)
-BUILT_SOURCES += $(res_files)
-@MODULE@_LDADD += $(res_files)
+CLEANFILES += $(ugly_res_files)
+BUILT_SOURCES += $(ugly_res_files)
+@MODULE@_LDADD += $(ugly_res_files)
 
 endif
 

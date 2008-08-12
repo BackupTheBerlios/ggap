@@ -4,11 +4,13 @@
 
 EXTRA_DIST += $(PCH_HEADER)
 
-BASE_COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-BASE_CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+ugly_base_compile_c = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+ugly_base_compile_cxx = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+ugly_base_compile_objc = $(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_OBJCFLAGS) $(OBJCFLAGS)
 
-COMPILE = $(BASE_COMPILE)
-CXXCOMPILE = $(BASE_CXXCOMPILE)
+COMPILE = $(ugly_base_compile_c)
+CXXCOMPILE = $(ugly_base_compile_cxx)
+OBJCCOMPILE = $(ugly_base_compile_objc)
 
 if MOO_ENABLE_PCH
 
@@ -19,9 +21,9 @@ pch_name = precompiled-header-name
 pch_files = $(pch_name)-c.gch $(pch_name)-c++.gch
 
 $(pch_name)-c.gch: $(PCH_HEADER)
-	$(BASE_COMPILE) -x c-header -c $< -o $@
+	$(ugly_base_compile_c) -x c-header -c $< -o $@
 $(pch_name)-c++.gch: $(PCH_HEADER)
-	$(BASE_CXXCOMPILE) -x c++-header -c $< -o $@
+	$(ugly_base_compile_cxx) -x c++-header -c $< -o $@
 
 COMPILE += -include $(pch_name)-c -Winvalid-pch
 CXXCOMPILE += -include $(pch_name)-c++ -Winvalid-pch

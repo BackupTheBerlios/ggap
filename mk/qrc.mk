@@ -9,13 +9,10 @@
 #        QT_QRC_DEPS
 #
 
-qrc_cpp = $(QT_QRC_NAME)-qrc.cpp
-$(qrc_cpp): $(QT_QRC_FILES) $(QT_QRC_DEPS)
-	$(QT_RCC) -o $(qrc_cpp).tmp -name $(QT_QRC_NAME) $(addprefix $(srcdir)/,$(QT_QRC_FILES)) && mv $(qrc_cpp).tmp $(qrc_cpp)
-
-qrc_names = $(basename $(QT_QRC_FILES))
-GEN_QRC_SRCS = $(QT_QRC_FILES:.qrc=-qrc.cpp)
+ugly_qrc_cpp = $(QT_QRC_NAME)-qrc.cpp
+$(ugly_qrc_cpp): $(QT_QRC_FILES) $(QT_QRC_DEPS)
+	$(QT_RCC) -o $(ugly_qrc_cpp).tmp -name $(QT_QRC_NAME) $(addprefix $(srcdir)/,$(QT_QRC_FILES)) && mv $(ugly_qrc_cpp).tmp $(ugly_qrc_cpp)
 
 EXTRA_DIST += $(QT_QRC_FILES) $(QT_QRC_DEPS)
-BUILT_SOURCES += $(GEN_QRC_SRCS)
-@MODULE@_SOURCES += $(GEN_QRC_SRCS)
+BUILT_SOURCES += $(ugly_qrc_cpp)
+@MODULE@_SOURCES += $(ugly_qrc_cpp)

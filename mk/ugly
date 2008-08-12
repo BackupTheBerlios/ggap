@@ -114,7 +114,7 @@ _EOFEOF
   if grep PCH_HEADER $infile > /dev/null 2>&1; then
     mk_mods="$mk_mods pch"
   fi
-  if grep 'YACC_FILES|YACC_PP_FILES' $infile > /dev/null 2>&1; then
+  if grep -E 'YACC_FILES|YACC_PP_FILES' $infile > /dev/null 2>&1; then
     mk_mods="$mk_mods yacc"
   fi
   if grep RC_IN_FILES $infile > /dev/null 2>&1; then

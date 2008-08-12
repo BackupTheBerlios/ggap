@@ -18,8 +18,6 @@ ggap_SOURCES =		\
     parser.cpp		\
     parser.h		\
     parser-p.h		\
-    parser-yacc.cpp	\
-    parser-yacc.h	\
     prefs.cpp		\
     prefs.h		\
     prefsdialog.cpp	\
@@ -111,7 +109,7 @@ proc-wrapper.o: proc.o
 
 include gap/Makefile.incl
 
-YACC_PP_FILES = parser-yacc.y
+YACC_PP_FILES = parser.y
 
 RC_IN_FILES = ggap.rc.in
 
