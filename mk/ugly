@@ -1,0 +1,122 @@
+#! /bin/sh
+
+DEBUG=no
+
+debug() {
+  if [ "$DEBUG" != "yes" ]; then
+    :
+  elif [ -z "$current_func" ]; then
+    echo "$@" > /dev/stderr
+  else
+    echo "$current_func: $@" > /dev/stderr
+  fi
+}
+
+find_input() {
+  current_func=find_input
+  debug "dir: $1"
+  if [ -f $1/Makefile.ug ]; then
+    echo $1/Makefile.ug
+    subdirs=`grep '\bSUBDIRS\b' $1/Makefile.ug`
+    if [ -n "$subdirs" ]; then
+      subdirs=`echo "$subdirs" | sed 's/SUBDIRS[ ]*=//'`
+    fi
+    debug "subdirs: $subdirs"
+    if [ -n "$subdirs" ]; then
+      for sd in $subdirs; do
+        debug "going into: $1/$sd"
+        find_input $1/$sd
+      done
+    fi
+  fi
+}
+
+do_makefile() {
+  current_func=do_makefile
+
+  infile="$1"
+  subdir=`dirname $infile | sed 's,^\./,,'`
+  outbase=`basename $infile .ug`
+  out=$subdir/$outbase.am
+
+  if [ "$subdir" = . ]; then
+    rel_topdir=.
+    mk_prefix="mk"
+  else
+    rel_topdir=`echo $subdir | sed 's,[^/]*,..,g'`
+    mk_prefix="$rel_topdir/mk"
+  fi
+
+  debug "processing $infile, output: $out, subdir: $subdir, topdir: $rel_topdir"
+
+  includes=
+
+  if grep PCH_HEADER $infile > /dev/null 2>&1; then
+    includes="$includes pch.mk"
+  fi
+  if grep QT_QRC_FILES $infile > /dev/null 2>&1; then
+    includes="$includes qrc.mk"
+  fi
+  if grep QT_MOC_HDRS $infile > /dev/null 2>&1; then
+    includes="$includes moc.mk"
+  fi
+  if grep 'YACC_FILES|YACC_PP_FILES' $infile > /dev/null 2>&1; then
+    includes="$includes yacc.mk"
+  fi
+
+  if [ "$subdir" = . ]; then
+    includes="$includes ugly-top.mk"
+  fi
+
+  cat > $out.tmp << _EOFEOF
+#
+# begin ugly stuff
+#
+
+include $mk_prefix/ugly-pre.mk
+
+#
+# end ugly stuff
+#
+
+_EOFEOF
+
+  cat $infile >> $out.tmp || exit $?
+
+  cat >> $out.tmp << _EOFEOF
+
+#
+# begin ugly stuff
+#
+
+_EOFEOF
+
+  for inc in $includes; do
+  cat >> $out.tmp << _EOFEOF
+include $mk_prefix/$inc
+_EOFEOF
+  done
+
+  cat >> $out.tmp << _EOFEOF
+include $mk_prefix/ugly-post.mk
+
+#
+# end ugly stuff
+#
+_EOFEOF
+
+  mv $out.tmp $out || exit $?
+}
+
+if [ -z "$1" ]; then
+  top_srcdir=.
+  input=`find_input .`
+else
+  top_srcdir="$1"
+  input="$2/Makefile.ug"
+fi
+
+cd $top_srcdir
+for f in $input; do
+  do_makefile "$f"
+done

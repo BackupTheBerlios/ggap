@@ -1,5 +1,3 @@
-include ../mk/pre.mk
-
 noinst_LIBRARIES = libmoows.a
 
 AM_CXXFLAGS =		\
@@ -25,7 +23,7 @@ libmoows_a_SOURCES =	\
     wstextblock.cpp	\
     wstextdocument.cpp
 
-MOC_HDRS =		\
+QT_MOC_HDRS =		\
     colorcombobox.h	\
     worksheet-p.h	\
     worksheet.h		\
@@ -38,10 +36,7 @@ nodist_libmoows_a_SOURCES = \
     $(nodist_mod_SRCS)
 
 PCH_HEADER = common.h
-include ../mk/pch.mk
 
 wsblock-format.o: wsblock.o ; @true
 %_p.o: %.o ; @true
 %-p.o: %.o ; @true
-
-include ../mk/moc.mk

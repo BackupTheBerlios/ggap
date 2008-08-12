@@ -1,5 +1,3 @@
-include ../mk/pre.mk
-
 bin_PROGRAMS = ggap
 
 ggap_SOURCES =		\
@@ -33,7 +31,7 @@ ggap_SOURCES =		\
     wswindow.cpp	\
     $(mod_SRCS)
 
-MOC_HDRS =		\
+QT_MOC_HDRS =		\
     app.h		\
     appwindow.h		\
     dialogs.h		\
@@ -64,7 +62,7 @@ test_moc_h_files =	\
     script-t.h
 if MOO_ENABLE_UNIT_TESTS
 ggap_SOURCES += $(test_sources)
-MOC_HDRS += $(test_moc_h_files)
+QT_MOC_HDRS += $(test_moc_h_files)
 else
 EXTRA_DIST += $(test_sources) $(test_moc_h_files)
 endif
@@ -83,7 +81,7 @@ AM_CXXFLAGS =			\
     -Wall -W			\
     $(MOO_UNIT_TESTS_CFLAGS)
 
-UI_FILES =			\
+QT_UI_FILES =			\
     about.ui			\
     addbookmark.ui		\
     editdirlist.ui		\
@@ -91,16 +89,18 @@ UI_FILES =			\
     prefs.ui			\
     wswindow.ui
 
-QRC_NAME = ggap
-QRC_FILES = ggap.qrc gap.qrc help.qrc
-QRC_DEPS =			\
+QT_QRC_NAME = ggap
+QT_QRC_FILES =			\
+    ggap.qrc			\
+    gap.qrc			\
+    help.qrc
+QT_QRC_DEPS =			\
     $(top_srcdir)/THANKS	\
     gap/restore.g		\
     gap/ggap.g			\
     help/prefsdialog.html
 
 PCH_HEADER = $(srcdir)/../moows/common.h
-include ../mk/pch.mk
 
 %-p.o: %.o
 	@true
@@ -111,8 +111,7 @@ proc-wrapper.o: proc.o
 
 include gap/Makefile.incl
 
-yacc_pp_files = parser-yacc.y
-include ../mk/yacc.mk
+YACC_PP_FILES = parser-yacc.y
 
 if MOO_OS_MINGW
 # ggap_LDFLAGS += -mwindows
@@ -128,7 +127,3 @@ EXTRA_DIST += $(tests)
 if MOO_ENABLE_UNIT_TESTS
 TESTS += $(tests)
 endif
-
-include ../mk/qrc.mk
-include ../mk/moc.mk
-include ../mk/uic.mk

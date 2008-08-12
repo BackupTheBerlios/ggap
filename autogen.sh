@@ -23,6 +23,12 @@ AUTOMAKE=${AUTOMAKE:-automake-1.10}
 AUTOHEADER=${AUTOHEADER:-autoheader}
 AUTOCONF=${AUTOCONF:-autoconf}
 LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
+UGLY=${UGLY:-./mk/ugly}
+
+if [ -f Makefile.ug ]; then
+  echo $UGLY
+  $UGLY || exit $?
+fi
 
 if grep AC_PROG_LIBTOOL configure.ac; then
   echo $LIBTOOLIZE --automake --copy --force

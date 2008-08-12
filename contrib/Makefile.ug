@@ -1,5 +1,3 @@
-include ../mk/pre.mk
-
 noinst_LIBRARIES = libcontrib.a
 
 libcontrib_a_SOURCES =
@@ -33,3 +31,6 @@ libcontrib_a_SOURCES +=		\
 
 EXTRA_DIST +=			\
     zip/README
+
+# erg erger gerg eg
+# regergerg
