@@ -6,13 +6,7 @@ AM_CXXFLAGS =		\
     -I..		\
     -I$(srcdir)/..	\
     $(QT_CXXFLAGS)	\
-    -Wall -Wreorder	\
-    -Wno-non-template-friend \
-    -Woverloaded-virtual\
-    -Wunused -Winit-self\
-    -Woverloaded-virtual \
-    -Wunused-parameter	\
-    -W
+    -Wall -W
 
 libmoows_a_SOURCES =	\
     colorcombobox.cpp	\
@@ -29,11 +23,9 @@ libmoows_a_SOURCES =	\
     wsblock-p.h		\
     wsblock-format.h	\
     wstextblock.cpp	\
-    wstextdocument.cpp	\
-    $(moc_h_files)	\
-    $(moc_cpp_files)
+    wstextdocument.cpp
 
-moc_h_files =		\
+MOC_HDRS =		\
     colorcombobox.h	\
     worksheet-p.h	\
     worksheet.h		\
@@ -43,17 +35,13 @@ moc_h_files =		\
     wstextdocument.h
 
 nodist_libmoows_a_SOURCES = \
-    $(moc_gen_cpp)	\
-    $(ui_gen_sources)
-
-include ../mk/qt.mk
+    $(nodist_mod_SRCS)
 
 PCH_HEADER = common.h
 include ../mk/pch.mk
 
-wsblock-format.o: wsblock.o
-	@true
-%_p.o: %.o
-	@true
-%-p.o: %.o
-	@true
+wsblock-format.o: wsblock.o ; @true
+%_p.o: %.o ; @true
+%-p.o: %.o ; @true
+
+include ../mk/moc.mk

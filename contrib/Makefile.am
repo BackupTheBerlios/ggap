@@ -9,8 +9,6 @@ AM_CXXFLAGS =			\
     -Wall -W			\
     -I$(srcdir)/qxt
 
-include ../mk/qt.mk
-
 
 libcontrib_a_SOURCES +=		\
     qxt/qxtcommandoptions.cpp	\

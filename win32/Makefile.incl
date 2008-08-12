@@ -131,7 +131,7 @@ gap-files: BIN/gap4r4/bin/gapw95.exe
 #
 # Zip files
 #
-win_installer_deps = $(nsi_files) ggap-files gap-files
+win_installer_deps = ggap-files gap-files $(nsi_files)
 
 win-zip: $(win_installer_deps)
 	rm -fr $(ZIP_FILE) ggap-win/$(ZIP_FILE) ggap-win/$(ZIP_DIR) || exit 1

@@ -3,14 +3,16 @@ ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
 
 SUBDIRS = contrib moows ggap
 
-EXTRA_DIST =            \
-    autogen.sh          \
+EXTRA_DIST =		\
+    autogen.sh		\
     moo-debug.h		\
     moo-macros.h	\
     moo-pimpl.h		\
     moo-unit-tests.h	\
     COPYING		\
-    xml2h.sh
+    THANKS		\
+    mk/moc-wrapper	\
+    mk/uic-wrapper
 
 # desktopdir = $(datadir)/applications
 # desktop_DATA = ggap.desktop

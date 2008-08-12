@@ -31,13 +31,9 @@ ggap_SOURCES =		\
     windowmenu.cpp	\
     worksheet.cpp	\
     wswindow.cpp	\
-    $(moc_h_files)	\
-    $(moc_cpp_files)	\
-    $(qrc_sources)
+    $(mod_SRCS)
 
-moc_cpp_files =
-
-moc_h_files =		\
+MOC_HDRS =		\
     app.h		\
     appwindow.h		\
     dialogs.h		\
@@ -57,8 +53,7 @@ moc_h_files =		\
     wswindow-p.h
 
 nodist_ggap_SOURCES =	\
-    $(moc_gen_cpp)	\
-    $(ui_gen_sources)
+    $(nodist_mod_SRCS)
 
 test_sources =		\
     tester.cpp		\
@@ -69,25 +64,26 @@ test_moc_h_files =	\
     script-t.h
 if MOO_ENABLE_UNIT_TESTS
 ggap_SOURCES += $(test_sources)
-moc_h_files += $(test_moc_h_files)
+MOC_HDRS += $(test_moc_h_files)
 else
 EXTRA_DIST += $(test_sources) $(test_moc_h_files)
 endif
 
-ggap_LDADD = ../moows/libmoows.a ../contrib/libcontrib.a $(QT_LIBS)
+ggap_LDADD =			\
+    ../moows/libmoows.a		\
+    ../contrib/libcontrib.a	\
+    $(QT_LIBS)
+
 AM_CXXFLAGS =			\
     -I..			\
     -I$(srcdir)/..		\
     -I$(srcdir)/../contrib	\
     -I$(srcdir)/../contrib/qxt	\
     $(QT_CXXFLAGS)		\
-    -Wall -Wreorder		\
-    -Wno-non-template-friend	\
-    -Woverloaded-virtual	\
-    -Wunused -W			\
+    -Wall -W			\
     $(MOO_UNIT_TESTS_CFLAGS)
 
-ui_files =			\
+UI_FILES =			\
     about.ui			\
     addbookmark.ui		\
     editdirlist.ui		\
@@ -95,14 +91,13 @@ ui_files =			\
     prefs.ui			\
     wswindow.ui
 
-qrc_files = ggap.qrc gap.qrc help.qrc
-ggap_qrc_deps = $(top_srcdir)/THANKS
-gap_qrc_deps = gap/restore.g gap/ggap.g
-help_qrc_deps =			\
+QRC_NAME = ggap
+QRC_FILES = ggap.qrc gap.qrc help.qrc
+QRC_DEPS =			\
+    $(top_srcdir)/THANKS	\
+    gap/restore.g		\
+    gap/ggap.g			\
     help/prefsdialog.html
-EXTRA_DIST += $(help_qrc_deps)
-
-include ../mk/qt.mk
 
 PCH_HEADER = $(srcdir)/../moows/common.h
 include ../mk/pch.mk
@@ -133,3 +128,7 @@ EXTRA_DIST += $(tests)
 if MOO_ENABLE_UNIT_TESTS
 TESTS += $(tests)
 endif
+
+include ../mk/qrc.mk
+include ../mk/moc.mk
+include ../mk/uic.mk
