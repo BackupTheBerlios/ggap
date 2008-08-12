@@ -1,7 +1,6 @@
 # -*- makefile -*-
 
-# $(rc_in_files) should be a list of input *.rc.in files
-# $(rc_files) is defined to be a list of generated *.res files
+# $(RC_IN_FILES) should be a list of input *.rc.in files
 
 if MOO_OS_MINGW
 
@@ -12,11 +11,12 @@ if MOO_OS_MINGW
 	$(WINDRES) -i $*.rc --input-format=rc -o $@ -O coff && \
 	rm $*.rc
 
-rc_files = $(rc_in_files:.rc.in=.res)
+res_files = $(RC_IN_FILES:.rc.in=.res)
 
-CLEANFILES += $(rc_files)
-BUILT_SOURCES += $(rc_files)
+CLEANFILES += $(res_files)
+BUILT_SOURCES += $(res_files)
+@MODULE@_LDADD += $(res_files)
 
 endif
 
-EXTRA_DIST += $(rc_in_files)
+EXTRA_DIST += $(RC_IN_FILES)

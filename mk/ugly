@@ -31,6 +31,28 @@ find_input() {
   fi
 }
 
+extract_var() {
+  # extract_var Makefile NAME
+  value=`grep '\b'$2'\b' $1`
+  if [ -n "$value" ]; then
+    value=`echo "$value" | sed 's/'$2'[ ]*=//'`
+  fi
+  value=`echo $value | tr -d " "`
+  echo "$value"
+}
+
+write_mk() {
+  # write_mk mk_mod MODULE
+  echo ""
+  echo "# begin $1.mk"
+  cat mk/$1.mk | sed 's/@MODULE@/'$2'/g'
+  echo ""
+  echo 'UGLY_DEPS += $(top_srcdir)/mk/'$1'.mk'
+  echo ""
+  echo "# end $1.mk"
+  echo ""
+}
+
 do_makefile() {
   current_func=do_makefile
 
@@ -47,26 +69,8 @@ do_makefile() {
     mk_prefix="$rel_topdir/mk"
   fi
 
-  debug "processing $infile, output: $out, subdir: $subdir, topdir: $rel_topdir"
-
-  includes=
-
-  if grep PCH_HEADER $infile > /dev/null 2>&1; then
-    includes="$includes pch.mk"
-  fi
-  if grep QT_QRC_FILES $infile > /dev/null 2>&1; then
-    includes="$includes qrc.mk"
-  fi
-  if grep QT_MOC_HDRS $infile > /dev/null 2>&1; then
-    includes="$includes moc.mk"
-  fi
-  if grep 'YACC_FILES|YACC_PP_FILES' $infile > /dev/null 2>&1; then
-    includes="$includes yacc.mk"
-  fi
-
-  if [ "$subdir" = . ]; then
-    includes="$includes ugly-top.mk"
-  fi
+  modname=`extract_var $infile MODULE | sed 's/\./_/g'`
+  debug "processing $infile, output: $out, subdir: $subdir, topdir: $rel_topdir, module: $modname"
 
   cat > $out.tmp << _EOFEOF
 #
@@ -91,10 +95,34 @@ _EOFEOF
 
 _EOFEOF
 
-  for inc in $includes; do
+  if [ "$subdir" = . ]; then
   cat >> $out.tmp << _EOFEOF
-include $mk_prefix/$inc
+include $mk_prefix/ugly-top.mk
 _EOFEOF
+  fi
+
+  mk_mods=
+  if grep QT_QRC_FILES $infile > /dev/null 2>&1; then
+    mk_mods="$mk_mods qrc"
+  fi
+  if grep QT_UI_FILES $infile > /dev/null 2>&1; then
+    mk_mods="$mk_mods uic"
+  fi
+  if grep QT_MOC_HDRS $infile > /dev/null 2>&1; then
+    mk_mods="$mk_mods moc"
+  fi
+  if grep PCH_HEADER $infile > /dev/null 2>&1; then
+    mk_mods="$mk_mods pch"
+  fi
+  if grep 'YACC_FILES|YACC_PP_FILES' $infile > /dev/null 2>&1; then
+    mk_mods="$mk_mods yacc"
+  fi
+  if grep RC_IN_FILES $infile > /dev/null 2>&1; then
+    mk_mods="$mk_mods rc"
+  fi
+
+  for m in $mk_mods; do
+    write_mk $m $modname >> $out.tmp
   done
 
   cat >> $out.tmp << _EOFEOF

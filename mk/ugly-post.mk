@@ -1,8 +1,8 @@
 # -*- makefile -*-
 
-UGLY=$(top_srcdir)/mk/ugly
+UGLY = $(top_srcdir)/mk/ugly
 
-$(srcdir)/Makefile.am: $(srcdir)/Makefile.ug $(UGLY)
+$(srcdir)/Makefile.am: $(srcdir)/Makefile.ug $(UGLY) $(UGLY_DEPS)
 	@echo 'cd $(srcdir) && $(UGLY) $(top_srcdir) $(subdir)'; \
 	cd $(srcdir) && $(UGLY) $(top_srcdir) $(subdir) && exit 0; \
 	exit 1;

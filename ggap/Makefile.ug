@@ -1,3 +1,4 @@
+MODULE = ggap
 bin_PROGRAMS = ggap
 
 ggap_SOURCES =		\
@@ -28,8 +29,7 @@ ggap_SOURCES =		\
     utils.h		\
     windowmenu.cpp	\
     worksheet.cpp	\
-    wswindow.cpp	\
-    $(mod_SRCS)
+    wswindow.cpp
 
 QT_MOC_HDRS =		\
     app.h		\
@@ -50,8 +50,7 @@ QT_MOC_HDRS =		\
     wswindow.h		\
     wswindow-p.h
 
-nodist_ggap_SOURCES =	\
-    $(nodist_mod_SRCS)
+nodist_ggap_SOURCES =
 
 test_sources =		\
     tester.cpp		\
@@ -68,6 +67,7 @@ EXTRA_DIST += $(test_sources) $(test_moc_h_files)
 endif
 
 ggap_LDADD =			\
+    $(mod_LDADD)		\
     ../moows/libmoows.a		\
     ../contrib/libcontrib.a	\
     $(QT_LIBS)
@@ -113,13 +113,7 @@ include gap/Makefile.incl
 
 YACC_PP_FILES = parser-yacc.y
 
-if MOO_OS_MINGW
-# ggap_LDFLAGS += -mwindows
-rc_in_files = ggap.rc.in
-ggap_LDADD += ggap.res
-ggap.exe: ggap.res
-include ../mk/rc.mk
-endif MOO_OS_MINGW
+RC_IN_FILES = ggap.rc.in
 
 tests = run-unit-tests
 TESTS =

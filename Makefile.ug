@@ -12,21 +12,5 @@ EXTRA_DIST +=		\
     COPYING		\
     THANKS
 
-# desktopdir = $(datadir)/applications
-# desktop_DATA = ggap.desktop
-#
-# pixmaps_files = ggap.png
-# theme_files = ggap.png gap.png
-# include ../moo/mk/icon.mk
-
-distuninstallcheck_listfiles = find . -type f -print | grep -v share/mime/ | grep -v share/icons/hicolor
-
-# EXTRA_DIST +=		\
-# 	$(desktop_DATA)	\
-# 	$(ggap_DATA)	\
-# 	ggap.png	\
-# 	ggap.ico	\
-# 	gap.png
-
 include mac/Makefile.incl
 include win32/Makefile.incl

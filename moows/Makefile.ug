@@ -1,3 +1,4 @@
+MODULE = libmoows.a
 noinst_LIBRARIES = libmoows.a
 
 AM_CXXFLAGS =		\
@@ -32,8 +33,7 @@ QT_MOC_HDRS =		\
     wstextdocument-p.h	\
     wstextdocument.h
 
-nodist_libmoows_a_SOURCES = \
-    $(nodist_mod_SRCS)
+nodist_libmoows_a_SOURCES =
 
 PCH_HEADER = common.h
 

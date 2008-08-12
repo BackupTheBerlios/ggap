@@ -16,4 +16,4 @@ EXTRA_DIST += $(QT_UI_FILES)
 BUILT_SOURCES += ui.h.stamp
 UI_HDRS = $(patsubst %.ui,ui_%.h,$(QT_UI_FILES))
 CLEANFILES += $(UI_HDRS) ui.h.stamp
-nodist_mod_SRCS += $(UI_HDRS)
+nodist_@MODULE@_SOURCES += $(UI_HDRS)

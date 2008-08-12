@@ -15,4 +15,4 @@ GEN_MOC_SRCS = all-classes-moc.cpp
 EXTRA_DIST += $(QT_MOC_HDRS)
 BUILT_SOURCES += all-classes-moc.cpp.stamp
 CLEANFILES += $(GEN_MOC_SRCS) all-classes-moc.cpp.stamp
-nodist_mod_SRCS += $(GEN_MOC_SRCS)
+nodist_@MODULE@_SOURCES += $(GEN_MOC_SRCS)

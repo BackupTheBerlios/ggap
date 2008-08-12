@@ -22,3 +22,4 @@ yacc_sources =                              \
 
 BUILT_SOURCES += $(yacc_sources)
 EXTRA_DIST += $(yacc_files) $(YACC_PP_FILES)
+@MODULE@_SOURCES += $(yacc_sources)

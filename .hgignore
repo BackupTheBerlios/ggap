@@ -1,7 +1,7 @@
 (^|/)\.hg($|/)
 (^|/)\.hgtags($|/)
 build/.*
-Makefile\.in$
+Makefile\.(in|am)$
 aclocal\.m4
 autom4te.*
 compile
