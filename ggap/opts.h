@@ -371,6 +371,14 @@ public:
             if (arg == "--help-all")
                 showHelp(true);
 
+#ifdef Q_OS_MAC
+            if (arg.startsWith("-psn_"))
+            {
+                ret_args << i;
+                continue;
+            }
+#endif
+
             int optstart = arg.startsWith("--") ? 2 : 1;
             int eq = arg.indexOf('=', 1);
             QString opt = arg.mid(optstart, eq - optstart);
