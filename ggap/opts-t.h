@@ -134,6 +134,7 @@ private Q_SLOTS:
 #ifdef Q_OS_MAC
         args << "-psn_0_8650753";
 #endif
+        ret << "-psn_0_8650753";
         pos << "afile" << "fileagain";
         QTest::newRow("2") << args << ret << pos << Data(false) << Data(true);
 
