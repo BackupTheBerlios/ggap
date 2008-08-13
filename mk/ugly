@@ -108,6 +108,7 @@ include $mk_prefix/ugly-top.mk
 _EOFEOF
   fi
 
+  need_all_target=false
   mk_mods=
   if grep QT_QRC_FILES $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods qrc"
@@ -127,10 +128,23 @@ _EOFEOF
   if grep RC_IN_FILES $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods rc"
   fi
+  if grep MACOSX_APP $out.pp# > /dev/null 2>&1; then
+    mk_mods="$mk_mods macapp"
+    need_all_target=true
+  fi
 
   for m in $mk_mods; do
     write_mk $m $modname >> $out.tmp
   done
+
+  if $need_all_target; then
+    cat >> $out.tmp << \_EOFEOF
+
+all-local: $(UGLY_ALL_TARGETS)
+clean-local: $(UGLY_CLEAN_TARGETS)
+
+_EOFEOF
+  fi
 
   cat >> $out.tmp << _EOFEOF
 include $mk_prefix/ugly-post.mk
