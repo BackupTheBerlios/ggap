@@ -88,7 +88,6 @@ QT_UI_FILES =			\
     prefs.ui			\
     wswindow.ui
 
-QT_QRC_NAME = ggap
 QT_QRC_FILES =			\
     ggap.qrc			\
     gap.qrc			\
@@ -113,16 +112,6 @@ EXTRA_DIST += $(tests)
 if MOO_ENABLE_UNIT_TESTS
 TESTS += $(tests)
 endif
-
-
-MACOSX_APP = ggap
-ggap_INFO_PLIST = ../mac/Info.plist
-../mac/Info.plist: $(srcdir)/../mac/Info.plist.in $(top_builddir)/config.status
-	cd .. && $(SHELL) ./config.status --file=mac/Info.plist
-ggap_APP_RESOURCES =			\
-    $(srcdir)/icons/ggap/ggap.icns	\
-    $(srcdir)/icons/ggap/gws.icns	\
-    $(srcdir)/icons/ggap/gwp.icns
 
 %-p.o: %.o ; @true
 %-t.o: tester.o ; @true

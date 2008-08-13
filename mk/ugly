@@ -128,10 +128,6 @@ _EOFEOF
   if grep RC_IN_FILES $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods rc"
   fi
-  if grep MACOSX_APP $out.pp# > /dev/null 2>&1; then
-    mk_mods="$mk_mods macapp"
-    need_all_target=true
-  fi
 
   for m in $mk_mods; do
     write_mk $m $modname >> $out.tmp
