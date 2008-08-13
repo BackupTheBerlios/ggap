@@ -15,6 +15,7 @@ ggap_SOURCES =		\
     help.cpp		\
     help-bookmarks.cpp	\
     main.cpp		\
+    opts.h		\
     parser.cpp		\
     parser.h		\
     parser-p.h		\
@@ -55,6 +56,7 @@ test_sources =		\
     tester.h
 test_moc_h_files =	\
     gws-t.h		\
+    opts-t.h		\
     parser-t.h		\
     script-t.h
 if MOO_ENABLE_UNIT_TESTS
@@ -74,7 +76,6 @@ AM_CXXFLAGS =			\
     -I..			\
     -I$(srcdir)/..		\
     -I$(srcdir)/../contrib	\
-    -I$(srcdir)/../contrib/qxt	\
     $(QT_CXXFLAGS)		\
     -Wall -W			\
     $(MOO_UNIT_TESTS_CFLAGS)
@@ -100,13 +101,6 @@ QT_QRC_DEPS =			\
 
 PCH_HEADER = $(srcdir)/../moows/common.h
 
-%-p.o: %.o
-	@true
-%-t.o: %.o
-	@true
-proc-wrapper.o: proc.o
-	@true
-
 include gap/Makefile.incl
 
 YACC_PP_FILES = parser.y
@@ -119,3 +113,8 @@ EXTRA_DIST += $(tests)
 if MOO_ENABLE_UNIT_TESTS
 TESTS += $(tests)
 endif
+
+%-p.o: %.o ; @true
+%-t.o: tester.o ; @true
+proc-wrapper.o: proc.o ; @true
+opts.o: app.o ; @true

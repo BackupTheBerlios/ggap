@@ -9,10 +9,8 @@
 #include "ggap/prefsdialog.h"
 #include "ggap/help.h"
 #include "ggap/tester.h"
-#include <qxtcommandoptions.h>
+#include "ggap/opts.h"
 #include <QtGui>
-#include <iostream>
-#include <stdlib.h>
 #include <string.h>
 #ifdef Q_OS_MAC
 #include <CoreFoundation/CoreFoundation.h>
@@ -57,17 +55,9 @@ static AppData appData;
 
 }
 
-static void usage(QxtCommandOptions &opts, bool show_qt)
-{
-    std::cout << "Application options:" << std::endl;
-    opts.showUsage(show_qt);
-    ::exit(EXIT_SUCCESS);
-}
-
 void App::parseOptions(int &argc, char **argv)
 {
-    QxtCommandOptions opts;
-    opts.setFlagStyle(QxtCommandOptions::DoubleDash);
+    OptParser opts("ggap");
 
 #ifdef MOO_ENABLE_UNIT_TESTS
     if (argc > 1 && strcmp(argv[1], "--ut") == 0)
@@ -79,44 +69,28 @@ void App::parseOptions(int &argc, char **argv)
         return;
     }
 
-    opts.add("--ut", "run unit tests");
+    opts.add("ut", "run unit tests");
 #endif
 
 #ifdef Q_OS_MAC
-    opts.add("raise", "raise window");
+    opts.add("raise", "raise window", &appData.options.raise);
 #endif
-    opts.add("help-url", "open url in help browser", QxtCommandOptions::ValueRequired);
-    opts.add("help-browser", "open help browser");
 
-    opts.add("version", "show version and exit");
-    opts.add("help", "show this help text");
-    opts.alias("help", "h");
-    opts.add("help-all", "show also Qt options");
+    opts.add("help-url", "url", "open url in help browser", &appData.options.help_url);
+    opts.add("help-browser", "open help browser", &appData.options.open_help_browser);
+
+    bool show_version = false;
+    opts.add("version", "show version and exit", &show_version);
 
     opts.parse(argc, argv);
 
-    if (opts.showUnrecognizedWarning())
-        ::exit(EXIT_FAILURE);
-
-    if (opts.count("help"))
-        usage(opts, false);
-    if (opts.count("help-all"))
-        usage(opts, true);
-
-    if (opts.count("version"))
+    if (show_version)
     {
         std::cout << "ggap " GGAP_VERSION << std::endl;
         ::exit(EXIT_SUCCESS);
     }
 
-#ifdef Q_OS_MAC
-    appData.options.raise = opts.count("raise") != 0;
-#endif
-
-    appData.options.open_help_browser = opts.count("help-browser") != 0;
-    if (opts.count("help-url"))
-        appData.options.help_url = opts.value("help-url").toString();
-    appData.options.files_to_open = opts.positional();
+    appData.options.files_to_open = opts.files();
 }
 
 App::App(int &argc, char **argv) :

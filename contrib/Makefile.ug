@@ -4,21 +4,7 @@ libcontrib_a_SOURCES =
 
 AM_CXXFLAGS =			\
     $(QT_CXXFLAGS)		\
-    -Wall -W			\
-    -I$(srcdir)/qxt
-
-
-libcontrib_a_SOURCES +=		\
-    qxt/qxtcommandoptions.cpp	\
-    qxt/qxtcommandoptions.h	\
-    qxt/qxtglobal.h		\
-    qxt/qxtpimpl.h
-
-EXTRA_DIST +=			\
-    qxt/AUTHORS			\
-    qxt/LICENSE			\
-    qxt/README
-
+    -Wall -W
 
 libcontrib_a_SOURCES +=		\
     zip/unzip_p.h		\
@@ -31,6 +17,3 @@ libcontrib_a_SOURCES +=		\
 
 EXTRA_DIST +=			\
     zip/README
-
-# erg erger gerg eg
-# regergerg

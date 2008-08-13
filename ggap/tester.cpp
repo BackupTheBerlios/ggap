@@ -2,6 +2,7 @@
 #include "ggap/gws-t.h"
 #include "ggap/script-t.h"
 #include "ggap/parser-t.h"
+#include "ggap/opts-t.h"
 #include <QtTest>
 
 #define TEST_CLASS(Class, args) { \
@@ -22,9 +23,11 @@ int moo::test::Tester::exec(const QStringList &args)
     TEST_CLASS(ggap::GwsWriter, args);
     TEST_CLASS(ggap::WorksheetScriptProxy, args);
     TEST(ggap::parser::ParserTest, args);
+    TEST(ggap::OptsParserTest, args);
 
     foreach (int r, results)
         if (r != 0)
             return r;
+
     return 0;
 }
