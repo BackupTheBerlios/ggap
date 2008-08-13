@@ -31,6 +31,11 @@ find_input() {
   fi
 }
 
+preprocess() {
+  # preprocess input output
+  sed -e :a -e '/\\$/N; s/\\\n//; ta' "$1" | sed 's/#.*//' > $2
+}
+
 extract_var() {
   # extract_var Makefile NAME
   value=`grep '\b'$2'\b' $1`
@@ -69,7 +74,9 @@ do_makefile() {
     mk_prefix="$rel_topdir/mk"
   fi
 
-  modname=`extract_var $infile MODULE | sed 's/\./_/g'`
+  preprocess $infile $out.pp#
+
+  modname=`extract_var $out.pp# MODULE | sed 's/\./_/g'`
   debug "processing $infile, output: $out, subdir: $subdir, topdir: $rel_topdir, module: $modname"
 
   cat > $out.tmp << _EOFEOF
@@ -102,22 +109,22 @@ _EOFEOF
   fi
 
   mk_mods=
-  if grep QT_QRC_FILES $infile > /dev/null 2>&1; then
+  if grep QT_QRC_FILES $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods qrc"
   fi
-  if grep QT_UI_FILES $infile > /dev/null 2>&1; then
+  if grep QT_UI_FILES $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods uic"
   fi
-  if grep QT_MOC_HDRS $infile > /dev/null 2>&1; then
+  if grep QT_MOC_HDRS $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods moc"
   fi
-  if grep PCH_HEADER $infile > /dev/null 2>&1; then
+  if grep PCH_HEADER $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods pch"
   fi
-  if grep -E 'YACC_FILES|YACC_PP_FILES' $infile > /dev/null 2>&1; then
+  if grep -E 'YACC_FILES|YACC_PP_FILES' $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods yacc"
   fi
-  if grep RC_IN_FILES $infile > /dev/null 2>&1; then
+  if grep RC_IN_FILES $out.pp# > /dev/null 2>&1; then
     mk_mods="$mk_mods rc"
   fi
 
@@ -133,6 +140,7 @@ include $mk_prefix/ugly-post.mk
 #
 _EOFEOF
 
+  rm -f $out.pp#
   mv $out.tmp $out || exit $?
 }
 
