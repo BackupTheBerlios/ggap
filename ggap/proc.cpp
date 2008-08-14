@@ -11,54 +11,38 @@
 
 using namespace ggap;
 
-// #ifdef Q_OS_WIN32
-//
-// namespace {
-//
-// struct FindWindowData {
-//     DWORD proc_id;
-//     HWND handle;
-// };
-//
-// static BOOL find_window_func(HWND hwnd, LPARAM lParam)
-// {
-//     FindWindowData *data = lParam;
-//     DWORD proc_id = 0;
-//
-//     GetWindowThreadProcessId(hwnd, &proc_id);
-//
-//     if (proc_id == data->proc_id)
-//     {
-//         data->handle = hwnd;
-//         return FALSE;
-//     }
-//
-//     return TRUE;
-// }
-//
-// }
-//
-// #endif
-
 void GapProcessWrapper::sendIntr()
 {
 #ifndef Q_OS_WIN32
     ::kill(proc->pid(), SIGINT);
 #else
 
-    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION*) proc->pid();
-//     FindWindowData data = { pi->dwProcessId, 0 };
-//     EnumWindows(find_window_func, LPARAM lParam);
-//
-//     if (!data.handle)
-//     {
-//         qCritical("could not find window for process id %d",
-//                   (int) pi->dwProcessId);
-//         return;
-//     }
+    QString appdir = QCoreApplication::applicationDirPath();
+    QString kill_exe = appdir + "/kill.exe";
 
-    qDebug("sending Ctrl-C to process id %d", (int) pi->dwProcessId);
-    GenerateConsoleCtrlEvent(CTRL_C_EVENT, pi->dwProcessId);
+    if (!QFile::exists(kill_exe))
+    {
+        qCritical("kill.exe not found");
+        return;
+    }
+
+    QString gap_dir = proc->applicationDirPath();
+    if (!QDir(gap_dir).exists("cygwin1.dll"))
+    {
+        qCritical("cygwin1.dll not found");
+        return;
+    }
+
+    QStringList args;
+    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION*) proc->pid();
+    args << "-SIGINT" << QString::number(pi->dwProcessId);
+
+    qDebug() << "calling" << kill_exe << args << gap_dir;
+    QProcess proc;
+    proc.setWorkingDirectory(gap_dir);
+    proc.start(kill_exe, args);
+    if (!proc.waitForFinished(10000))
+        qCritical("error in waitForFinished()");
 
 #endif // Q_OS_WIN32
 }

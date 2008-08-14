@@ -27,6 +27,7 @@ class ProcessReaper : public QProcess {
 
     uint ref_count;
     RefPtr<ProcessReaper> self;
+    QString prog;
 
     void start(const QString &program, OpenMode mode = ReadWrite);
 
@@ -53,8 +54,14 @@ public:
             deleteLater();
     }
 
+    QString applicationDirPath() const
+    {
+        return QFileInfo(prog).path();
+    }
+
     void start(const QString &program, const QStringList &arguments, OpenMode mode = ReadWrite)
     {
+        prog = program;
         QProcess::start(program, arguments, mode);
         self = this;
         connect(this, SIGNAL(error(QProcess::ProcessError)),
@@ -66,6 +73,7 @@ public:
 private Q_SLOTS:
     void unrefSelf()
     {
+        prog = QString();
         self = 0;
     }
 };
