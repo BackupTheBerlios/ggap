@@ -1,0 +1,31 @@
+This is GGAP, a front end for GAP system. See http://ggap.sourceforge.net/
+for more information, and http://www.gap-system.org/ for information about
+GAP.
+
+  Copyright (C) 2008 Yevgen Muntyan
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along
+  with this program; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+See file COPYING for text of the GNU General Public License.
+
+This program includes zip compression and uncompression software by Angius Fabrizio
+
+  Copyright (C) 2007 Angius Fabrizio (blue_death@users.sourceforge.net)
+
+  You may use, distribute and copy the files under the terms of
+  GNU General Public License version 2 (see the file LICENSE.GPL for details)
+
+  Available at http://osdab.42cows.org/snippets/zip.php?mode=advanced,
+  see contrib/zip directory in this source distribution.

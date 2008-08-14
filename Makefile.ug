@@ -10,6 +10,7 @@ EXTRA_DIST +=		\
     moo-pimpl.h		\
     moo-unit-tests.h	\
     COPYING		\
+    README		\
     THANKS
 
 include mac/Makefile.incl
