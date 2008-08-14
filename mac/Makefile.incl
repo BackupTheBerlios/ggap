@@ -46,9 +46,11 @@ bundle: mac/Info.plist mac-qt-libs
 	mv _bin_inst/$(bindir)/ggap ggap.app/Contents/MacOS/ || exit 1
 	cp mac/Info.plist ggap.app/Contents/ || exit 1
 	cp $(srcdir)/mac/PkgInfo ggap.app/Contents/ || exit 1
-	cp $(top_srcdir)/ggap/icons/ggap/ggap.icns ggap.app/Contents/Resources/ || exit 1
-	cp $(top_srcdir)/ggap/icons/ggap/gws.icns ggap.app/Contents/Resources/ || exit 1
-	cp $(top_srcdir)/ggap/icons/ggap/gwp.icns ggap.app/Contents/Resources/ || exit 1
+	cp $(srcdir)/ggap/icons/ggap/ggap.icns ggap.app/Contents/Resources/ || exit 1
+	cp $(srcdir)/ggap/icons/ggap/gws.icns ggap.app/Contents/Resources/ || exit 1
+	cp $(srcdir)/ggap/icons/ggap/gwp.icns ggap.app/Contents/Resources/ || exit 1
+	cp $(srcdir)/COPYING ggap.app/Contents/Resources/ || exit 1
+	cp $(srcdir)/mac/README ggap.app/Contents/Resources/ || exit 1
 	cp $(srcdir)/mac/qt.conf ggap.app/Contents/Resources/ || exit 1
 
 	cp -R Frameworks ggap.app/Contents/ || exit 1

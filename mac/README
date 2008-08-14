@@ -1,0 +1,82 @@
+This is GGAP, a front end for GAP system. See http://ggap.sourceforge.net/
+for more information, and http://www.gap-system.org/ for information about
+GAP.
+
+  Copyright (C) 2008 Yevgen Muntyan
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along
+  with this program; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+This distribution of GGAP includes
+
+  GAP -- Groups, Algorithms, and Programming, Version 4.4.10
+
+  Copyright © (1987--2004) by the GAP Group,
+  incorporating the Copyright © 1999, 2000 by School of Mathematical and
+    Computational Sciences, University of St Andrews, North Haugh, St Andrews,
+    Fife KY16 9SS, Scotland
+  being the Copyright © 1992 by Lehrstuhl D für Mathematik, RWTH, 52056 Aachen,
+    Germany, transferred to St Andrews on July 21st, 1997.
+  except for files in the distribution, which have an explicit different copyright
+  statement. In particular, the copyright of packages distributed with GAP is
+  usually with the package authors or their institutions.
+
+  GAP is free software; you can redistribute it and/or modify it under the terms
+  of the GNU General Public License as published by the Free Software Foundation;
+  either version 2 of the License, or (at your option) any later version. For details,
+  see the file GPL in the etc directory of the GAP distribution or see
+  http://www.gnu.org/licenses/gpl.html
+
+  GAP is distributed by us without any warranty, to the extent permitted by applicable
+  state law. We distribute GAP as is without warranty of any kind, either expressed
+  or implied, including, but not limited to, the implied warranties of merchantability
+  and fitness for a particular purpose.
+
+  The entire risk as to the quality and performance of the program is with you. Should
+  GAP prove defective, you assume the cost of all necessary servicing, repair or correction.
+
+  In no case unless required by applicable law will we, and/or any other party who
+  may modify and redistribute GAP as permitted above, be liable to you for damages,
+  including lost profits, lost monies or other special, incidental or consequential
+  damages arising out of the use or inability to use GAP.
+
+  You are permitted to modify and redistribute GAP, but you are not allowed to restrict
+  further redistribution. That is to say proprietary modifications will not be allowed.
+  We want all versions of GAP to remain free.
+
+  If you modify any part of GAP and redistribute it, you must supply a README document.
+  This should specify what modifications you made in which files. We do not want to
+  take credit or be blamed for your modifications.
+
+This distribution of GGAP also includes
+
+  Qt Cross-Platform Application Framework (http://www.trolltech.com/)
+  The Qt GUI Toolkit is Copyright (C) 1994-2008 Trolltech ASA.
+
+  You may use, distribute and copy the Qt GUI Toolkit under the terms of
+  GNU General Public License version 2.
+
+  Qt is a cross-platform application framework for desktop and embedded development.
+  It includes an intuitive API and a rich C++ class library, integrated tools for GUI
+  development and internationalization, and support for Java™ and C++ development.
+
+This distribution of GGAP also includes
+
+  Zip compression and uncompression software by Angius Fabrizio
+  Copyright (C) 2007 Angius Fabrizio (blue_death@users.sourceforge.net)
+
+  You may use, distribute and copy the files under the terms of
+  GNU General Public License version 2 (see the file LICENSE.GPL for details)
+
+  Available at http://osdab.42cows.org/snippets/zip.php?mode=advanced

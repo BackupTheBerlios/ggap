@@ -97,15 +97,19 @@ win-qt-libs: $(qt_libs)/QtCore4.dll $(qt_libs)/mingwm10.dll
 #
 # ggap files
 #
-ggap-files: win-qt-libs
+cygwin_kill_exe = BIN/kill.exe
+
+ggap-files: win-qt-libs $(cygwin_kill_exe)
 	rm -fr _bin_inst || exit 1
 	$(MAKE) $(AM_MAKEFLAGS) install-strip DESTDIR=`pwd`/_bin_inst || exit 1
 	rm -fr ggap-win/ggap || exit 1
 	mkdir -p ggap-win/ggap || exit 1
 	mv _bin_inst/$(bindir)/ggap.exe ggap-win/ggap/ || exit 1
+	cp $(cygwin_kill_exe) ggap-win/ggap/ || exit 1
 	cp -R $(qt_libs)/* ggap-win/ggap/ || exit 1
 	cp $(srcdir)/win32/qt.conf ggap-win/ggap/
 	cp $(srcdir)/COPYING ggap-win/ggap/ || exit 1
+	cp $(srcdir)/win32/README ggap-win/ggap/ || exit 1
 	rm -fr _bin_inst || exit 1
 
 WIN32_CLEANDIRS += _bin_inst ggap-win
